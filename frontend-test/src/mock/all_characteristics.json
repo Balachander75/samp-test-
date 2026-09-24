@@ -1,0 +1,3613 @@
+[
+  {
+    "class_name": "PRODUCT_CLASS",
+    "characteristic_name": "PRODUCTCLOSESIZELENGTH",
+    "sequence": 1,
+    "uom": "CM",
+    "options": []
+  },
+  {
+    "class_name": "PRODUCT_CLASS",
+    "characteristic_name": "PRODUCTCLOSESIZEWIDTH",
+    "sequence": 2,
+    "uom": "CM",
+    "options": []
+  },
+  {
+    "class_name": "PRODUCT_CLASS",
+    "characteristic_name": "FSCEUTR_REQUIREMENT",
+    "sequence": 3,
+    "uom": null,
+    "options": [
+      "FSC",
+      "EUTR",
+      "SUSTAINABLE",
+      "NA",
+      "FSC & EUDR",
+      "FSC & EUTR",
+      "SUSTAINABLE & EUTR"
+    ]
+  },
+  {
+    "class_name": "PRODUCT_CLASS",
+    "characteristic_name": "CLAIMAPPLICABLETOPRODUCT",
+    "sequence": 4,
+    "uom": null,
+    "options": [
+      "MIX",
+      "RECYCLE",
+      "PURE",
+      "NA",
+      "BAGGASSE",
+      "OTHERS"
+    ]
+  },
+  {
+    "class_name": "PRODUCT_CLASS",
+    "characteristic_name": "PERCENTAGE_TYPE",
+    "sequence": 5,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "PRODUCT_CLASS",
+    "characteristic_name": "OVERALLPRODUCTNOTE",
+    "sequence": 6,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_BINDING",
+    "characteristic_name": "BINDINGTYPE1",
+    "sequence": 1,
+    "uom": null,
+    "options": [
+      "Refer To Special Binding",
+      "Case with Round Spine",
+      "Case Bound",
+      "Split Case",
+      "Full Bound Stiff Cover",
+      "Soft Cover",
+      "Double Pasted (3 Layers)",
+      "Full Bound",
+      "Full Bound Double Pasted",
+      "Unbound",
+      "NA",
+      "Perfect Bound",
+      "Stiff Cover",
+      "File Folder",
+      "Envelope",
+      "Flapover",
+      "Portfolio"
+    ]
+  },
+  {
+    "class_name": "NB_BINDING",
+    "characteristic_name": "BINDINGTYPE2",
+    "sequence": 2,
+    "uom": null,
+    "options": [
+      "Refer To Special Binding",
+      "Center sewn",
+      "Section Pin",
+      "Section Sewn",
+      "Section Sewn with Open Spine",
+      "Spiral",
+      "Wiro",
+      "Split Wiro (Wiro at Distance)",
+      "Center sewn & Locked",
+      "Center Pin",
+      "Covered Spine Wiro",
+      "Covered Spine Spiral",
+      "Disc Binding",
+      "Legal Pad Style Full Strip",
+      "Legal Pad Style Partial Strip",
+      "Cut and Sewn",
+      "Head Stappled",
+      "Glued",
+      "Glued + Head Stappled",
+      "Glued + Head Stappled + Turned",
+      "Refill Style Glued + Tape",
+      "Duplicate Style Glued + Tape",
+      "Flapover",
+      "Match Book Style",
+      "Twisted Glued",
+      "NA",
+      "Poly Box w/Elastic Band",
+      "Ring Bound",
+      "Perfect Bound",
+      "Binder",
+      "Plastic Spiral",
+      "Stappled",
+      "Wiro with hanger",
+      "Creasing and folding",
+      "Prong Style Binding",
+      "Section Glued",
+      "Lever Arch File",
+      "Poly Box"
+    ]
+  },
+  {
+    "class_name": "NB_BINDING",
+    "characteristic_name": "OPENINGOFPRODUCT",
+    "sequence": 3,
+    "uom": null,
+    "options": [
+      "English Opening",
+      "Arabic Opening",
+      "NA"
+    ]
+  },
+  {
+    "class_name": "NB_BINDING",
+    "characteristic_name": "BINDINGSIDE",
+    "sequence": 4,
+    "uom": null,
+    "options": [
+      "LONG SIDE",
+      "SHORT SIDE",
+      "LONG SIDE WITH PERF",
+      "SHORT SIDE WITH PERF",
+      "NA",
+      "ALL 4 SIDES",
+      "CORNER"
+    ]
+  },
+  {
+    "class_name": "NB_BINDING",
+    "characteristic_name": "BINDINGMATERIAL",
+    "sequence": 5,
+    "uom": null,
+    "options": [
+      "REF TO BIND MATRL/COLOR/STYLE",
+      "PLASTIC SPIRAL - FOLLOW COLOR",
+      "GALVANIZED SPIRAL",
+      "EXTRA THICK GALVANIZED SPIRAL",
+      "METAL SPIRAL - FOLLOW COLOR",
+      "METAL WIRO - FOLLOW COLOR",
+      "CLOTH TAPE - FOLLOW COLOR",
+      "BLEACHED KRAFT (STRONG) P TAPE",
+      "SYNTHETIC TAPE - FOLLOW COLOR",
+      "SYNTHETIC TAPE",
+      "PVC COATED PAPER",
+      "DISC - FOLLOW COLOR",
+      "CANVAS WITH H&T BAND",
+      "CANVAS",
+      "PAPER TAPE",
+      "NA",
+      "METAL WIRO - PER FOLLOW COLOR",
+      "CLOTH TAPE - PER FOLLOW COLOR",
+      "PAPER TAPE - PER FOLLOW COLOR",
+      "GLUED",
+      "VINYLE COATED PAPER TAPE_PERF",
+      "GALVANIZED WIRO",
+      "TAPE",
+      "METAL PIN - FOLLOW COLOUR",
+      "RING",
+      "CLIP MECHANISM LEVER ACRH"
+    ]
+  },
+  {
+    "class_name": "NB_BINDING",
+    "characteristic_name": "BINDINGCOLOR_STYLE",
+    "sequence": 6,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_BINDING",
+    "characteristic_name": "SPECIALBINDING",
+    "sequence": 7,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_BINDING",
+    "characteristic_name": "ADDITIONALPROCESSONBINDING",
+    "sequence": 8,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_BINDING",
+    "characteristic_name": "SPIRAL-WIROBINDINGHOLEPUNCH",
+    "sequence": 9,
+    "uom": null,
+    "options": [
+      "OVAL",
+      "ROUND",
+      "SQUARE",
+      "NA",
+      "REF TO ADD. PROCES ON BIND MAT",
+      "REF TO NOTE",
+      "MASHROOM PUNCH HOLES"
+    ]
+  },
+  {
+    "class_name": "NB_BINDING",
+    "characteristic_name": "FILINGHOLEPUNCHDIADISTANCE",
+    "sequence": 10,
+    "uom": null,
+    "options": [
+      "5MM X EU",
+      "6.5MM X EU",
+      "8 MM X EU",
+      "5MM X US",
+      "6.5MM X US",
+      "8 MM X US",
+      "UNIVERSAL",
+      "NA",
+      "REF TO ADDNL PROC ON BIND MAT"
+    ]
+  },
+  {
+    "class_name": "NB_BINDING",
+    "characteristic_name": "NOOFFILINGHOLESREQUIRE",
+    "sequence": 11,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_BINDING",
+    "characteristic_name": "FILLINGHOLESREQUIREDON",
+    "sequence": 12,
+    "uom": null,
+    "options": [
+      "FULL BOOK",
+      "ONLY INSIDE RULED BLOCK",
+      "NA",
+      "REF TO ADDNL PROC ON BIND MAT",
+      "INSIDE BLOCK W/DIVIDER"
+    ]
+  },
+  {
+    "class_name": "NB_BINDING",
+    "characteristic_name": "SPIRAL_WIROLOCK",
+    "sequence": 13,
+    "uom": null,
+    "options": [
+      "COIL LOCK",
+      "TURNED IN",
+      "NO SHARP EDGE",
+      "NA",
+      "REF TO ADDNL PROC ON BIND MAT"
+    ]
+  },
+  {
+    "class_name": "NB_BINDING",
+    "characteristic_name": "SPIRAL_WIRODIA",
+    "sequence": 14,
+    "uom": null,
+    "options": [
+      "STANDARD",
+      "OVERSIZE - REF TO BINDING MATR",
+      "NA"
+    ]
+  },
+  {
+    "class_name": "NB_BINDING",
+    "characteristic_name": "CORNERROUNDREQUIREON",
+    "sequence": 15,
+    "uom": null,
+    "options": [
+      "WHOLE BOOK - FINE",
+      "WHOLE BOOK - STD",
+      "ONLY ON CVR & BACK",
+      "ONLY INSIDE BLOCK",
+      "NA",
+      "ONLY CVR & BACK",
+      "ONLY ON COVER"
+    ]
+  },
+  {
+    "class_name": "NB_BINDING",
+    "characteristic_name": "CORNERROUNDINGRADIUS",
+    "sequence": 16,
+    "uom": null,
+    "options": [
+      "2 MM",
+      "REF TO ADDNL PROC ON BIND MAT",
+      "5 MM",
+      "6 MM",
+      "9 MM",
+      "12 MM",
+      "NA",
+      "FACTORY STD"
+    ]
+  },
+  {
+    "class_name": "NB_BINDING",
+    "characteristic_name": "EDGEFINISHIGTYPE",
+    "sequence": 17,
+    "uom": null,
+    "options": [
+      "REF TO ADDNL PROC ON BIND MAT",
+      "COLOR EDGE",
+      "DECORATIVE EDGE",
+      "GILDING",
+      "NA"
+    ]
+  },
+  {
+    "class_name": "NB_BINDING",
+    "characteristic_name": "EDGEFINISHINGSIDES",
+    "sequence": 18,
+    "uom": null,
+    "options": [
+      "REF TO ADDNL PROC ON BIND MAT",
+      "ALL 4 SIDES",
+      "BINDING SIDE ONLY",
+      "3 OPEN SIDES",
+      "NA"
+    ]
+  },
+  {
+    "class_name": "NB_BINDING",
+    "characteristic_name": "EDGEFINISHINGNOOFDESIGNS",
+    "sequence": 19,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_BINDING",
+    "characteristic_name": "EDGEFINISHINGDESIGNNOTES",
+    "sequence": 20,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_BINDING",
+    "characteristic_name": "SHEETGATHERINGSTYLE",
+    "sequence": 21,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_BINDING",
+    "characteristic_name": "ACCESSORIES",
+    "sequence": 22,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_BINDING",
+    "characteristic_name": "ACCESSORIESDETAILS",
+    "sequence": 23,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_BINDING",
+    "characteristic_name": "CARENOTEFORBINDING",
+    "sequence": 24,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_1",
+    "characteristic_name": "COMPONENT1NAME",
+    "sequence": 1,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_1",
+    "characteristic_name": "C1SIZELENGTH",
+    "sequence": 2,
+    "uom": "CM",
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_1",
+    "characteristic_name": "C1SIZEWIDTH",
+    "sequence": 3,
+    "uom": "CM",
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_1",
+    "characteristic_name": "LENGTHAFTERPERFORATION",
+    "sequence": 4,
+    "uom": "CM",
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_1",
+    "characteristic_name": "WIDTHAFTERPERFORATION",
+    "sequence": 5,
+    "uom": "CM",
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_1",
+    "characteristic_name": "C1NOOFSHEETS",
+    "sequence": 6,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_1",
+    "characteristic_name": "C1MATERIALTYPE",
+    "sequence": 7,
+    "uom": null,
+    "options": [
+      "REF TO SPECIAL NOTE",
+      "PAPER",
+      "POLY",
+      "PU",
+      "PVC CLOTH PAPER",
+      "PVC",
+      "FABRIC",
+      "PEALABLE STICKER",
+      "PERMT STICKER",
+      "WOOD",
+      "BOARD"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_1",
+    "characteristic_name": "C1MILL_SUPPLIERNAME",
+    "sequence": 8,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_1",
+    "characteristic_name": "C1MILL_SUPLIER_QLTY_GRDE_FNSH",
+    "sequence": 9,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_1",
+    "characteristic_name": "C1MATERIALCOLOR_VARIANCE",
+    "sequence": 10,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_1",
+    "characteristic_name": "C1CALIPER_WEIGHT",
+    "sequence": 11,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_1",
+    "characteristic_name": "C1MATERIALUNIT",
+    "sequence": 12,
+    "uom": null,
+    "options": [
+      "REF TO SPECIAL NOTE",
+      "GSM",
+      "MICRONS",
+      "OZ",
+      "MM"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_1",
+    "characteristic_name": "C1PURCHASECERTIFICATION",
+    "sequence": 13,
+    "uom": null,
+    "options": [
+      "FSC MIX",
+      "FSC RECYCLED",
+      "FSC PURE",
+      "FSC MIX AND EUTR",
+      "FSC RECYCLED AND EUTR",
+      "FSC PURE AND EUTR",
+      "EUTR",
+      "NA",
+      "RECYCLED",
+      "BAGGASE",
+      "OTHERS"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_1",
+    "characteristic_name": "C1CERTIFICATIONADDNLNOTE",
+    "sequence": 14,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_1",
+    "characteristic_name": "C1TECHNICALRAWMATERIALSPEC",
+    "sequence": 15,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_1",
+    "characteristic_name": "C1PRINTINGTYPE1",
+    "sequence": 16,
+    "uom": null,
+    "options": [
+      "FLEXO RULING",
+      "NO PRINTING (BLANK)",
+      "OFFSET VARIABLE BOOK PRTG",
+      "OFFSET COMMON PRINT",
+      "REF TO PRINT NOTE",
+      "COATING",
+      "TINTING",
+      "SCREEN PRINTING",
+      "GRAVIER",
+      "DIGITAL PRINTING"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_1",
+    "characteristic_name": "C1NOOFDESIGNS_PRINT_1",
+    "sequence": 17,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_1",
+    "characteristic_name": "C1NOOFCOLOURSF_B_1",
+    "sequence": 18,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_1",
+    "characteristic_name": "C1NAMEOFCOLORSF_B_1",
+    "sequence": 19,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_1",
+    "characteristic_name": "C1RULING_PRINTDESIGNNAME1",
+    "sequence": 20,
+    "uom": null,
+    "options": [
+      "SINGLE LINE",
+      "SINGLE LINE EDGE CUT RULED",
+      "COLLEGE RULED",
+      "COLLEGE EDGE CUT RULED",
+      "WIDE RULED",
+      "WIDE EDGE CUT RULED",
+      "FRENCH/SEYES RULED",
+      "DOUBLE LINE \"PAUTADO\" RULED",
+      "PAUTADO RULED",
+      "NA",
+      "NARROW RULED",
+      "NARROW EDGE CUT RULED"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_1",
+    "characteristic_name": "C1RULE_PRINTCODE1",
+    "sequence": 21,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_1",
+    "characteristic_name": "C1PRINTINGTYPE2",
+    "sequence": 22,
+    "uom": null,
+    "options": [
+      "FLEXO RULING",
+      "NO PRINTING (BLANK)",
+      "OFFSET VARIABLE BOOK PRTG",
+      "OFFSET COMMON PRINT",
+      "REF TO PRINT NOTE",
+      "COATING",
+      "TINTING",
+      "SCREEN PRINTING",
+      "GRAVIER",
+      "DIGITAL PRINTING"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_1",
+    "characteristic_name": "C1NOOFDESIGNS_PRINT",
+    "sequence": 23,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_1",
+    "characteristic_name": "C1NOOFCOLOURSF_B",
+    "sequence": 24,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_1",
+    "characteristic_name": "C1NAMEOFCOLORSF_B",
+    "sequence": 25,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_1",
+    "characteristic_name": "C1RULING_PRINTDESIGNNAME2",
+    "sequence": 26,
+    "uom": null,
+    "options": [
+      "SINGLE LINE",
+      "SINGLE LINE EDGE CUT RULED",
+      "COLLEGE RULED",
+      "COLLEGE EDGE CUT RULED",
+      "WIDE RULED",
+      "WIDE EDGE CUT RULED",
+      "FRENCH/SEYES RULED",
+      "DOUBLE LINE \"PAUTADO\" RULED",
+      "PAUTADO RULED",
+      "NA",
+      "NARROW RULED",
+      "NARROW EDGE CUT RULED"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_1",
+    "characteristic_name": "C1RULE_PRINTCODE2",
+    "sequence": 27,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_1",
+    "characteristic_name": "C1PRINTNOTE",
+    "sequence": 28,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_1",
+    "characteristic_name": "C1FINISHING",
+    "sequence": 29,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_1",
+    "characteristic_name": "C1FINISHINGNOTE",
+    "sequence": 30,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_1",
+    "characteristic_name": "C1SPECIALNOTE",
+    "sequence": 31,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_1",
+    "characteristic_name": "C1ADDITIONALPROCESS",
+    "sequence": 32,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_1",
+    "characteristic_name": "C1ADDITIONALINFO1",
+    "sequence": 33,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_1",
+    "characteristic_name": "C1ADDITIONALINFO2",
+    "sequence": 34,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_1",
+    "characteristic_name": "C1ADDITIONALINFO3",
+    "sequence": 35,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_2",
+    "characteristic_name": "COMPONENT2NAME",
+    "sequence": 1,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_2",
+    "characteristic_name": "C2SIZELENGTH",
+    "sequence": 2,
+    "uom": "CM",
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_2",
+    "characteristic_name": "C2SIZEWIDTH",
+    "sequence": 3,
+    "uom": "CM",
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_2",
+    "characteristic_name": "C2LENGHTAFTERPERFORATION",
+    "sequence": 4,
+    "uom": "CM",
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_2",
+    "characteristic_name": "C2WIDTHAFTERPERFORATION",
+    "sequence": 5,
+    "uom": "CM",
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_2",
+    "characteristic_name": "C2NOOFSHEETS",
+    "sequence": 6,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_2",
+    "characteristic_name": "C2MATERIALTYPE",
+    "sequence": 7,
+    "uom": null,
+    "options": [
+      "REF TO SPECIAL NOTE",
+      "PAPER",
+      "POLY",
+      "PU",
+      "PVC CLOTH PAPER",
+      "PVC",
+      "FABRIC",
+      "PEALABLE STICKER",
+      "PERMT STICKER",
+      "WOOD",
+      "BOARD"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_2",
+    "characteristic_name": "C2MILL_SUPPLIERNAME",
+    "sequence": 8,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_2",
+    "characteristic_name": "C2MILL_SUPLIER_QLTY_GRDE_FNSH",
+    "sequence": 9,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_2",
+    "characteristic_name": "C2MATERIALCOLOR_VARIANCE",
+    "sequence": 10,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_2",
+    "characteristic_name": "C2CALIPER_WEIGHT",
+    "sequence": 11,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_2",
+    "characteristic_name": "C2MATERIALUNIT",
+    "sequence": 12,
+    "uom": null,
+    "options": [
+      "REF TO SPECIAL NOTE",
+      "GSM",
+      "MICRONS",
+      "OZ",
+      "MM"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_2",
+    "characteristic_name": "C2PURCHASECERTIFICATION",
+    "sequence": 13,
+    "uom": null,
+    "options": [
+      "FSC MIX",
+      "FSC RECYCLED",
+      "FSC PURE",
+      "FSC MIX AND EUTR",
+      "FSC RECYCLED AND EUTR",
+      "FSC PURE AND EUTR",
+      "EUTR",
+      "NA",
+      "RECYCLED",
+      "BAGGASE",
+      "OTHERS"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_2",
+    "characteristic_name": "C2CERTIFICATIONADDNLNOTE",
+    "sequence": 14,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_2",
+    "characteristic_name": "C2TECHNICALRAWMATERIALSPEC",
+    "sequence": 15,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_2",
+    "characteristic_name": "C2PRINTINGTYPE1",
+    "sequence": 16,
+    "uom": null,
+    "options": [
+      "FLEXO RULING",
+      "NO PRINTING (BLANK)",
+      "OFFSET VARIABLE BOOK PRTG",
+      "OFFSET COMMON PRINT",
+      "REF TO PRINT NOTE",
+      "COATING",
+      "TINTING",
+      "SCREEN PRINTING",
+      "GRAVIER",
+      "DIGITAL PRINTING"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_2",
+    "characteristic_name": "C2NOOFDESIGNS_PRINT_1",
+    "sequence": 17,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_2",
+    "characteristic_name": "C2NOOFCOLOURSF_B_1",
+    "sequence": 18,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_2",
+    "characteristic_name": "C2NAMEOFCOLORSF_B_1",
+    "sequence": 19,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_2",
+    "characteristic_name": "C2RULING_PRINTDESIGNNAME1",
+    "sequence": 20,
+    "uom": null,
+    "options": [
+      "SINGLE LINE",
+      "SINGLE LINE EDGE CUT RULED",
+      "COLLEGE RULED",
+      "COLLEGE EDGE CUT RULED",
+      "WIDE RULED",
+      "WIDE EDGE CUT RULED",
+      "FRENCH/SEYES RULED",
+      "DOUBLE LINE \"PAUTADO\" RULED",
+      "PAUTADO RULED",
+      "NA",
+      "NARROW RULED",
+      "NARROW EDGE CUT RULED"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_2",
+    "characteristic_name": "C2RULE_PRINTCODE1",
+    "sequence": 21,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_2",
+    "characteristic_name": "C2PRINTINGTYPE2",
+    "sequence": 22,
+    "uom": null,
+    "options": [
+      "FLEXO RULING",
+      "NO PRINTING (BLANK)",
+      "OFFSET VARIABLE BOOK PRTG",
+      "OFFSET COMMON PRINT",
+      "REF TO PRINT NOTE",
+      "COATING",
+      "TINTING",
+      "SCREEN PRINTING",
+      "GRAVIER",
+      "DIGITAL PRINTING"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_2",
+    "characteristic_name": "C2NOOFDESIGNS_PRINT",
+    "sequence": 23,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_2",
+    "characteristic_name": "C2NOOFCOLOURSF_B",
+    "sequence": 24,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_2",
+    "characteristic_name": "C2NAMEOFCOLORSF_B",
+    "sequence": 25,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_2",
+    "characteristic_name": "C2RULING_PRINTDESIGNNAME2",
+    "sequence": 26,
+    "uom": null,
+    "options": [
+      "SINGLE LINE",
+      "SINGLE LINE EDGE CUT RULED",
+      "COLLEGE RULED",
+      "COLLEGE EDGE CUT RULED",
+      "WIDE RULED",
+      "WIDE EDGE CUT RULED",
+      "FRENCH/SEYES RULED",
+      "DOUBLE LINE \"PAUTADO\" RULED",
+      "PAUTADO RULED",
+      "NA",
+      "NARROW RULED",
+      "NARROW EDGE CUT RULED"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_2",
+    "characteristic_name": "C2RULE_PRINTCODE2",
+    "sequence": 27,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_2",
+    "characteristic_name": "C2PRINTNOTE",
+    "sequence": 28,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_2",
+    "characteristic_name": "C2FINISHING",
+    "sequence": 29,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_2",
+    "characteristic_name": "C2COVERENHANCEMENT",
+    "sequence": 30,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_2",
+    "characteristic_name": "C2FINISHINGNOTE",
+    "sequence": 31,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_2",
+    "characteristic_name": "C2SPECIALNOTE",
+    "sequence": 32,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_2",
+    "characteristic_name": "C2ADDITIONALPROCESS",
+    "sequence": 33,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_2",
+    "characteristic_name": "C2ADDITIONALINFO1",
+    "sequence": 34,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_2",
+    "characteristic_name": "C2ADDITIONALINFO2",
+    "sequence": 35,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_2",
+    "characteristic_name": "C2ADDITIONALINFO3",
+    "sequence": 36,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_3",
+    "characteristic_name": "COMPONENT3NAME",
+    "sequence": 1,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_3",
+    "characteristic_name": "C3SIZELENGTH",
+    "sequence": 2,
+    "uom": "CM",
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_3",
+    "characteristic_name": "C3SIZEWIDTH",
+    "sequence": 3,
+    "uom": "CM",
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_3",
+    "characteristic_name": "C3LENGHTAFTERPERFORATION",
+    "sequence": 4,
+    "uom": "CM",
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_3",
+    "characteristic_name": "C3WIDTHAFTERPERFORATION",
+    "sequence": 5,
+    "uom": "CM",
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_3",
+    "characteristic_name": "C3NOOFSHEETS",
+    "sequence": 6,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_3",
+    "characteristic_name": "C3MATERIALTYPE",
+    "sequence": 7,
+    "uom": null,
+    "options": [
+      "REF TO SPECIAL NOTE",
+      "PAPER",
+      "POLY",
+      "PU",
+      "PVC CLOTH PAPER",
+      "PVC",
+      "FABRIC",
+      "PEALABLE STICKER",
+      "PERMT STICKER",
+      "WOOD",
+      "BOARD"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_3",
+    "characteristic_name": "C3MILL_SUPPLIERNAME",
+    "sequence": 8,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_3",
+    "characteristic_name": "C3MILL_SUPLIER_QLTY_GRDE_FNSH",
+    "sequence": 9,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_3",
+    "characteristic_name": "C3MATERIALCOLOR_VARIANCE",
+    "sequence": 10,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_3",
+    "characteristic_name": "C3CALIPER_WEIGHT",
+    "sequence": 11,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_3",
+    "characteristic_name": "C3MATERIALUNIT",
+    "sequence": 12,
+    "uom": null,
+    "options": [
+      "REF TO SPECIAL NOTE",
+      "GSM",
+      "MICRONS",
+      "OZ",
+      "MM"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_3",
+    "characteristic_name": "C3PURCHASECERTIFICATION",
+    "sequence": 13,
+    "uom": null,
+    "options": [
+      "FSC MIX",
+      "FSC RECYCLED",
+      "FSC PURE",
+      "FSC MIX AND EUTR",
+      "FSC RECYCLED AND EUTR",
+      "FSC PURE AND EUTR",
+      "EUTR",
+      "NA",
+      "RECYCLED",
+      "BAGGASE",
+      "OTHERS"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_3",
+    "characteristic_name": "C3CERTIFICATIONADDNLNOTE",
+    "sequence": 14,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_3",
+    "characteristic_name": "C3TECHNICALRAWMATERIALSPEC",
+    "sequence": 15,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_3",
+    "characteristic_name": "C3PRINTINGTYPE1",
+    "sequence": 16,
+    "uom": null,
+    "options": [
+      "FLEXO RULING",
+      "NO PRINTING (BLANK)",
+      "OFFSET VARIABLE BOOK PRTG",
+      "OFFSET COMMON PRINT",
+      "REF TO PRINT NOTE",
+      "COATING",
+      "TINTING",
+      "SCREEN PRINTING",
+      "GRAVIER",
+      "DIGITAL PRINTING"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_3",
+    "characteristic_name": "C3NOOFDESIGNS_PRINT_1",
+    "sequence": 17,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_3",
+    "characteristic_name": "C3NOOFCOLOURSF_B_1",
+    "sequence": 18,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_3",
+    "characteristic_name": "C3NAMEOFCOLORSF_B_1",
+    "sequence": 19,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_3",
+    "characteristic_name": "C3RULING_PRINTDESIGNNAME1",
+    "sequence": 20,
+    "uom": null,
+    "options": [
+      "SINGLE LINE",
+      "SINGLE LINE EDGE CUT RULED",
+      "COLLEGE RULED",
+      "COLLEGE EDGE CUT RULED",
+      "WIDE RULED",
+      "WIDE EDGE CUT RULED",
+      "FRENCH/SEYES RULED",
+      "DOUBLE LINE \"PAUTADO\" RULED",
+      "PAUTADO RULED",
+      "NA",
+      "NARROW RULED",
+      "NARROW EDGE CUT RULED"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_3",
+    "characteristic_name": "C3RULE_PRINTCODE1",
+    "sequence": 21,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_3",
+    "characteristic_name": "C3PRINTINGTYPE2",
+    "sequence": 22,
+    "uom": null,
+    "options": [
+      "FLEXO RULING",
+      "NO PRINTING (BLANK)",
+      "OFFSET VARIABLE BOOK PRTG",
+      "OFFSET COMMON PRINT",
+      "REF TO PRINT NOTE",
+      "COATING",
+      "TINTING",
+      "SCREEN PRINTING",
+      "GRAVIER",
+      "DIGITAL PRINTING"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_3",
+    "characteristic_name": "C3NOOFDESIGNS_PRINT",
+    "sequence": 23,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_3",
+    "characteristic_name": "C3NOOFCOLOURSF_B",
+    "sequence": 24,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_3",
+    "characteristic_name": "C3NAMEOFCOLORSF_B",
+    "sequence": 25,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_3",
+    "characteristic_name": "C3RULING_PRINTDESIGNNAME2",
+    "sequence": 26,
+    "uom": null,
+    "options": [
+      "SINGLE LINE",
+      "SINGLE LINE EDGE CUT RULED",
+      "COLLEGE RULED",
+      "COLLEGE EDGE CUT RULED",
+      "WIDE RULED",
+      "WIDE EDGE CUT RULED",
+      "FRENCH/SEYES RULED",
+      "DOUBLE LINE \"PAUTADO\" RULED",
+      "PAUTADO RULED",
+      "NA",
+      "NARROW RULED",
+      "NARROW EDGE CUT RULED"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_3",
+    "characteristic_name": "C3RULE_PRINTCODE2",
+    "sequence": 27,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_3",
+    "characteristic_name": "C3PRINTNOTE",
+    "sequence": 28,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_3",
+    "characteristic_name": "C3FINISHING",
+    "sequence": 29,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_3",
+    "characteristic_name": "C3FINISHINGNOTE",
+    "sequence": 30,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_3",
+    "characteristic_name": "C3SPECIALNOTE",
+    "sequence": 31,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_3",
+    "characteristic_name": "C3ADDITIONALPROCESS",
+    "sequence": 32,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_3",
+    "characteristic_name": "C3ADDITIONALINFO1",
+    "sequence": 33,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_3",
+    "characteristic_name": "C3ADDITIONALINFO2",
+    "sequence": 34,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_3",
+    "characteristic_name": "C3ADDITIONALINFO3",
+    "sequence": 35,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_4",
+    "characteristic_name": "COMPONENT4NAME",
+    "sequence": 1,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_4",
+    "characteristic_name": "C4SIZELENGTH",
+    "sequence": 2,
+    "uom": "CM",
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_4",
+    "characteristic_name": "C4SIZEWIDTH",
+    "sequence": 3,
+    "uom": "CM",
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_4",
+    "characteristic_name": "C4LENGHTAFTERPERFORATION",
+    "sequence": 4,
+    "uom": "CM",
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_4",
+    "characteristic_name": "C4WIDTHAFTERPERFORATION",
+    "sequence": 5,
+    "uom": "CM",
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_4",
+    "characteristic_name": "C4NOOFSHEETS",
+    "sequence": 6,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_4",
+    "characteristic_name": "C4MATERIALTYPE",
+    "sequence": 7,
+    "uom": null,
+    "options": [
+      "REF TO SPECIAL NOTE",
+      "PAPER",
+      "POLY",
+      "PU",
+      "PVC CLOTH PAPER",
+      "PVC",
+      "FABRIC",
+      "PEALABLE STICKER",
+      "PERMT STICKER",
+      "WOOD",
+      "BOARD"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_4",
+    "characteristic_name": "C4MILL_SUPPLIERNAME",
+    "sequence": 8,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_4",
+    "characteristic_name": "C4MILL_SUPLIER_QLTY_GRDE_FNSH",
+    "sequence": 9,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_4",
+    "characteristic_name": "C4MATERIALCOLOR_VARIANCE",
+    "sequence": 10,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_4",
+    "characteristic_name": "C4CALIPER_WEIGHT",
+    "sequence": 11,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_4",
+    "characteristic_name": "C4MATERIALUNIT",
+    "sequence": 12,
+    "uom": null,
+    "options": [
+      "REF TO SPECIAL NOTE",
+      "GSM",
+      "MICRONS",
+      "OZ",
+      "MM"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_4",
+    "characteristic_name": "C4PURCHASECERTIFICATION",
+    "sequence": 13,
+    "uom": null,
+    "options": [
+      "FSC MIX",
+      "FSC RECYCLED",
+      "FSC PURE",
+      "FSC MIX AND EUTR",
+      "FSC RECYCLED AND EUTR",
+      "FSC PURE AND EUTR",
+      "EUTR",
+      "NA",
+      "RECYCLED",
+      "BAGGASE",
+      "OTHERS"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_4",
+    "characteristic_name": "C4CERTIFICATIONADDNLNOTE",
+    "sequence": 14,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_4",
+    "characteristic_name": "C4TECHNICALRAWMATERIALSPEC",
+    "sequence": 15,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_4",
+    "characteristic_name": "C4PRINTINGTYPE1",
+    "sequence": 16,
+    "uom": null,
+    "options": [
+      "FLEXO RULING",
+      "NO PRINTING (BLANK)",
+      "OFFSET VARIABLE BOOK PRTG",
+      "OFFSET COMMON PRINT",
+      "REF TO PRINT NOTE",
+      "COATING",
+      "TINTING",
+      "SCREEN PRINTING",
+      "GRAVIER",
+      "DIGITAL PRINTING"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_4",
+    "characteristic_name": "C4NOOFDESIGNS_PRINT_1",
+    "sequence": 17,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_4",
+    "characteristic_name": "C4NOOFCOLOURSF_B_1",
+    "sequence": 18,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_4",
+    "characteristic_name": "C4NAMEOFCOLORSF_B_1",
+    "sequence": 19,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_4",
+    "characteristic_name": "C4RULING_PRINTDESIGNNAME1",
+    "sequence": 20,
+    "uom": null,
+    "options": [
+      "SINGLE LINE",
+      "SINGLE LINE EDGE CUT RULED",
+      "COLLEGE RULED",
+      "COLLEGE EDGE CUT RULED",
+      "WIDE RULED",
+      "WIDE EDGE CUT RULED",
+      "FRENCH/SEYES RULED",
+      "DOUBLE LINE \"PAUTADO\" RULED",
+      "PAUTADO RULED",
+      "NA",
+      "NARROW RULED",
+      "NARROW EDGE CUT RULED"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_4",
+    "characteristic_name": "C4RULE_PRINTCODE1",
+    "sequence": 21,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_4",
+    "characteristic_name": "C4PRINTINGTYPE2",
+    "sequence": 22,
+    "uom": null,
+    "options": [
+      "FLEXO RULING",
+      "NO PRINTING (BLANK)",
+      "OFFSET VARIABLE BOOK PRTG",
+      "OFFSET COMMON PRINT",
+      "REF TO PRINT NOTE",
+      "COATING",
+      "TINTING",
+      "SCREEN PRINTING",
+      "GRAVIER",
+      "DIGITAL PRINTING"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_4",
+    "characteristic_name": "C4NOOFDESIGNS_PRINT",
+    "sequence": 23,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_4",
+    "characteristic_name": "C4NOOFCOLOURSF_B",
+    "sequence": 24,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_4",
+    "characteristic_name": "C4NAMEOFCOLORSF_B",
+    "sequence": 25,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_4",
+    "characteristic_name": "C4RULING_PRINTDESIGNNAME2",
+    "sequence": 26,
+    "uom": null,
+    "options": [
+      "SINGLE LINE",
+      "SINGLE LINE EDGE CUT RULED",
+      "COLLEGE RULED",
+      "COLLEGE EDGE CUT RULED",
+      "WIDE RULED",
+      "WIDE EDGE CUT RULED",
+      "FRENCH/SEYES RULED",
+      "DOUBLE LINE \"PAUTADO\" RULED",
+      "PAUTADO RULED",
+      "NA",
+      "NARROW RULED",
+      "NARROW EDGE CUT RULED"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_4",
+    "characteristic_name": "C4RULE_PRINTCODE2",
+    "sequence": 27,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_4",
+    "characteristic_name": "C4PRINTNOTE",
+    "sequence": 28,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_4",
+    "characteristic_name": "C4FINISHING",
+    "sequence": 29,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_4",
+    "characteristic_name": "C4FINISHINGNOTE",
+    "sequence": 30,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_4",
+    "characteristic_name": "C4SPECIALNOTE",
+    "sequence": 31,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_4",
+    "characteristic_name": "C4ADDITIONALPROCESS",
+    "sequence": 32,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_4",
+    "characteristic_name": "C4ADDITIONALINFO1",
+    "sequence": 33,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_4",
+    "characteristic_name": "C4ADDITIONALINFO2",
+    "sequence": 34,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_4",
+    "characteristic_name": "C4ADDITIONALINFO3",
+    "sequence": 35,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_5",
+    "characteristic_name": "COMPONENT5NAME",
+    "sequence": 1,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_5",
+    "characteristic_name": "C5SIZELENGTH",
+    "sequence": 2,
+    "uom": "CM",
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_5",
+    "characteristic_name": "C5SIZEWIDTH",
+    "sequence": 3,
+    "uom": "CM",
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_5",
+    "characteristic_name": "C5NOOFSHEETS",
+    "sequence": 4,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_5",
+    "characteristic_name": "C5MATERIALTYPE",
+    "sequence": 5,
+    "uom": null,
+    "options": [
+      "REF TO SPECIAL NOTE",
+      "PAPER",
+      "POLY",
+      "PU",
+      "PVC CLOTH PAPER",
+      "PVC",
+      "FABRIC",
+      "PEALABLE STICKER",
+      "PERMT STICKER",
+      "WOOD",
+      "BOARD"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_5",
+    "characteristic_name": "C5MILL_SUPPLIERNAME",
+    "sequence": 6,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_5",
+    "characteristic_name": "C5MILL_SUPLIER_QLTY_GRDE_FNSH",
+    "sequence": 7,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_5",
+    "characteristic_name": "C5MATERIALCOLOR_VARIANCE",
+    "sequence": 8,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_5",
+    "characteristic_name": "C5CALIPER_WEIGHT",
+    "sequence": 9,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_5",
+    "characteristic_name": "C5MATERIALUNIT",
+    "sequence": 10,
+    "uom": null,
+    "options": [
+      "REF TO SPECIAL NOTE",
+      "GSM",
+      "MICRONS",
+      "OZ",
+      "MM"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_5",
+    "characteristic_name": "C5PURCHASECERTIFICATION",
+    "sequence": 11,
+    "uom": null,
+    "options": [
+      "FSC MIX",
+      "FSC RECYCLED",
+      "FSC PURE",
+      "FSC MIX AND EUTR",
+      "FSC RECYCLED AND EUTR",
+      "FSC PURE AND EUTR",
+      "EUTR",
+      "NA",
+      "RECYCLED",
+      "BAGGASE",
+      "OTHERS"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_5",
+    "characteristic_name": "C5CERTIFICATIONADDNLNOTE",
+    "sequence": 12,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_5",
+    "characteristic_name": "C5TECHNICALRAWMATERIALSPEC",
+    "sequence": 13,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_5",
+    "characteristic_name": "C5PRINTINGTYPE1",
+    "sequence": 14,
+    "uom": null,
+    "options": [
+      "FLEXO RULING",
+      "NO PRINTING (BLANK)",
+      "OFFSET VARIABLE BOOK PRTG",
+      "OFFSET COMMON PRINT",
+      "REF TO PRINT NOTE",
+      "COATING",
+      "TINTING",
+      "SCREEN PRINTING",
+      "GRAVIER",
+      "DIGITAL PRINTING"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_5",
+    "characteristic_name": "C5NOOFDESIGNS_PRINT_1",
+    "sequence": 15,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_5",
+    "characteristic_name": "C5NOOFCOLOURSF_B_1",
+    "sequence": 16,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_5",
+    "characteristic_name": "C5NAMEOFCOLORSF_B_1",
+    "sequence": 17,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_5",
+    "characteristic_name": "C5RULING_PRINTDESIGNNAME1",
+    "sequence": 18,
+    "uom": null,
+    "options": [
+      "SINGLE LINE",
+      "SINGLE LINE EDGE CUT RULED",
+      "COLLEGE RULED",
+      "COLLEGE EDGE CUT RULED",
+      "WIDE RULED",
+      "WIDE EDGE CUT RULED",
+      "FRENCH/SEYES RULED",
+      "DOUBLE LINE \"PAUTADO\" RULED",
+      "PAUTADO RULED",
+      "NA",
+      "NARROW RULED",
+      "NARROW EDGE CUT RULED"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_5",
+    "characteristic_name": "C5RULE_PRINTCODE1",
+    "sequence": 19,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_5",
+    "characteristic_name": "C5PRINTINGTYPE2",
+    "sequence": 20,
+    "uom": null,
+    "options": [
+      "FLEXO RULING",
+      "NO PRINTING (BLANK)",
+      "OFFSET VARIABLE BOOK PRTG",
+      "OFFSET COMMON PRINT",
+      "REF TO PRINT NOTE",
+      "COATING",
+      "TINTING",
+      "SCREEN PRINTING",
+      "GRAVIER",
+      "DIGITAL PRINTING"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_5",
+    "characteristic_name": "C5NOOFDESIGNS_PRINT",
+    "sequence": 21,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_5",
+    "characteristic_name": "C5NOOFCOLOURSF_B",
+    "sequence": 22,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_5",
+    "characteristic_name": "C5NAMEOFCOLORSF_B",
+    "sequence": 23,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_5",
+    "characteristic_name": "C5RULING_PRINTDESIGNNAME2",
+    "sequence": 24,
+    "uom": null,
+    "options": [
+      "SINGLE LINE",
+      "SINGLE LINE EDGE CUT RULED",
+      "COLLEGE RULED",
+      "COLLEGE EDGE CUT RULED",
+      "WIDE RULED",
+      "WIDE EDGE CUT RULED",
+      "FRENCH/SEYES RULED",
+      "DOUBLE LINE \"PAUTADO\" RULED",
+      "PAUTADO RULED",
+      "NA",
+      "NARROW RULED",
+      "NARROW EDGE CUT RULED"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_5",
+    "characteristic_name": "C5RULE_PRINTCODE2",
+    "sequence": 25,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_5",
+    "characteristic_name": "C5PRINTNOTE",
+    "sequence": 26,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_5",
+    "characteristic_name": "C5FINISHING",
+    "sequence": 27,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_5",
+    "characteristic_name": "C5FINISHINGNOTE",
+    "sequence": 28,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_5",
+    "characteristic_name": "C5SPECIALNOTE",
+    "sequence": 29,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_5",
+    "characteristic_name": "C5ADDITIONALPROCESS",
+    "sequence": 30,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_6",
+    "characteristic_name": "COMPONENT6NAME",
+    "sequence": 1,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_6",
+    "characteristic_name": "C6SIZELENGTH",
+    "sequence": 2,
+    "uom": "CM",
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_6",
+    "characteristic_name": "C6SIZEWIDTH",
+    "sequence": 3,
+    "uom": "CM",
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_6",
+    "characteristic_name": "C6NOOFSHEETS",
+    "sequence": 4,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_6",
+    "characteristic_name": "C6MATERIALTYPE",
+    "sequence": 5,
+    "uom": null,
+    "options": [
+      "REF TO SPECIAL NOTE",
+      "PAPER",
+      "POLY",
+      "PU",
+      "PVC CLOTH PAPER",
+      "PVC",
+      "FABRIC",
+      "PEALABLE STICKER",
+      "PERMT STICKER",
+      "WOOD",
+      "BOARD"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_6",
+    "characteristic_name": "C6MILL_SUPPLIERNAME",
+    "sequence": 6,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_6",
+    "characteristic_name": "C6MILL_SUPLIER_QLTY_GRDE_FNSH",
+    "sequence": 7,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_6",
+    "characteristic_name": "C6MATERIALCOLOR_VARIANCE",
+    "sequence": 8,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_6",
+    "characteristic_name": "C6CALIPER_WEIGHT",
+    "sequence": 9,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_6",
+    "characteristic_name": "C6MATERIALUNIT",
+    "sequence": 10,
+    "uom": null,
+    "options": [
+      "REF TO SPECIAL NOTE",
+      "GSM",
+      "MICRONS",
+      "OZ",
+      "MM"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_6",
+    "characteristic_name": "C6PURCHASECERTIFICATION",
+    "sequence": 11,
+    "uom": null,
+    "options": [
+      "FSC MIX",
+      "FSC RECYCLED",
+      "FSC PURE",
+      "FSC MIX AND EUTR",
+      "FSC RECYCLED AND EUTR",
+      "FSC PURE AND EUTR",
+      "EUTR",
+      "NA",
+      "RECYCLED",
+      "BAGGASE",
+      "OTHERS"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_6",
+    "characteristic_name": "C6CERTIFICATIONADDNLNOTE",
+    "sequence": 12,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_6",
+    "characteristic_name": "C6TECHNICALRAWMATERIALSPEC",
+    "sequence": 13,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_6",
+    "characteristic_name": "C6PRINTINGTYPE1",
+    "sequence": 14,
+    "uom": null,
+    "options": [
+      "FLEXO RULING",
+      "NO PRINTING (BLANK)",
+      "OFFSET VARIABLE BOOK PRTG",
+      "OFFSET COMMON PRINT",
+      "REF TO PRINT NOTE",
+      "COATING",
+      "TINTING",
+      "SCREEN PRINTING",
+      "GRAVIER",
+      "DIGITAL PRINTING"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_6",
+    "characteristic_name": "C6NOOFDESIGNS_PRINT_1",
+    "sequence": 15,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_6",
+    "characteristic_name": "C6NOOFCOLOURSF_B_1",
+    "sequence": 16,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_6",
+    "characteristic_name": "C6NAMEOFCOLORSF_B_1",
+    "sequence": 17,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_6",
+    "characteristic_name": "C6RULING_PRINTDESIGNNAME1",
+    "sequence": 18,
+    "uom": null,
+    "options": [
+      "SINGLE LINE",
+      "SINGLE LINE EDGE CUT RULED",
+      "COLLEGE RULED",
+      "COLLEGE EDGE CUT RULED",
+      "WIDE RULED",
+      "WIDE EDGE CUT RULED",
+      "FRENCH/SEYES RULED",
+      "DOUBLE LINE \"PAUTADO\" RULED",
+      "PAUTADO RULED",
+      "NA",
+      "NARROW RULED",
+      "NARROW EDGE CUT RULED"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_6",
+    "characteristic_name": "C6RULE_PRINTCODE1",
+    "sequence": 19,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_6",
+    "characteristic_name": "C6PRINTINGTYPE2",
+    "sequence": 20,
+    "uom": null,
+    "options": [
+      "FLEXO RULING",
+      "NO PRINTING (BLANK)",
+      "OFFSET VARIABLE BOOK PRTG",
+      "OFFSET COMMON PRINT",
+      "REF TO PRINT NOTE",
+      "COATING",
+      "TINTING",
+      "SCREEN PRINTING",
+      "GRAVIER",
+      "DIGITAL PRINTING"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_6",
+    "characteristic_name": "C6NOOFDESIGNS_PRINT",
+    "sequence": 21,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_6",
+    "characteristic_name": "C6NOOFCOLOURSF_B",
+    "sequence": 22,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_6",
+    "characteristic_name": "C6NAMEOFCOLORSF_B",
+    "sequence": 23,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_6",
+    "characteristic_name": "C6RULING_PRINTDESIGNNAME2",
+    "sequence": 24,
+    "uom": null,
+    "options": [
+      "SINGLE LINE",
+      "SINGLE LINE EDGE CUT RULED",
+      "COLLEGE RULED",
+      "COLLEGE EDGE CUT RULED",
+      "WIDE RULED",
+      "WIDE EDGE CUT RULED",
+      "FRENCH/SEYES RULED",
+      "DOUBLE LINE \"PAUTADO\" RULED",
+      "PAUTADO RULED",
+      "NA",
+      "NARROW RULED",
+      "NARROW EDGE CUT RULED"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_6",
+    "characteristic_name": "C6RULE_PRINTCODE2",
+    "sequence": 25,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_6",
+    "characteristic_name": "C6PRINTNOTE",
+    "sequence": 26,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_6",
+    "characteristic_name": "C6FINISHING",
+    "sequence": 27,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_6",
+    "characteristic_name": "C6FINISHINGNOTE",
+    "sequence": 28,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_6",
+    "characteristic_name": "C6SPECIALNOTE",
+    "sequence": 29,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_6",
+    "characteristic_name": "C6ADDITIONALPROCESS",
+    "sequence": 30,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_7",
+    "characteristic_name": "C7PRODUCT_TYPE",
+    "sequence": 1,
+    "uom": null,
+    "options": [
+      "CANVAS FRAME",
+      "CANVAS PANNEL"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_7",
+    "characteristic_name": "C7CANVAS_MATERIAL",
+    "sequence": 2,
+    "uom": null,
+    "options": [
+      "PLAIN WEAVE",
+      "DUCK WEAVE",
+      "SPECIAL"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_7",
+    "characteristic_name": "C7CONSTRUCTION_REEDXPICK",
+    "sequence": 3,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_7",
+    "characteristic_name": "C7COUNT_REEDXPICK",
+    "sequence": 4,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_7",
+    "characteristic_name": "C7NOTE_FOR_CANVAS",
+    "sequence": 5,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_7",
+    "characteristic_name": "C7MATERIAL_TYPE",
+    "sequence": 6,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_7",
+    "characteristic_name": "C7MILL_SUPPLIERNAME",
+    "sequence": 7,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_7",
+    "characteristic_name": "C7MILL_SUPLIER_QLTY_GRDE_FNSH",
+    "sequence": 8,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_7",
+    "characteristic_name": "C7MATERIAL_COLOUR",
+    "sequence": 9,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_7",
+    "characteristic_name": "C7MATERIAL_CERTIFICATION",
+    "sequence": 10,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_7",
+    "characteristic_name": "C7FINISHING",
+    "sequence": 11,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_7",
+    "characteristic_name": "C7CALIPER_WEIGHT",
+    "sequence": 12,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_7",
+    "characteristic_name": "C7MATERIALUNIT",
+    "sequence": 13,
+    "uom": null,
+    "options": [
+      "REF TO SPECIAL NOTE",
+      "GSM",
+      "MICRONS",
+      "OZ",
+      "MM",
+      "NA"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_7",
+    "characteristic_name": "C7PANNEL_TYPE",
+    "sequence": 14,
+    "uom": null,
+    "options": [
+      "BOARD",
+      "MDF"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_7",
+    "characteristic_name": "C71NCALIPER_WEIGHT",
+    "sequence": 15,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_7",
+    "characteristic_name": "C71MATERIALUNIT",
+    "sequence": 16,
+    "uom": null,
+    "options": [
+      "REF TO SPECIAL NOTE",
+      "GSM",
+      "MICRONS",
+      "OZ",
+      "MM",
+      "NA"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_7",
+    "characteristic_name": "C7MILL_SUPPLIERNAME2",
+    "sequence": 17,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_7",
+    "characteristic_name": "C7MILL_SUPLIER_QLTY_GRDE_FNSH2",
+    "sequence": 18,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_7",
+    "characteristic_name": "C7MDF_CERT",
+    "sequence": 19,
+    "uom": null,
+    "options": [
+      "CARB-P2",
+      "CARB-P2+PROP65",
+      "PROP65"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_7",
+    "characteristic_name": "C7SPECIAL_NOTE",
+    "sequence": 20,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_7",
+    "characteristic_name": "C7FRAME_MAT_TYPE",
+    "sequence": 21,
+    "uom": null,
+    "options": [
+      "PINE WOOD",
+      "PAULOWNIA"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_7",
+    "characteristic_name": "C7FRAME_INCH",
+    "sequence": 22,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_7",
+    "characteristic_name": "C7FRAME_THICKNESS",
+    "sequence": 23,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_7",
+    "characteristic_name": "C7FRAME_BACK_WIDTH",
+    "sequence": 24,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_COMPONENT_7",
+    "characteristic_name": "C7FRAME_TYPE",
+    "sequence": 25,
+    "uom": null,
+    "options": [
+      "TOUNGE & GROVE WITH WEDGES",
+      "TOUNGE & GROVE",
+      "MITERED"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_7",
+    "characteristic_name": "C7BEVEL_REQUIRED",
+    "sequence": 26,
+    "uom": null,
+    "options": [
+      "YES",
+      "NO"
+    ]
+  },
+  {
+    "class_name": "NB_COMPONENT_7",
+    "characteristic_name": "C7FRAME_CERT",
+    "sequence": 27,
+    "uom": null,
+    "options": [
+      "FSC",
+      "EUTR",
+      "OTHERS"
+    ]
+  },
+  {
+    "class_name": "NB_DIVIDER_SPECS",
+    "characteristic_name": "NOOFDIVIDERSOFTYPE1",
+    "sequence": 1,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_DIVIDER_SPECS",
+    "characteristic_name": "DIVIDERSTYPE1",
+    "sequence": 2,
+    "uom": null,
+    "options": [
+      "FIXED",
+      "REPOSITIONABLE",
+      "LOOSE"
+    ]
+  },
+  {
+    "class_name": "NB_DIVIDER_SPECS",
+    "characteristic_name": "DIVIDERPOSITION1",
+    "sequence": 3,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_DIVIDER_SPECS",
+    "characteristic_name": "TABSTYLEOF1STDIVIDERS",
+    "sequence": 4,
+    "uom": null,
+    "options": [
+      "NO TAB",
+      "REGULAR TAB",
+      "INSERTABLE FOLDED TAB",
+      "INSERTABLE SEALED TAB",
+      "ALONG WITH POCKET",
+      "MYLAR TABS",
+      "REF ADDITIONAL INFO"
+    ]
+  },
+  {
+    "class_name": "NB_DIVIDER_SPECS",
+    "characteristic_name": "POCKETSTYLEOF1STDIVIDERS",
+    "sequence": 5,
+    "uom": null,
+    "options": [
+      "NO POCKET",
+      "SINGLE POCKET",
+      "TWO PART SINGLE POCKET",
+      "F&B TWO POCKETS",
+      "TWO PART DOUBLE POCKET",
+      "DOUBLE WALL POCKET TWO SIDES",
+      "FULL SLEEVE",
+      "REF ADDITIONAL INFO"
+    ]
+  },
+  {
+    "class_name": "NB_DIVIDER_SPECS",
+    "characteristic_name": "DIVIDER1SIZEINCLTABLENGTH",
+    "sequence": 6,
+    "uom": "CM",
+    "options": []
+  },
+  {
+    "class_name": "NB_DIVIDER_SPECS",
+    "characteristic_name": "DIVIDER1SIZEWIDTH",
+    "sequence": 7,
+    "uom": "CM",
+    "options": []
+  },
+  {
+    "class_name": "NB_DIVIDER_SPECS",
+    "characteristic_name": "DIVIDER1SIZEINCLTABWIDTH",
+    "sequence": 8,
+    "uom": "CM",
+    "options": []
+  },
+  {
+    "class_name": "NB_DIVIDER_SPECS",
+    "characteristic_name": "DIVIDERMATERIALTYPE1",
+    "sequence": 9,
+    "uom": null,
+    "options": [
+      "REF SPL NOTE",
+      "PAPER",
+      "POLY"
+    ]
+  },
+  {
+    "class_name": "NB_DIVIDER_SPECS",
+    "characteristic_name": "D1MILL_SUPPLIER_SNAME",
+    "sequence": 10,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_DIVIDER_SPECS",
+    "characteristic_name": "D1MILL_SUPLIER_QLTY_GRDE_FNSH",
+    "sequence": 11,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_DIVIDER_SPECS",
+    "characteristic_name": "D1MATERIALCOLOR_VARIANCE",
+    "sequence": 12,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_DIVIDER_SPECS",
+    "characteristic_name": "D1DIVIDERCALIPER_WEIGHT",
+    "sequence": 13,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_DIVIDER_SPECS",
+    "characteristic_name": "D1DIVIDERMATERIALUNIT",
+    "sequence": 14,
+    "uom": null,
+    "options": [
+      "REF TO SPECIAL NOTE",
+      "GSM",
+      "MICRONS",
+      "OZ",
+      "MM"
+    ]
+  },
+  {
+    "class_name": "NB_DIVIDER_SPECS",
+    "characteristic_name": "D1DIVIDERPURCHASECERT",
+    "sequence": 15,
+    "uom": null,
+    "options": [
+      "FSC MIX",
+      "FSC RECYCLED",
+      "FSC PURE",
+      "FSC MIX AND EUTR",
+      "FSC RECYCLED AND EUTR",
+      "FSC PURE AND EUTR",
+      "EUTR",
+      "NA",
+      "RECYCLED",
+      "BAGGASE",
+      "OTHERS"
+    ]
+  },
+  {
+    "class_name": "NB_DIVIDER_SPECS",
+    "characteristic_name": "D1DIVIDERTECHMATERIALSPEC",
+    "sequence": 16,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_DIVIDER_SPECS",
+    "characteristic_name": "D1PRINTINGTYPE",
+    "sequence": 17,
+    "uom": null,
+    "options": [
+      "FLEXO RULING",
+      "NO PRINTING (BLANK)",
+      "OFFSET VARIABLE BOOK PRTG",
+      "OFFSET COMMON PRINT",
+      "REF TO PRINT NOTE",
+      "COATING",
+      "TINTING",
+      "SCREEN PRINTING",
+      "GRAVIER",
+      "DIGITAL PRINTING"
+    ]
+  },
+  {
+    "class_name": "NB_DIVIDER_SPECS",
+    "characteristic_name": "D1NOOFDESIGNS_PRINT",
+    "sequence": 18,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_DIVIDER_SPECS",
+    "characteristic_name": "D1NOOFCOLOURSF_B",
+    "sequence": 19,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_DIVIDER_SPECS",
+    "characteristic_name": "D1NAMEOFCOLORSF_B",
+    "sequence": 20,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_DIVIDER_SPECS",
+    "characteristic_name": "D1PRINTFINISHING",
+    "sequence": 21,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_DIVIDER_SPECS",
+    "characteristic_name": "D1ADDITIONALINFOFORDIVIDER",
+    "sequence": 22,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_DIVIDER_SPECS",
+    "characteristic_name": "D1NOOFDIVIDERSOFTYPE2",
+    "sequence": 23,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_DIVIDER_SPECS",
+    "characteristic_name": "DIVIDERSTYPE2",
+    "sequence": 24,
+    "uom": null,
+    "options": [
+      "FIXED",
+      "REPOSITIONABLE",
+      "LOOSE"
+    ]
+  },
+  {
+    "class_name": "NB_DIVIDER_SPECS",
+    "characteristic_name": "DIVIDERPOSITION2",
+    "sequence": 25,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_DIVIDER_SPECS",
+    "characteristic_name": "TABSTYLEOF2NDDIVIDERS",
+    "sequence": 26,
+    "uom": null,
+    "options": [
+      "NO TAB",
+      "REGULAR TAB",
+      "INSERTABLE FOLDED TAB",
+      "INSERTABLE SEALED TAB",
+      "ALONG WITH POCKET",
+      "MYLAR TABS",
+      "REF ADDITIONAL INFO"
+    ]
+  },
+  {
+    "class_name": "NB_DIVIDER_SPECS",
+    "characteristic_name": "POCKETSTYLEOFDIVIDERS",
+    "sequence": 27,
+    "uom": null,
+    "options": [
+      "NO POCKET",
+      "SINGLE POCKET",
+      "TWO PART SINGLE POCKET",
+      "F&B TWO POCKETS",
+      "TWO PART DOUBLE POCKET",
+      "DOUBLE WALL POCKET TWO SIDES",
+      "FULL SLEEVE",
+      "REF ADDITIONAL INFO"
+    ]
+  },
+  {
+    "class_name": "NB_DIVIDER_SPECS",
+    "characteristic_name": "DIVIDERSIZEINCLTABWIDTH",
+    "sequence": 28,
+    "uom": "CM",
+    "options": []
+  },
+  {
+    "class_name": "NB_DIVIDER_SPECS",
+    "characteristic_name": "DIVIDERSIZEINCLTABLENGTH",
+    "sequence": 29,
+    "uom": "CM",
+    "options": []
+  },
+  {
+    "class_name": "NB_DIVIDER_SPECS",
+    "characteristic_name": "DIVIDERMATERIALTYPE2",
+    "sequence": 30,
+    "uom": null,
+    "options": [
+      "REF SPL NOTE",
+      "PAPER",
+      "POLY"
+    ]
+  },
+  {
+    "class_name": "NB_DIVIDER_SPECS",
+    "characteristic_name": "D2MILL_SUPPLIER_SNAME",
+    "sequence": 31,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_DIVIDER_SPECS",
+    "characteristic_name": "D2MILL_SUPLIER_QLTY_GRDE_FNSH",
+    "sequence": 32,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_DIVIDER_SPECS",
+    "characteristic_name": "D2MATERIALCOLOR_VARIANCE",
+    "sequence": 33,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_DIVIDER_SPECS",
+    "characteristic_name": "D2DIVIDERCALIPER_WEIGHT",
+    "sequence": 34,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_DIVIDER_SPECS",
+    "characteristic_name": "D2DIVIDERMATERIALUNIT",
+    "sequence": 35,
+    "uom": null,
+    "options": [
+      "REF TO SPECIAL NOTE",
+      "GSM",
+      "MICRONS",
+      "OZ",
+      "MM"
+    ]
+  },
+  {
+    "class_name": "NB_DIVIDER_SPECS",
+    "characteristic_name": "D2DIVIDERPURCHASECERT",
+    "sequence": 36,
+    "uom": null,
+    "options": [
+      "FSC MIX",
+      "FSC RECYCLED",
+      "FSC PURE",
+      "FSC MIX AND EUTR",
+      "FSC RECYCLED AND EUTR",
+      "FSC PURE AND EUTR",
+      "EUTR",
+      "NA",
+      "RECYCLED",
+      "BAGGASE",
+      "OTHERS"
+    ]
+  },
+  {
+    "class_name": "NB_DIVIDER_SPECS",
+    "characteristic_name": "D2DIVIDERTECHMATERIALSPEC",
+    "sequence": 37,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_DIVIDER_SPECS",
+    "characteristic_name": "D2PRINTINGTYPE",
+    "sequence": 38,
+    "uom": null,
+    "options": [
+      "FLEXO RULING",
+      "NO PRINTING (BLANK)",
+      "OFFSET VARIABLE BOOK PRTG",
+      "OFFSET COMMON PRINT",
+      "REF TO PRINT NOTE",
+      "COATING",
+      "TINTING",
+      "SCREEN PRINTING",
+      "GRAVIER",
+      "DIGITAL PRINTING"
+    ]
+  },
+  {
+    "class_name": "NB_DIVIDER_SPECS",
+    "characteristic_name": "D2NOOFDESIGNS_PRINT",
+    "sequence": 39,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_DIVIDER_SPECS",
+    "characteristic_name": "D2NOOFCOLOURSF_B",
+    "sequence": 40,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_DIVIDER_SPECS",
+    "characteristic_name": "D2NAMEOFCOLORSF_B",
+    "sequence": 41,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_DIVIDER_SPECS",
+    "characteristic_name": "D2PRINTFINISHING",
+    "sequence": 42,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "NB_DIVIDER_SPECS",
+    "characteristic_name": "D2ADDITIONALINFOFORDIVIDER",
+    "sequence": 43,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "PACKAGING_SPECS_1",
+    "characteristic_name": "PACKAGETYPE1",
+    "sequence": 1,
+    "uom": null,
+    "options": [
+      "REF TO SPL NOTE",
+      "INSERTER",
+      "BELLY BAND",
+      "INFO SHEET",
+      "HEADER CARD",
+      "HANG TAG",
+      "STICKER",
+      "NA",
+      "TRAY",
+      "SHIRT BOX",
+      "ENVELOPE PACKING",
+      "PIZZA BOX",
+      "PEELABLE STICKER",
+      "PERMANENT STICKER",
+      "TRANSPARENT STICKER",
+      "SRP",
+      "MAILER/ROLL END TUCK BOX",
+      "TAFFETA LABEL",
+      "CORRUGATED BOX"
+    ]
+  },
+  {
+    "class_name": "PACKAGING_SPECS_1",
+    "characteristic_name": "P1_APPLICATION",
+    "sequence": 2,
+    "uom": null,
+    "options": [
+      "AFTER PRODUCT IS BOUND",
+      "BEFORE PRODUCT IS BOUND",
+      "REF NOTE",
+      "NA"
+    ]
+  },
+  {
+    "class_name": "PACKAGING_SPECS_1",
+    "characteristic_name": "P1_POSITIONING",
+    "sequence": 3,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "PACKAGING_SPECS_1",
+    "characteristic_name": "PACKAGING1SIZELENGTH",
+    "sequence": 4,
+    "uom": "CM",
+    "options": []
+  },
+  {
+    "class_name": "PACKAGING_SPECS_1",
+    "characteristic_name": "PACKAGING1SIZEWIDTH",
+    "sequence": 5,
+    "uom": "CM",
+    "options": []
+  },
+  {
+    "class_name": "PACKAGING_SPECS_1",
+    "characteristic_name": "PACKAGING1MATERIALTYPE",
+    "sequence": 6,
+    "uom": null,
+    "options": [
+      "REF TO SPL NOTE",
+      "PAPER",
+      "POLY",
+      "PEALABLE STICKER",
+      "PERMANENT STICKER",
+      "SYNTHETIC STICKER",
+      "PVC",
+      "FABRIC"
+    ]
+  },
+  {
+    "class_name": "PACKAGING_SPECS_1",
+    "characteristic_name": "PACKAGINGMILL_SUPPLIERNAME",
+    "sequence": 7,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "PACKAGING_SPECS_1",
+    "characteristic_name": "PCKGMILL_SUPPLIER_QLTY_GRADE",
+    "sequence": 8,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "PACKAGING_SPECS_1",
+    "characteristic_name": "CALIPER_WEIGHT",
+    "sequence": 9,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "PACKAGING_SPECS_1",
+    "characteristic_name": "MATERIALUNIT",
+    "sequence": 10,
+    "uom": null,
+    "options": [
+      "REF TO SPECIAL NOTE",
+      "GSM",
+      "MICRONS",
+      "OZ",
+      "MM"
+    ]
+  },
+  {
+    "class_name": "PACKAGING_SPECS_1",
+    "characteristic_name": "P1PRINTINGTYPE",
+    "sequence": 11,
+    "uom": null,
+    "options": [
+      "FLEXO RULING",
+      "NO PRINTING (BLANK)",
+      "OFFSET VARIABLE BOOK PRTG",
+      "OFFSET COMMON PRINT",
+      "REF TO PRINT NOTE",
+      "COATING",
+      "TINTING",
+      "SCREEN PRINTING",
+      "GRAVIER",
+      "DIGITAL PRINTING"
+    ]
+  },
+  {
+    "class_name": "PACKAGING_SPECS_1",
+    "characteristic_name": "NOOFCOLOURSF_B",
+    "sequence": 12,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "PACKAGING_SPECS_1",
+    "characteristic_name": "NAMEOFCOLORSF_B",
+    "sequence": 13,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "PACKAGING_SPECS_1",
+    "characteristic_name": "PACKAGING1FINISHING",
+    "sequence": 14,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "PACKAGING_SPECS_1",
+    "characteristic_name": "ADDITIONALPROCESS",
+    "sequence": 15,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "PACKAGING_SPECS_1",
+    "characteristic_name": "PACKAGING1SPECIALNOTE",
+    "sequence": 16,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "PACKAGING_SPECS_1",
+    "characteristic_name": "PACKAGETYPE2",
+    "sequence": 17,
+    "uom": null,
+    "options": [
+      "REF TO SPL NOTE",
+      "INSERTER",
+      "BELLY BAND",
+      "INFO SHEET",
+      "HEADER CARD",
+      "HANG TAG",
+      "STICKER",
+      "NA",
+      "TRAY",
+      "SHIRT BOX",
+      "ENVELOPE PACKING",
+      "PIZZA BOX",
+      "PEELABLE STICKER",
+      "PERMANENT STICKER",
+      "TRANSPARENT STICKER",
+      "MAILER/ROLL END TUCK BOX",
+      "RFID STICKER",
+      "SEPERATOR"
+    ]
+  },
+  {
+    "class_name": "PACKAGING_SPECS_1",
+    "characteristic_name": "P2_APPLICATION",
+    "sequence": 18,
+    "uom": null,
+    "options": [
+      "AFTER PRODUCT IS BOUND",
+      "BEFORE PRODUCT IS BOUND",
+      "REF NOTE",
+      "NA"
+    ]
+  },
+  {
+    "class_name": "PACKAGING_SPECS_1",
+    "characteristic_name": "P2_POSITIONING",
+    "sequence": 19,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "PACKAGING_SPECS_1",
+    "characteristic_name": "PACKAGING2SIZELENGTH",
+    "sequence": 20,
+    "uom": "CM",
+    "options": []
+  },
+  {
+    "class_name": "PACKAGING_SPECS_1",
+    "characteristic_name": "PACKAGING2SIZEWIDTH",
+    "sequence": 21,
+    "uom": "CM",
+    "options": []
+  },
+  {
+    "class_name": "PACKAGING_SPECS_1",
+    "characteristic_name": "PACKAGING2MATERIALTYPE",
+    "sequence": 22,
+    "uom": null,
+    "options": [
+      "REF TO SPL NOTE",
+      "PAPER",
+      "POLY",
+      "PEALABLE STICKER"
+    ]
+  },
+  {
+    "class_name": "PACKAGING_SPECS_1",
+    "characteristic_name": "PACKAGINGMILL_SUPPLIERNAME2",
+    "sequence": 23,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "PACKAGING_SPECS_1",
+    "characteristic_name": "PCKGMILL_SUPPLIER_QLTY_GRADE2",
+    "sequence": 24,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "PACKAGING_SPECS_1",
+    "characteristic_name": "CALIPER_WEIGHT2",
+    "sequence": 25,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "PACKAGING_SPECS_1",
+    "characteristic_name": "MATERIALUNIT2",
+    "sequence": 26,
+    "uom": null,
+    "options": [
+      "REF TO SPECIAL NOTE",
+      "GSM",
+      "MICRONS",
+      "OZ",
+      "MM"
+    ]
+  },
+  {
+    "class_name": "PACKAGING_SPECS_1",
+    "characteristic_name": "P2PRINTINGTYPE",
+    "sequence": 27,
+    "uom": null,
+    "options": [
+      "FLEXO RULING",
+      "NO PRINTING (BLANK)",
+      "OFFSET VARIABLE BOOK PRTG",
+      "OFFSET COMMON PRINT",
+      "REF TO PRINT NOTE",
+      "COATING",
+      "TINTING",
+      "SCREEN PRINTING",
+      "GRAVIER",
+      "DIGITAL PRINTING"
+    ]
+  },
+  {
+    "class_name": "PACKAGING_SPECS_1",
+    "characteristic_name": "NOOFCOLOURSF_B2",
+    "sequence": 28,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "PACKAGING_SPECS_1",
+    "characteristic_name": "NAMEOFCOLORSF_B2",
+    "sequence": 29,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "PACKAGING_SPECS_1",
+    "characteristic_name": "PACKAGING2FINISHING",
+    "sequence": 30,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "PACKAGING_SPECS_1",
+    "characteristic_name": "ADDITIONALPROCESS2",
+    "sequence": 31,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "PACKAGING_SPECS_1",
+    "characteristic_name": "PACKAGING2SPECIALNOTE",
+    "sequence": 32,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "RULLING_DETAILS",
+    "characteristic_name": "TOP_MARGIN",
+    "sequence": 1,
+    "uom": "MM",
+    "options": []
+  },
+  {
+    "class_name": "RULLING_DETAILS",
+    "characteristic_name": "TOP_MARGIN_COLOR",
+    "sequence": 2,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "RULLING_DETAILS",
+    "characteristic_name": "LEFT_MARGIN",
+    "sequence": 3,
+    "uom": "MM",
+    "options": []
+  },
+  {
+    "class_name": "RULLING_DETAILS",
+    "characteristic_name": "LEFT_MARGIN_COLOR",
+    "sequence": 4,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "RULLING_DETAILS",
+    "characteristic_name": "RIGHT_MARGIN",
+    "sequence": 5,
+    "uom": "MM",
+    "options": []
+  },
+  {
+    "class_name": "RULLING_DETAILS",
+    "characteristic_name": "RIGHT_MARGIN_COLOR",
+    "sequence": 6,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "RULLING_DETAILS",
+    "characteristic_name": "BOTTOM_MARGIN",
+    "sequence": 7,
+    "uom": "MM",
+    "options": []
+  },
+  {
+    "class_name": "RULLING_DETAILS",
+    "characteristic_name": "BOTTOM_MARGIN_COLOR",
+    "sequence": 8,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "RULLING_DETAILS",
+    "characteristic_name": "CENTER_MARGIN_COLOR",
+    "sequence": 9,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "RULLING_DETAILS",
+    "characteristic_name": "RULLING_PDF",
+    "sequence": 10,
+    "uom": null,
+    "options": [
+      "YES",
+      "NO"
+    ]
+  },
+  {
+    "class_name": "RULLING_DETAILS",
+    "characteristic_name": "SPECIAL_RULING",
+    "sequence": 11,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "RULLING_DETAILS",
+    "characteristic_name": "INSTRUCTION_RULLING",
+    "sequence": 12,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "RULLING_DETAILS",
+    "characteristic_name": "RULLING_DISTANCE",
+    "sequence": 13,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "RULLING_DETAILS",
+    "characteristic_name": "RULLING_SHADE",
+    "sequence": 14,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "PACKING_DETAILS",
+    "characteristic_name": "RETAILPACK_SALEUNITPACK",
+    "sequence": 1,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "PACKING_DETAILS",
+    "characteristic_name": "RETAILPACKTYPE",
+    "sequence": 2,
+    "uom": null,
+    "options": [
+      "NA",
+      "SHRINK WRAP",
+      "UNIV CARTON",
+      "PDQ",
+      "PERFORATED CARTON",
+      "SHIRT BOX",
+      "PEEL & SEAL BAG",
+      "HEAT SEAL BAG",
+      "ZIPPER BAG",
+      "TRAY",
+      "1 PLY BOX",
+      "BLISTER",
+      "CORRUGATED SHEET",
+      "PIZZA STYLE CORRUG BOX",
+      "REF TO SPL INSTRUCT",
+      "POLY BOX W/CLOSURE",
+      "OPP BAG",
+      "POLY BAG",
+      "MAIL/ROLL END TUCK BOX"
+    ]
+  },
+  {
+    "class_name": "PACKING_DETAILS",
+    "characteristic_name": "MATERIAL_SPECS",
+    "sequence": 3,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "PACKING_DETAILS",
+    "characteristic_name": "PRINTINGINSTRUCTION",
+    "sequence": 4,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "PACKING_DETAILS",
+    "characteristic_name": "DESIGN_COLORASSORTMENT",
+    "sequence": 5,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "PACKING_DETAILS",
+    "characteristic_name": "SPECIALINSTRUCTIONS",
+    "sequence": 6,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "PACKING_DETAILS",
+    "characteristic_name": "INNERPACKINGNOOFPCS",
+    "sequence": 7,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "PACKING_DETAILS",
+    "characteristic_name": "INNERPACKINGTYPE",
+    "sequence": 8,
+    "uom": null,
+    "options": [
+      "NA",
+      "SHRINK WRAP",
+      "UNIV CARTON",
+      "PDQ",
+      "PERFORATED CARTON",
+      "SHIRT BOX",
+      "PEEL & SEAL BAG",
+      "HEAT SEAL BAG",
+      "ZIPPER BAG",
+      "TRAY",
+      "1 PLY BOX",
+      "BLISTER",
+      "CORRUGATED SHEET",
+      "PIZZA STYLE CORRUG BOX",
+      "REF TO SPL INSTRUCT",
+      "POLY BOX W/CLOSURE",
+      "OPP BAG",
+      "POLY BAG",
+      "MAIL/ROLL END TUCK BOX"
+    ]
+  },
+  {
+    "class_name": "PACKING_DETAILS",
+    "characteristic_name": "INNERMATERIALSPECS",
+    "sequence": 9,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "PACKING_DETAILS",
+    "characteristic_name": "INNERSPECIALINSTRUCTIONS",
+    "sequence": 10,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "PACKING_DETAILS",
+    "characteristic_name": "INNERPRINTINGINSTRUCTION",
+    "sequence": 11,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "PACKING_DETAILS",
+    "characteristic_name": "I_WHNUMBEROFSALEUNITS",
+    "sequence": 12,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "PACKING_DETAILS",
+    "characteristic_name": "I_WHINNERPACKTYPE",
+    "sequence": 13,
+    "uom": null,
+    "options": [
+      "NA",
+      "SHRINK WRAP",
+      "UNIV CARTON",
+      "PDQ",
+      "PERFORATED CARTON",
+      "SHIRT BOX",
+      "PEEL & SEAL BAG",
+      "HEAT SEAL BAG",
+      "ZIPPER BAG",
+      "TRAY",
+      "1 PLY BOX",
+      "BLISTER",
+      "CORRUGATED SHEET",
+      "PIZZA STYLE CORRUG BOX",
+      "REF TO SPL INSTRUCT",
+      "PE BAG",
+      "PDQ WITH UNIVERSAL BOX",
+      "PDQ WITH CAP"
+    ]
+  },
+  {
+    "class_name": "PACKING_DETAILS",
+    "characteristic_name": "MATERIAL_SPECS2",
+    "sequence": 14,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "PACKING_DETAILS",
+    "characteristic_name": "I_WHPRINTINGINSTRUCTION",
+    "sequence": 15,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "PACKING_DETAILS",
+    "characteristic_name": "DESIGN_COLORASSORTMENT2",
+    "sequence": 16,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "PACKING_DETAILS",
+    "characteristic_name": "I_WHSPECIALINSTRUCTIONS",
+    "sequence": 17,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "PACKING_DETAILS",
+    "characteristic_name": "MASTERNUMBEROFSALEUNITS",
+    "sequence": 18,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "PACKING_DETAILS",
+    "characteristic_name": "MASTERPACKTYPE",
+    "sequence": 19,
+    "uom": null,
+    "options": [
+      "STRAIGHT ON A PALLET",
+      "UNIV CARTON",
+      "PDQ",
+      "PERFORATED CARTON",
+      "CORRUGATED SHEET",
+      "STORE READY LARGE DISPLAY CTN",
+      "REF TO SPL INSTRUCT",
+      "PDQ WITH CAP"
+    ]
+  },
+  {
+    "class_name": "PACKING_DETAILS",
+    "characteristic_name": "MASTERMATERIAL_SPECS",
+    "sequence": 20,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "PACKING_DETAILS",
+    "characteristic_name": "MASTERSTACKING_ASSORTTYPE",
+    "sequence": 21,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "PACKING_DETAILS",
+    "characteristic_name": "MASTERMARK_PRINTINSTR_POS",
+    "sequence": 22,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "PACKING_DETAILS",
+    "characteristic_name": "MASTERSPECIALINSTRUCTIONS",
+    "sequence": 23,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "PACKING_DETAILS",
+    "characteristic_name": "STUFFINGTYPE",
+    "sequence": 24,
+    "uom": null,
+    "options": [
+      "SLIP SHEET",
+      "FUMIGATED PALLETS",
+      "FLOOR LOADED",
+      "REF TO SPECIAL INSTRUCTION"
+    ]
+  },
+  {
+    "class_name": "PACKING_DETAILS",
+    "characteristic_name": "MAXPALLETSIZEALLOW_LXWXH",
+    "sequence": 25,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "PACKING_DETAILS",
+    "characteristic_name": "MAXPALLETWEIGHT",
+    "sequence": 26,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "PACKING_DETAILS",
+    "characteristic_name": "SPECIALINSTRUCTIONS2",
+    "sequence": 27,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "PACKING_DETAILS",
+    "characteristic_name": "TAPPINGDETAILS",
+    "sequence": 28,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "PACKING_DETAILS",
+    "characteristic_name": "PRODUCTBARCODE",
+    "sequence": 29,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "PACKING_DETAILS",
+    "characteristic_name": "INNERBARCODE",
+    "sequence": 30,
+    "uom": null,
+    "options": []
+  },
+  {
+    "class_name": "PACKING_DETAILS",
+    "characteristic_name": "MASTERBARCODE",
+    "sequence": 31,
+    "uom": null,
+    "options": []
+  }
+]

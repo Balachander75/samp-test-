@@ -1,0 +1,6486 @@
+{
+  "classes": {
+    "PRODUCT_CLASS": {
+      "displayName": "PRODUCT CLASS",
+      "sequence": 1
+    },
+    "NB_BINDING": {
+      "displayName": "BINDING SPECIFICATION",
+      "sequence": 2
+    },
+    "NB_COMPONENT_1": {
+      "displayName": "COMPONENT 1",
+      "sequence": 3
+    },
+    "NB_COMPONENT_2": {
+      "displayName": "COMPONENT 2",
+      "sequence": 4
+    },
+    "NB_COMPONENT_3": {
+      "displayName": "COMPONENT 3",
+      "sequence": 5
+    },
+    "NB_COMPONENT_4": {
+      "displayName": "COMPONENT 4",
+      "sequence": 6
+    },
+    "NB_COMPONENT_5": {
+      "displayName": "COMPONENT 5",
+      "sequence": 7
+    },
+    "NB_COMPONENT_6": {
+      "displayName": "COMPONENT 6",
+      "sequence": 8
+    },
+    "NB_COMPONENT_7": {
+      "displayName": "COMPONENT 7",
+      "sequence": 9
+    },
+    "NB_DIVIDER_SPECS": {
+      "displayName": "DIVIDER SPECIFICATION",
+      "sequence": 10
+    },
+    "PACKAGING_SPECS_1": {
+      "displayName": "PACKAGING SPECIFICATION 1",
+      "sequence": 11
+    },
+    "PACKING_DETAILS": {
+      "displayName": "PACKING DETAILS",
+      "sequence": 12
+    },
+    "RULLING_DETAILS": {
+      "displayName": "RULING DETAILS",
+      "sequence": 13
+    }
+  },
+  "characteristics": {
+    "PRODUCTCLOSESIZELENGTH": {
+      "displayName": "PRODUCT CLOSE SIZE LENGTH",
+      "className": "PRODUCT_CLASS",
+      "sequence": 1,
+      "type": "NUM",
+      "tabNote": "Concatenate and display with Seprator as \"x\""
+    },
+    "PRODUCTCLOSESIZEWIDTH": {
+      "displayName": "PRODUCT CLOSE SIZE WIDTH",
+      "className": "PRODUCT_CLASS",
+      "sequence": 2,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "FSCEUTR_REQUIREMENT": {
+      "displayName": "FSC / EUTR / EUDR REQUIREMENT",
+      "className": "PRODUCT_CLASS",
+      "sequence": 3,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "CLAIMAPPLICABLETOPRODUCT": {
+      "displayName": "CLAIM APPLICABLE TO PRODUCT",
+      "className": "PRODUCT_CLASS",
+      "sequence": 4,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "PERCENTAGE_TYPE": {
+      "displayName": "PERCENTAGE & TYPE",
+      "className": "PRODUCT_CLASS",
+      "sequence": 5,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "OVERALLPRODUCTNOTE": {
+      "displayName": "OVER ALL PRODUCT NOTE",
+      "className": "PRODUCT_CLASS",
+      "sequence": 6,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "BINDINGTYPE1": {
+      "displayName": "BINDING TYPE  1",
+      "className": "NB_BINDING",
+      "sequence": 1,
+      "type": "CHAR",
+      "tabNote": "This Value to be displayed as Tab Name"
+    },
+    "BINDINGTYPE2": {
+      "displayName": "BINDING TYPE  2",
+      "className": "NB_BINDING",
+      "sequence": 2,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "OPENINGOFPRODUCT": {
+      "displayName": "OPENING OF PRODUCT",
+      "className": "NB_BINDING",
+      "sequence": 3,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "BINDINGSIDE": {
+      "displayName": "BINDING SIDE",
+      "className": "NB_BINDING",
+      "sequence": 4,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "BINDINGMATERIAL": {
+      "displayName": "BINDING MATERIAL",
+      "className": "NB_BINDING",
+      "sequence": 5,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "BINDINGCOLOR_STYLE": {
+      "displayName": "MATERIAL COLOR & STYLE",
+      "className": "NB_BINDING",
+      "sequence": 6,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "SPECIALBINDING": {
+      "displayName": "SPECIAL BINDING",
+      "className": "NB_BINDING",
+      "sequence": 7,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "ADDITIONALPROCESSONBINDING": {
+      "displayName": "PROCESS ON BINDING MATERIAL",
+      "className": "NB_BINDING",
+      "sequence": 8,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "SPIRAL-WIROBINDINGHOLEPUNCH": {
+      "displayName": "SPIRAL/WIRO BINDING HOLE PUNCH",
+      "className": "NB_BINDING",
+      "sequence": 9,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "FILINGHOLEPUNCHDIADISTANCE": {
+      "displayName": "FILING HOLE PUNCH DIA DISTANCE",
+      "className": "NB_BINDING",
+      "sequence": 10,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "NOOFFILINGHOLESREQUIRE": {
+      "displayName": "NO OF FILING HOLES REQUIRE",
+      "className": "NB_BINDING",
+      "sequence": 11,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "FILLINGHOLESREQUIREDON": {
+      "displayName": "FILLING HOLES REQUIRED ON",
+      "className": "NB_BINDING",
+      "sequence": 12,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "SPIRAL_WIROLOCK": {
+      "displayName": "SPIRAL / WIRO LOCK",
+      "className": "NB_BINDING",
+      "sequence": 13,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "SPIRAL_WIRODIA": {
+      "displayName": "SPIRAL / WIRO DIA",
+      "className": "NB_BINDING",
+      "sequence": 14,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "CORNERROUNDREQUIREON": {
+      "displayName": "CORNER ROUND REQUIRE ON",
+      "className": "NB_BINDING",
+      "sequence": 15,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "CORNERROUNDINGRADIUS": {
+      "displayName": "CORNER ROUNDING RADIUS",
+      "className": "NB_BINDING",
+      "sequence": 22,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "EDGEFINISHIGTYPE": {
+      "displayName": "EDGE FINISHIG TYPE",
+      "className": "NB_BINDING",
+      "sequence": 23,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "EDGEFINISHINGSIDES": {
+      "displayName": "EDGE FINISHING SIDES",
+      "className": "NB_BINDING",
+      "sequence": 24,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "EDGEFINISHINGNOOFDESIGNS": {
+      "displayName": "EDGE FINISHING NO OF DESIGNS",
+      "className": "NB_BINDING",
+      "sequence": 25,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "EDGEFINISHINGDESIGNNOTES": {
+      "displayName": "EDGE FINISHING DESIGN NOTES",
+      "className": "NB_BINDING",
+      "sequence": 26,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "SHEETGATHERINGSTYLE": {
+      "displayName": "SHEET GATHERING STYLE",
+      "className": "NB_BINDING",
+      "sequence": 27,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "ACCESSORIES": {
+      "displayName": "ACCESSORIES",
+      "className": "NB_BINDING",
+      "sequence": 28,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "ACCESSORIESDETAILS": {
+      "displayName": "ACCESSORIES DETAILS",
+      "className": "NB_BINDING",
+      "sequence": 29,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "CARENOTEFORBINDING": {
+      "displayName": "CARE NOTE FOR BINDING",
+      "className": "NB_BINDING",
+      "sequence": 30,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "COMPONENT1NAME": {
+      "displayName": "COMPONENT 1 NAME",
+      "className": "NB_COMPONENT_1",
+      "sequence": 1,
+      "type": "CHAR",
+      "tabNote": "This Value to be displayed as Tab Name"
+    },
+    "C1SIZELENGTH": {
+      "displayName": "LENGTH SIZE (CM)",
+      "className": "NB_COMPONENT_1",
+      "sequence": 2,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "C1SIZEWIDTH": {
+      "displayName": "WIDTH SIZE (CM)",
+      "className": "NB_COMPONENT_1",
+      "sequence": 3,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "LENGTHAFTERPERFORATION": {
+      "displayName": "LENGTH AFTER PERFORATION",
+      "className": "NB_COMPONENT_1",
+      "sequence": 4,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "WIDTHAFTERPERFORATION": {
+      "displayName": "WIDTH AFTER PERFORATION",
+      "className": "NB_COMPONENT_1",
+      "sequence": 5,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "C1NOOFSHEETS": {
+      "displayName": "NO OF SHEETS",
+      "className": "NB_COMPONENT_1",
+      "sequence": 6,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "C1MATERIALTYPE": {
+      "displayName": "MATERIAL TYPE",
+      "className": "NB_COMPONENT_1",
+      "sequence": 7,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C1MILL_SUPPLIERNAME": {
+      "displayName": "MILL / SUPPLIER NAME",
+      "className": "NB_COMPONENT_1",
+      "sequence": 8,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C1MILL_SUPLIER_QLTY_GRDE_FNSH": {
+      "displayName": "MILL/SUPLIER/QLTY/GRADE/FINISH",
+      "className": "NB_COMPONENT_1",
+      "sequence": 9,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C1MATERIALCOLOR_VARIANCE": {
+      "displayName": "MATERIAL COLOR / VARIANCE",
+      "className": "NB_COMPONENT_1",
+      "sequence": 10,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C1CALIPER_WEIGHT": {
+      "displayName": "CALIPER / WEIGHT",
+      "className": "NB_COMPONENT_1",
+      "sequence": 11,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C1MATERIALUNIT": {
+      "displayName": "MATERIAL UNIT",
+      "className": "NB_COMPONENT_1",
+      "sequence": 12,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C1PURCHASECERTIFICATION": {
+      "displayName": "PURCHASE CERTIFICATION",
+      "className": "NB_COMPONENT_1",
+      "sequence": 13,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C1CERTIFICATIONADDNLNOTE": {
+      "displayName": "CERTIFICATION ADDNL NOTE",
+      "className": "NB_COMPONENT_1",
+      "sequence": 14,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C1TECHNICALRAWMATERIALSPEC": {
+      "displayName": "TECHNICAL RAW MATERIAL SPECS",
+      "className": "NB_COMPONENT_1",
+      "sequence": 15,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C1PRINTINGTYPE1": {
+      "displayName": "PRINTING TYPE",
+      "className": "NB_COMPONENT_1",
+      "sequence": 16,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C1NOOFDESIGNS_PRINT_1": {
+      "displayName": "NO OF DESIGNS / PRINT",
+      "className": "NB_COMPONENT_1",
+      "sequence": 17,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C1NOOFCOLOURSF_B_1": {
+      "displayName": "NO OF COLOURS F/B",
+      "className": "NB_COMPONENT_1",
+      "sequence": 18,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C1NAMEOFCOLORSF_B_1": {
+      "displayName": "NAME OF COLORS F/B",
+      "className": "NB_COMPONENT_1",
+      "sequence": 19,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C1RULING_PRINTDESIGNNAME1": {
+      "displayName": "RULING / PRINT DESIGN  NAME",
+      "className": "NB_COMPONENT_1",
+      "sequence": 20,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C1RULE_PRINTCODE1": {
+      "displayName": "RULE / PRINT CODE",
+      "className": "NB_COMPONENT_1",
+      "sequence": 21,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C1PRINTINGTYPE2": {
+      "displayName": "PRINTING TYPE 2",
+      "className": "NB_COMPONENT_1",
+      "sequence": 22,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C1NOOFDESIGNS_PRINT": {
+      "displayName": "NO OF DESIGNS / PRINT 2",
+      "className": "NB_COMPONENT_1",
+      "sequence": 23,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C1NOOFCOLOURSF_B": {
+      "displayName": "NO OF COLOURS F/B 2",
+      "className": "NB_COMPONENT_1",
+      "sequence": 24,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C1NAMEOFCOLORSF_B": {
+      "displayName": "NAME OF COLORS F/B 2",
+      "className": "NB_COMPONENT_1",
+      "sequence": 25,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C1RULING_PRINTDESIGNNAME2": {
+      "displayName": "RULING / PRINT DESIGN  NAME 2",
+      "className": "NB_COMPONENT_1",
+      "sequence": 26,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C1RULE_PRINTCODE2": {
+      "displayName": "RULE / PRINT CODE 2",
+      "className": "NB_COMPONENT_1",
+      "sequence": 27,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C1PRINTNOTE": {
+      "displayName": "PRINT NOTE",
+      "className": "NB_COMPONENT_1",
+      "sequence": 28,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C1FINISHING": {
+      "displayName": "FINISHING",
+      "className": "NB_COMPONENT_1",
+      "sequence": 29,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C1FINISHINGNOTE": {
+      "displayName": "FINISHING NOTE",
+      "className": "NB_COMPONENT_1",
+      "sequence": 30,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C1SPECIALNOTE": {
+      "displayName": "SPECIAL NOTE",
+      "className": "NB_COMPONENT_1",
+      "sequence": 31,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C1ADDITIONALPROCESS": {
+      "displayName": "ADDITIONAL PROCESS",
+      "className": "NB_COMPONENT_1",
+      "sequence": 32,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C1ADDITIONALINFO1": {
+      "displayName": "ADDITIONAL INFORMATION 1",
+      "className": "NB_COMPONENT_1",
+      "sequence": 33,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C1ADDITIONALINFO2": {
+      "displayName": "ADDITIONAL INFORMATION 2",
+      "className": "NB_COMPONENT_1",
+      "sequence": 34,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C1ADDITIONALINFO3": {
+      "displayName": "ADDITIONAL INFORMATION 3",
+      "className": "NB_COMPONENT_1",
+      "sequence": 35,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "COMPONENT2NAME": {
+      "displayName": "COMPONENT 2 NAME",
+      "className": "NB_COMPONENT_2",
+      "sequence": 1,
+      "type": "CHAR",
+      "tabNote": "This Value to be displayed as Tab Name"
+    },
+    "C2SIZELENGTH": {
+      "displayName": "LENGTH SIZE (CM)",
+      "className": "NB_COMPONENT_2",
+      "sequence": 2,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "C2SIZEWIDTH": {
+      "displayName": "WIDTH SIZE (CM)",
+      "className": "NB_COMPONENT_2",
+      "sequence": 3,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "C2LENGHTAFTERPERFORATION": {
+      "displayName": "LENGTH AFTER PERFORATION",
+      "className": "NB_COMPONENT_2",
+      "sequence": 4,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "C2WIDTHAFTERPERFORATION": {
+      "displayName": "WIDTH AFTER PERFORATION",
+      "className": "NB_COMPONENT_2",
+      "sequence": 5,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "C2NOOFSHEETS": {
+      "displayName": "NO OF SHEETS",
+      "className": "NB_COMPONENT_2",
+      "sequence": 6,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "C2MATERIALTYPE": {
+      "displayName": "MATERIAL TYPE",
+      "className": "NB_COMPONENT_2",
+      "sequence": 7,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C2MILL_SUPPLIERNAME": {
+      "displayName": "MILL / SUPPLIER NAME",
+      "className": "NB_COMPONENT_2",
+      "sequence": 8,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C2MILL_SUPLIER_QLTY_GRDE_FNSH": {
+      "displayName": "MILL/SUPLIER/QLTY/GRADE/FINISH",
+      "className": "NB_COMPONENT_2",
+      "sequence": 9,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C2MATERIALCOLOR_VARIANCE": {
+      "displayName": "MATERIAL COLOR / VARIANCE",
+      "className": "NB_COMPONENT_2",
+      "sequence": 10,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C2CALIPER_WEIGHT": {
+      "displayName": "CALIPER / WEIGHT",
+      "className": "NB_COMPONENT_2",
+      "sequence": 11,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "C2MATERIALUNIT": {
+      "displayName": "MATERIAL UNIT",
+      "className": "NB_COMPONENT_2",
+      "sequence": 12,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C2PURCHASECERTIFICATION": {
+      "displayName": "PURCHASE CERTIFICATION",
+      "className": "NB_COMPONENT_2",
+      "sequence": 13,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C2CERTIFICATIONADDNLNOTE": {
+      "displayName": "CERTIFICATION ADDNL NOTE",
+      "className": "NB_COMPONENT_2",
+      "sequence": 14,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C2TECHNICALRAWMATERIALSPEC": {
+      "displayName": "TECHNICAL RAW MATERIAL SPECS",
+      "className": "NB_COMPONENT_2",
+      "sequence": 15,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C2PRINTINGTYPE1": {
+      "displayName": "PRINTING TYPE",
+      "className": "NB_COMPONENT_2",
+      "sequence": 16,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C2NOOFDESIGNS_PRINT_1": {
+      "displayName": "NO OF DESIGNS / PRINT",
+      "className": "NB_COMPONENT_2",
+      "sequence": 17,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C2NOOFCOLOURSF_B_1": {
+      "displayName": "NO OF COLOURS F/B",
+      "className": "NB_COMPONENT_2",
+      "sequence": 18,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C2NAMEOFCOLORSF_B_1": {
+      "displayName": "NAME OF COLORS F/B",
+      "className": "NB_COMPONENT_2",
+      "sequence": 19,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C2RULING_PRINTDESIGNNAME1": {
+      "displayName": "RULING / PRINT DESIGN  NAME",
+      "className": "NB_COMPONENT_2",
+      "sequence": 20,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C2RULE_PRINTCODE1": {
+      "displayName": "RULE / PRINT CODE",
+      "className": "NB_COMPONENT_2",
+      "sequence": 21,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C2PRINTINGTYPE2": {
+      "displayName": "PRINTING TYPE 2",
+      "className": "NB_COMPONENT_2",
+      "sequence": 22,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C2NOOFDESIGNS_PRINT": {
+      "displayName": "NO OF DESIGNS / PRINT 2",
+      "className": "NB_COMPONENT_2",
+      "sequence": 23,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C2NOOFCOLOURSF_B": {
+      "displayName": "NO OF COLOURS F/B 2",
+      "className": "NB_COMPONENT_2",
+      "sequence": 24,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C2NAMEOFCOLORSF_B": {
+      "displayName": "NAME OF COLORS F/B 2",
+      "className": "NB_COMPONENT_2",
+      "sequence": 25,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C2RULING_PRINTDESIGNNAME2": {
+      "displayName": "RULING / PRINT DESIGN  NAME 2",
+      "className": "NB_COMPONENT_2",
+      "sequence": 26,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C2RULE_PRINTCODE2": {
+      "displayName": "RULE / PRINT CODE 2",
+      "className": "NB_COMPONENT_2",
+      "sequence": 27,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C2PRINTNOTE": {
+      "displayName": "PRINT NOTE",
+      "className": "NB_COMPONENT_2",
+      "sequence": 28,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C2FINISHING": {
+      "displayName": "FINISHING",
+      "className": "NB_COMPONENT_2",
+      "sequence": 29,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C2COVERENHANCEMENT": {
+      "displayName": "COVER ENHANCEMENT",
+      "className": "NB_COMPONENT_2",
+      "sequence": 30,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C2FINISHINGNOTE": {
+      "displayName": "FINISHING NOTE",
+      "className": "NB_COMPONENT_2",
+      "sequence": 31,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C2SPECIALNOTE": {
+      "displayName": "SPECIAL NOTE",
+      "className": "NB_COMPONENT_2",
+      "sequence": 32,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C2ADDITIONALPROCESS": {
+      "displayName": "ADDITIONAL PROCESS",
+      "className": "NB_COMPONENT_2",
+      "sequence": 33,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C2ADDITIONALINFO1": {
+      "displayName": "ADDITIONAL INFORMATION 1",
+      "className": "NB_COMPONENT_2",
+      "sequence": 34,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C2ADDITIONALINFO2": {
+      "displayName": "ADDITIONAL INFORMATION 2",
+      "className": "NB_COMPONENT_2",
+      "sequence": 35,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C2ADDITIONALINFO3": {
+      "displayName": "ADDITIONAL INFORMATION 3",
+      "className": "NB_COMPONENT_2",
+      "sequence": 36,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "COMPONENT3NAME": {
+      "displayName": "COMPONENT 3 NAME",
+      "className": "NB_COMPONENT_3",
+      "sequence": 1,
+      "type": "CHAR",
+      "tabNote": "This Value to be displayed as Tab Name"
+    },
+    "C3SIZELENGTH": {
+      "displayName": "LENGTH SIZE (CM)",
+      "className": "NB_COMPONENT_3",
+      "sequence": 2,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "C3SIZEWIDTH": {
+      "displayName": "WIDTH SIZE (CM)",
+      "className": "NB_COMPONENT_3",
+      "sequence": 3,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "C3LENGHTAFTERPERFORATION": {
+      "displayName": "LENGHT_AFTER_PERFORATION",
+      "className": "NB_COMPONENT_3",
+      "sequence": 4,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "C3WIDTHAFTERPERFORATION": {
+      "displayName": "WIDTH_AFTER_PERFORATION",
+      "className": "NB_COMPONENT_3",
+      "sequence": 5,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "C3NOOFSHEETS": {
+      "displayName": "NO OF SHEETS",
+      "className": "NB_COMPONENT_3",
+      "sequence": 6,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "C3MATERIALTYPE": {
+      "displayName": "MATERIAL TYPE",
+      "className": "NB_COMPONENT_3",
+      "sequence": 7,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C3MILL_SUPPLIERNAME": {
+      "displayName": "MILL / SUPPLIER NAME",
+      "className": "NB_COMPONENT_3",
+      "sequence": 8,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C3MILL_SUPLIER_QLTY_GRDE_FNSH": {
+      "displayName": "MILL/SUPLIER/QLTY/GRADE/FINISH",
+      "className": "NB_COMPONENT_3",
+      "sequence": 9,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C3MATERIALCOLOR_VARIANCE": {
+      "displayName": "MATERIAL COLOR / VARIANCE",
+      "className": "NB_COMPONENT_3",
+      "sequence": 10,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C3CALIPER_WEIGHT": {
+      "displayName": "CALIPER / WEIGHT",
+      "className": "NB_COMPONENT_3",
+      "sequence": 11,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "C3MATERIALUNIT": {
+      "displayName": "MATERIAL UNIT",
+      "className": "NB_COMPONENT_3",
+      "sequence": 12,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C3PURCHASECERTIFICATION": {
+      "displayName": "PURCHASE CERTIFICATION",
+      "className": "NB_COMPONENT_3",
+      "sequence": 13,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C3CERTIFICATIONADDNLNOTE": {
+      "displayName": "CERTIFICATION ADDNL NOTE",
+      "className": "NB_COMPONENT_3",
+      "sequence": 14,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C3TECHNICALRAWMATERIALSPEC": {
+      "displayName": "TECHNICAL RAW MATERIAL SPECS",
+      "className": "NB_COMPONENT_3",
+      "sequence": 15,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C3PRINTINGTYPE1": {
+      "displayName": "PRINTING TYPE",
+      "className": "NB_COMPONENT_3",
+      "sequence": 16,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C3NOOFDESIGNS_PRINT_1": {
+      "displayName": "NO OF DESIGNS / PRINT",
+      "className": "NB_COMPONENT_3",
+      "sequence": 17,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C3NOOFCOLOURSF_B_1": {
+      "displayName": "NO OF COLOURS F/B",
+      "className": "NB_COMPONENT_3",
+      "sequence": 18,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C3NAMEOFCOLORSF_B_1": {
+      "displayName": "NAME OF COLORS F/B",
+      "className": "NB_COMPONENT_3",
+      "sequence": 19,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C3RULING_PRINTDESIGNNAME1": {
+      "displayName": "RULING / PRINT DESIGN  NAME",
+      "className": "NB_COMPONENT_3",
+      "sequence": 20,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C3RULE_PRINTCODE1": {
+      "displayName": "RULE / PRINT CODE",
+      "className": "NB_COMPONENT_3",
+      "sequence": 21,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C3PRINTINGTYPE2": {
+      "displayName": "PRINTING TYPE 2",
+      "className": "NB_COMPONENT_3",
+      "sequence": 22,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C3NOOFDESIGNS_PRINT": {
+      "displayName": "NO OF DESIGNS / PRINT 2",
+      "className": "NB_COMPONENT_3",
+      "sequence": 23,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C3NOOFCOLOURSF_B": {
+      "displayName": "NO OF COLOURS F/B 2",
+      "className": "NB_COMPONENT_3",
+      "sequence": 24,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C3NAMEOFCOLORSF_B": {
+      "displayName": "NAME OF COLORS F/B 2",
+      "className": "NB_COMPONENT_3",
+      "sequence": 25,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C3RULING_PRINTDESIGNNAME2": {
+      "displayName": "RULING / PRINT DESIGN  NAME 2",
+      "className": "NB_COMPONENT_3",
+      "sequence": 26,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C3RULE_PRINTCODE2": {
+      "displayName": "RULE / PRINT CODE 2",
+      "className": "NB_COMPONENT_3",
+      "sequence": 27,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C3PRINTNOTE": {
+      "displayName": "PRINT NOTE",
+      "className": "NB_COMPONENT_3",
+      "sequence": 28,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C3FINISHING": {
+      "displayName": "FINISHING",
+      "className": "NB_COMPONENT_3",
+      "sequence": 29,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C3FINISHINGNOTE": {
+      "displayName": "FINISHING NOTE",
+      "className": "NB_COMPONENT_3",
+      "sequence": 30,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C3SPECIALNOTE": {
+      "displayName": "SPECIAL NOTE",
+      "className": "NB_COMPONENT_3",
+      "sequence": 31,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C3ADDITIONALPROCESS": {
+      "displayName": "ADDITIONAL PROCESS",
+      "className": "NB_COMPONENT_3",
+      "sequence": 32,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C3ADDITIONALINFO1": {
+      "displayName": "ADDITIONAL INFORMATION 1",
+      "className": "NB_COMPONENT_3",
+      "sequence": 33,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C3ADDITIONALINFO2": {
+      "displayName": "ADDITIONAL INFORMATION 2",
+      "className": "NB_COMPONENT_3",
+      "sequence": 34,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C3ADDITIONALINFO3": {
+      "displayName": "ADDITIONAL INFORMATION 3",
+      "className": "NB_COMPONENT_3",
+      "sequence": 35,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "COMPONENT4NAME": {
+      "displayName": "COMPONENT 4 NAME",
+      "className": "NB_COMPONENT_4",
+      "sequence": 1,
+      "type": "CHAR",
+      "tabNote": "This Value to be displayed as Tab Name"
+    },
+    "C4SIZELENGTH": {
+      "displayName": "LENGTH SIZE (CM)",
+      "className": "NB_COMPONENT_4",
+      "sequence": 2,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "C4SIZEWIDTH": {
+      "displayName": "WIDTH SIZE (CM)",
+      "className": "NB_COMPONENT_4",
+      "sequence": 3,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "C4LENGHTAFTERPERFORATION": {
+      "displayName": "LENGHT AFTER PERFORATION",
+      "className": "NB_COMPONENT_4",
+      "sequence": 4,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "C4WIDTHAFTERPERFORATION": {
+      "displayName": "WIDTH_AFTER_PERFORATION",
+      "className": "NB_COMPONENT_4",
+      "sequence": 5,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "C4NOOFSHEETS": {
+      "displayName": "NO OF SHEETS",
+      "className": "NB_COMPONENT_4",
+      "sequence": 6,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "C4MATERIALTYPE": {
+      "displayName": "MATERIAL TYPE",
+      "className": "NB_COMPONENT_4",
+      "sequence": 7,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C4MILL_SUPPLIERNAME": {
+      "displayName": "MILL / SUPPLIER NAME",
+      "className": "NB_COMPONENT_4",
+      "sequence": 8,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C4MILL_SUPLIER_QLTY_GRDE_FNSH": {
+      "displayName": "MILL/SUPLIER/QLTY/GRADE/FINISH",
+      "className": "NB_COMPONENT_4",
+      "sequence": 9,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C4MATERIALCOLOR_VARIANCE": {
+      "displayName": "MATERIAL COLOR / VARIANCE",
+      "className": "NB_COMPONENT_4",
+      "sequence": 10,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C4CALIPER_WEIGHT": {
+      "displayName": "CALIPER / WEIGHT",
+      "className": "NB_COMPONENT_4",
+      "sequence": 11,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "C4MATERIALUNIT": {
+      "displayName": "MATERIAL UNIT",
+      "className": "NB_COMPONENT_4",
+      "sequence": 12,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C4PURCHASECERTIFICATION": {
+      "displayName": "PURCHASE CERTIFICATION",
+      "className": "NB_COMPONENT_4",
+      "sequence": 13,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C4CERTIFICATIONADDNLNOTE": {
+      "displayName": "CERTIFICATION ADDNL NOTE",
+      "className": "NB_COMPONENT_4",
+      "sequence": 14,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C4TECHNICALRAWMATERIALSPEC": {
+      "displayName": "TECHNICAL RAW MATERIAL SPECS",
+      "className": "NB_COMPONENT_4",
+      "sequence": 15,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C4PRINTINGTYPE1": {
+      "displayName": "PRINTING TYPE",
+      "className": "NB_COMPONENT_4",
+      "sequence": 16,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C4NOOFDESIGNS_PRINT_1": {
+      "displayName": "NO OF DESIGNS / PRINT",
+      "className": "NB_COMPONENT_4",
+      "sequence": 17,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C4NOOFCOLOURSF_B_1": {
+      "displayName": "NO OF COLOURS F/B",
+      "className": "NB_COMPONENT_4",
+      "sequence": 18,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C4NAMEOFCOLORSF_B_1": {
+      "displayName": "NAME OF COLORS F/B",
+      "className": "NB_COMPONENT_4",
+      "sequence": 19,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C4RULING_PRINTDESIGNNAME1": {
+      "displayName": "RULING / PRINT DESIGN  NAME",
+      "className": "NB_COMPONENT_4",
+      "sequence": 20,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C4RULE_PRINTCODE1": {
+      "displayName": "RULE / PRINT CODE",
+      "className": "NB_COMPONENT_4",
+      "sequence": 21,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C4PRINTINGTYPE2": {
+      "displayName": "PRINTING TYPE 2",
+      "className": "NB_COMPONENT_4",
+      "sequence": 22,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C4NOOFDESIGNS_PRINT": {
+      "displayName": "NO OF DESIGNS / PRINT 2",
+      "className": "NB_COMPONENT_4",
+      "sequence": 23,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C4NOOFCOLOURSF_B": {
+      "displayName": "NO OF COLOURS F/B 2",
+      "className": "NB_COMPONENT_4",
+      "sequence": 24,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C4NAMEOFCOLORSF_B": {
+      "displayName": "NAME OF COLORS F/B 2",
+      "className": "NB_COMPONENT_4",
+      "sequence": 25,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C4RULING_PRINTDESIGNNAME2": {
+      "displayName": "RULING / PRINT DESIGN  NAME 2",
+      "className": "NB_COMPONENT_4",
+      "sequence": 26,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C4RULE_PRINTCODE2": {
+      "displayName": "RULE / PRINT CODE 2",
+      "className": "NB_COMPONENT_4",
+      "sequence": 27,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C4PRINTNOTE": {
+      "displayName": "PRINT NOTE",
+      "className": "NB_COMPONENT_4",
+      "sequence": 28,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C4FINISHING": {
+      "displayName": "FINISHING",
+      "className": "NB_COMPONENT_4",
+      "sequence": 29,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C4FINISHINGNOTE": {
+      "displayName": "FINISHING NOTE",
+      "className": "NB_COMPONENT_4",
+      "sequence": 30,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C4SPECIALNOTE": {
+      "displayName": "SPECIAL NOTE",
+      "className": "NB_COMPONENT_4",
+      "sequence": 31,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C4ADDITIONALPROCESS": {
+      "displayName": "ADDITIONAL PROCESS",
+      "className": "NB_COMPONENT_4",
+      "sequence": 32,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C4ADDITIONALINFO1": {
+      "displayName": "ADDITIONAL INFORMATION 1",
+      "className": "NB_COMPONENT_4",
+      "sequence": 33,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C4ADDITIONALINFO2": {
+      "displayName": "ADDITIONAL INFORMATION 2",
+      "className": "NB_COMPONENT_4",
+      "sequence": 34,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C4ADDITIONALINFO3": {
+      "displayName": "ADDITIONAL INFORMATION 3",
+      "className": "NB_COMPONENT_4",
+      "sequence": 35,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "COMPONENT5NAME": {
+      "displayName": "COMPONENT 5 NAME",
+      "className": "NB_COMPONENT_5",
+      "sequence": 1,
+      "type": "CHAR",
+      "tabNote": "This Value to be displayed as Tab Name"
+    },
+    "C5SIZELENGTH": {
+      "displayName": "LENGTH SIZE (CM)",
+      "className": "NB_COMPONENT_5",
+      "sequence": 2,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "C5SIZEWIDTH": {
+      "displayName": "WIDTH SIZE (CM)",
+      "className": "NB_COMPONENT_5",
+      "sequence": 3,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "C5NOOFSHEETS": {
+      "displayName": "NO OF SHEETS",
+      "className": "NB_COMPONENT_5",
+      "sequence": 4,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "C5MATERIALTYPE": {
+      "displayName": "MATERIAL TYPE",
+      "className": "NB_COMPONENT_5",
+      "sequence": 5,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C5MILL_SUPPLIERNAME": {
+      "displayName": "MILL / SUPPLIER NAME",
+      "className": "NB_COMPONENT_5",
+      "sequence": 6,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C5MILL_SUPLIER_QLTY_GRDE_FNSH": {
+      "displayName": "MILL/SUPLIER/QLTY/GRADE/FINISH",
+      "className": "NB_COMPONENT_5",
+      "sequence": 7,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C5MATERIALCOLOR_VARIANCE": {
+      "displayName": "MATERIAL COLOR / VARIANCE",
+      "className": "NB_COMPONENT_5",
+      "sequence": 8,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C5CALIPER_WEIGHT": {
+      "displayName": "CALIPER / WEIGHT",
+      "className": "NB_COMPONENT_5",
+      "sequence": 9,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "C5MATERIALUNIT": {
+      "displayName": "MATERIAL UNIT",
+      "className": "NB_COMPONENT_5",
+      "sequence": 10,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C5PURCHASECERTIFICATION": {
+      "displayName": "PURCHASE CERTIFICATION",
+      "className": "NB_COMPONENT_5",
+      "sequence": 11,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C5CERTIFICATIONADDNLNOTE": {
+      "displayName": "CERTIFICATION ADDNL NOTE",
+      "className": "NB_COMPONENT_5",
+      "sequence": 12,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C5TECHNICALRAWMATERIALSPEC": {
+      "displayName": "TECHNICAL RAW MATERIAL SPECS",
+      "className": "NB_COMPONENT_5",
+      "sequence": 13,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C5PRINTINGTYPE1": {
+      "displayName": "PRINTING TYPE",
+      "className": "NB_COMPONENT_5",
+      "sequence": 14,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C5NOOFDESIGNS_PRINT_1": {
+      "displayName": "NO OF DESIGNS / PRINT",
+      "className": "NB_COMPONENT_5",
+      "sequence": 15,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C5NOOFCOLOURSF_B_1": {
+      "displayName": "NO OF COLOURS F/B",
+      "className": "NB_COMPONENT_5",
+      "sequence": 16,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C5NAMEOFCOLORSF_B_1": {
+      "displayName": "NAME OF COLORS F/B",
+      "className": "NB_COMPONENT_5",
+      "sequence": 17,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C5RULING_PRINTDESIGNNAME1": {
+      "displayName": "RULING / PRINT DESIGN  NAME",
+      "className": "NB_COMPONENT_5",
+      "sequence": 18,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C5RULE_PRINTCODE1": {
+      "displayName": "RULE / PRINT CODE",
+      "className": "NB_COMPONENT_5",
+      "sequence": 19,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C5PRINTINGTYPE2": {
+      "displayName": "PRINTING TYPE 2",
+      "className": "NB_COMPONENT_5",
+      "sequence": 20,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C5NOOFDESIGNS_PRINT": {
+      "displayName": "NO OF DESIGNS / PRINT 2",
+      "className": "NB_COMPONENT_5",
+      "sequence": 21,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C5NOOFCOLOURSF_B": {
+      "displayName": "NO OF COLOURS F/B 2",
+      "className": "NB_COMPONENT_5",
+      "sequence": 22,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C5NAMEOFCOLORSF_B": {
+      "displayName": "NAME OF COLORS F/B 2",
+      "className": "NB_COMPONENT_5",
+      "sequence": 23,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C5RULING_PRINTDESIGNNAME2": {
+      "displayName": "RULING / PRINT DESIGN  NAME 2",
+      "className": "NB_COMPONENT_5",
+      "sequence": 24,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C5RULE_PRINTCODE2": {
+      "displayName": "RULE / PRINT CODE",
+      "className": "NB_COMPONENT_5",
+      "sequence": 25,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C5PRINTNOTE": {
+      "displayName": "PRINT NOTE",
+      "className": "NB_COMPONENT_5",
+      "sequence": 26,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C5FINISHING": {
+      "displayName": "FINISHING",
+      "className": "NB_COMPONENT_5",
+      "sequence": 27,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C5FINISHINGNOTE": {
+      "displayName": "FINISHING NOTE",
+      "className": "NB_COMPONENT_5",
+      "sequence": 28,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C5SPECIALNOTE": {
+      "displayName": "SPECIAL NOTE",
+      "className": "NB_COMPONENT_5",
+      "sequence": 29,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C5ADDITIONALPROCESS": {
+      "displayName": "ADDITIONAL PROCESS",
+      "className": "NB_COMPONENT_5",
+      "sequence": 30,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "COMPONENT6NAME": {
+      "displayName": "COMPONENT 6 NAME",
+      "className": "NB_COMPONENT_6",
+      "sequence": 1,
+      "type": "CHAR",
+      "tabNote": "This Value to be displayed as Tab Name"
+    },
+    "C6SIZELENGTH": {
+      "displayName": "LENGTH SIZE (CM)",
+      "className": "NB_COMPONENT_6",
+      "sequence": 2,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "C6SIZEWIDTH": {
+      "displayName": "WIDTH SIZE (CM)",
+      "className": "NB_COMPONENT_6",
+      "sequence": 3,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "C6NOOFSHEETS": {
+      "displayName": "NO OF SHEETS",
+      "className": "NB_COMPONENT_6",
+      "sequence": 4,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "C6MATERIALTYPE": {
+      "displayName": "MATERIAL TYPE",
+      "className": "NB_COMPONENT_6",
+      "sequence": 5,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C6MILL_SUPPLIERNAME": {
+      "displayName": "MILL / SUPPLIER NAME",
+      "className": "NB_COMPONENT_6",
+      "sequence": 6,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C6MILL_SUPLIER_QLTY_GRDE_FNSH": {
+      "displayName": "MILL/SUPLIER/QLTY/GRADE/FINISH",
+      "className": "NB_COMPONENT_6",
+      "sequence": 7,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C6MATERIALCOLOR_VARIANCE": {
+      "displayName": "MATERIAL COLOR / VARIANCE",
+      "className": "NB_COMPONENT_6",
+      "sequence": 8,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C6CALIPER_WEIGHT": {
+      "displayName": "CALIPER / WEIGHT",
+      "className": "NB_COMPONENT_6",
+      "sequence": 9,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "C6MATERIALUNIT": {
+      "displayName": "MATERIAL UNIT",
+      "className": "NB_COMPONENT_6",
+      "sequence": 10,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C6PURCHASECERTIFICATION": {
+      "displayName": "PURCHASE CERTIFICATION",
+      "className": "NB_COMPONENT_6",
+      "sequence": 11,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C6CERTIFICATIONADDNLNOTE": {
+      "displayName": "CERTIFICATION ADDNL NOTE",
+      "className": "NB_COMPONENT_6",
+      "sequence": 12,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C6TECHNICALRAWMATERIALSPEC": {
+      "displayName": "TECHNICAL RAW MATERIAL SPECS",
+      "className": "NB_COMPONENT_6",
+      "sequence": 13,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C6PRINTINGTYPE1": {
+      "displayName": "PRINTING TYPE",
+      "className": "NB_COMPONENT_6",
+      "sequence": 14,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C6NOOFDESIGNS_PRINT_1": {
+      "displayName": "NO OF DESIGNS / PRINT",
+      "className": "NB_COMPONENT_6",
+      "sequence": 15,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C6NOOFCOLOURSF_B_1": {
+      "displayName": "NO OF COLOURS F/B",
+      "className": "NB_COMPONENT_6",
+      "sequence": 16,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C6NAMEOFCOLORSF_B_1": {
+      "displayName": "NAME OF COLORS F/B",
+      "className": "NB_COMPONENT_6",
+      "sequence": 17,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C6RULING_PRINTDESIGNNAME1": {
+      "displayName": "RULING / PRINT DESIGN  NAME",
+      "className": "NB_COMPONENT_6",
+      "sequence": 18,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C6RULE_PRINTCODE1": {
+      "displayName": "RULE / PRINT CODE",
+      "className": "NB_COMPONENT_6",
+      "sequence": 19,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C6PRINTINGTYPE2": {
+      "displayName": "PRINTING TYPE 2",
+      "className": "NB_COMPONENT_6",
+      "sequence": 20,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C6NOOFDESIGNS_PRINT": {
+      "displayName": "NO OF DESIGNS / PRINT 2",
+      "className": "NB_COMPONENT_6",
+      "sequence": 21,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C6NOOFCOLOURSF_B": {
+      "displayName": "NO OF COLOURS F/B 2",
+      "className": "NB_COMPONENT_6",
+      "sequence": 22,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C6NAMEOFCOLORSF_B": {
+      "displayName": "NAME OF COLORS F/B 2",
+      "className": "NB_COMPONENT_6",
+      "sequence": 23,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C6RULING_PRINTDESIGNNAME2": {
+      "displayName": "RULING / PRINT DESIGN  NAME 2",
+      "className": "NB_COMPONENT_6",
+      "sequence": 24,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C6RULE_PRINTCODE2": {
+      "displayName": "RULE / PRINT CODE 2",
+      "className": "NB_COMPONENT_6",
+      "sequence": 25,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C6PRINTNOTE": {
+      "displayName": "PRINT NOTE",
+      "className": "NB_COMPONENT_6",
+      "sequence": 26,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C6FINISHING": {
+      "displayName": "FINISHING",
+      "className": "NB_COMPONENT_6",
+      "sequence": 27,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C6FINISHINGNOTE": {
+      "displayName": "FINISHING NOTE",
+      "className": "NB_COMPONENT_6",
+      "sequence": 28,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C6SPECIALNOTE": {
+      "displayName": "SPECIAL NOTE",
+      "className": "NB_COMPONENT_6",
+      "sequence": 29,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C6ADDITIONALPROCESS": {
+      "displayName": "ADDITIONAL PROCESS",
+      "className": "NB_COMPONENT_6",
+      "sequence": 30,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C7PRODUCT_TYPE": {
+      "displayName": "PRODUCT TYPE",
+      "className": "NB_COMPONENT_7",
+      "sequence": 1,
+      "type": "CHAR",
+      "tabNote": "This Value to be displayed as Tab Name"
+    },
+    "C7CANVAS_MATERIAL": {
+      "displayName": "CANVAS MATERIAL",
+      "className": "NB_COMPONENT_7",
+      "sequence": 2,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C7CONSTRUCTION_REEDXPICK": {
+      "displayName": "CONSTRUCTION REED X PICK",
+      "className": "NB_COMPONENT_7",
+      "sequence": 3,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C7COUNT_REEDXPICK": {
+      "displayName": "COUNT REED X PICK",
+      "className": "NB_COMPONENT_7",
+      "sequence": 4,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C7NOTE_FOR_CANVAS": {
+      "displayName": "NOTE FOR CANVAS MATERIAL",
+      "className": "NB_COMPONENT_7",
+      "sequence": 5,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C7MATERIAL_TYPE": {
+      "displayName": "MATERIAL TYPE",
+      "className": "NB_COMPONENT_7",
+      "sequence": 6,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C7MILL_SUPPLIERNAME": {
+      "displayName": "MILL / SUPPLIER NAME",
+      "className": "NB_COMPONENT_7",
+      "sequence": 7,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C7MILL_SUPLIER_QLTY_GRDE_FNSH": {
+      "displayName": "MILL/SUPLIER/QLTY/GRADE/FINISH",
+      "className": "NB_COMPONENT_7",
+      "sequence": 8,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C7MATERIAL_COLOUR": {
+      "displayName": "CANVAS MATERIAL COLOUR",
+      "className": "NB_COMPONENT_7",
+      "sequence": 9,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C7MATERIAL_CERTIFICATION": {
+      "displayName": "TECHNICAL RAW MATERIAL SPECS",
+      "className": "NB_COMPONENT_7",
+      "sequence": 10,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C7FINISHING": {
+      "displayName": "FINISHING",
+      "className": "NB_COMPONENT_7",
+      "sequence": 11,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C7CALIPER_WEIGHT": {
+      "displayName": "CALIPER / WEIGHT",
+      "className": "NB_COMPONENT_7",
+      "sequence": 12,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "C7MATERIALUNIT": {
+      "displayName": "MATERIAL UNIT",
+      "className": "NB_COMPONENT_7",
+      "sequence": 13,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C7PANNEL_TYPE": {
+      "displayName": "PANNEL MATERIAL TYPE",
+      "className": "NB_COMPONENT_7",
+      "sequence": 14,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C71NCALIPER_WEIGHT": {
+      "displayName": "CALIPER / WEIGHT",
+      "className": "NB_COMPONENT_7",
+      "sequence": 15,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "C71MATERIALUNIT": {
+      "displayName": "MATERIAL UNIT",
+      "className": "NB_COMPONENT_7",
+      "sequence": 19,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C7MILL_SUPPLIERNAME2": {
+      "displayName": "MILL NAME",
+      "className": "NB_COMPONENT_7",
+      "sequence": 20,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C7MILL_SUPLIER_QLTY_GRDE_FNSH2": {
+      "displayName": "MILL/SUPLIER/QLTY/GRADE/FINISH",
+      "className": "NB_COMPONENT_7",
+      "sequence": 21,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C7MDF_CERT": {
+      "displayName": "CERTIFICATION REQ",
+      "className": "NB_COMPONENT_7",
+      "sequence": 22,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C7SPECIAL_NOTE": {
+      "displayName": "SPECIAL NOTE",
+      "className": "NB_COMPONENT_7",
+      "sequence": 23,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C7FRAME_MAT_TYPE": {
+      "displayName": "FRAME MATERIAL TYPE",
+      "className": "NB_COMPONENT_7",
+      "sequence": 24,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C7FRAME_INCH": {
+      "displayName": "FRAME SIZE IN INCH",
+      "className": "NB_COMPONENT_7",
+      "sequence": 25,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C7FRAME_THICKNESS": {
+      "displayName": "FRAME PROFILE THICKNESS IN MM",
+      "className": "NB_COMPONENT_7",
+      "sequence": 26,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "C7FRAME_BACK_WIDTH": {
+      "displayName": "FRAME BCK WIDTH THICKNES IN MM",
+      "className": "NB_COMPONENT_7",
+      "sequence": 27,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "C7FRAME_TYPE": {
+      "displayName": "FRAME JOINT TYPE",
+      "className": "NB_COMPONENT_7",
+      "sequence": 28,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C7BEVEL_REQUIRED": {
+      "displayName": "BEVEL REQUIRED",
+      "className": "NB_COMPONENT_7",
+      "sequence": 29,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "C7FRAME_CERT": {
+      "displayName": "PURCHASE CERTIFICATION REQ",
+      "className": "NB_COMPONENT_7",
+      "sequence": 30,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "NOOFDIVIDERSOFTYPE1": {
+      "displayName": "NO OF DIVIDERS OF TYPE 1",
+      "className": "NB_DIVIDER_SPECS",
+      "sequence": 1,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "DIVIDERSTYPE1": {
+      "displayName": "DIVIDERS TYPE",
+      "className": "NB_DIVIDER_SPECS",
+      "sequence": 2,
+      "type": "CHAR",
+      "tabNote": "This Value to be displayed as Tab Name"
+    },
+    "DIVIDERPOSITION1": {
+      "displayName": "DIVIDER POSITION",
+      "className": "NB_DIVIDER_SPECS",
+      "sequence": 3,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "TABSTYLEOF1STDIVIDERS": {
+      "displayName": "TAB STYLE OF  DIVIDERS",
+      "className": "NB_DIVIDER_SPECS",
+      "sequence": 4,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "POCKETSTYLEOF1STDIVIDERS": {
+      "displayName": "POCKET STYLE OF DIVIDERS",
+      "className": "NB_DIVIDER_SPECS",
+      "sequence": 5,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "DIVIDER1SIZEINCLTABWIDTH": {
+      "displayName": "DIVIDER SIZE LENGTH",
+      "className": "NB_DIVIDER_SPECS",
+      "sequence": 6,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "DIVIDER1SIZEWIDTH": {
+      "displayName": "DIVIDER SIZE WIDTH",
+      "className": "NB_DIVIDER_SPECS",
+      "sequence": 7,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "DIVIDER1SIZEINCLTABLENGTH": {
+      "displayName": "DIVIDER SIZE INCL TAB WIDTH",
+      "className": "NB_DIVIDER_SPECS",
+      "sequence": 8,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "DIVIDERMATERIALTYPE1": {
+      "displayName": "DIVIDER MATERIAL TYPE",
+      "className": "NB_DIVIDER_SPECS",
+      "sequence": 9,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "D1MILL_SUPPLIER_SNAME": {
+      "displayName": "MILL / SUPPLIER'S NAME",
+      "className": "NB_DIVIDER_SPECS",
+      "sequence": 10,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "D1MILL_SUPLIER_QLTY_GRDE_FNSH": {
+      "displayName": "MILL/SUPLIER/QLTY/GRADE/FINISH",
+      "className": "NB_DIVIDER_SPECS",
+      "sequence": 11,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "D1MATERIALCOLOR_VARIANCE": {
+      "displayName": "MATERIAL COLOR / VARIANCE",
+      "className": "NB_DIVIDER_SPECS",
+      "sequence": 12,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "D1DIVIDERCALIPER_WEIGHT": {
+      "displayName": "DIVIDER CALIPER / WEIGHT",
+      "className": "NB_DIVIDER_SPECS",
+      "sequence": 13,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "D1DIVIDERMATERIALUNIT": {
+      "displayName": "DIVIDER MATERIAL UNIT",
+      "className": "NB_DIVIDER_SPECS",
+      "sequence": 14,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "D1DIVIDERPURCHASECERT": {
+      "displayName": "DIVIDER PURCHASE CERTIFICATION",
+      "className": "NB_DIVIDER_SPECS",
+      "sequence": 15,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "D1DIVIDERTECHMATERIALSPEC": {
+      "displayName": "TECHNICAL RAW MATERIAL SPECS",
+      "className": "NB_DIVIDER_SPECS",
+      "sequence": 16,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "D1PRINTINGTYPE": {
+      "displayName": "PRINTING TYPE",
+      "className": "NB_DIVIDER_SPECS",
+      "sequence": 17,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "D1NOOFDESIGNS_PRINT": {
+      "displayName": "NO OF DESIGNS / PRINT",
+      "className": "NB_DIVIDER_SPECS",
+      "sequence": 18,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "D1NOOFCOLOURSF_B": {
+      "displayName": "NO OF COLOURS F/B",
+      "className": "NB_DIVIDER_SPECS",
+      "sequence": 19,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "D1NAMEOFCOLORSF_B": {
+      "displayName": "NAME OF COLORS F/B",
+      "className": "NB_DIVIDER_SPECS",
+      "sequence": 20,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "D1PRINTFINISHING": {
+      "displayName": "PRINT FINISHING",
+      "className": "NB_DIVIDER_SPECS",
+      "sequence": 21,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "D1ADDITIONALINFOFORDIVIDER": {
+      "displayName": "ADDITIONAL INFO FOR DIVIDERS",
+      "className": "NB_DIVIDER_SPECS",
+      "sequence": 22,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "D1NOOFDIVIDERSOFTYPE2": {
+      "displayName": "NO OF DIVIDERS OF TYPE 2",
+      "className": "NB_DIVIDER_SPECS",
+      "sequence": 23,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "DIVIDERSTYPE2": {
+      "displayName": "DIVIDERS TYPE",
+      "className": "NB_DIVIDER_SPECS",
+      "sequence": 24,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "DIVIDERPOSITION2": {
+      "displayName": "DIVIDER POSITION",
+      "className": "NB_DIVIDER_SPECS",
+      "sequence": 25,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "TABSTYLEOF2NDDIVIDERS": {
+      "displayName": "TAB STYLE OF  DIVIDERS",
+      "className": "NB_DIVIDER_SPECS",
+      "sequence": 26,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "POCKETSTYLEOFDIVIDERS": {
+      "displayName": "POCKET STYLE OF DIVIDERS",
+      "className": "NB_DIVIDER_SPECS",
+      "sequence": 27,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "DIVIDERSIZEINCLTABWIDTH": {
+      "displayName": "DIVIDER SIZE INCL TAB WIDTH",
+      "className": "NB_DIVIDER_SPECS",
+      "sequence": 28,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "DIVIDERSIZEINCLTABLENGTH": {
+      "displayName": "DIVIDER SIZE INCL TAB LENGTH",
+      "className": "NB_DIVIDER_SPECS",
+      "sequence": 29,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "DIVIDERMATERIALTYPE2": {
+      "displayName": "DIVIDER MATERIAL TYPE",
+      "className": "NB_DIVIDER_SPECS",
+      "sequence": 30,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "D2MILL_SUPPLIER_SNAME": {
+      "displayName": "MILL / SUPPLIER'S NAME",
+      "className": "NB_DIVIDER_SPECS",
+      "sequence": 33,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "D2MILL_SUPLIER_QLTY_GRDE_FNSH": {
+      "displayName": "MILL/SUPLIER/QLTY/GRADE/FINISH",
+      "className": "NB_DIVIDER_SPECS",
+      "sequence": 34,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "D2MATERIALCOLOR_VARIANCE": {
+      "displayName": "MATERIAL COLOR / VARIANCE",
+      "className": "NB_DIVIDER_SPECS",
+      "sequence": 35,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "D2DIVIDERCALIPER_WEIGHT": {
+      "displayName": "DIVIDER CALIPER / WEIGHT",
+      "className": "NB_DIVIDER_SPECS",
+      "sequence": 36,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "D2DIVIDERMATERIALUNIT": {
+      "displayName": "DIVIDER MATERIAL UNIT",
+      "className": "NB_DIVIDER_SPECS",
+      "sequence": 37,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "D2DIVIDERPURCHASECERT": {
+      "displayName": "DIVIDER PURCHASE CERTIFICATE",
+      "className": "NB_DIVIDER_SPECS",
+      "sequence": 38,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "D2DIVIDERTECHMATERIALSPEC": {
+      "displayName": "TECHNICAL RAW MATERIAL SPECS",
+      "className": "NB_DIVIDER_SPECS",
+      "sequence": 39,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "D2PRINTINGTYPE": {
+      "displayName": "PRINTING TYPE",
+      "className": "NB_DIVIDER_SPECS",
+      "sequence": 40,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "D2NOOFDESIGNS_PRINT": {
+      "displayName": "NO OF DESIGNS / PRINT",
+      "className": "NB_DIVIDER_SPECS",
+      "sequence": 41,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "D2NOOFCOLOURSF_B": {
+      "displayName": "NO OF COLOURS F/B",
+      "className": "NB_DIVIDER_SPECS",
+      "sequence": 42,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "D2NAMEOFCOLORSF_B": {
+      "displayName": "NAME OF COLORS F/B",
+      "className": "NB_DIVIDER_SPECS",
+      "sequence": 43,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "D2PRINTFINISHING": {
+      "displayName": "PRINT FINISHING",
+      "className": "NB_DIVIDER_SPECS",
+      "sequence": 44,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "D2ADDITIONALINFOFORDIVIDER": {
+      "displayName": "ADDITIONAL INFO FOR DIVIDERS",
+      "className": "NB_DIVIDER_SPECS",
+      "sequence": 45,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "PACKAGETYPE1": {
+      "displayName": "PACKAGING TYPE 1",
+      "className": "PACKAGING_SPECS_1",
+      "sequence": 1,
+      "type": "CHAR",
+      "tabNote": "This Value to be displayed as Tab Name"
+    },
+    "P1_APPLICATION": {
+      "displayName": "APPLICATION",
+      "className": "PACKAGING_SPECS_1",
+      "sequence": 2,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "P1_POSITIONING": {
+      "displayName": "POSITIONING",
+      "className": "PACKAGING_SPECS_1",
+      "sequence": 3,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "PACKAGING1SIZELENGTH": {
+      "displayName": "PACKAGING 1 SIZE LENGTH (CM)",
+      "className": "PACKAGING_SPECS_1",
+      "sequence": 4,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "PACKAGING1SIZEWIDTH": {
+      "displayName": "PACKAGING 1 SIZE WIDTH (CM)",
+      "className": "PACKAGING_SPECS_1",
+      "sequence": 5,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "PACKAGING1MATERIALTYPE": {
+      "displayName": "PACKAGING 1 MATERIAL TYPE",
+      "className": "PACKAGING_SPECS_1",
+      "sequence": 6,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "PACKAGINGMILL_SUPPLIERNAME": {
+      "displayName": "PACKAGING MILL / SUPPLIER NAME",
+      "className": "PACKAGING_SPECS_1",
+      "sequence": 7,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "PCKGMILL_SUPPLIER_QLTY_GRADE": {
+      "displayName": "MIL/SUPPLIER/QLTY/GRADE/FINISH",
+      "className": "PACKAGING_SPECS_1",
+      "sequence": 8,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "CALIPER_WEIGHT": {
+      "displayName": "CALIPER / WEIGHT",
+      "className": "PACKAGING_SPECS_1",
+      "sequence": 9,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "MATERIALUNIT": {
+      "displayName": "MATERIAL UNIT",
+      "className": "PACKAGING_SPECS_1",
+      "sequence": 10,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "P1PRINTINGTYPE": {
+      "displayName": "PRINTING TYPE 1",
+      "className": "PACKAGING_SPECS_1",
+      "sequence": 11,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "NOOFCOLOURSF_B": {
+      "displayName": "NO OF COLOURS F/B",
+      "className": "PACKAGING_SPECS_1",
+      "sequence": 12,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "NAMEOFCOLORSF_B": {
+      "displayName": "NAME OF COLORS F/B",
+      "className": "PACKAGING_SPECS_1",
+      "sequence": 13,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "PACKAGING1FINISHING": {
+      "displayName": "PACKAGING 1 FINISHING",
+      "className": "PACKAGING_SPECS_1",
+      "sequence": 14,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "ADDITIONALPROCESS": {
+      "displayName": "ADDITIONAL PROCESS",
+      "className": "PACKAGING_SPECS_1",
+      "sequence": 15,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "PACKAGING1SPECIALNOTE": {
+      "displayName": "PACKAGING  1 SPECIAL  NOTE",
+      "className": "PACKAGING_SPECS_1",
+      "sequence": 16,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "PACKAGETYPE2": {
+      "displayName": "PACKAGING TYPE 2",
+      "className": "PACKAGING_SPECS_1",
+      "sequence": 17,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "P2_APPLICATION": {
+      "displayName": "APPLICATION P2",
+      "className": "PACKAGING_SPECS_1",
+      "sequence": 18,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "P2_POSITIONING": {
+      "displayName": "POSITIONING P2",
+      "className": "PACKAGING_SPECS_1",
+      "sequence": 19,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "PACKAGING2SIZELENGTH": {
+      "displayName": "PACKAGING 2 SIZE LENGTH",
+      "className": "PACKAGING_SPECS_1",
+      "sequence": 20,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "PACKAGING2SIZEWIDTH": {
+      "displayName": "PACKAGING 2 SIZE WIDTH",
+      "className": "PACKAGING_SPECS_1",
+      "sequence": 21,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "PACKAGING2MATERIALTYPE": {
+      "displayName": "PACKAGING 2 MATERIAL TYPE",
+      "className": "PACKAGING_SPECS_1",
+      "sequence": 22,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "PACKAGINGMILL_SUPPLIERNAME2": {
+      "displayName": "PACKAGING MILL / SUPPLIER NAME",
+      "className": "PACKAGING_SPECS_1",
+      "sequence": 23,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "PCKGMILL_SUPPLIER_QLTY_GRADE2": {
+      "displayName": "MIL/SUPPLIER/QLTY/GRADE/FINISH",
+      "className": "PACKAGING_SPECS_1",
+      "sequence": 24,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "CALIPER_WEIGHT2": {
+      "displayName": "CALIPER / WEIGHT",
+      "className": "PACKAGING_SPECS_1",
+      "sequence": 25,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "MATERIALUNIT2": {
+      "displayName": "MATERIAL UNIT",
+      "className": "PACKAGING_SPECS_1",
+      "sequence": 26,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "P2PRINTINGTYPE": {
+      "displayName": "PRINTING TYPE 2",
+      "className": "PACKAGING_SPECS_1",
+      "sequence": 27,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "NOOFCOLOURSF_B2": {
+      "displayName": "NO OF COLOURS F/B",
+      "className": "PACKAGING_SPECS_1",
+      "sequence": 28,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "NAMEOFCOLORSF_B2": {
+      "displayName": "NAME OF COLORS F/B",
+      "className": "PACKAGING_SPECS_1",
+      "sequence": 29,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "PACKAGING2FINISHING": {
+      "displayName": "PACKAGING 2 FINISHING",
+      "className": "PACKAGING_SPECS_1",
+      "sequence": 30,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "ADDITIONALPROCESS2": {
+      "displayName": "ADDITIONAL PROCESS",
+      "className": "PACKAGING_SPECS_1",
+      "sequence": 44,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "PACKAGING2SPECIALNOTE": {
+      "displayName": "PACKAGING  2 SPECIAL  NOTE",
+      "className": "PACKAGING_SPECS_1",
+      "sequence": 45,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "RETAILPACK_SALEUNITPACK": {
+      "displayName": "NO OF PCS IN RETAIL/SALE UNIT",
+      "className": "PACKING_DETAILS",
+      "sequence": 1,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "RETAILPACKTYPE": {
+      "displayName": "RETAIL PACK TYPE",
+      "className": "PACKING_DETAILS",
+      "sequence": 2,
+      "type": "CHAR",
+      "tabNote": "This Value to be displayed as Tab Name"
+    },
+    "MATERIAL_SPECS": {
+      "displayName": "MATERIAL & SPECS",
+      "className": "PACKING_DETAILS",
+      "sequence": 3,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "PRINTINGINSTRUCTION": {
+      "displayName": "PRINTING INSTRUCTION",
+      "className": "PACKING_DETAILS",
+      "sequence": 4,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "DESIGN_COLORASSORTMENT": {
+      "displayName": "DESIGN / COLOR ASSORTMENT",
+      "className": "PACKING_DETAILS",
+      "sequence": 5,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "SPECIALINSTRUCTIONS": {
+      "displayName": "SPECIAL INSTRUCTIONS",
+      "className": "PACKING_DETAILS",
+      "sequence": 6,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "INNERPACKINGNOOFPCS": {
+      "displayName": "INNER PACKING NO OF PCS",
+      "className": "PACKING_DETAILS",
+      "sequence": 7,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "INNERPACKINGTYPE": {
+      "displayName": "INNER PACKING TYPE",
+      "className": "PACKING_DETAILS",
+      "sequence": 8,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "INNERMATERIALSPECS": {
+      "displayName": "INNER MATERIAL SPECS",
+      "className": "PACKING_DETAILS",
+      "sequence": 9,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "INNERSPECIALINSTRUCTIONS": {
+      "displayName": "INNER SPECIALINSTRUCTIONS",
+      "className": "PACKING_DETAILS",
+      "sequence": 10,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "INNERPRINTINGINSTRUCTION": {
+      "displayName": "INNER PRINTINGINSTRUCTION",
+      "className": "PACKING_DETAILS",
+      "sequence": 11,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "I_WHNUMBEROFSALEUNITS": {
+      "displayName": "I-WH NUMBER OF SALE UNITS",
+      "className": "PACKING_DETAILS",
+      "sequence": 12,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "I_WHINNERPACKTYPE": {
+      "displayName": "I-WH PACK TYPE",
+      "className": "PACKING_DETAILS",
+      "sequence": 13,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "MATERIAL_SPECS2": {
+      "displayName": "MATERIAL & SPECS",
+      "className": "PACKING_DETAILS",
+      "sequence": 14,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "I_WHPRINTINGINSTRUCTION": {
+      "displayName": "I/WH PRINTING INSTRUCTION",
+      "className": "PACKING_DETAILS",
+      "sequence": 15,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "DESIGN_COLORASSORTMENT2": {
+      "displayName": "DESIGN / COLOR ASSORTMENT",
+      "className": "PACKING_DETAILS",
+      "sequence": 16,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "I_WHSPECIALINSTRUCTIONS": {
+      "displayName": "I/WH SPECIAL INSTRUCTIONS",
+      "className": "PACKING_DETAILS",
+      "sequence": 17,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "MASTERNUMBEROFSALEUNITS": {
+      "displayName": "MASTER NUMBER OF SALE UNITS",
+      "className": "PACKING_DETAILS",
+      "sequence": 18,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "MASTERPACKTYPE": {
+      "displayName": "MASTER PACK TYPE",
+      "className": "PACKING_DETAILS",
+      "sequence": 19,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "MASTERMATERIAL_SPECS": {
+      "displayName": "MASTER MATERIAL & SPECS",
+      "className": "PACKING_DETAILS",
+      "sequence": 20,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "MASTERSTACKING_ASSORTTYPE": {
+      "displayName": "MASTER STACKING & ASSORT. TYPE",
+      "className": "PACKING_DETAILS",
+      "sequence": 21,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "MASTERMARK_PRINTINSTR_POS": {
+      "displayName": "MASTER MARK/PRINT INSTR. & POS",
+      "className": "PACKING_DETAILS",
+      "sequence": 22,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "MASTERSPECIALINSTRUCTIONS": {
+      "displayName": "MASTER SPECIAL INSTRUCTIONS",
+      "className": "PACKING_DETAILS",
+      "sequence": 23,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "STUFFINGTYPE": {
+      "displayName": "STUFFING TYPE",
+      "className": "PACKING_DETAILS",
+      "sequence": 24,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "MAXPALLETSIZEALLOW_LXWXH": {
+      "displayName": "MAX PALLET SIZE ALLOW (LXWXH)",
+      "className": "PACKING_DETAILS",
+      "sequence": 25,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "MAXPALLETWEIGHT": {
+      "displayName": "MAX WEIGHT ALLOW (INCL PALLET)",
+      "className": "PACKING_DETAILS",
+      "sequence": 26,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "SPECIALINSTRUCTIONS2": {
+      "displayName": "SPECIAL INSTRUCTIONS",
+      "className": "PACKING_DETAILS",
+      "sequence": 27,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "TAPPINGDETAILS": {
+      "displayName": "TAPPING DETAILS",
+      "className": "PACKING_DETAILS",
+      "sequence": 28,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "PRODUCTBARCODE": {
+      "displayName": "PRODUCT BARCODE",
+      "className": "PACKING_DETAILS",
+      "sequence": 29,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "INNERBARCODE": {
+      "displayName": "INNER BARCODE",
+      "className": "PACKING_DETAILS",
+      "sequence": 30,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "MASTERBARCODE": {
+      "displayName": "MASTER BARCODE",
+      "className": "PACKING_DETAILS",
+      "sequence": 31,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "TOP_MARGIN": {
+      "displayName": "TOP MARGIN (In MM)",
+      "className": "RULLING_DETAILS",
+      "sequence": 1,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "TOP_MARGIN_COLOR": {
+      "displayName": "TOP MARGIN COLOR",
+      "className": "RULLING_DETAILS",
+      "sequence": 2,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "LEFT_MARGIN": {
+      "displayName": "LEFT MARGIN (In MM)",
+      "className": "RULLING_DETAILS",
+      "sequence": 3,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "LEFT_MARGIN_COLOR": {
+      "displayName": "LEFT MARGIN COLOR",
+      "className": "RULLING_DETAILS",
+      "sequence": 4,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "RIGHT_MARGIN": {
+      "displayName": "RIGHT MARGIN (In MM)",
+      "className": "RULLING_DETAILS",
+      "sequence": 5,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "RIGHT_MARGIN_COLOR": {
+      "displayName": "RIGHT MARGIN COLOR",
+      "className": "RULLING_DETAILS",
+      "sequence": 6,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "BOTTOM_MARGIN": {
+      "displayName": "BOTTOM MARGIN (In MM)",
+      "className": "RULLING_DETAILS",
+      "sequence": 7,
+      "type": "NUM",
+      "tabNote": null
+    },
+    "BOTTOM_MARGIN_COLOR": {
+      "displayName": "BOTTOM MARGIN COLOR",
+      "className": "RULLING_DETAILS",
+      "sequence": 8,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "CENTER_MARGIN_COLOR": {
+      "displayName": "CENTER MARGIN COLOR",
+      "className": "RULLING_DETAILS",
+      "sequence": 9,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "RULLING_PDF": {
+      "displayName": "RULLING PDF SENT TO PLANT",
+      "className": "RULLING_DETAILS",
+      "sequence": 10,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "SPECIAL_RULING": {
+      "displayName": "SPECIAL RULING (If Any)",
+      "className": "RULLING_DETAILS",
+      "sequence": 11,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "INSTRUCTION_RULLING": {
+      "displayName": "INSTRUCTIONS FOR RULLING",
+      "className": "RULLING_DETAILS",
+      "sequence": 12,
+      "type": "CHAR",
+      "tabNote": null
+    },
+    "RULLING_DISTANCE": {
+      "displayName": "RULLING DISTANCE (IN MM)",
+      "className": "RULLING_DETAILS",
+      "sequence": 13,
+      "type": "CHAR",
+      "tabNote": "This Value to be displayed as Tab Name"
+    },
+    "RULLING_SHADE": {
+      "displayName": "RULLING_SHADE",
+      "className": "RULLING_DETAILS",
+      "sequence": 14,
+      "type": "CHAR",
+      "tabNote": null
+    }
+  },
+  "items": [
+    {
+      "classTech": "PRODUCT_CLASS",
+      "classDesc": "PRODUCT CLASS",
+      "charTech": "PRODUCTCLOSESIZELENGTH",
+      "charDesc": "PRODUCT CLOSE SIZE LENGTH",
+      "type": "NUM",
+      "charSeq": 1,
+      "classSeq": 1,
+      "tabNote": "Concatenate and display with Seprator as \"x\""
+    },
+    {
+      "classTech": "PRODUCT_CLASS",
+      "classDesc": "PRODUCT CLASS",
+      "charTech": "PRODUCTCLOSESIZEWIDTH",
+      "charDesc": "PRODUCT CLOSE SIZE WIDTH",
+      "type": "NUM",
+      "charSeq": 2,
+      "classSeq": 1,
+      "tabNote": null
+    },
+    {
+      "classTech": "PRODUCT_CLASS",
+      "classDesc": "PRODUCT CLASS",
+      "charTech": "FSCEUTR_REQUIREMENT",
+      "charDesc": "FSC / EUTR / EUDR REQUIREMENT",
+      "type": "CHAR",
+      "charSeq": 3,
+      "classSeq": 1,
+      "tabNote": null
+    },
+    {
+      "classTech": "PRODUCT_CLASS",
+      "classDesc": "PRODUCT CLASS",
+      "charTech": "CLAIMAPPLICABLETOPRODUCT",
+      "charDesc": "CLAIM APPLICABLE TO PRODUCT",
+      "type": "CHAR",
+      "charSeq": 4,
+      "classSeq": 1,
+      "tabNote": null
+    },
+    {
+      "classTech": "PRODUCT_CLASS",
+      "classDesc": "PRODUCT CLASS",
+      "charTech": "PERCENTAGE_TYPE",
+      "charDesc": "PERCENTAGE & TYPE",
+      "type": "CHAR",
+      "charSeq": 5,
+      "classSeq": 1,
+      "tabNote": null
+    },
+    {
+      "classTech": "PRODUCT_CLASS",
+      "classDesc": "PRODUCT CLASS",
+      "charTech": "OVERALLPRODUCTNOTE",
+      "charDesc": "OVER ALL PRODUCT NOTE",
+      "type": "CHAR",
+      "charSeq": 6,
+      "classSeq": 1,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_BINDING",
+      "classDesc": "BINDING SPECIFICATION",
+      "charTech": "BINDINGTYPE1",
+      "charDesc": "BINDING TYPE  1",
+      "type": "CHAR",
+      "charSeq": 1,
+      "classSeq": 2,
+      "tabNote": "This Value to be displayed as Tab Name"
+    },
+    {
+      "classTech": "NB_BINDING",
+      "classDesc": "BINDING SPECIFICATION",
+      "charTech": "BINDINGTYPE2",
+      "charDesc": "BINDING TYPE  2",
+      "type": "CHAR",
+      "charSeq": 2,
+      "classSeq": 2,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_BINDING",
+      "classDesc": "BINDING SPECIFICATION",
+      "charTech": "OPENINGOFPRODUCT",
+      "charDesc": "OPENING OF PRODUCT",
+      "type": "CHAR",
+      "charSeq": 3,
+      "classSeq": 2,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_BINDING",
+      "classDesc": "BINDING SPECIFICATION",
+      "charTech": "BINDINGSIDE",
+      "charDesc": "BINDING SIDE",
+      "type": "CHAR",
+      "charSeq": 4,
+      "classSeq": 2,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_BINDING",
+      "classDesc": "BINDING SPECIFICATION",
+      "charTech": "BINDINGMATERIAL",
+      "charDesc": "BINDING MATERIAL",
+      "type": "CHAR",
+      "charSeq": 5,
+      "classSeq": 2,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_BINDING",
+      "classDesc": "BINDING SPECIFICATION",
+      "charTech": "BINDINGCOLOR_STYLE",
+      "charDesc": "MATERIAL COLOR & STYLE",
+      "type": "CHAR",
+      "charSeq": 6,
+      "classSeq": 2,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_BINDING",
+      "classDesc": "BINDING SPECIFICATION",
+      "charTech": "SPECIALBINDING",
+      "charDesc": "SPECIAL BINDING",
+      "type": "CHAR",
+      "charSeq": 7,
+      "classSeq": 2,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_BINDING",
+      "classDesc": "BINDING SPECIFICATION",
+      "charTech": "ADDITIONALPROCESSONBINDING",
+      "charDesc": "PROCESS ON BINDING MATERIAL",
+      "type": "CHAR",
+      "charSeq": 8,
+      "classSeq": 2,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_BINDING",
+      "classDesc": "BINDING SPECIFICATION",
+      "charTech": "SPIRAL-WIROBINDINGHOLEPUNCH",
+      "charDesc": "SPIRAL/WIRO BINDING HOLE PUNCH",
+      "type": "CHAR",
+      "charSeq": 9,
+      "classSeq": 2,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_BINDING",
+      "classDesc": "BINDING SPECIFICATION",
+      "charTech": "FILINGHOLEPUNCHDIADISTANCE",
+      "charDesc": "FILING HOLE PUNCH DIA DISTANCE",
+      "type": "CHAR",
+      "charSeq": 10,
+      "classSeq": 2,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_BINDING",
+      "classDesc": "BINDING SPECIFICATION",
+      "charTech": "NOOFFILINGHOLESREQUIRE",
+      "charDesc": "NO OF FILING HOLES REQUIRE",
+      "type": "CHAR",
+      "charSeq": 11,
+      "classSeq": 2,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_BINDING",
+      "classDesc": "BINDING SPECIFICATION",
+      "charTech": "FILLINGHOLESREQUIREDON",
+      "charDesc": "FILLING HOLES REQUIRED ON",
+      "type": "CHAR",
+      "charSeq": 12,
+      "classSeq": 2,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_BINDING",
+      "classDesc": "BINDING SPECIFICATION",
+      "charTech": "SPIRAL_WIROLOCK",
+      "charDesc": "SPIRAL / WIRO LOCK",
+      "type": "CHAR",
+      "charSeq": 13,
+      "classSeq": 2,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_BINDING",
+      "classDesc": "BINDING SPECIFICATION",
+      "charTech": "SPIRAL_WIRODIA",
+      "charDesc": "SPIRAL / WIRO DIA",
+      "type": "CHAR",
+      "charSeq": 14,
+      "classSeq": 2,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_BINDING",
+      "classDesc": "BINDING SPECIFICATION",
+      "charTech": "CORNERROUNDREQUIREON",
+      "charDesc": "CORNER ROUND REQUIRE ON",
+      "type": "CHAR",
+      "charSeq": 15,
+      "classSeq": 2,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_BINDING",
+      "classDesc": "BINDING SPECIFICATION",
+      "charTech": "CORNERROUNDINGRADIUS",
+      "charDesc": "CORNER ROUNDING RADIUS",
+      "type": "CHAR",
+      "charSeq": 22,
+      "classSeq": 2,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_BINDING",
+      "classDesc": "BINDING SPECIFICATION",
+      "charTech": "EDGEFINISHIGTYPE",
+      "charDesc": "EDGE FINISHIG TYPE",
+      "type": "CHAR",
+      "charSeq": 23,
+      "classSeq": 2,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_BINDING",
+      "classDesc": "BINDING SPECIFICATION",
+      "charTech": "EDGEFINISHINGSIDES",
+      "charDesc": "EDGE FINISHING SIDES",
+      "type": "CHAR",
+      "charSeq": 24,
+      "classSeq": 2,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_BINDING",
+      "classDesc": "BINDING SPECIFICATION",
+      "charTech": "EDGEFINISHINGNOOFDESIGNS",
+      "charDesc": "EDGE FINISHING NO OF DESIGNS",
+      "type": "CHAR",
+      "charSeq": 25,
+      "classSeq": 2,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_BINDING",
+      "classDesc": "BINDING SPECIFICATION",
+      "charTech": "EDGEFINISHINGDESIGNNOTES",
+      "charDesc": "EDGE FINISHING DESIGN NOTES",
+      "type": "CHAR",
+      "charSeq": 26,
+      "classSeq": 2,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_BINDING",
+      "classDesc": "BINDING SPECIFICATION",
+      "charTech": "SHEETGATHERINGSTYLE",
+      "charDesc": "SHEET GATHERING STYLE",
+      "type": "CHAR",
+      "charSeq": 27,
+      "classSeq": 2,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_BINDING",
+      "classDesc": "BINDING SPECIFICATION",
+      "charTech": "ACCESSORIES",
+      "charDesc": "ACCESSORIES",
+      "type": "CHAR",
+      "charSeq": 28,
+      "classSeq": 2,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_BINDING",
+      "classDesc": "BINDING SPECIFICATION",
+      "charTech": "ACCESSORIESDETAILS",
+      "charDesc": "ACCESSORIES DETAILS",
+      "type": "CHAR",
+      "charSeq": 29,
+      "classSeq": 2,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_BINDING",
+      "classDesc": "BINDING SPECIFICATION",
+      "charTech": "CARENOTEFORBINDING",
+      "charDesc": "CARE NOTE FOR BINDING",
+      "type": "CHAR",
+      "charSeq": 30,
+      "classSeq": 2,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_1",
+      "classDesc": "COMPONENT 1",
+      "charTech": "COMPONENT1NAME",
+      "charDesc": "COMPONENT 1 NAME",
+      "type": "CHAR",
+      "charSeq": 1,
+      "classSeq": 3,
+      "tabNote": "This Value to be displayed as Tab Name"
+    },
+    {
+      "classTech": "NB_COMPONENT_1",
+      "classDesc": "COMPONENT 1",
+      "charTech": "C1SIZELENGTH",
+      "charDesc": "LENGTH SIZE (CM)",
+      "type": "NUM",
+      "charSeq": 2,
+      "classSeq": 3,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_1",
+      "classDesc": "COMPONENT 1",
+      "charTech": "C1SIZEWIDTH",
+      "charDesc": "WIDTH SIZE (CM)",
+      "type": "NUM",
+      "charSeq": 3,
+      "classSeq": 3,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_1",
+      "classDesc": "COMPONENT 1",
+      "charTech": "LENGTHAFTERPERFORATION",
+      "charDesc": "LENGTH AFTER PERFORATION",
+      "type": "NUM",
+      "charSeq": 4,
+      "classSeq": 3,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_1",
+      "classDesc": "COMPONENT 1",
+      "charTech": "WIDTHAFTERPERFORATION",
+      "charDesc": "WIDTH AFTER PERFORATION",
+      "type": "NUM",
+      "charSeq": 5,
+      "classSeq": 3,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_1",
+      "classDesc": "COMPONENT 1",
+      "charTech": "C1NOOFSHEETS",
+      "charDesc": "NO OF SHEETS",
+      "type": "NUM",
+      "charSeq": 6,
+      "classSeq": 3,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_1",
+      "classDesc": "COMPONENT 1",
+      "charTech": "C1MATERIALTYPE",
+      "charDesc": "MATERIAL TYPE",
+      "type": "CHAR",
+      "charSeq": 7,
+      "classSeq": 3,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_1",
+      "classDesc": "COMPONENT 1",
+      "charTech": "C1MILL_SUPPLIERNAME",
+      "charDesc": "MILL / SUPPLIER NAME",
+      "type": "CHAR",
+      "charSeq": 8,
+      "classSeq": 3,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_1",
+      "classDesc": "COMPONENT 1",
+      "charTech": "C1MILL_SUPLIER_QLTY_GRDE_FNSH",
+      "charDesc": "MILL/SUPLIER/QLTY/GRADE/FINISH",
+      "type": "CHAR",
+      "charSeq": 9,
+      "classSeq": 3,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_1",
+      "classDesc": "COMPONENT 1",
+      "charTech": "C1MATERIALCOLOR_VARIANCE",
+      "charDesc": "MATERIAL COLOR / VARIANCE",
+      "type": "CHAR",
+      "charSeq": 10,
+      "classSeq": 3,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_1",
+      "classDesc": "COMPONENT 1",
+      "charTech": "C1CALIPER_WEIGHT",
+      "charDesc": "CALIPER / WEIGHT",
+      "type": "CHAR",
+      "charSeq": 11,
+      "classSeq": 3,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_1",
+      "classDesc": "COMPONENT 1",
+      "charTech": "C1MATERIALUNIT",
+      "charDesc": "MATERIAL UNIT",
+      "type": "CHAR",
+      "charSeq": 12,
+      "classSeq": 3,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_1",
+      "classDesc": "COMPONENT 1",
+      "charTech": "C1PURCHASECERTIFICATION",
+      "charDesc": "PURCHASE CERTIFICATION",
+      "type": "CHAR",
+      "charSeq": 13,
+      "classSeq": 3,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_1",
+      "classDesc": "COMPONENT 1",
+      "charTech": "C1CERTIFICATIONADDNLNOTE",
+      "charDesc": "CERTIFICATION ADDNL NOTE",
+      "type": "CHAR",
+      "charSeq": 14,
+      "classSeq": 3,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_1",
+      "classDesc": "COMPONENT 1",
+      "charTech": "C1TECHNICALRAWMATERIALSPEC",
+      "charDesc": "TECHNICAL RAW MATERIAL SPECS",
+      "type": "CHAR",
+      "charSeq": 15,
+      "classSeq": 3,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_1",
+      "classDesc": "COMPONENT 1",
+      "charTech": "C1PRINTINGTYPE1",
+      "charDesc": "PRINTING TYPE",
+      "type": "CHAR",
+      "charSeq": 16,
+      "classSeq": 3,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_1",
+      "classDesc": "COMPONENT 1",
+      "charTech": "C1NOOFDESIGNS_PRINT_1",
+      "charDesc": "NO OF DESIGNS / PRINT",
+      "type": "CHAR",
+      "charSeq": 17,
+      "classSeq": 3,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_1",
+      "classDesc": "COMPONENT 1",
+      "charTech": "C1NOOFCOLOURSF_B_1",
+      "charDesc": "NO OF COLOURS F/B",
+      "type": "CHAR",
+      "charSeq": 18,
+      "classSeq": 3,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_1",
+      "classDesc": "COMPONENT 1",
+      "charTech": "C1NAMEOFCOLORSF_B_1",
+      "charDesc": "NAME OF COLORS F/B",
+      "type": "CHAR",
+      "charSeq": 19,
+      "classSeq": 3,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_1",
+      "classDesc": "COMPONENT 1",
+      "charTech": "C1RULING_PRINTDESIGNNAME1",
+      "charDesc": "RULING / PRINT DESIGN  NAME",
+      "type": "CHAR",
+      "charSeq": 20,
+      "classSeq": 3,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_1",
+      "classDesc": "COMPONENT 1",
+      "charTech": "C1RULE_PRINTCODE1",
+      "charDesc": "RULE / PRINT CODE",
+      "type": "CHAR",
+      "charSeq": 21,
+      "classSeq": 3,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_1",
+      "classDesc": "COMPONENT 1",
+      "charTech": "C1PRINTINGTYPE2",
+      "charDesc": "PRINTING TYPE 2",
+      "type": "CHAR",
+      "charSeq": 22,
+      "classSeq": 3,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_1",
+      "classDesc": "COMPONENT 1",
+      "charTech": "C1NOOFDESIGNS_PRINT",
+      "charDesc": "NO OF DESIGNS / PRINT 2",
+      "type": "CHAR",
+      "charSeq": 23,
+      "classSeq": 3,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_1",
+      "classDesc": "COMPONENT 1",
+      "charTech": "C1NOOFCOLOURSF_B",
+      "charDesc": "NO OF COLOURS F/B 2",
+      "type": "CHAR",
+      "charSeq": 24,
+      "classSeq": 3,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_1",
+      "classDesc": "COMPONENT 1",
+      "charTech": "C1NAMEOFCOLORSF_B",
+      "charDesc": "NAME OF COLORS F/B 2",
+      "type": "CHAR",
+      "charSeq": 25,
+      "classSeq": 3,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_1",
+      "classDesc": "COMPONENT 1",
+      "charTech": "C1RULING_PRINTDESIGNNAME2",
+      "charDesc": "RULING / PRINT DESIGN  NAME 2",
+      "type": "CHAR",
+      "charSeq": 26,
+      "classSeq": 3,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_1",
+      "classDesc": "COMPONENT 1",
+      "charTech": "C1RULE_PRINTCODE2",
+      "charDesc": "RULE / PRINT CODE 2",
+      "type": "CHAR",
+      "charSeq": 27,
+      "classSeq": 3,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_1",
+      "classDesc": "COMPONENT 1",
+      "charTech": "C1PRINTNOTE",
+      "charDesc": "PRINT NOTE",
+      "type": "CHAR",
+      "charSeq": 28,
+      "classSeq": 3,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_1",
+      "classDesc": "COMPONENT 1",
+      "charTech": "C1FINISHING",
+      "charDesc": "FINISHING",
+      "type": "CHAR",
+      "charSeq": 29,
+      "classSeq": 3,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_1",
+      "classDesc": "COMPONENT 1",
+      "charTech": "C1FINISHINGNOTE",
+      "charDesc": "FINISHING NOTE",
+      "type": "CHAR",
+      "charSeq": 30,
+      "classSeq": 3,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_1",
+      "classDesc": "COMPONENT 1",
+      "charTech": "C1SPECIALNOTE",
+      "charDesc": "SPECIAL NOTE",
+      "type": "CHAR",
+      "charSeq": 31,
+      "classSeq": 3,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_1",
+      "classDesc": "COMPONENT 1",
+      "charTech": "C1ADDITIONALPROCESS",
+      "charDesc": "ADDITIONAL PROCESS",
+      "type": "CHAR",
+      "charSeq": 32,
+      "classSeq": 3,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_1",
+      "classDesc": "COMPONENT 1",
+      "charTech": "C1ADDITIONALINFO1",
+      "charDesc": "ADDITIONAL INFORMATION 1",
+      "type": "CHAR",
+      "charSeq": 33,
+      "classSeq": 3,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_1",
+      "classDesc": "COMPONENT 1",
+      "charTech": "C1ADDITIONALINFO2",
+      "charDesc": "ADDITIONAL INFORMATION 2",
+      "type": "CHAR",
+      "charSeq": 34,
+      "classSeq": 3,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_1",
+      "classDesc": "COMPONENT 1",
+      "charTech": "C1ADDITIONALINFO3",
+      "charDesc": "ADDITIONAL INFORMATION 3",
+      "type": "CHAR",
+      "charSeq": 35,
+      "classSeq": 3,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_2",
+      "classDesc": "COMPONENT 2",
+      "charTech": "COMPONENT2NAME",
+      "charDesc": "COMPONENT 2 NAME",
+      "type": "CHAR",
+      "charSeq": 1,
+      "classSeq": 4,
+      "tabNote": "This Value to be displayed as Tab Name"
+    },
+    {
+      "classTech": "NB_COMPONENT_2",
+      "classDesc": "COMPONENT 2",
+      "charTech": "C2SIZELENGTH",
+      "charDesc": "LENGTH SIZE (CM)",
+      "type": "NUM",
+      "charSeq": 2,
+      "classSeq": 4,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_2",
+      "classDesc": "COMPONENT 2",
+      "charTech": "C2SIZEWIDTH",
+      "charDesc": "WIDTH SIZE (CM)",
+      "type": "NUM",
+      "charSeq": 3,
+      "classSeq": 4,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_2",
+      "classDesc": "COMPONENT 2",
+      "charTech": "C2LENGHTAFTERPERFORATION",
+      "charDesc": "LENGTH AFTER PERFORATION",
+      "type": "NUM",
+      "charSeq": 4,
+      "classSeq": 4,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_2",
+      "classDesc": "COMPONENT 2",
+      "charTech": "C2WIDTHAFTERPERFORATION",
+      "charDesc": "WIDTH AFTER PERFORATION",
+      "type": "NUM",
+      "charSeq": 5,
+      "classSeq": 4,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_2",
+      "classDesc": "COMPONENT 2",
+      "charTech": "C2NOOFSHEETS",
+      "charDesc": "NO OF SHEETS",
+      "type": "NUM",
+      "charSeq": 6,
+      "classSeq": 4,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_2",
+      "classDesc": "COMPONENT 2",
+      "charTech": "C2MATERIALTYPE",
+      "charDesc": "MATERIAL TYPE",
+      "type": "CHAR",
+      "charSeq": 7,
+      "classSeq": 4,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_2",
+      "classDesc": "COMPONENT 2",
+      "charTech": "C2MILL_SUPPLIERNAME",
+      "charDesc": "MILL / SUPPLIER NAME",
+      "type": "CHAR",
+      "charSeq": 8,
+      "classSeq": 4,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_2",
+      "classDesc": "COMPONENT 2",
+      "charTech": "C2MILL_SUPLIER_QLTY_GRDE_FNSH",
+      "charDesc": "MILL/SUPLIER/QLTY/GRADE/FINISH",
+      "type": "CHAR",
+      "charSeq": 9,
+      "classSeq": 4,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_2",
+      "classDesc": "COMPONENT 2",
+      "charTech": "C2MATERIALCOLOR_VARIANCE",
+      "charDesc": "MATERIAL COLOR / VARIANCE",
+      "type": "CHAR",
+      "charSeq": 10,
+      "classSeq": 4,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_2",
+      "classDesc": "COMPONENT 2",
+      "charTech": "C2CALIPER_WEIGHT",
+      "charDesc": "CALIPER / WEIGHT",
+      "type": "NUM",
+      "charSeq": 11,
+      "classSeq": 4,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_2",
+      "classDesc": "COMPONENT 2",
+      "charTech": "C2MATERIALUNIT",
+      "charDesc": "MATERIAL UNIT",
+      "type": "CHAR",
+      "charSeq": 12,
+      "classSeq": 4,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_2",
+      "classDesc": "COMPONENT 2",
+      "charTech": "C2PURCHASECERTIFICATION",
+      "charDesc": "PURCHASE CERTIFICATION",
+      "type": "CHAR",
+      "charSeq": 13,
+      "classSeq": 4,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_2",
+      "classDesc": "COMPONENT 2",
+      "charTech": "C2CERTIFICATIONADDNLNOTE",
+      "charDesc": "CERTIFICATION ADDNL NOTE",
+      "type": "CHAR",
+      "charSeq": 14,
+      "classSeq": 4,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_2",
+      "classDesc": "COMPONENT 2",
+      "charTech": "C2TECHNICALRAWMATERIALSPEC",
+      "charDesc": "TECHNICAL RAW MATERIAL SPECS",
+      "type": "CHAR",
+      "charSeq": 15,
+      "classSeq": 4,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_2",
+      "classDesc": "COMPONENT 2",
+      "charTech": "C2PRINTINGTYPE1",
+      "charDesc": "PRINTING TYPE",
+      "type": "CHAR",
+      "charSeq": 16,
+      "classSeq": 4,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_2",
+      "classDesc": "COMPONENT 2",
+      "charTech": "C2NOOFDESIGNS_PRINT_1",
+      "charDesc": "NO OF DESIGNS / PRINT",
+      "type": "CHAR",
+      "charSeq": 17,
+      "classSeq": 4,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_2",
+      "classDesc": "COMPONENT 2",
+      "charTech": "C2NOOFCOLOURSF_B_1",
+      "charDesc": "NO OF COLOURS F/B",
+      "type": "CHAR",
+      "charSeq": 18,
+      "classSeq": 4,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_2",
+      "classDesc": "COMPONENT 2",
+      "charTech": "C2NAMEOFCOLORSF_B_1",
+      "charDesc": "NAME OF COLORS F/B",
+      "type": "CHAR",
+      "charSeq": 19,
+      "classSeq": 4,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_2",
+      "classDesc": "COMPONENT 2",
+      "charTech": "C2RULING_PRINTDESIGNNAME1",
+      "charDesc": "RULING / PRINT DESIGN  NAME",
+      "type": "CHAR",
+      "charSeq": 20,
+      "classSeq": 4,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_2",
+      "classDesc": "COMPONENT 2",
+      "charTech": "C2RULE_PRINTCODE1",
+      "charDesc": "RULE / PRINT CODE",
+      "type": "CHAR",
+      "charSeq": 21,
+      "classSeq": 4,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_2",
+      "classDesc": "COMPONENT 2",
+      "charTech": "C2PRINTINGTYPE2",
+      "charDesc": "PRINTING TYPE 2",
+      "type": "CHAR",
+      "charSeq": 22,
+      "classSeq": 4,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_2",
+      "classDesc": "COMPONENT 2",
+      "charTech": "C2NOOFDESIGNS_PRINT",
+      "charDesc": "NO OF DESIGNS / PRINT 2",
+      "type": "CHAR",
+      "charSeq": 23,
+      "classSeq": 4,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_2",
+      "classDesc": "COMPONENT 2",
+      "charTech": "C2NOOFCOLOURSF_B",
+      "charDesc": "NO OF COLOURS F/B 2",
+      "type": "CHAR",
+      "charSeq": 24,
+      "classSeq": 4,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_2",
+      "classDesc": "COMPONENT 2",
+      "charTech": "C2NAMEOFCOLORSF_B",
+      "charDesc": "NAME OF COLORS F/B 2",
+      "type": "CHAR",
+      "charSeq": 25,
+      "classSeq": 4,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_2",
+      "classDesc": "COMPONENT 2",
+      "charTech": "C2RULING_PRINTDESIGNNAME2",
+      "charDesc": "RULING / PRINT DESIGN  NAME 2",
+      "type": "CHAR",
+      "charSeq": 26,
+      "classSeq": 4,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_2",
+      "classDesc": "COMPONENT 2",
+      "charTech": "C2RULE_PRINTCODE2",
+      "charDesc": "RULE / PRINT CODE 2",
+      "type": "CHAR",
+      "charSeq": 27,
+      "classSeq": 4,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_2",
+      "classDesc": "COMPONENT 2",
+      "charTech": "C2PRINTNOTE",
+      "charDesc": "PRINT NOTE",
+      "type": "CHAR",
+      "charSeq": 28,
+      "classSeq": 4,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_2",
+      "classDesc": "COMPONENT 2",
+      "charTech": "C2FINISHING",
+      "charDesc": "FINISHING",
+      "type": "CHAR",
+      "charSeq": 29,
+      "classSeq": 4,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_2",
+      "classDesc": "COMPONENT 2",
+      "charTech": "C2COVERENHANCEMENT",
+      "charDesc": "COVER ENHANCEMENT",
+      "type": "CHAR",
+      "charSeq": 30,
+      "classSeq": 4,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_2",
+      "classDesc": "COMPONENT 2",
+      "charTech": "C2FINISHINGNOTE",
+      "charDesc": "FINISHING NOTE",
+      "type": "CHAR",
+      "charSeq": 31,
+      "classSeq": 4,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_2",
+      "classDesc": "COMPONENT 2",
+      "charTech": "C2SPECIALNOTE",
+      "charDesc": "SPECIAL NOTE",
+      "type": "CHAR",
+      "charSeq": 32,
+      "classSeq": 4,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_2",
+      "classDesc": "COMPONENT 2",
+      "charTech": "C2ADDITIONALPROCESS",
+      "charDesc": "ADDITIONAL PROCESS",
+      "type": "CHAR",
+      "charSeq": 33,
+      "classSeq": 4,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_2",
+      "classDesc": "COMPONENT 2",
+      "charTech": "C2ADDITIONALINFO1",
+      "charDesc": "ADDITIONAL INFORMATION 1",
+      "type": "CHAR",
+      "charSeq": 34,
+      "classSeq": 4,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_2",
+      "classDesc": "COMPONENT 2",
+      "charTech": "C2ADDITIONALINFO2",
+      "charDesc": "ADDITIONAL INFORMATION 2",
+      "type": "CHAR",
+      "charSeq": 35,
+      "classSeq": 4,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_2",
+      "classDesc": "COMPONENT 2",
+      "charTech": "C2ADDITIONALINFO3",
+      "charDesc": "ADDITIONAL INFORMATION 3",
+      "type": "CHAR",
+      "charSeq": 36,
+      "classSeq": 4,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_3",
+      "classDesc": "COMPONENT 3",
+      "charTech": "COMPONENT3NAME",
+      "charDesc": "COMPONENT 3 NAME",
+      "type": "CHAR",
+      "charSeq": 1,
+      "classSeq": 5,
+      "tabNote": "This Value to be displayed as Tab Name"
+    },
+    {
+      "classTech": "NB_COMPONENT_3",
+      "classDesc": "COMPONENT 3",
+      "charTech": "C3SIZELENGTH",
+      "charDesc": "LENGTH SIZE (CM)",
+      "type": "NUM",
+      "charSeq": 2,
+      "classSeq": 5,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_3",
+      "classDesc": "COMPONENT 3",
+      "charTech": "C3SIZEWIDTH",
+      "charDesc": "WIDTH SIZE (CM)",
+      "type": "NUM",
+      "charSeq": 3,
+      "classSeq": 5,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_3",
+      "classDesc": "COMPONENT 3",
+      "charTech": "C3LENGHTAFTERPERFORATION",
+      "charDesc": "LENGHT_AFTER_PERFORATION",
+      "type": "NUM",
+      "charSeq": 4,
+      "classSeq": 5,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_3",
+      "classDesc": "COMPONENT 3",
+      "charTech": "C3WIDTHAFTERPERFORATION",
+      "charDesc": "WIDTH_AFTER_PERFORATION",
+      "type": "NUM",
+      "charSeq": 5,
+      "classSeq": 5,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_3",
+      "classDesc": "COMPONENT 3",
+      "charTech": "C3NOOFSHEETS",
+      "charDesc": "NO OF SHEETS",
+      "type": "NUM",
+      "charSeq": 6,
+      "classSeq": 5,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_3",
+      "classDesc": "COMPONENT 3",
+      "charTech": "C3MATERIALTYPE",
+      "charDesc": "MATERIAL TYPE",
+      "type": "CHAR",
+      "charSeq": 7,
+      "classSeq": 5,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_3",
+      "classDesc": "COMPONENT 3",
+      "charTech": "C3MILL_SUPPLIERNAME",
+      "charDesc": "MILL / SUPPLIER NAME",
+      "type": "CHAR",
+      "charSeq": 8,
+      "classSeq": 5,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_3",
+      "classDesc": "COMPONENT 3",
+      "charTech": "C3MILL_SUPLIER_QLTY_GRDE_FNSH",
+      "charDesc": "MILL/SUPLIER/QLTY/GRADE/FINISH",
+      "type": "CHAR",
+      "charSeq": 9,
+      "classSeq": 5,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_3",
+      "classDesc": "COMPONENT 3",
+      "charTech": "C3MATERIALCOLOR_VARIANCE",
+      "charDesc": "MATERIAL COLOR / VARIANCE",
+      "type": "CHAR",
+      "charSeq": 10,
+      "classSeq": 5,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_3",
+      "classDesc": "COMPONENT 3",
+      "charTech": "C3CALIPER_WEIGHT",
+      "charDesc": "CALIPER / WEIGHT",
+      "type": "NUM",
+      "charSeq": 11,
+      "classSeq": 5,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_3",
+      "classDesc": "COMPONENT 3",
+      "charTech": "C3MATERIALUNIT",
+      "charDesc": "MATERIAL UNIT",
+      "type": "CHAR",
+      "charSeq": 12,
+      "classSeq": 5,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_3",
+      "classDesc": "COMPONENT 3",
+      "charTech": "C3PURCHASECERTIFICATION",
+      "charDesc": "PURCHASE CERTIFICATION",
+      "type": "CHAR",
+      "charSeq": 13,
+      "classSeq": 5,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_3",
+      "classDesc": "COMPONENT 3",
+      "charTech": "C3CERTIFICATIONADDNLNOTE",
+      "charDesc": "CERTIFICATION ADDNL NOTE",
+      "type": "CHAR",
+      "charSeq": 14,
+      "classSeq": 5,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_3",
+      "classDesc": "COMPONENT 3",
+      "charTech": "C3TECHNICALRAWMATERIALSPEC",
+      "charDesc": "TECHNICAL RAW MATERIAL SPECS",
+      "type": "CHAR",
+      "charSeq": 15,
+      "classSeq": 5,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_3",
+      "classDesc": "COMPONENT 3",
+      "charTech": "C3PRINTINGTYPE1",
+      "charDesc": "PRINTING TYPE",
+      "type": "CHAR",
+      "charSeq": 16,
+      "classSeq": 5,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_3",
+      "classDesc": "COMPONENT 3",
+      "charTech": "C3NOOFDESIGNS_PRINT_1",
+      "charDesc": "NO OF DESIGNS / PRINT",
+      "type": "CHAR",
+      "charSeq": 17,
+      "classSeq": 5,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_3",
+      "classDesc": "COMPONENT 3",
+      "charTech": "C3NOOFCOLOURSF_B_1",
+      "charDesc": "NO OF COLOURS F/B",
+      "type": "CHAR",
+      "charSeq": 18,
+      "classSeq": 5,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_3",
+      "classDesc": "COMPONENT 3",
+      "charTech": "C3NAMEOFCOLORSF_B_1",
+      "charDesc": "NAME OF COLORS F/B",
+      "type": "CHAR",
+      "charSeq": 19,
+      "classSeq": 5,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_3",
+      "classDesc": "COMPONENT 3",
+      "charTech": "C3RULING_PRINTDESIGNNAME1",
+      "charDesc": "RULING / PRINT DESIGN  NAME",
+      "type": "CHAR",
+      "charSeq": 20,
+      "classSeq": 5,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_3",
+      "classDesc": "COMPONENT 3",
+      "charTech": "C3RULE_PRINTCODE1",
+      "charDesc": "RULE / PRINT CODE",
+      "type": "CHAR",
+      "charSeq": 21,
+      "classSeq": 5,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_3",
+      "classDesc": "COMPONENT 3",
+      "charTech": "C3PRINTINGTYPE2",
+      "charDesc": "PRINTING TYPE 2",
+      "type": "CHAR",
+      "charSeq": 22,
+      "classSeq": 5,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_3",
+      "classDesc": "COMPONENT 3",
+      "charTech": "C3NOOFDESIGNS_PRINT",
+      "charDesc": "NO OF DESIGNS / PRINT 2",
+      "type": "CHAR",
+      "charSeq": 23,
+      "classSeq": 5,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_3",
+      "classDesc": "COMPONENT 3",
+      "charTech": "C3NOOFCOLOURSF_B",
+      "charDesc": "NO OF COLOURS F/B 2",
+      "type": "CHAR",
+      "charSeq": 24,
+      "classSeq": 5,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_3",
+      "classDesc": "COMPONENT 3",
+      "charTech": "C3NAMEOFCOLORSF_B",
+      "charDesc": "NAME OF COLORS F/B 2",
+      "type": "CHAR",
+      "charSeq": 25,
+      "classSeq": 5,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_3",
+      "classDesc": "COMPONENT 3",
+      "charTech": "C3RULING_PRINTDESIGNNAME2",
+      "charDesc": "RULING / PRINT DESIGN  NAME 2",
+      "type": "CHAR",
+      "charSeq": 26,
+      "classSeq": 5,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_3",
+      "classDesc": "COMPONENT 3",
+      "charTech": "C3RULE_PRINTCODE2",
+      "charDesc": "RULE / PRINT CODE 2",
+      "type": "CHAR",
+      "charSeq": 27,
+      "classSeq": 5,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_3",
+      "classDesc": "COMPONENT 3",
+      "charTech": "C3PRINTNOTE",
+      "charDesc": "PRINT NOTE",
+      "type": "CHAR",
+      "charSeq": 28,
+      "classSeq": 5,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_3",
+      "classDesc": "COMPONENT 3",
+      "charTech": "C3FINISHING",
+      "charDesc": "FINISHING",
+      "type": "CHAR",
+      "charSeq": 29,
+      "classSeq": 5,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_3",
+      "classDesc": "COMPONENT 3",
+      "charTech": "C3FINISHINGNOTE",
+      "charDesc": "FINISHING NOTE",
+      "type": "CHAR",
+      "charSeq": 30,
+      "classSeq": 5,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_3",
+      "classDesc": "COMPONENT 3",
+      "charTech": "C3SPECIALNOTE",
+      "charDesc": "SPECIAL NOTE",
+      "type": "CHAR",
+      "charSeq": 31,
+      "classSeq": 5,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_3",
+      "classDesc": "COMPONENT 3",
+      "charTech": "C3ADDITIONALPROCESS",
+      "charDesc": "ADDITIONAL PROCESS",
+      "type": "CHAR",
+      "charSeq": 32,
+      "classSeq": 5,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_3",
+      "classDesc": "COMPONENT 3",
+      "charTech": "C3ADDITIONALINFO1",
+      "charDesc": "ADDITIONAL INFORMATION 1",
+      "type": "CHAR",
+      "charSeq": 33,
+      "classSeq": 5,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_3",
+      "classDesc": "COMPONENT 3",
+      "charTech": "C3ADDITIONALINFO2",
+      "charDesc": "ADDITIONAL INFORMATION 2",
+      "type": "CHAR",
+      "charSeq": 34,
+      "classSeq": 5,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_3",
+      "classDesc": "COMPONENT 3",
+      "charTech": "C3ADDITIONALINFO3",
+      "charDesc": "ADDITIONAL INFORMATION 3",
+      "type": "CHAR",
+      "charSeq": 35,
+      "classSeq": 5,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_4",
+      "classDesc": "COMPONENT 4",
+      "charTech": "COMPONENT4NAME",
+      "charDesc": "COMPONENT 4 NAME",
+      "type": "CHAR",
+      "charSeq": 1,
+      "classSeq": 6,
+      "tabNote": "This Value to be displayed as Tab Name"
+    },
+    {
+      "classTech": "NB_COMPONENT_4",
+      "classDesc": "COMPONENT 4",
+      "charTech": "C4SIZELENGTH",
+      "charDesc": "LENGTH SIZE (CM)",
+      "type": "NUM",
+      "charSeq": 2,
+      "classSeq": 6,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_4",
+      "classDesc": "COMPONENT 4",
+      "charTech": "C4SIZEWIDTH",
+      "charDesc": "WIDTH SIZE (CM)",
+      "type": "NUM",
+      "charSeq": 3,
+      "classSeq": 6,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_4",
+      "classDesc": "COMPONENT 4",
+      "charTech": "C4LENGHTAFTERPERFORATION",
+      "charDesc": "LENGHT AFTER PERFORATION",
+      "type": "NUM",
+      "charSeq": 4,
+      "classSeq": 6,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_4",
+      "classDesc": "COMPONENT 4",
+      "charTech": "C4WIDTHAFTERPERFORATION",
+      "charDesc": "WIDTH_AFTER_PERFORATION",
+      "type": "NUM",
+      "charSeq": 5,
+      "classSeq": 6,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_4",
+      "classDesc": "COMPONENT 4",
+      "charTech": "C4NOOFSHEETS",
+      "charDesc": "NO OF SHEETS",
+      "type": "NUM",
+      "charSeq": 6,
+      "classSeq": 6,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_4",
+      "classDesc": "COMPONENT 4",
+      "charTech": "C4MATERIALTYPE",
+      "charDesc": "MATERIAL TYPE",
+      "type": "CHAR",
+      "charSeq": 7,
+      "classSeq": 6,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_4",
+      "classDesc": "COMPONENT 4",
+      "charTech": "C4MILL_SUPPLIERNAME",
+      "charDesc": "MILL / SUPPLIER NAME",
+      "type": "CHAR",
+      "charSeq": 8,
+      "classSeq": 6,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_4",
+      "classDesc": "COMPONENT 4",
+      "charTech": "C4MILL_SUPLIER_QLTY_GRDE_FNSH",
+      "charDesc": "MILL/SUPLIER/QLTY/GRADE/FINISH",
+      "type": "CHAR",
+      "charSeq": 9,
+      "classSeq": 6,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_4",
+      "classDesc": "COMPONENT 4",
+      "charTech": "C4MATERIALCOLOR_VARIANCE",
+      "charDesc": "MATERIAL COLOR / VARIANCE",
+      "type": "CHAR",
+      "charSeq": 10,
+      "classSeq": 6,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_4",
+      "classDesc": "COMPONENT 4",
+      "charTech": "C4CALIPER_WEIGHT",
+      "charDesc": "CALIPER / WEIGHT",
+      "type": "NUM",
+      "charSeq": 11,
+      "classSeq": 6,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_4",
+      "classDesc": "COMPONENT 4",
+      "charTech": "C4MATERIALUNIT",
+      "charDesc": "MATERIAL UNIT",
+      "type": "CHAR",
+      "charSeq": 12,
+      "classSeq": 6,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_4",
+      "classDesc": "COMPONENT 4",
+      "charTech": "C4PURCHASECERTIFICATION",
+      "charDesc": "PURCHASE CERTIFICATION",
+      "type": "CHAR",
+      "charSeq": 13,
+      "classSeq": 6,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_4",
+      "classDesc": "COMPONENT 4",
+      "charTech": "C4CERTIFICATIONADDNLNOTE",
+      "charDesc": "CERTIFICATION ADDNL NOTE",
+      "type": "CHAR",
+      "charSeq": 14,
+      "classSeq": 6,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_4",
+      "classDesc": "COMPONENT 4",
+      "charTech": "C4TECHNICALRAWMATERIALSPEC",
+      "charDesc": "TECHNICAL RAW MATERIAL SPECS",
+      "type": "CHAR",
+      "charSeq": 15,
+      "classSeq": 6,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_4",
+      "classDesc": "COMPONENT 4",
+      "charTech": "C4PRINTINGTYPE1",
+      "charDesc": "PRINTING TYPE",
+      "type": "CHAR",
+      "charSeq": 16,
+      "classSeq": 6,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_4",
+      "classDesc": "COMPONENT 4",
+      "charTech": "C4NOOFDESIGNS_PRINT_1",
+      "charDesc": "NO OF DESIGNS / PRINT",
+      "type": "CHAR",
+      "charSeq": 17,
+      "classSeq": 6,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_4",
+      "classDesc": "COMPONENT 4",
+      "charTech": "C4NOOFCOLOURSF_B_1",
+      "charDesc": "NO OF COLOURS F/B",
+      "type": "CHAR",
+      "charSeq": 18,
+      "classSeq": 6,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_4",
+      "classDesc": "COMPONENT 4",
+      "charTech": "C4NAMEOFCOLORSF_B_1",
+      "charDesc": "NAME OF COLORS F/B",
+      "type": "CHAR",
+      "charSeq": 19,
+      "classSeq": 6,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_4",
+      "classDesc": "COMPONENT 4",
+      "charTech": "C4RULING_PRINTDESIGNNAME1",
+      "charDesc": "RULING / PRINT DESIGN  NAME",
+      "type": "CHAR",
+      "charSeq": 20,
+      "classSeq": 6,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_4",
+      "classDesc": "COMPONENT 4",
+      "charTech": "C4RULE_PRINTCODE1",
+      "charDesc": "RULE / PRINT CODE",
+      "type": "CHAR",
+      "charSeq": 21,
+      "classSeq": 6,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_4",
+      "classDesc": "COMPONENT 4",
+      "charTech": "C4PRINTINGTYPE2",
+      "charDesc": "PRINTING TYPE 2",
+      "type": "CHAR",
+      "charSeq": 22,
+      "classSeq": 6,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_4",
+      "classDesc": "COMPONENT 4",
+      "charTech": "C4NOOFDESIGNS_PRINT",
+      "charDesc": "NO OF DESIGNS / PRINT 2",
+      "type": "CHAR",
+      "charSeq": 23,
+      "classSeq": 6,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_4",
+      "classDesc": "COMPONENT 4",
+      "charTech": "C4NOOFCOLOURSF_B",
+      "charDesc": "NO OF COLOURS F/B 2",
+      "type": "CHAR",
+      "charSeq": 24,
+      "classSeq": 6,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_4",
+      "classDesc": "COMPONENT 4",
+      "charTech": "C4NAMEOFCOLORSF_B",
+      "charDesc": "NAME OF COLORS F/B 2",
+      "type": "CHAR",
+      "charSeq": 25,
+      "classSeq": 6,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_4",
+      "classDesc": "COMPONENT 4",
+      "charTech": "C4RULING_PRINTDESIGNNAME2",
+      "charDesc": "RULING / PRINT DESIGN  NAME 2",
+      "type": "CHAR",
+      "charSeq": 26,
+      "classSeq": 6,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_4",
+      "classDesc": "COMPONENT 4",
+      "charTech": "C4RULE_PRINTCODE2",
+      "charDesc": "RULE / PRINT CODE 2",
+      "type": "CHAR",
+      "charSeq": 27,
+      "classSeq": 6,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_4",
+      "classDesc": "COMPONENT 4",
+      "charTech": "C4PRINTNOTE",
+      "charDesc": "PRINT NOTE",
+      "type": "CHAR",
+      "charSeq": 28,
+      "classSeq": 6,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_4",
+      "classDesc": "COMPONENT 4",
+      "charTech": "C4FINISHING",
+      "charDesc": "FINISHING",
+      "type": "CHAR",
+      "charSeq": 29,
+      "classSeq": 6,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_4",
+      "classDesc": "COMPONENT 4",
+      "charTech": "C4FINISHINGNOTE",
+      "charDesc": "FINISHING NOTE",
+      "type": "CHAR",
+      "charSeq": 30,
+      "classSeq": 6,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_4",
+      "classDesc": "COMPONENT 4",
+      "charTech": "C4SPECIALNOTE",
+      "charDesc": "SPECIAL NOTE",
+      "type": "CHAR",
+      "charSeq": 31,
+      "classSeq": 6,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_4",
+      "classDesc": "COMPONENT 4",
+      "charTech": "C4ADDITIONALPROCESS",
+      "charDesc": "ADDITIONAL PROCESS",
+      "type": "CHAR",
+      "charSeq": 32,
+      "classSeq": 6,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_4",
+      "classDesc": "COMPONENT 4",
+      "charTech": "C4ADDITIONALINFO1",
+      "charDesc": "ADDITIONAL INFORMATION 1",
+      "type": "CHAR",
+      "charSeq": 33,
+      "classSeq": 6,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_4",
+      "classDesc": "COMPONENT 4",
+      "charTech": "C4ADDITIONALINFO2",
+      "charDesc": "ADDITIONAL INFORMATION 2",
+      "type": "CHAR",
+      "charSeq": 34,
+      "classSeq": 6,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_4",
+      "classDesc": "COMPONENT 4",
+      "charTech": "C4ADDITIONALINFO3",
+      "charDesc": "ADDITIONAL INFORMATION 3",
+      "type": "CHAR",
+      "charSeq": 35,
+      "classSeq": 6,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_5",
+      "classDesc": "COMPONENT 5",
+      "charTech": "COMPONENT5NAME",
+      "charDesc": "COMPONENT 5 NAME",
+      "type": "CHAR",
+      "charSeq": 1,
+      "classSeq": 7,
+      "tabNote": "This Value to be displayed as Tab Name"
+    },
+    {
+      "classTech": "NB_COMPONENT_5",
+      "classDesc": "COMPONENT 5",
+      "charTech": "C5SIZELENGTH",
+      "charDesc": "LENGTH SIZE (CM)",
+      "type": "NUM",
+      "charSeq": 2,
+      "classSeq": 7,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_5",
+      "classDesc": "COMPONENT 5",
+      "charTech": "C5SIZEWIDTH",
+      "charDesc": "WIDTH SIZE (CM)",
+      "type": "NUM",
+      "charSeq": 3,
+      "classSeq": 7,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_5",
+      "classDesc": "COMPONENT 5",
+      "charTech": "C5NOOFSHEETS",
+      "charDesc": "NO OF SHEETS",
+      "type": "NUM",
+      "charSeq": 4,
+      "classSeq": 7,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_5",
+      "classDesc": "COMPONENT 5",
+      "charTech": "C5MATERIALTYPE",
+      "charDesc": "MATERIAL TYPE",
+      "type": "CHAR",
+      "charSeq": 5,
+      "classSeq": 7,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_5",
+      "classDesc": "COMPONENT 5",
+      "charTech": "C5MILL_SUPPLIERNAME",
+      "charDesc": "MILL / SUPPLIER NAME",
+      "type": "CHAR",
+      "charSeq": 6,
+      "classSeq": 7,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_5",
+      "classDesc": "COMPONENT 5",
+      "charTech": "C5MILL_SUPLIER_QLTY_GRDE_FNSH",
+      "charDesc": "MILL/SUPLIER/QLTY/GRADE/FINISH",
+      "type": "CHAR",
+      "charSeq": 7,
+      "classSeq": 7,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_5",
+      "classDesc": "COMPONENT 5",
+      "charTech": "C5MATERIALCOLOR_VARIANCE",
+      "charDesc": "MATERIAL COLOR / VARIANCE",
+      "type": "CHAR",
+      "charSeq": 8,
+      "classSeq": 7,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_5",
+      "classDesc": "COMPONENT 5",
+      "charTech": "C5CALIPER_WEIGHT",
+      "charDesc": "CALIPER / WEIGHT",
+      "type": "NUM",
+      "charSeq": 9,
+      "classSeq": 7,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_5",
+      "classDesc": "COMPONENT 5",
+      "charTech": "C5MATERIALUNIT",
+      "charDesc": "MATERIAL UNIT",
+      "type": "CHAR",
+      "charSeq": 10,
+      "classSeq": 7,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_5",
+      "classDesc": "COMPONENT 5",
+      "charTech": "C5PURCHASECERTIFICATION",
+      "charDesc": "PURCHASE CERTIFICATION",
+      "type": "CHAR",
+      "charSeq": 11,
+      "classSeq": 7,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_5",
+      "classDesc": "COMPONENT 5",
+      "charTech": "C5CERTIFICATIONADDNLNOTE",
+      "charDesc": "CERTIFICATION ADDNL NOTE",
+      "type": "CHAR",
+      "charSeq": 12,
+      "classSeq": 7,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_5",
+      "classDesc": "COMPONENT 5",
+      "charTech": "C5TECHNICALRAWMATERIALSPEC",
+      "charDesc": "TECHNICAL RAW MATERIAL SPECS",
+      "type": "CHAR",
+      "charSeq": 13,
+      "classSeq": 7,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_5",
+      "classDesc": "COMPONENT 5",
+      "charTech": "C5PRINTINGTYPE1",
+      "charDesc": "PRINTING TYPE",
+      "type": "CHAR",
+      "charSeq": 14,
+      "classSeq": 7,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_5",
+      "classDesc": "COMPONENT 5",
+      "charTech": "C5NOOFDESIGNS_PRINT_1",
+      "charDesc": "NO OF DESIGNS / PRINT",
+      "type": "CHAR",
+      "charSeq": 15,
+      "classSeq": 7,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_5",
+      "classDesc": "COMPONENT 5",
+      "charTech": "C5NOOFCOLOURSF_B_1",
+      "charDesc": "NO OF COLOURS F/B",
+      "type": "CHAR",
+      "charSeq": 16,
+      "classSeq": 7,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_5",
+      "classDesc": "COMPONENT 5",
+      "charTech": "C5NAMEOFCOLORSF_B_1",
+      "charDesc": "NAME OF COLORS F/B",
+      "type": "CHAR",
+      "charSeq": 17,
+      "classSeq": 7,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_5",
+      "classDesc": "COMPONENT 5",
+      "charTech": "C5RULING_PRINTDESIGNNAME1",
+      "charDesc": "RULING / PRINT DESIGN  NAME",
+      "type": "CHAR",
+      "charSeq": 18,
+      "classSeq": 7,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_5",
+      "classDesc": "COMPONENT 5",
+      "charTech": "C5RULE_PRINTCODE1",
+      "charDesc": "RULE / PRINT CODE",
+      "type": "CHAR",
+      "charSeq": 19,
+      "classSeq": 7,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_5",
+      "classDesc": "COMPONENT 5",
+      "charTech": "C5PRINTINGTYPE2",
+      "charDesc": "PRINTING TYPE 2",
+      "type": "CHAR",
+      "charSeq": 20,
+      "classSeq": 7,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_5",
+      "classDesc": "COMPONENT 5",
+      "charTech": "C5NOOFDESIGNS_PRINT",
+      "charDesc": "NO OF DESIGNS / PRINT 2",
+      "type": "CHAR",
+      "charSeq": 21,
+      "classSeq": 7,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_5",
+      "classDesc": "COMPONENT 5",
+      "charTech": "C5NOOFCOLOURSF_B",
+      "charDesc": "NO OF COLOURS F/B 2",
+      "type": "CHAR",
+      "charSeq": 22,
+      "classSeq": 7,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_5",
+      "classDesc": "COMPONENT 5",
+      "charTech": "C5NAMEOFCOLORSF_B",
+      "charDesc": "NAME OF COLORS F/B 2",
+      "type": "CHAR",
+      "charSeq": 23,
+      "classSeq": 7,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_5",
+      "classDesc": "COMPONENT 5",
+      "charTech": "C5RULING_PRINTDESIGNNAME2",
+      "charDesc": "RULING / PRINT DESIGN  NAME 2",
+      "type": "CHAR",
+      "charSeq": 24,
+      "classSeq": 7,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_5",
+      "classDesc": "COMPONENT 5",
+      "charTech": "C5RULE_PRINTCODE2",
+      "charDesc": "RULE / PRINT CODE",
+      "type": "CHAR",
+      "charSeq": 25,
+      "classSeq": 7,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_5",
+      "classDesc": "COMPONENT 5",
+      "charTech": "C5PRINTNOTE",
+      "charDesc": "PRINT NOTE",
+      "type": "CHAR",
+      "charSeq": 26,
+      "classSeq": 7,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_5",
+      "classDesc": "COMPONENT 5",
+      "charTech": "C5FINISHING",
+      "charDesc": "FINISHING",
+      "type": "CHAR",
+      "charSeq": 27,
+      "classSeq": 7,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_5",
+      "classDesc": "COMPONENT 5",
+      "charTech": "C5FINISHINGNOTE",
+      "charDesc": "FINISHING NOTE",
+      "type": "CHAR",
+      "charSeq": 28,
+      "classSeq": 7,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_5",
+      "classDesc": "COMPONENT 5",
+      "charTech": "C5SPECIALNOTE",
+      "charDesc": "SPECIAL NOTE",
+      "type": "CHAR",
+      "charSeq": 29,
+      "classSeq": 7,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_5",
+      "classDesc": "COMPONENT 5",
+      "charTech": "C5ADDITIONALPROCESS",
+      "charDesc": "ADDITIONAL PROCESS",
+      "type": "CHAR",
+      "charSeq": 30,
+      "classSeq": 7,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_6",
+      "classDesc": "COMPONENT 6",
+      "charTech": "COMPONENT6NAME",
+      "charDesc": "COMPONENT 6 NAME",
+      "type": "CHAR",
+      "charSeq": 1,
+      "classSeq": 8,
+      "tabNote": "This Value to be displayed as Tab Name"
+    },
+    {
+      "classTech": "NB_COMPONENT_6",
+      "classDesc": "COMPONENT 6",
+      "charTech": "C6SIZELENGTH",
+      "charDesc": "LENGTH SIZE (CM)",
+      "type": "NUM",
+      "charSeq": 2,
+      "classSeq": 8,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_6",
+      "classDesc": "COMPONENT 6",
+      "charTech": "C6SIZEWIDTH",
+      "charDesc": "WIDTH SIZE (CM)",
+      "type": "NUM",
+      "charSeq": 3,
+      "classSeq": 8,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_6",
+      "classDesc": "COMPONENT 6",
+      "charTech": "C6NOOFSHEETS",
+      "charDesc": "NO OF SHEETS",
+      "type": "NUM",
+      "charSeq": 4,
+      "classSeq": 8,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_6",
+      "classDesc": "COMPONENT 6",
+      "charTech": "C6MATERIALTYPE",
+      "charDesc": "MATERIAL TYPE",
+      "type": "CHAR",
+      "charSeq": 5,
+      "classSeq": 8,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_6",
+      "classDesc": "COMPONENT 6",
+      "charTech": "C6MILL_SUPPLIERNAME",
+      "charDesc": "MILL / SUPPLIER NAME",
+      "type": "CHAR",
+      "charSeq": 6,
+      "classSeq": 8,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_6",
+      "classDesc": "COMPONENT 6",
+      "charTech": "C6MILL_SUPLIER_QLTY_GRDE_FNSH",
+      "charDesc": "MILL/SUPLIER/QLTY/GRADE/FINISH",
+      "type": "CHAR",
+      "charSeq": 7,
+      "classSeq": 8,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_6",
+      "classDesc": "COMPONENT 6",
+      "charTech": "C6MATERIALCOLOR_VARIANCE",
+      "charDesc": "MATERIAL COLOR / VARIANCE",
+      "type": "CHAR",
+      "charSeq": 8,
+      "classSeq": 8,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_6",
+      "classDesc": "COMPONENT 6",
+      "charTech": "C6CALIPER_WEIGHT",
+      "charDesc": "CALIPER / WEIGHT",
+      "type": "NUM",
+      "charSeq": 9,
+      "classSeq": 8,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_6",
+      "classDesc": "COMPONENT 6",
+      "charTech": "C6MATERIALUNIT",
+      "charDesc": "MATERIAL UNIT",
+      "type": "CHAR",
+      "charSeq": 10,
+      "classSeq": 8,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_6",
+      "classDesc": "COMPONENT 6",
+      "charTech": "C6PURCHASECERTIFICATION",
+      "charDesc": "PURCHASE CERTIFICATION",
+      "type": "CHAR",
+      "charSeq": 11,
+      "classSeq": 8,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_6",
+      "classDesc": "COMPONENT 6",
+      "charTech": "C6CERTIFICATIONADDNLNOTE",
+      "charDesc": "CERTIFICATION ADDNL NOTE",
+      "type": "CHAR",
+      "charSeq": 12,
+      "classSeq": 8,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_6",
+      "classDesc": "COMPONENT 6",
+      "charTech": "C6TECHNICALRAWMATERIALSPEC",
+      "charDesc": "TECHNICAL RAW MATERIAL SPECS",
+      "type": "CHAR",
+      "charSeq": 13,
+      "classSeq": 8,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_6",
+      "classDesc": "COMPONENT 6",
+      "charTech": "C6PRINTINGTYPE1",
+      "charDesc": "PRINTING TYPE",
+      "type": "CHAR",
+      "charSeq": 14,
+      "classSeq": 8,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_6",
+      "classDesc": "COMPONENT 6",
+      "charTech": "C6NOOFDESIGNS_PRINT_1",
+      "charDesc": "NO OF DESIGNS / PRINT",
+      "type": "CHAR",
+      "charSeq": 15,
+      "classSeq": 8,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_6",
+      "classDesc": "COMPONENT 6",
+      "charTech": "C6NOOFCOLOURSF_B_1",
+      "charDesc": "NO OF COLOURS F/B",
+      "type": "CHAR",
+      "charSeq": 16,
+      "classSeq": 8,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_6",
+      "classDesc": "COMPONENT 6",
+      "charTech": "C6NAMEOFCOLORSF_B_1",
+      "charDesc": "NAME OF COLORS F/B",
+      "type": "CHAR",
+      "charSeq": 17,
+      "classSeq": 8,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_6",
+      "classDesc": "COMPONENT 6",
+      "charTech": "C6RULING_PRINTDESIGNNAME1",
+      "charDesc": "RULING / PRINT DESIGN  NAME",
+      "type": "CHAR",
+      "charSeq": 18,
+      "classSeq": 8,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_6",
+      "classDesc": "COMPONENT 6",
+      "charTech": "C6RULE_PRINTCODE1",
+      "charDesc": "RULE / PRINT CODE",
+      "type": "CHAR",
+      "charSeq": 19,
+      "classSeq": 8,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_6",
+      "classDesc": "COMPONENT 6",
+      "charTech": "C6PRINTINGTYPE2",
+      "charDesc": "PRINTING TYPE 2",
+      "type": "CHAR",
+      "charSeq": 20,
+      "classSeq": 8,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_6",
+      "classDesc": "COMPONENT 6",
+      "charTech": "C6NOOFDESIGNS_PRINT",
+      "charDesc": "NO OF DESIGNS / PRINT 2",
+      "type": "CHAR",
+      "charSeq": 21,
+      "classSeq": 8,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_6",
+      "classDesc": "COMPONENT 6",
+      "charTech": "C6NOOFCOLOURSF_B",
+      "charDesc": "NO OF COLOURS F/B 2",
+      "type": "CHAR",
+      "charSeq": 22,
+      "classSeq": 8,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_6",
+      "classDesc": "COMPONENT 6",
+      "charTech": "C6NAMEOFCOLORSF_B",
+      "charDesc": "NAME OF COLORS F/B 2",
+      "type": "CHAR",
+      "charSeq": 23,
+      "classSeq": 8,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_6",
+      "classDesc": "COMPONENT 6",
+      "charTech": "C6RULING_PRINTDESIGNNAME2",
+      "charDesc": "RULING / PRINT DESIGN  NAME 2",
+      "type": "CHAR",
+      "charSeq": 24,
+      "classSeq": 8,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_6",
+      "classDesc": "COMPONENT 6",
+      "charTech": "C6RULE_PRINTCODE2",
+      "charDesc": "RULE / PRINT CODE 2",
+      "type": "CHAR",
+      "charSeq": 25,
+      "classSeq": 8,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_6",
+      "classDesc": "COMPONENT 6",
+      "charTech": "C6PRINTNOTE",
+      "charDesc": "PRINT NOTE",
+      "type": "CHAR",
+      "charSeq": 26,
+      "classSeq": 8,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_6",
+      "classDesc": "COMPONENT 6",
+      "charTech": "C6FINISHING",
+      "charDesc": "FINISHING",
+      "type": "CHAR",
+      "charSeq": 27,
+      "classSeq": 8,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_6",
+      "classDesc": "COMPONENT 6",
+      "charTech": "C6FINISHINGNOTE",
+      "charDesc": "FINISHING NOTE",
+      "type": "CHAR",
+      "charSeq": 28,
+      "classSeq": 8,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_6",
+      "classDesc": "COMPONENT 6",
+      "charTech": "C6SPECIALNOTE",
+      "charDesc": "SPECIAL NOTE",
+      "type": "CHAR",
+      "charSeq": 29,
+      "classSeq": 8,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_6",
+      "classDesc": "COMPONENT 6",
+      "charTech": "C6ADDITIONALPROCESS",
+      "charDesc": "ADDITIONAL PROCESS",
+      "type": "CHAR",
+      "charSeq": 30,
+      "classSeq": 8,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_7",
+      "classDesc": "COMPONENT 7",
+      "charTech": "C7PRODUCT_TYPE",
+      "charDesc": "PRODUCT TYPE",
+      "type": "CHAR",
+      "charSeq": 1,
+      "classSeq": 9,
+      "tabNote": "This Value to be displayed as Tab Name"
+    },
+    {
+      "classTech": "NB_COMPONENT_7",
+      "classDesc": "COMPONENT 7",
+      "charTech": "C7CANVAS_MATERIAL",
+      "charDesc": "CANVAS MATERIAL",
+      "type": "CHAR",
+      "charSeq": 2,
+      "classSeq": 9,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_7",
+      "classDesc": "COMPONENT 7",
+      "charTech": "C7CONSTRUCTION_REEDXPICK",
+      "charDesc": "CONSTRUCTION REED X PICK",
+      "type": "CHAR",
+      "charSeq": 3,
+      "classSeq": 9,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_7",
+      "classDesc": "COMPONENT 7",
+      "charTech": "C7COUNT_REEDXPICK",
+      "charDesc": "COUNT REED X PICK",
+      "type": "CHAR",
+      "charSeq": 4,
+      "classSeq": 9,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_7",
+      "classDesc": "COMPONENT 7",
+      "charTech": "C7NOTE_FOR_CANVAS",
+      "charDesc": "NOTE FOR CANVAS MATERIAL",
+      "type": "CHAR",
+      "charSeq": 5,
+      "classSeq": 9,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_7",
+      "classDesc": "COMPONENT 7",
+      "charTech": "C7MATERIAL_TYPE",
+      "charDesc": "MATERIAL TYPE",
+      "type": "CHAR",
+      "charSeq": 6,
+      "classSeq": 9,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_7",
+      "classDesc": "COMPONENT 7",
+      "charTech": "C7MILL_SUPPLIERNAME",
+      "charDesc": "MILL / SUPPLIER NAME",
+      "type": "CHAR",
+      "charSeq": 7,
+      "classSeq": 9,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_7",
+      "classDesc": "COMPONENT 7",
+      "charTech": "C7MILL_SUPLIER_QLTY_GRDE_FNSH",
+      "charDesc": "MILL/SUPLIER/QLTY/GRADE/FINISH",
+      "type": "CHAR",
+      "charSeq": 8,
+      "classSeq": 9,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_7",
+      "classDesc": "COMPONENT 7",
+      "charTech": "C7MATERIAL_COLOUR",
+      "charDesc": "CANVAS MATERIAL COLOUR",
+      "type": "CHAR",
+      "charSeq": 9,
+      "classSeq": 9,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_7",
+      "classDesc": "COMPONENT 7",
+      "charTech": "C7MATERIAL_CERTIFICATION",
+      "charDesc": "TECHNICAL RAW MATERIAL SPECS",
+      "type": "CHAR",
+      "charSeq": 10,
+      "classSeq": 9,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_7",
+      "classDesc": "COMPONENT 7",
+      "charTech": "C7FINISHING",
+      "charDesc": "FINISHING",
+      "type": "CHAR",
+      "charSeq": 11,
+      "classSeq": 9,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_7",
+      "classDesc": "COMPONENT 7",
+      "charTech": "C7CALIPER_WEIGHT",
+      "charDesc": "CALIPER / WEIGHT",
+      "type": "NUM",
+      "charSeq": 12,
+      "classSeq": 9,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_7",
+      "classDesc": "COMPONENT 7",
+      "charTech": "C7MATERIALUNIT",
+      "charDesc": "MATERIAL UNIT",
+      "type": "CHAR",
+      "charSeq": 13,
+      "classSeq": 9,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_7",
+      "classDesc": "COMPONENT 7",
+      "charTech": "C7PANNEL_TYPE",
+      "charDesc": "PANNEL MATERIAL TYPE",
+      "type": "CHAR",
+      "charSeq": 14,
+      "classSeq": 9,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_7",
+      "classDesc": "COMPONENT 7",
+      "charTech": "C71NCALIPER_WEIGHT",
+      "charDesc": "CALIPER / WEIGHT",
+      "type": "NUM",
+      "charSeq": 15,
+      "classSeq": 9,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_7",
+      "classDesc": "COMPONENT 7",
+      "charTech": "C71MATERIALUNIT",
+      "charDesc": "MATERIAL UNIT",
+      "type": "CHAR",
+      "charSeq": 19,
+      "classSeq": 9,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_7",
+      "classDesc": "COMPONENT 7",
+      "charTech": "C7MILL_SUPPLIERNAME2",
+      "charDesc": "MILL NAME",
+      "type": "CHAR",
+      "charSeq": 20,
+      "classSeq": 9,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_7",
+      "classDesc": "COMPONENT 7",
+      "charTech": "C7MILL_SUPLIER_QLTY_GRDE_FNSH2",
+      "charDesc": "MILL/SUPLIER/QLTY/GRADE/FINISH",
+      "type": "CHAR",
+      "charSeq": 21,
+      "classSeq": 9,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_7",
+      "classDesc": "COMPONENT 7",
+      "charTech": "C7MDF_CERT",
+      "charDesc": "CERTIFICATION REQ",
+      "type": "CHAR",
+      "charSeq": 22,
+      "classSeq": 9,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_7",
+      "classDesc": "COMPONENT 7",
+      "charTech": "C7SPECIAL_NOTE",
+      "charDesc": "SPECIAL NOTE",
+      "type": "CHAR",
+      "charSeq": 23,
+      "classSeq": 9,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_7",
+      "classDesc": "COMPONENT 7",
+      "charTech": "C7FRAME_MAT_TYPE",
+      "charDesc": "FRAME MATERIAL TYPE",
+      "type": "CHAR",
+      "charSeq": 24,
+      "classSeq": 9,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_7",
+      "classDesc": "COMPONENT 7",
+      "charTech": "C7FRAME_INCH",
+      "charDesc": "FRAME SIZE IN INCH",
+      "type": "CHAR",
+      "charSeq": 25,
+      "classSeq": 9,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_7",
+      "classDesc": "COMPONENT 7",
+      "charTech": "C7FRAME_THICKNESS",
+      "charDesc": "FRAME PROFILE THICKNESS IN MM",
+      "type": "NUM",
+      "charSeq": 26,
+      "classSeq": 9,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_7",
+      "classDesc": "COMPONENT 7",
+      "charTech": "C7FRAME_BACK_WIDTH",
+      "charDesc": "FRAME BCK WIDTH THICKNES IN MM",
+      "type": "NUM",
+      "charSeq": 27,
+      "classSeq": 9,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_7",
+      "classDesc": "COMPONENT 7",
+      "charTech": "C7FRAME_TYPE",
+      "charDesc": "FRAME JOINT TYPE",
+      "type": "CHAR",
+      "charSeq": 28,
+      "classSeq": 9,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_7",
+      "classDesc": "COMPONENT 7",
+      "charTech": "C7BEVEL_REQUIRED",
+      "charDesc": "BEVEL REQUIRED",
+      "type": "CHAR",
+      "charSeq": 29,
+      "classSeq": 9,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_COMPONENT_7",
+      "classDesc": "COMPONENT 7",
+      "charTech": "C7FRAME_CERT",
+      "charDesc": "PURCHASE CERTIFICATION REQ",
+      "type": "CHAR",
+      "charSeq": 30,
+      "classSeq": 9,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_DIVIDER_SPECS",
+      "classDesc": "DIVIDER SPECIFICATION",
+      "charTech": "NOOFDIVIDERSOFTYPE1",
+      "charDesc": "NO OF DIVIDERS OF TYPE 1",
+      "type": "CHAR",
+      "charSeq": 1,
+      "classSeq": 10,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_DIVIDER_SPECS",
+      "classDesc": "DIVIDER SPECIFICATION",
+      "charTech": "DIVIDERSTYPE1",
+      "charDesc": "DIVIDERS TYPE",
+      "type": "CHAR",
+      "charSeq": 2,
+      "classSeq": 10,
+      "tabNote": "This Value to be displayed as Tab Name"
+    },
+    {
+      "classTech": "NB_DIVIDER_SPECS",
+      "classDesc": "DIVIDER SPECIFICATION",
+      "charTech": "DIVIDERPOSITION1",
+      "charDesc": "DIVIDER POSITION",
+      "type": "CHAR",
+      "charSeq": 3,
+      "classSeq": 10,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_DIVIDER_SPECS",
+      "classDesc": "DIVIDER SPECIFICATION",
+      "charTech": "TABSTYLEOF1STDIVIDERS",
+      "charDesc": "TAB STYLE OF  DIVIDERS",
+      "type": "CHAR",
+      "charSeq": 4,
+      "classSeq": 10,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_DIVIDER_SPECS",
+      "classDesc": "DIVIDER SPECIFICATION",
+      "charTech": "POCKETSTYLEOF1STDIVIDERS",
+      "charDesc": "POCKET STYLE OF DIVIDERS",
+      "type": "CHAR",
+      "charSeq": 5,
+      "classSeq": 10,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_DIVIDER_SPECS",
+      "classDesc": "DIVIDER SPECIFICATION",
+      "charTech": "DIVIDER1SIZEINCLTABWIDTH",
+      "charDesc": "DIVIDER SIZE LENGTH",
+      "type": "NUM",
+      "charSeq": 6,
+      "classSeq": 10,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_DIVIDER_SPECS",
+      "classDesc": "DIVIDER SPECIFICATION",
+      "charTech": "DIVIDER1SIZEWIDTH",
+      "charDesc": "DIVIDER SIZE WIDTH",
+      "type": "NUM",
+      "charSeq": 7,
+      "classSeq": 10,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_DIVIDER_SPECS",
+      "classDesc": "DIVIDER SPECIFICATION",
+      "charTech": "DIVIDER1SIZEINCLTABLENGTH",
+      "charDesc": "DIVIDER SIZE INCL TAB WIDTH",
+      "type": "NUM",
+      "charSeq": 8,
+      "classSeq": 10,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_DIVIDER_SPECS",
+      "classDesc": "DIVIDER SPECIFICATION",
+      "charTech": "DIVIDERMATERIALTYPE1",
+      "charDesc": "DIVIDER MATERIAL TYPE",
+      "type": "CHAR",
+      "charSeq": 9,
+      "classSeq": 10,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_DIVIDER_SPECS",
+      "classDesc": "DIVIDER SPECIFICATION",
+      "charTech": "D1MILL_SUPPLIER_SNAME",
+      "charDesc": "MILL / SUPPLIER'S NAME",
+      "type": "CHAR",
+      "charSeq": 10,
+      "classSeq": 10,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_DIVIDER_SPECS",
+      "classDesc": "DIVIDER SPECIFICATION",
+      "charTech": "D1MILL_SUPLIER_QLTY_GRDE_FNSH",
+      "charDesc": "MILL/SUPLIER/QLTY/GRADE/FINISH",
+      "type": "CHAR",
+      "charSeq": 11,
+      "classSeq": 10,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_DIVIDER_SPECS",
+      "classDesc": "DIVIDER SPECIFICATION",
+      "charTech": "D1MATERIALCOLOR_VARIANCE",
+      "charDesc": "MATERIAL COLOR / VARIANCE",
+      "type": "CHAR",
+      "charSeq": 12,
+      "classSeq": 10,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_DIVIDER_SPECS",
+      "classDesc": "DIVIDER SPECIFICATION",
+      "charTech": "D1DIVIDERCALIPER_WEIGHT",
+      "charDesc": "DIVIDER CALIPER / WEIGHT",
+      "type": "NUM",
+      "charSeq": 13,
+      "classSeq": 10,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_DIVIDER_SPECS",
+      "classDesc": "DIVIDER SPECIFICATION",
+      "charTech": "D1DIVIDERMATERIALUNIT",
+      "charDesc": "DIVIDER MATERIAL UNIT",
+      "type": "CHAR",
+      "charSeq": 14,
+      "classSeq": 10,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_DIVIDER_SPECS",
+      "classDesc": "DIVIDER SPECIFICATION",
+      "charTech": "D1DIVIDERPURCHASECERT",
+      "charDesc": "DIVIDER PURCHASE CERTIFICATION",
+      "type": "CHAR",
+      "charSeq": 15,
+      "classSeq": 10,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_DIVIDER_SPECS",
+      "classDesc": "DIVIDER SPECIFICATION",
+      "charTech": "D1DIVIDERTECHMATERIALSPEC",
+      "charDesc": "TECHNICAL RAW MATERIAL SPECS",
+      "type": "CHAR",
+      "charSeq": 16,
+      "classSeq": 10,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_DIVIDER_SPECS",
+      "classDesc": "DIVIDER SPECIFICATION",
+      "charTech": "D1PRINTINGTYPE",
+      "charDesc": "PRINTING TYPE",
+      "type": "CHAR",
+      "charSeq": 17,
+      "classSeq": 10,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_DIVIDER_SPECS",
+      "classDesc": "DIVIDER SPECIFICATION",
+      "charTech": "D1NOOFDESIGNS_PRINT",
+      "charDesc": "NO OF DESIGNS / PRINT",
+      "type": "CHAR",
+      "charSeq": 18,
+      "classSeq": 10,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_DIVIDER_SPECS",
+      "classDesc": "DIVIDER SPECIFICATION",
+      "charTech": "D1NOOFCOLOURSF_B",
+      "charDesc": "NO OF COLOURS F/B",
+      "type": "CHAR",
+      "charSeq": 19,
+      "classSeq": 10,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_DIVIDER_SPECS",
+      "classDesc": "DIVIDER SPECIFICATION",
+      "charTech": "D1NAMEOFCOLORSF_B",
+      "charDesc": "NAME OF COLORS F/B",
+      "type": "CHAR",
+      "charSeq": 20,
+      "classSeq": 10,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_DIVIDER_SPECS",
+      "classDesc": "DIVIDER SPECIFICATION",
+      "charTech": "D1PRINTFINISHING",
+      "charDesc": "PRINT FINISHING",
+      "type": "CHAR",
+      "charSeq": 21,
+      "classSeq": 10,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_DIVIDER_SPECS",
+      "classDesc": "DIVIDER SPECIFICATION",
+      "charTech": "D1ADDITIONALINFOFORDIVIDER",
+      "charDesc": "ADDITIONAL INFO FOR DIVIDERS",
+      "type": "CHAR",
+      "charSeq": 22,
+      "classSeq": 10,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_DIVIDER_SPECS",
+      "classDesc": "DIVIDER SPECIFICATION",
+      "charTech": "D1NOOFDIVIDERSOFTYPE2",
+      "charDesc": "NO OF DIVIDERS OF TYPE 2",
+      "type": "CHAR",
+      "charSeq": 23,
+      "classSeq": 10,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_DIVIDER_SPECS",
+      "classDesc": "DIVIDER SPECIFICATION",
+      "charTech": "DIVIDERSTYPE2",
+      "charDesc": "DIVIDERS TYPE",
+      "type": "CHAR",
+      "charSeq": 24,
+      "classSeq": 10,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_DIVIDER_SPECS",
+      "classDesc": "DIVIDER SPECIFICATION",
+      "charTech": "DIVIDERPOSITION2",
+      "charDesc": "DIVIDER POSITION",
+      "type": "CHAR",
+      "charSeq": 25,
+      "classSeq": 10,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_DIVIDER_SPECS",
+      "classDesc": "DIVIDER SPECIFICATION",
+      "charTech": "TABSTYLEOF2NDDIVIDERS",
+      "charDesc": "TAB STYLE OF  DIVIDERS",
+      "type": "CHAR",
+      "charSeq": 26,
+      "classSeq": 10,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_DIVIDER_SPECS",
+      "classDesc": "DIVIDER SPECIFICATION",
+      "charTech": "POCKETSTYLEOFDIVIDERS",
+      "charDesc": "POCKET STYLE OF DIVIDERS",
+      "type": "CHAR",
+      "charSeq": 27,
+      "classSeq": 10,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_DIVIDER_SPECS",
+      "classDesc": "DIVIDER SPECIFICATION",
+      "charTech": "DIVIDERSIZEINCLTABWIDTH",
+      "charDesc": "DIVIDER SIZE INCL TAB WIDTH",
+      "type": "NUM",
+      "charSeq": 28,
+      "classSeq": 10,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_DIVIDER_SPECS",
+      "classDesc": "DIVIDER SPECIFICATION",
+      "charTech": "DIVIDERSIZEINCLTABLENGTH",
+      "charDesc": "DIVIDER SIZE INCL TAB LENGTH",
+      "type": "NUM",
+      "charSeq": 29,
+      "classSeq": 10,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_DIVIDER_SPECS",
+      "classDesc": "DIVIDER SPECIFICATION",
+      "charTech": "DIVIDERMATERIALTYPE2",
+      "charDesc": "DIVIDER MATERIAL TYPE",
+      "type": "CHAR",
+      "charSeq": 30,
+      "classSeq": 10,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_DIVIDER_SPECS",
+      "classDesc": "DIVIDER SPECIFICATION",
+      "charTech": "D2MILL_SUPPLIER_SNAME",
+      "charDesc": "MILL / SUPPLIER'S NAME",
+      "type": "CHAR",
+      "charSeq": 33,
+      "classSeq": 10,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_DIVIDER_SPECS",
+      "classDesc": "DIVIDER SPECIFICATION",
+      "charTech": "D2MILL_SUPLIER_QLTY_GRDE_FNSH",
+      "charDesc": "MILL/SUPLIER/QLTY/GRADE/FINISH",
+      "type": "CHAR",
+      "charSeq": 34,
+      "classSeq": 10,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_DIVIDER_SPECS",
+      "classDesc": "DIVIDER SPECIFICATION",
+      "charTech": "D2MATERIALCOLOR_VARIANCE",
+      "charDesc": "MATERIAL COLOR / VARIANCE",
+      "type": "CHAR",
+      "charSeq": 35,
+      "classSeq": 10,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_DIVIDER_SPECS",
+      "classDesc": "DIVIDER SPECIFICATION",
+      "charTech": "D2DIVIDERCALIPER_WEIGHT",
+      "charDesc": "DIVIDER CALIPER / WEIGHT",
+      "type": "NUM",
+      "charSeq": 36,
+      "classSeq": 10,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_DIVIDER_SPECS",
+      "classDesc": "DIVIDER SPECIFICATION",
+      "charTech": "D2DIVIDERMATERIALUNIT",
+      "charDesc": "DIVIDER MATERIAL UNIT",
+      "type": "CHAR",
+      "charSeq": 37,
+      "classSeq": 10,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_DIVIDER_SPECS",
+      "classDesc": "DIVIDER SPECIFICATION",
+      "charTech": "D2DIVIDERPURCHASECERT",
+      "charDesc": "DIVIDER PURCHASE CERTIFICATE",
+      "type": "CHAR",
+      "charSeq": 38,
+      "classSeq": 10,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_DIVIDER_SPECS",
+      "classDesc": "DIVIDER SPECIFICATION",
+      "charTech": "D2DIVIDERTECHMATERIALSPEC",
+      "charDesc": "TECHNICAL RAW MATERIAL SPECS",
+      "type": "CHAR",
+      "charSeq": 39,
+      "classSeq": 10,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_DIVIDER_SPECS",
+      "classDesc": "DIVIDER SPECIFICATION",
+      "charTech": "D2PRINTINGTYPE",
+      "charDesc": "PRINTING TYPE",
+      "type": "CHAR",
+      "charSeq": 40,
+      "classSeq": 10,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_DIVIDER_SPECS",
+      "classDesc": "DIVIDER SPECIFICATION",
+      "charTech": "D2NOOFDESIGNS_PRINT",
+      "charDesc": "NO OF DESIGNS / PRINT",
+      "type": "CHAR",
+      "charSeq": 41,
+      "classSeq": 10,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_DIVIDER_SPECS",
+      "classDesc": "DIVIDER SPECIFICATION",
+      "charTech": "D2NOOFCOLOURSF_B",
+      "charDesc": "NO OF COLOURS F/B",
+      "type": "CHAR",
+      "charSeq": 42,
+      "classSeq": 10,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_DIVIDER_SPECS",
+      "classDesc": "DIVIDER SPECIFICATION",
+      "charTech": "D2NAMEOFCOLORSF_B",
+      "charDesc": "NAME OF COLORS F/B",
+      "type": "CHAR",
+      "charSeq": 43,
+      "classSeq": 10,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_DIVIDER_SPECS",
+      "classDesc": "DIVIDER SPECIFICATION",
+      "charTech": "D2PRINTFINISHING",
+      "charDesc": "PRINT FINISHING",
+      "type": "CHAR",
+      "charSeq": 44,
+      "classSeq": 10,
+      "tabNote": null
+    },
+    {
+      "classTech": "NB_DIVIDER_SPECS",
+      "classDesc": "DIVIDER SPECIFICATION",
+      "charTech": "D2ADDITIONALINFOFORDIVIDER",
+      "charDesc": "ADDITIONAL INFO FOR DIVIDERS",
+      "type": "CHAR",
+      "charSeq": 45,
+      "classSeq": 10,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKAGING_SPECS_1",
+      "classDesc": "PACKAGING SPECIFICATION 1",
+      "charTech": "PACKAGETYPE1",
+      "charDesc": "PACKAGING TYPE 1",
+      "type": "CHAR",
+      "charSeq": 1,
+      "classSeq": 11,
+      "tabNote": "This Value to be displayed as Tab Name"
+    },
+    {
+      "classTech": "PACKAGING_SPECS_1",
+      "classDesc": "PACKAGING SPECIFICATION 1",
+      "charTech": "P1_APPLICATION",
+      "charDesc": "APPLICATION",
+      "type": "CHAR",
+      "charSeq": 2,
+      "classSeq": 11,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKAGING_SPECS_1",
+      "classDesc": "PACKAGING SPECIFICATION 1",
+      "charTech": "P1_POSITIONING",
+      "charDesc": "POSITIONING",
+      "type": "CHAR",
+      "charSeq": 3,
+      "classSeq": 11,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKAGING_SPECS_1",
+      "classDesc": "PACKAGING SPECIFICATION 1",
+      "charTech": "PACKAGING1SIZELENGTH",
+      "charDesc": "PACKAGING 1 SIZE LENGTH (CM)",
+      "type": "NUM",
+      "charSeq": 4,
+      "classSeq": 11,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKAGING_SPECS_1",
+      "classDesc": "PACKAGING SPECIFICATION 1",
+      "charTech": "PACKAGING1SIZEWIDTH",
+      "charDesc": "PACKAGING 1 SIZE WIDTH (CM)",
+      "type": "NUM",
+      "charSeq": 5,
+      "classSeq": 11,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKAGING_SPECS_1",
+      "classDesc": "PACKAGING SPECIFICATION 1",
+      "charTech": "PACKAGING1MATERIALTYPE",
+      "charDesc": "PACKAGING 1 MATERIAL TYPE",
+      "type": "CHAR",
+      "charSeq": 6,
+      "classSeq": 11,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKAGING_SPECS_1",
+      "classDesc": "PACKAGING SPECIFICATION 1",
+      "charTech": "PACKAGINGMILL_SUPPLIERNAME",
+      "charDesc": "PACKAGING MILL / SUPPLIER NAME",
+      "type": "CHAR",
+      "charSeq": 7,
+      "classSeq": 11,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKAGING_SPECS_1",
+      "classDesc": "PACKAGING SPECIFICATION 1",
+      "charTech": "PCKGMILL_SUPPLIER_QLTY_GRADE",
+      "charDesc": "MIL/SUPPLIER/QLTY/GRADE/FINISH",
+      "type": "CHAR",
+      "charSeq": 8,
+      "classSeq": 11,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKAGING_SPECS_1",
+      "classDesc": "PACKAGING SPECIFICATION 1",
+      "charTech": "CALIPER_WEIGHT",
+      "charDesc": "CALIPER / WEIGHT",
+      "type": "NUM",
+      "charSeq": 9,
+      "classSeq": 11,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKAGING_SPECS_1",
+      "classDesc": "PACKAGING SPECIFICATION 1",
+      "charTech": "MATERIALUNIT",
+      "charDesc": "MATERIAL UNIT",
+      "type": "CHAR",
+      "charSeq": 10,
+      "classSeq": 11,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKAGING_SPECS_1",
+      "classDesc": "PACKAGING SPECIFICATION 1",
+      "charTech": "P1PRINTINGTYPE",
+      "charDesc": "PRINTING TYPE 1",
+      "type": "CHAR",
+      "charSeq": 11,
+      "classSeq": 11,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKAGING_SPECS_1",
+      "classDesc": "PACKAGING SPECIFICATION 1",
+      "charTech": "NOOFCOLOURSF_B",
+      "charDesc": "NO OF COLOURS F/B",
+      "type": "CHAR",
+      "charSeq": 12,
+      "classSeq": 11,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKAGING_SPECS_1",
+      "classDesc": "PACKAGING SPECIFICATION 1",
+      "charTech": "NAMEOFCOLORSF_B",
+      "charDesc": "NAME OF COLORS F/B",
+      "type": "CHAR",
+      "charSeq": 13,
+      "classSeq": 11,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKAGING_SPECS_1",
+      "classDesc": "PACKAGING SPECIFICATION 1",
+      "charTech": "PACKAGING1FINISHING",
+      "charDesc": "PACKAGING 1 FINISHING",
+      "type": "CHAR",
+      "charSeq": 14,
+      "classSeq": 11,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKAGING_SPECS_1",
+      "classDesc": "PACKAGING SPECIFICATION 1",
+      "charTech": "ADDITIONALPROCESS",
+      "charDesc": "ADDITIONAL PROCESS",
+      "type": "CHAR",
+      "charSeq": 15,
+      "classSeq": 11,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKAGING_SPECS_1",
+      "classDesc": "PACKAGING SPECIFICATION 1",
+      "charTech": "PACKAGING1SPECIALNOTE",
+      "charDesc": "PACKAGING  1 SPECIAL  NOTE",
+      "type": "CHAR",
+      "charSeq": 16,
+      "classSeq": 11,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKAGING_SPECS_1",
+      "classDesc": "PACKAGING SPECIFICATION 1",
+      "charTech": "PACKAGETYPE2",
+      "charDesc": "PACKAGING TYPE 2",
+      "type": "CHAR",
+      "charSeq": 17,
+      "classSeq": 11,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKAGING_SPECS_1",
+      "classDesc": "PACKAGING SPECIFICATION 1",
+      "charTech": "P2_APPLICATION",
+      "charDesc": "APPLICATION P2",
+      "type": "CHAR",
+      "charSeq": 18,
+      "classSeq": 11,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKAGING_SPECS_1",
+      "classDesc": "PACKAGING SPECIFICATION 1",
+      "charTech": "P2_POSITIONING",
+      "charDesc": "POSITIONING P2",
+      "type": "CHAR",
+      "charSeq": 19,
+      "classSeq": 11,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKAGING_SPECS_1",
+      "classDesc": "PACKAGING SPECIFICATION 1",
+      "charTech": "PACKAGING2SIZELENGTH",
+      "charDesc": "PACKAGING 2 SIZE LENGTH",
+      "type": "NUM",
+      "charSeq": 20,
+      "classSeq": 11,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKAGING_SPECS_1",
+      "classDesc": "PACKAGING SPECIFICATION 1",
+      "charTech": "PACKAGING2SIZEWIDTH",
+      "charDesc": "PACKAGING 2 SIZE WIDTH",
+      "type": "NUM",
+      "charSeq": 21,
+      "classSeq": 11,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKAGING_SPECS_1",
+      "classDesc": "PACKAGING SPECIFICATION 1",
+      "charTech": "PACKAGING2MATERIALTYPE",
+      "charDesc": "PACKAGING 2 MATERIAL TYPE",
+      "type": "CHAR",
+      "charSeq": 22,
+      "classSeq": 11,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKAGING_SPECS_1",
+      "classDesc": "PACKAGING SPECIFICATION 1",
+      "charTech": "PACKAGINGMILL_SUPPLIERNAME2",
+      "charDesc": "PACKAGING MILL / SUPPLIER NAME",
+      "type": "CHAR",
+      "charSeq": 23,
+      "classSeq": 11,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKAGING_SPECS_1",
+      "classDesc": "PACKAGING SPECIFICATION 1",
+      "charTech": "PCKGMILL_SUPPLIER_QLTY_GRADE2",
+      "charDesc": "MIL/SUPPLIER/QLTY/GRADE/FINISH",
+      "type": "CHAR",
+      "charSeq": 24,
+      "classSeq": 11,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKAGING_SPECS_1",
+      "classDesc": "PACKAGING SPECIFICATION 1",
+      "charTech": "CALIPER_WEIGHT2",
+      "charDesc": "CALIPER / WEIGHT",
+      "type": "NUM",
+      "charSeq": 25,
+      "classSeq": 11,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKAGING_SPECS_1",
+      "classDesc": "PACKAGING SPECIFICATION 1",
+      "charTech": "MATERIALUNIT2",
+      "charDesc": "MATERIAL UNIT",
+      "type": "CHAR",
+      "charSeq": 26,
+      "classSeq": 11,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKAGING_SPECS_1",
+      "classDesc": "PACKAGING SPECIFICATION 1",
+      "charTech": "P2PRINTINGTYPE",
+      "charDesc": "PRINTING TYPE 2",
+      "type": "CHAR",
+      "charSeq": 27,
+      "classSeq": 11,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKAGING_SPECS_1",
+      "classDesc": "PACKAGING SPECIFICATION 1",
+      "charTech": "NOOFCOLOURSF_B2",
+      "charDesc": "NO OF COLOURS F/B",
+      "type": "CHAR",
+      "charSeq": 28,
+      "classSeq": 11,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKAGING_SPECS_1",
+      "classDesc": "PACKAGING SPECIFICATION 1",
+      "charTech": "NAMEOFCOLORSF_B2",
+      "charDesc": "NAME OF COLORS F/B",
+      "type": "CHAR",
+      "charSeq": 29,
+      "classSeq": 11,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKAGING_SPECS_1",
+      "classDesc": "PACKAGING SPECIFICATION 1",
+      "charTech": "PACKAGING2FINISHING",
+      "charDesc": "PACKAGING 2 FINISHING",
+      "type": "CHAR",
+      "charSeq": 30,
+      "classSeq": 11,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKAGING_SPECS_1",
+      "classDesc": "PACKAGING SPECIFICATION 1",
+      "charTech": "ADDITIONALPROCESS2",
+      "charDesc": "ADDITIONAL PROCESS",
+      "type": "CHAR",
+      "charSeq": 44,
+      "classSeq": 11,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKAGING_SPECS_1",
+      "classDesc": "PACKAGING SPECIFICATION 1",
+      "charTech": "PACKAGING2SPECIALNOTE",
+      "charDesc": "PACKAGING  2 SPECIAL  NOTE",
+      "type": "CHAR",
+      "charSeq": 45,
+      "classSeq": 11,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKING_DETAILS",
+      "classDesc": "PACKING DETAILS",
+      "charTech": "RETAILPACK_SALEUNITPACK",
+      "charDesc": "NO OF PCS IN RETAIL/SALE UNIT",
+      "type": "CHAR",
+      "charSeq": 1,
+      "classSeq": 12,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKING_DETAILS",
+      "classDesc": "PACKING DETAILS",
+      "charTech": "RETAILPACKTYPE",
+      "charDesc": "RETAIL PACK TYPE",
+      "type": "CHAR",
+      "charSeq": 2,
+      "classSeq": 12,
+      "tabNote": "This Value to be displayed as Tab Name"
+    },
+    {
+      "classTech": "PACKING_DETAILS",
+      "classDesc": "PACKING DETAILS",
+      "charTech": "MATERIAL_SPECS",
+      "charDesc": "MATERIAL & SPECS",
+      "type": "CHAR",
+      "charSeq": 3,
+      "classSeq": 12,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKING_DETAILS",
+      "classDesc": "PACKING DETAILS",
+      "charTech": "PRINTINGINSTRUCTION",
+      "charDesc": "PRINTING INSTRUCTION",
+      "type": "CHAR",
+      "charSeq": 4,
+      "classSeq": 12,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKING_DETAILS",
+      "classDesc": "PACKING DETAILS",
+      "charTech": "DESIGN_COLORASSORTMENT",
+      "charDesc": "DESIGN / COLOR ASSORTMENT",
+      "type": "CHAR",
+      "charSeq": 5,
+      "classSeq": 12,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKING_DETAILS",
+      "classDesc": "PACKING DETAILS",
+      "charTech": "SPECIALINSTRUCTIONS",
+      "charDesc": "SPECIAL INSTRUCTIONS",
+      "type": "CHAR",
+      "charSeq": 6,
+      "classSeq": 12,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKING_DETAILS",
+      "classDesc": "PACKING DETAILS",
+      "charTech": "INNERPACKINGNOOFPCS",
+      "charDesc": "INNER PACKING NO OF PCS",
+      "type": "CHAR",
+      "charSeq": 7,
+      "classSeq": 12,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKING_DETAILS",
+      "classDesc": "PACKING DETAILS",
+      "charTech": "INNERPACKINGTYPE",
+      "charDesc": "INNER PACKING TYPE",
+      "type": "CHAR",
+      "charSeq": 8,
+      "classSeq": 12,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKING_DETAILS",
+      "classDesc": "PACKING DETAILS",
+      "charTech": "INNERMATERIALSPECS",
+      "charDesc": "INNER MATERIAL SPECS",
+      "type": "CHAR",
+      "charSeq": 9,
+      "classSeq": 12,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKING_DETAILS",
+      "classDesc": "PACKING DETAILS",
+      "charTech": "INNERSPECIALINSTRUCTIONS",
+      "charDesc": "INNER SPECIALINSTRUCTIONS",
+      "type": "CHAR",
+      "charSeq": 10,
+      "classSeq": 12,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKING_DETAILS",
+      "classDesc": "PACKING DETAILS",
+      "charTech": "INNERPRINTINGINSTRUCTION",
+      "charDesc": "INNER PRINTINGINSTRUCTION",
+      "type": "CHAR",
+      "charSeq": 11,
+      "classSeq": 12,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKING_DETAILS",
+      "classDesc": "PACKING DETAILS",
+      "charTech": "I_WHNUMBEROFSALEUNITS",
+      "charDesc": "I-WH NUMBER OF SALE UNITS",
+      "type": "CHAR",
+      "charSeq": 12,
+      "classSeq": 12,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKING_DETAILS",
+      "classDesc": "PACKING DETAILS",
+      "charTech": "I_WHINNERPACKTYPE",
+      "charDesc": "I-WH PACK TYPE",
+      "type": "CHAR",
+      "charSeq": 13,
+      "classSeq": 12,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKING_DETAILS",
+      "classDesc": "PACKING DETAILS",
+      "charTech": "MATERIAL_SPECS2",
+      "charDesc": "MATERIAL & SPECS",
+      "type": "CHAR",
+      "charSeq": 14,
+      "classSeq": 12,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKING_DETAILS",
+      "classDesc": "PACKING DETAILS",
+      "charTech": "I_WHPRINTINGINSTRUCTION",
+      "charDesc": "I/WH PRINTING INSTRUCTION",
+      "type": "CHAR",
+      "charSeq": 15,
+      "classSeq": 12,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKING_DETAILS",
+      "classDesc": "PACKING DETAILS",
+      "charTech": "DESIGN_COLORASSORTMENT2",
+      "charDesc": "DESIGN / COLOR ASSORTMENT",
+      "type": "CHAR",
+      "charSeq": 16,
+      "classSeq": 12,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKING_DETAILS",
+      "classDesc": "PACKING DETAILS",
+      "charTech": "I_WHSPECIALINSTRUCTIONS",
+      "charDesc": "I/WH SPECIAL INSTRUCTIONS",
+      "type": "CHAR",
+      "charSeq": 17,
+      "classSeq": 12,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKING_DETAILS",
+      "classDesc": "PACKING DETAILS",
+      "charTech": "MASTERNUMBEROFSALEUNITS",
+      "charDesc": "MASTER NUMBER OF SALE UNITS",
+      "type": "CHAR",
+      "charSeq": 18,
+      "classSeq": 12,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKING_DETAILS",
+      "classDesc": "PACKING DETAILS",
+      "charTech": "MASTERPACKTYPE",
+      "charDesc": "MASTER PACK TYPE",
+      "type": "CHAR",
+      "charSeq": 19,
+      "classSeq": 12,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKING_DETAILS",
+      "classDesc": "PACKING DETAILS",
+      "charTech": "MASTERMATERIAL_SPECS",
+      "charDesc": "MASTER MATERIAL & SPECS",
+      "type": "CHAR",
+      "charSeq": 20,
+      "classSeq": 12,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKING_DETAILS",
+      "classDesc": "PACKING DETAILS",
+      "charTech": "MASTERSTACKING_ASSORTTYPE",
+      "charDesc": "MASTER STACKING & ASSORT. TYPE",
+      "type": "CHAR",
+      "charSeq": 21,
+      "classSeq": 12,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKING_DETAILS",
+      "classDesc": "PACKING DETAILS",
+      "charTech": "MASTERMARK_PRINTINSTR_POS",
+      "charDesc": "MASTER MARK/PRINT INSTR. & POS",
+      "type": "CHAR",
+      "charSeq": 22,
+      "classSeq": 12,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKING_DETAILS",
+      "classDesc": "PACKING DETAILS",
+      "charTech": "MASTERSPECIALINSTRUCTIONS",
+      "charDesc": "MASTER SPECIAL INSTRUCTIONS",
+      "type": "CHAR",
+      "charSeq": 23,
+      "classSeq": 12,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKING_DETAILS",
+      "classDesc": "PACKING DETAILS",
+      "charTech": "STUFFINGTYPE",
+      "charDesc": "STUFFING TYPE",
+      "type": "CHAR",
+      "charSeq": 24,
+      "classSeq": 12,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKING_DETAILS",
+      "classDesc": "PACKING DETAILS",
+      "charTech": "MAXPALLETSIZEALLOW_LXWXH",
+      "charDesc": "MAX PALLET SIZE ALLOW (LXWXH)",
+      "type": "CHAR",
+      "charSeq": 25,
+      "classSeq": 12,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKING_DETAILS",
+      "classDesc": "PACKING DETAILS",
+      "charTech": "MAXPALLETWEIGHT",
+      "charDesc": "MAX WEIGHT ALLOW (INCL PALLET)",
+      "type": "CHAR",
+      "charSeq": 26,
+      "classSeq": 12,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKING_DETAILS",
+      "classDesc": "PACKING DETAILS",
+      "charTech": "SPECIALINSTRUCTIONS2",
+      "charDesc": "SPECIAL INSTRUCTIONS",
+      "type": "CHAR",
+      "charSeq": 27,
+      "classSeq": 12,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKING_DETAILS",
+      "classDesc": "PACKING DETAILS",
+      "charTech": "TAPPINGDETAILS",
+      "charDesc": "TAPPING DETAILS",
+      "type": "CHAR",
+      "charSeq": 28,
+      "classSeq": 12,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKING_DETAILS",
+      "classDesc": "PACKING DETAILS",
+      "charTech": "PRODUCTBARCODE",
+      "charDesc": "PRODUCT BARCODE",
+      "type": "CHAR",
+      "charSeq": 29,
+      "classSeq": 12,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKING_DETAILS",
+      "classDesc": "PACKING DETAILS",
+      "charTech": "INNERBARCODE",
+      "charDesc": "INNER BARCODE",
+      "type": "CHAR",
+      "charSeq": 30,
+      "classSeq": 12,
+      "tabNote": null
+    },
+    {
+      "classTech": "PACKING_DETAILS",
+      "classDesc": "PACKING DETAILS",
+      "charTech": "MASTERBARCODE",
+      "charDesc": "MASTER BARCODE",
+      "type": "CHAR",
+      "charSeq": 31,
+      "classSeq": 12,
+      "tabNote": null
+    },
+    {
+      "classTech": "RULLING_DETAILS",
+      "classDesc": "RULING DETAILS",
+      "charTech": "TOP_MARGIN",
+      "charDesc": "TOP MARGIN (In MM)",
+      "type": "NUM",
+      "charSeq": 1,
+      "classSeq": 13,
+      "tabNote": null
+    },
+    {
+      "classTech": "RULLING_DETAILS",
+      "classDesc": "RULING DETAILS",
+      "charTech": "TOP_MARGIN_COLOR",
+      "charDesc": "TOP MARGIN COLOR",
+      "type": "CHAR",
+      "charSeq": 2,
+      "classSeq": 13,
+      "tabNote": null
+    },
+    {
+      "classTech": "RULLING_DETAILS",
+      "classDesc": "RULING DETAILS",
+      "charTech": "LEFT_MARGIN",
+      "charDesc": "LEFT MARGIN (In MM)",
+      "type": "NUM",
+      "charSeq": 3,
+      "classSeq": 13,
+      "tabNote": null
+    },
+    {
+      "classTech": "RULLING_DETAILS",
+      "classDesc": "RULING DETAILS",
+      "charTech": "LEFT_MARGIN_COLOR",
+      "charDesc": "LEFT MARGIN COLOR",
+      "type": "CHAR",
+      "charSeq": 4,
+      "classSeq": 13,
+      "tabNote": null
+    },
+    {
+      "classTech": "RULLING_DETAILS",
+      "classDesc": "RULING DETAILS",
+      "charTech": "RIGHT_MARGIN",
+      "charDesc": "RIGHT MARGIN (In MM)",
+      "type": "NUM",
+      "charSeq": 5,
+      "classSeq": 13,
+      "tabNote": null
+    },
+    {
+      "classTech": "RULLING_DETAILS",
+      "classDesc": "RULING DETAILS",
+      "charTech": "RIGHT_MARGIN_COLOR",
+      "charDesc": "RIGHT MARGIN COLOR",
+      "type": "CHAR",
+      "charSeq": 6,
+      "classSeq": 13,
+      "tabNote": null
+    },
+    {
+      "classTech": "RULLING_DETAILS",
+      "classDesc": "RULING DETAILS",
+      "charTech": "BOTTOM_MARGIN",
+      "charDesc": "BOTTOM MARGIN (In MM)",
+      "type": "NUM",
+      "charSeq": 7,
+      "classSeq": 13,
+      "tabNote": null
+    },
+    {
+      "classTech": "RULLING_DETAILS",
+      "classDesc": "RULING DETAILS",
+      "charTech": "BOTTOM_MARGIN_COLOR",
+      "charDesc": "BOTTOM MARGIN COLOR",
+      "type": "CHAR",
+      "charSeq": 8,
+      "classSeq": 13,
+      "tabNote": null
+    },
+    {
+      "classTech": "RULLING_DETAILS",
+      "classDesc": "RULING DETAILS",
+      "charTech": "CENTER_MARGIN_COLOR",
+      "charDesc": "CENTER MARGIN COLOR",
+      "type": "CHAR",
+      "charSeq": 9,
+      "classSeq": 13,
+      "tabNote": null
+    },
+    {
+      "classTech": "RULLING_DETAILS",
+      "classDesc": "RULING DETAILS",
+      "charTech": "RULLING_PDF",
+      "charDesc": "RULLING PDF SENT TO PLANT",
+      "type": "CHAR",
+      "charSeq": 10,
+      "classSeq": 13,
+      "tabNote": null
+    },
+    {
+      "classTech": "RULLING_DETAILS",
+      "classDesc": "RULING DETAILS",
+      "charTech": "SPECIAL_RULING",
+      "charDesc": "SPECIAL RULING (If Any)",
+      "type": "CHAR",
+      "charSeq": 11,
+      "classSeq": 13,
+      "tabNote": null
+    },
+    {
+      "classTech": "RULLING_DETAILS",
+      "classDesc": "RULING DETAILS",
+      "charTech": "INSTRUCTION_RULLING",
+      "charDesc": "INSTRUCTIONS FOR RULLING",
+      "type": "CHAR",
+      "charSeq": 12,
+      "classSeq": 13,
+      "tabNote": null
+    },
+    {
+      "classTech": "RULLING_DETAILS",
+      "classDesc": "RULING DETAILS",
+      "charTech": "RULLING_DISTANCE",
+      "charDesc": "RULLING DISTANCE (IN MM)",
+      "type": "CHAR",
+      "charSeq": 13,
+      "classSeq": 13,
+      "tabNote": "This Value to be displayed as Tab Name"
+    },
+    {
+      "classTech": "RULLING_DETAILS",
+      "classDesc": "RULING DETAILS",
+      "charTech": "RULLING_SHADE",
+      "charDesc": "RULLING_SHADE",
+      "type": "CHAR",
+      "charSeq": 14,
+      "classSeq": 13,
+      "tabNote": null
+    }
+  ]
+}
