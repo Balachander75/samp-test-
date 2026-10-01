@@ -4,6 +4,7 @@ import { ThemeProvider } from "@/context/ThemeContext";
 import { SignInPage, UserProfile, AuthResponse } from "@/features/auth";
 import { readAuthToken, readAuthUser, clearAuthStorage } from "@/lib/session";
 import { AppShell, getNavigationTitle } from "@/layouts";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 
 // Route-level code splitting for performance and zero initial bloat
 const OperationsOverview = lazy(() => import("@/features/dashboard/OperationsOverview"));
@@ -54,6 +55,7 @@ function ActiveModuleView({
   const location = useLocation();
 
   return (
+    <ErrorBoundary variant="page">
     <Suspense fallback={<DeskSkeletonLoader />}>
       {(() => {
         // Executive Operations Overview (Dashboard Landing)
@@ -187,6 +189,7 @@ function ActiveModuleView({
   );
 })()}
     </Suspense>
+    </ErrorBoundary>
   );
 }
 
@@ -230,7 +233,7 @@ function AppRoutes() {
   };
 
   return (
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Routes>
         <Route
           path="/signin"
@@ -333,6 +336,18 @@ function AppRoutes() {
           }
         />
         <Route
+          path="/plant"
+          element={
+            currentUser ? (
+              <AppShellRouteWrapper user={currentUser} onLogout={handleLogout} />
+            ) : (
+              <Navigate to="/signin" replace />
+            )
+          }
+        />
+        <Route path="/plant-execution" element={<Navigate to="/plant" replace />} />
+        <Route path="/plant-work" element={<Navigate to="/plant" replace />} />
+        <Route
           path="/analytics"
           element={
             currentUser ? (
@@ -381,7 +396,9 @@ function AppRoutes() {
 export default function App() {
   return (
     <ThemeProvider>
-      <AppRoutes />
+      <ErrorBoundary variant="page">
+        <AppRoutes />
+      </ErrorBoundary>
     </ThemeProvider>
   );
 }

@@ -7,11 +7,11 @@ import {
 import {
   LogOut,
   X,
-  ShieldCheck,
+  ChevronRight,
 } from "lucide-react";
 import logoImg from "@/assets/logo.png";
 import {
-  fetchSampleRequestsApi,
+  fetchAllMarketingRequestsApi,
   fetchCreativeBriefsApi,
   fetchStudioDielinesApi,
   fetchCostingEstimationsApi,
@@ -26,6 +26,21 @@ export interface SidebarProps {
   onCloseMobile?: () => void;
 }
 
+// Dept color accents for active state left-bar indicator
+const DEPT_ACCENT: Record<string, string> = {
+  operations: "bg-brand-600",
+  marketing:  "bg-violet-500",
+  creative:   "bg-pink-500",
+  studio:     "bg-cyan-500",
+  samp:       "bg-amber-500",
+  costing:    "bg-emerald-500",
+  plant:      "bg-orange-500",
+  analytics:  "bg-indigo-500",
+  members:    "bg-teal-500",
+  settings:   "bg-zinc-400",
+  help:       "bg-zinc-400",
+};
+
 export const Sidebar: React.FC<SidebarProps> = ({
   user,
   onLogout,
@@ -36,11 +51,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const [dynamicBadges, setDynamicBadges] = useState<Record<string, number | string>>({});
 
-  // Sync live operational counts for badges across all active department desks
+  // Sync live operational counts
   useEffect(() => {
     let isMounted = true;
     Promise.all([
-      fetchSampleRequestsApi().catch(() => []),
+      fetchAllMarketingRequestsApi().catch(() => []),
       fetchCreativeBriefsApi().catch(() => []),
       fetchStudioDielinesApi().catch(() => []),
       fetchCostingEstimationsApi().catch(() => []),
@@ -62,12 +77,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
         costing: costings.length,
       });
     });
-    return () => {
-      isMounted = false;
-    };
+    return () => { isMounted = false; };
   }, [selectedPath]);
 
-  // Close on Escape
+  // Escape to close mobile
   useEffect(() => {
     if (!isMobileOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -77,7 +90,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isMobileOpen, onCloseMobile]);
 
-  // Lock body scroll when open
+  // Lock body scroll
   useEffect(() => {
     document.body.style.overflow = isMobileOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
@@ -100,45 +113,64 @@ export const Sidebar: React.FC<SidebarProps> = ({
     return false;
   };
 
+  // User initials (up to 2 chars)
+  const initials = (user?.name || "U")
+    .split(" ")
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+
+  const roleLabel = user?.sub_role || user?.role || "Operator";
+
   const renderNavContent = (isDrawer = false) => (
     <div className="flex flex-col h-full select-none">
-      {/* Brand Header */}
-      <div className="flex items-center justify-between h-14 px-4 sm:px-5 border-b border-zinc-200/80 dark:border-white/[0.07] shrink-0">
+
+      {/* ── Brand Header ─────────────────────────────── */}
+      <div className="flex items-center justify-between h-14 px-4 sm:px-5 shrink-0 border-b border-zinc-200/60 dark:border-white/[0.06]">
         <img
           src={logoImg}
           alt="Navneet"
-          className="h-8 sm:h-9 w-auto max-w-[145px] object-contain object-left"
+          className="h-8 w-auto max-w-[140px] object-contain object-left"
         />
         {isDrawer && onCloseMobile && (
           <button
             type="button"
             onClick={onCloseMobile}
-            className="h-8 w-8 rounded-md flex items-center justify-center text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 dark:hover:text-zinc-200 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+            className="h-7 w-7 rounded-md flex items-center justify-center text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-white/[0.07] transition-colors cursor-pointer"
             aria-label="Close navigation"
           >
-            <X className="w-4 h-4" />
+            <X className="w-[15px] h-[15px]" />
           </button>
         )}
       </div>
 
-      {/* Navigation Groups */}
-      <div className="flex-1 overflow-y-auto py-3 space-y-5">
+      {/* ── Navigation Groups ─────────────────────────── */}
+      <div className="flex-1 overflow-y-auto py-2.5 space-y-4">
         {NAVIGATION_GROUPS.map((group, gIdx) => (
           <div key={group.groupTitle}>
-            {/* Group separator line for non-first groups */}
+
+            {/* Inter-group divider */}
             {gIdx > 0 && (
-              <div className="mx-4 mb-3 h-px bg-zinc-100 dark:bg-white/[0.05]" />
+              <div className="mx-4 mb-3 h-px bg-zinc-100 dark:bg-white/[0.04]" />
             )}
 
-            <div className="px-4 mb-1">
-              <span className="text-[9px] font-bold uppercase tracking-[0.1em] text-zinc-400 dark:text-zinc-600 font-mono">
+            {/* Group label */}
+            <div className="px-4 mb-1.5">
+              <span className="text-[9px] font-semibold uppercase tracking-[0.12em] text-zinc-400/80 dark:text-zinc-600">
                 {group.groupTitle}
               </span>
             </div>
 
+            {/* Nav items */}
             <div className="space-y-px px-2">
               {group.items.map((item) => {
                 const active = isItemActive(item);
+                const accentColor = DEPT_ACCENT[item.departmentKey] || "bg-brand-600";
+                const badgeValue =
+                  dynamicBadges[item.id] !== undefined
+                    ? String(dynamicBadges[item.id])
+                    : item.badge;
 
                 return (
                   <button
@@ -146,30 +178,41 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     type="button"
                     onClick={() => handleItemClick(item)}
                     className={[
-                      "relative w-full flex items-center justify-between h-9 px-3.5 rounded-md text-[13px] transition-colors duration-150 ease-out cursor-pointer text-left",
+                      "group relative w-full flex items-center h-9 px-3.5 rounded-md text-[13px] transition-all duration-150 ease-out cursor-pointer text-left gap-2",
                       active
-                        ? "bg-brand-600 text-white font-semibold shadow-xs"
-                        : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 font-medium dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-white/[0.05]",
+                        ? "bg-brand-600/10 dark:bg-brand-600/[0.14] text-brand-700 dark:text-brand-300 font-semibold"
+                        : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100/80 font-medium dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-white/[0.05]",
                     ].join(" ")}
                   >
-                    <span className="truncate tracking-tight">{item.title}</span>
+                    {/* Active accent bar */}
+                    <span
+                      className={[
+                        "absolute left-0 inset-y-1.5 w-[3px] rounded-full transition-all duration-200",
+                        active ? `${accentColor} opacity-100` : "opacity-0",
+                      ].join(" ")}
+                    />
 
-                    {(() => {
-                      const badgeValue = dynamicBadges[item.id] !== undefined ? String(dynamicBadges[item.id]) : item.badge;
-                      if (!badgeValue) return null;
-                      return (
-                        <span
-                          className={[
-                            "text-[10px] font-mono px-1.5 py-0.5 rounded-full ml-2 shrink-0 tabular-nums font-bold",
-                            active
-                              ? "bg-white/20 text-white"
-                              : "bg-zinc-200/70 text-zinc-600 dark:bg-white/[0.08] dark:text-zinc-400",
-                          ].join(" ")}
-                        >
-                          {badgeValue}
-                        </span>
-                      );
-                    })()}
+                    {/* Title */}
+                    <span className="flex-1 truncate">{item.title}</span>
+
+                    {/* Badge */}
+                    {badgeValue && (
+                      <span
+                        className={[
+                          "shrink-0 text-[10px] font-mono font-bold px-1.5 py-px rounded-full tabular-nums",
+                          active
+                            ? "bg-brand-600/20 text-brand-700 dark:bg-brand-500/25 dark:text-brand-300"
+                            : "bg-zinc-200/80 text-zinc-500 dark:bg-white/[0.08] dark:text-zinc-500",
+                        ].join(" ")}
+                      >
+                        {badgeValue}
+                      </span>
+                    )}
+
+                    {/* Subtle chevron on hover (inactive only) */}
+                    {!active && (
+                      <ChevronRight className="w-3 h-3 shrink-0 opacity-0 group-hover:opacity-40 transition-opacity" />
+                    )}
                   </button>
                 );
               })}
@@ -178,34 +221,35 @@ export const Sidebar: React.FC<SidebarProps> = ({
         ))}
       </div>
 
-      {/* Bottom: Operator Identity Card */}
-      <div className="p-2 border-t border-zinc-200/80 dark:border-white/[0.08] shrink-0">
-        <div className="flex items-center justify-between gap-2 px-2 py-2 rounded hover:bg-zinc-50 dark:hover:bg-white/[0.03] transition-colors">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="relative shrink-0">
-              <div className="w-7 h-7 rounded-md bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 font-bold text-[11px] flex items-center justify-center font-mono">
-                {(user?.name || "A").charAt(0).toUpperCase()}
-              </div>
-              <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-[#0f1118]" />
-            </div>
+      {/* ── Bottom: Operator Identity Card ───────────── */}
+      <div className="px-3 py-2.5 border-t border-zinc-200/60 dark:border-white/[0.06] shrink-0">
+        <div className="flex items-center gap-2.5 px-2 py-2 rounded-md hover:bg-zinc-50 dark:hover:bg-white/[0.03] transition-colors group">
 
-            <div className="min-w-0">
-              <span className="block text-[12px] font-semibold text-zinc-900 dark:text-zinc-100 truncate leading-tight">
-                {user?.name || "Corporate User"}
-              </span>
-              <span className="flex items-center gap-1 text-[10px] font-mono text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
-                <ShieldCheck className="w-2.5 h-2.5 text-brand-600 dark:text-brand-400 shrink-0" />
-                <span className="truncate">{user?.sub_role || user?.role || "Operator"}</span>
-              </span>
+          {/* Avatar with online pip */}
+          <div className="relative shrink-0">
+            <div className="w-8 h-8 rounded-md bg-gradient-to-br from-zinc-800 to-zinc-900 dark:from-zinc-200 dark:to-white text-white dark:text-zinc-900 font-bold text-[11px] flex items-center justify-center font-mono shadow-xs">
+              {initials}
             </div>
+            <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-500 ring-[1.5px] ring-white dark:ring-[#0f1118]" />
           </div>
 
+          {/* Name + role */}
+          <div className="flex-1 min-w-0">
+            <span className="block text-[12px] font-semibold text-zinc-800 dark:text-zinc-100 truncate leading-tight">
+              {user?.name || "Corporate User"}
+            </span>
+            <span className="block text-[10px] text-zinc-400 dark:text-zinc-500 truncate leading-tight font-mono tracking-wide uppercase">
+              {roleLabel}
+            </span>
+          </div>
+
+          {/* Sign out */}
           {onLogout && (
             <button
               type="button"
               onClick={onLogout}
               title="Sign Out"
-              className="h-7.5 w-7.5 rounded-md flex items-center justify-center text-zinc-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer shrink-0"
+              className="h-7 w-7 rounded-md flex items-center justify-center text-zinc-300 hover:text-rose-500 dark:text-zinc-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer shrink-0 opacity-0 group-hover:opacity-100"
               aria-label="Sign out"
             >
               <LogOut className="w-3.5 h-3.5" />
@@ -219,7 +263,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   return (
     <>
       {/* Desktop Sticky Sidebar */}
-      <aside className="hidden md:flex flex-col sticky top-0 h-screen shrink-0 border-r border-zinc-200/80 dark:border-white/[0.08] bg-white dark:bg-[#0f1118] z-30 w-[232px]">
+      <aside className="hidden md:flex flex-col sticky top-0 h-screen shrink-0 border-r border-zinc-200/60 dark:border-white/[0.06] bg-white dark:bg-[#0c0d12] z-30 w-[228px]">
         {renderNavContent(false)}
       </aside>
 
@@ -227,10 +271,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {isMobileOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
           <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-xs"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm animate-smooth-backdrop"
             onClick={onCloseMobile}
           />
-          <aside className="fixed inset-y-0 left-0 z-50 w-[260px] bg-white dark:bg-[#0f1118] border-r border-zinc-200/80 dark:border-white/[0.08] shadow-2xl flex flex-col">
+          <aside className="fixed inset-y-0 left-0 z-50 w-[256px] bg-white dark:bg-[#0c0d12] border-r border-zinc-200/60 dark:border-white/[0.06] shadow-2xl flex flex-col animate-smooth-drawer">
             {renderNavContent(true)}
           </aside>
         </div>

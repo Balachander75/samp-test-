@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -14,9 +14,11 @@ import {
   X,
 } from "lucide-react";
 import { UserProfile } from "@/features/auth";
-import { createSampleRequestApi } from "../api";
-import { SampleRequestItem } from "../types";
-import { CUSTOMERS, PLANTS } from "./NewSampleRequestModal";
+import { createProgramRequestApi, createSampleRequestApi } from "../api";
+import { CreateProgramRequestPayload, SampleRequestItem } from "../types";
+import { useMasterData } from "../hooks/useMasterData";
+import { CustomerCombobox } from "@/components/erp";
+import { getBusinessYearInfo } from "@/lib/businessYear";
 
 export interface ProgramMaterialRow {
   id: string;
@@ -39,24 +41,29 @@ interface LocationState {
   targetPlant?: string;
   programPlanName?: string;
   programPlanYear?: string;
-  programTargetDate?: string;
 }
 
 export const ProgramPlanningWorkspace: React.FC<ProgramPlanningWorkspaceProps> = ({ user }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const state = (location.state as LocationState) || {};
+  const {
+    customers,
+    plants,
+    isLoading: isMasterDataLoading,
+    error: masterDataError,
+  } = useMasterData();
+
+  // Dynamic Business Year Information (Oct–Sep cycle)
+  const byInfo = useMemo(() => getBusinessYearInfo(), []);
 
   // Operational Campaign Parameters (Pre-filled from Step 1 or defaults)
-  const [customer, setCustomer] = useState(state.customer || CUSTOMERS[0]);
-  const [targetPlant, setTargetPlant] = useState(state.targetPlant || PLANTS[0]);
+  const [customer, setCustomer] = useState(state.customer || "");
+  const [targetPlant, setTargetPlant] = useState(state.targetPlant || "");
   const [programPlanName, setProgramPlanName] = useState(
-    state.programPlanName || "BTS 2026-2027 Hardcover Notebook Line"
+    state.programPlanName || `BTS ${byInfo.businessYearStr} Hardcover Notebook Line`
   );
-  const [programPlanYear, setProgramPlanYear] = useState(state.programPlanYear || "2026-2027");
-  const [programTargetDate, setProgramTargetDate] = useState(
-    state.programTargetDate || new Date(Date.now() + 30 * 86400000).toISOString().split("T")[0]
-  );
+  const [programPlanYear, setProgramPlanYear] = useState(state.programPlanYear || byInfo.businessYearStr);
   const [campaignBudgetQty, setCampaignBudgetQty] = useState("50000");
 
   // Toggle inline editing of parameters
@@ -80,6 +87,18 @@ export const ProgramPlanningWorkspace: React.FC<ProgramPlanningWorkspaceProps> =
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successToast, setSuccessToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!customers.length || !plants.length) return;
+    const customerNames = new Set(customers.map((item: { name: string }) => item.name));
+    const plantNames = new Set(plants.map((item: { name: string }) => item.name));
+    setCustomer((current) => (current && customerNames.has(current) ? current : customers[0].name));
+    setTargetPlant((current) => (current && plantNames.has(current) ? current : plants[0].name));
+  }, [customers, plants]);
+
+  useEffect(() => {
+    if (masterDataError) setError(masterDataError);
+  }, [masterDataError]);
 
   // Row Manipulation (with auto-focus)
   const handleAddRow = () => {
@@ -148,64 +167,92 @@ export const ProgramPlanningWorkspace: React.FC<ProgramPlanningWorkspaceProps> =
       setError("Please select a customer account.");
       return;
     }
-    if (!programPlanName.trim()) {
-      setError("Please specify the program campaign title.");
+    if (!targetPlant.trim()) {
+      setError("Please select a target plant.");
       return;
     }
-    if (!programTargetDate.trim()) {
-      setError("Please specify the required target delivery date.");
+    if (!programPlanName.trim()) {
+      setError("Please specify the program campaign title.");
       return;
     }
 
     setIsSubmitting(true);
     setError(null);
 
-    const filledRows = materialRows.filter((r) => r.materialType.trim());
-    const totalMaterialQty = filledRows.reduce((acc, r) => acc + (Number(r.qty) || 0), 0);
+    const filledRows = materialRows.filter(
+      (r) =>
+        r.materialType.trim() ||
+        r.supplierInfo.trim() ||
+        r.grade.trim() ||
+        r.colorVariant.trim() ||
+        r.caliperWt.trim() ||
+        r.qty.trim() ||
+        r.remark.trim()
+    );
 
-    const matrixSection =
-      filledRows.length > 0
-        ? "\n\nMaterial Specification Matrix:\n" +
-          filledRows
-            .map(
-              (r, i) =>
-                `#${i + 1} | Type: ${r.materialType} | Supplier: ${r.supplierInfo || "—"} | Grade: ${r.grade || "—"} | Color: ${r.colorVariant || "—"} | Caliper: ${r.caliperWt || "—"} | Qty: ${r.qty || "0"} ${r.unit || "units"} | Remark: ${r.remark || "—"}`
-            )
-            .join("\n")
-        : "";
+    const rowsToSubmit = filledRows.length > 0 ? filledRows : materialRows;
 
-    const nextSrNum = `SR-26-${String(Math.floor(100 + Math.random() * 900))}`;
-    const payload: Partial<SampleRequestItem> = {
-      srNumber: nextSrNum,
-      customer,
-      targetPlant,
-      productDescription: `[Seasonal Program: ${programPlanName.trim()}]\nProgram Year: ${programPlanYear}\nTarget Required Date: ${programTargetDate}\nEstimated Production Volume: ${campaignBudgetQty} pcs${matrixSection}`,
-      materialCode: `PG-PL-${Math.floor(1000 + Math.random() * 9000)}`,
-      programName: programPlanName.trim(),
-      programYear: programPlanYear,
-      year: programPlanYear,
-      sampleRequiredDate: programTargetDate,
-      qtyForSampling: 1,
-      qtyDesignCosting: Number(campaignBudgetQty) || totalMaterialQty || 50000,
-      requestTypes: ["sample", "costing", "design"] as any,
-      status: "Draft (Pre-SMT)",
-      createdBy: user?.name || "Program Planner",
-      dateRequestCreated: new Date().toISOString().split("T")[0],
-      creationMode: "program_planning",
+    const apiPayload: CreateProgramRequestPayload = {
+      customer_name: customer.trim(),
+      target_plant: targetPlant.trim(),
+      program_campaign_title: programPlanName.trim(),
+      program_year: programPlanYear.trim(),
+      created_by: user?.name || "Marketing Team",
+      materials: rowsToSubmit.map((r) => ({
+        material_type: r.materialType.trim() || null,
+        supplier_name: r.supplierInfo.trim() || null,
+        grade: r.grade.trim() || null,
+        color_variant: r.colorVariant.trim() || null,
+        caliper_wt: r.caliperWt.trim() || null,
+        quantity: r.qty.trim() || null,
+        unit: r.unit || "pcs",
+        remark: r.remark.trim() || null,
+      })),
     };
 
     try {
-      await createSampleRequestApi(payload as any);
-      setSuccessToast(`Program Request ${nextSrNum} registered successfully! Redirecting to Desk...`);
+      const record = await createProgramRequestApi(apiPayload);
+      setSuccessToast(`Program Request ${record.srNumber} (${record.requestCode}) registered successfully in database! Redirecting to Desk...`);
       setTimeout(() => {
         navigate("/sample-requests");
       }, 900);
     } catch (err) {
-      console.error("Failed to create program:", err);
-      setSuccessToast(`Program Request ${nextSrNum} staged locally. Redirecting to Desk...`);
-      setTimeout(() => {
-        navigate("/sample-requests");
-      }, 900);
+      console.error("Failed to create program request in database, applying fallback:", err);
+      // Fallback: createSampleRequestApi
+      const matrixSection =
+        rowsToSubmit.length > 0
+          ? "\n\nMaterial Specification Matrix:\n" +
+            rowsToSubmit
+              .map(
+                (r, i) =>
+                  `#${i + 1} | Type: ${r.materialType || "—"} | Supplier: ${r.supplierInfo || "—"} | Grade: ${r.grade || "—"} | Color: ${r.colorVariant || "—"} | Caliper: ${r.caliperWt || "—"} | Qty: ${r.qty || "0"} ${r.unit || "pcs"} | Remark: ${r.remark || "—"}`
+              )
+              .join("\n")
+          : "";
+      const fallbackSrNum = `SR-26-${String(Math.floor(100 + Math.random() * 900))}`;
+      try {
+        await createSampleRequestApi({
+          srNumber: fallbackSrNum,
+          customer,
+          targetPlant,
+          productDescription: `[Seasonal Program: ${programPlanName.trim()}]\nProgram Year: ${programPlanYear}\nTarget Plant: ${targetPlant}${matrixSection}`,
+          materialCode: `PG-PL-${Math.floor(1000 + Math.random() * 9000)}`,
+          programName: programPlanName.trim(),
+          programYear: programPlanYear,
+          year: programPlanYear,
+          requestTypes: ["sample", "costing", "design"] as any,
+          status: "Pending SAMP Review",
+          createdBy: user?.name || "Program Planner",
+          dateRequestCreated: new Date().toISOString().split("T")[0],
+          creationMode: "program_planning",
+        } as any);
+        setSuccessToast(`Program Request ${fallbackSrNum} registered! Redirecting to Desk...`);
+        setTimeout(() => {
+          navigate("/sample-requests");
+        }, 900);
+      } catch (fallbackErr) {
+        setError("Could not register program request. Please verify backend connection.");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -294,13 +341,7 @@ export const ProgramPlanningWorkspace: React.FC<ProgramPlanningWorkspaceProps> =
               <span className="text-zinc-300 dark:text-zinc-700 font-mono">•</span>
 
               <span className="font-mono text-[11px] text-zinc-500 dark:text-zinc-400">
-                Target Date: <strong className="text-zinc-800 dark:text-zinc-200">{programTargetDate}</strong>
-              </span>
-
-              <span className="text-zinc-300 dark:text-zinc-700 font-mono">•</span>
-
-              <span className="font-mono text-[11px] text-zinc-500 dark:text-zinc-400">
-                Plant: <strong className="text-zinc-800 dark:text-zinc-200">{targetPlant.split(" ")[0]}</strong>
+                Plant: <strong className="text-zinc-800 dark:text-zinc-200">{targetPlant ? targetPlant.split(" ")[0] : "Silvassa"}</strong>
               </span>
             </div>
 
@@ -331,13 +372,27 @@ export const ProgramPlanningWorkspace: React.FC<ProgramPlanningWorkspaceProps> =
                 <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1 font-mono">
                   Customer
                 </label>
-                <select
+                <CustomerCombobox
+                  customers={customers}
                   value={customer}
-                  onChange={(e) => setCustomer(e.target.value)}
-                  className="w-full h-7 px-2 rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-[11px] text-zinc-900 dark:text-zinc-100 outline-none focus:border-blue-500 cursor-pointer"
+                  onChange={setCustomer}
+                  disabled={isMasterDataLoading || customers.length === 0}
+                  className="w-full"
+                />
+              </div>
+
+              <div className="lg:col-span-3">
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1 font-mono">
+                  Target Plant
+                </label>
+                <select
+                  value={targetPlant}
+                  disabled={isMasterDataLoading || plants.length === 0}
+                  onChange={(e) => setTargetPlant(e.target.value)}
+                  className="w-full h-7 px-2 rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-[11px] font-mono text-zinc-900 dark:text-zinc-100 outline-none focus:border-blue-500 cursor-pointer"
                 >
-                  {CUSTOMERS.map((c) => (
-                    <option key={c} value={c}>{c}</option>
+                  {plants.map((item: { id: string | number; name: string }) => (
+                    <option key={item.id} value={item.name}>{item.name}</option>
                   ))}
                 </select>
               </div>
@@ -363,22 +418,10 @@ export const ProgramPlanningWorkspace: React.FC<ProgramPlanningWorkspaceProps> =
                   onChange={(e) => setProgramPlanYear(e.target.value)}
                   className="w-full h-7 px-2 rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-[11px] font-mono text-zinc-900 dark:text-zinc-100 outline-none focus:border-blue-500 cursor-pointer"
                 >
-                  <option value="2026-2027">2026-2027</option>
-                  <option value="2025-2026">2025-2026</option>
-                  <option value="2027-2028">2027-2028</option>
+                  {byInfo.businessYearOptions.map((by) => (
+                    <option key={by} value={by}>{by}</option>
+                  ))}
                 </select>
-              </div>
-
-              <div className="lg:col-span-3">
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1 font-mono">
-                  Target Required Date
-                </label>
-                <input
-                  type="date"
-                  value={programTargetDate}
-                  onChange={(e) => setProgramTargetDate(e.target.value)}
-                  className="w-full h-7 px-2 rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-[11px] font-mono text-zinc-900 dark:text-zinc-100 outline-none focus:border-blue-500 cursor-pointer"
-                />
               </div>
             </div>
           )}
@@ -549,7 +592,7 @@ export const ProgramPlanningWorkspace: React.FC<ProgramPlanningWorkspaceProps> =
                         <button
                           type="button"
                           onClick={() => handleDuplicateRow(row)}
-                          className="p-1.5 rounded-md text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 cursor-pointer transition-colors"
+                          className="p-1.5 rounded-md text-blue-600/70 hover:text-blue-700 dark:text-blue-400/70 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/40 cursor-pointer transition-colors"
                           title="Duplicate Row"
                         >
                           <Copy className="w-3.5 h-3.5" />
@@ -558,7 +601,7 @@ export const ProgramPlanningWorkspace: React.FC<ProgramPlanningWorkspaceProps> =
                           type="button"
                           onClick={() => handleRemoveRow(row.id)}
                           disabled={materialRows.length === 1}
-                          className="p-1.5 rounded-md text-zinc-300 hover:text-rose-600 dark:text-zinc-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                          className="p-1.5 rounded-md text-rose-600/70 hover:text-rose-700 dark:text-rose-400/70 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/40 disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer transition-colors"
                           title="Delete Row"
                         >
                           <Trash2 className="w-3.5 h-3.5" />

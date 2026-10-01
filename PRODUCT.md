@@ -1,47 +1,50 @@
-# Product
+# Navneet SAMP Operations
 
-<!-- impeccable:product-schema 1 -->
+## Product
 
-## Platform
+Navneet SAMP Operations is an internal web application for coordinating packaging and sampling work. It gives Marketing and operational teams a shared view of request intake, specifications, feasibility review, seasonal programs, and departmental work queues.
 
-web
+The intended workflow spans Marketing, Creative, Studio/CAD, Costing, SAMP, and plant execution. The repository currently implements several of those workspaces in the frontend; the existence of a screen or navigation item does not by itself mean that its data is persisted by a dedicated backend workflow.
 
-## Users
+## Users and operating context
 
-Internal teams at Navneet who manage a packaging and sampling workflow across marketing intake, creative design, studio/CAD, SAMP operations, costing, plant execution, and administration.
+The product is for internal Navneet users, including Marketing, Creative, Studio, Costing, SAMP, plant, and administrative roles. Users work from an operations overview or a department desk, search and filter requests, inspect product details, and use the actions available in that workflow. Interfaces need to support dense operational scanning, keyboard use, and smaller screens.
 
-## Product Purpose
+## Current capabilities
 
-SAMP Operations provides one workspace for moving sample and design requests through departmental stages, reviewing feasibility, tracking work, managing members and plants, and coordinating operational handoffs.
+- Sign-in through the FastAPI authentication API, with client-side session persistence and protected application routes.
+- Operations Overview, Marketing/Sample Requests, Seasonal Program Planning, Product Staging, Creative, Studio, Costing, and SAMP Team workspaces.
+- Sample request records with product characteristics and request types.
+- Feasibility requests with SAMP verdicts, Marketing decisions, and an activity timeline.
+- Seasonal program requests with material specification rows and SAMP remarks.
+- Customer and plant reference data APIs.
+- Department workspace interactions such as filtering, selection, detail inspection, status updates, and CSV export where implemented.
+- Shared navigation, light/dark theme, operational date selection, business-year display, loading/error boundaries, and refresh events.
 
-## Operating Context
+Plant, Analytics & SLA, Members & Plants, System Settings, Help & Support, and Notifications are represented in navigation or shell controls, but currently do not all have dedicated functional workspaces. Routes without a dedicated workspace render an in-development placeholder. The notification control is a shell affordance, not a full notification center.
 
-Users work from a shared dashboard and department-specific queues. Requests are searched, filtered, opened for specifications, updated through workflow stages, and sometimes exported. The interface must support dense operational scanning while remaining usable on smaller screens.
+## Technology and architecture
 
-## Capabilities and Constraints
+- Frontend: React 18, TypeScript, Vite, React Router 6, Tailwind CSS, and Lucide icons (`frontend/`).
+- Backend: FastAPI, Pydantic, SQLAlchemy, and PostgreSQL (`backend/`).
+- Frontend modules live in `frontend/src/features/`; shared primitives and ERP blocks live in `components/ui/` and `components/erp/`; app shell and navigation live in `layouts/`.
+- Backend HTTP routers, schemas, models, auth helpers, and database setup live under `backend/app/`.
+- `VITE_API_URL` configures the frontend API origin. When unset, the frontend uses the current origin; the current Vite config does not define a development API proxy.
+- `DATABASE_URL` configures the backend database. Its development default points to a local PostgreSQL database named `navneet_samp`.
 
-- React, TypeScript, Vite, React Router, and Tailwind are the existing application stack.
-- Authentication and session state are represented in the client and backed by a mock API interceptor for this frontend project.
-- The application includes protected routes for dashboard, sample requests, creative work, studio work, SAMP team work, costing, analytics, members, settings, help, and notifications.
-- Existing Navneet and SAMP brand assets, workflow terminology, and request data behavior must remain intact.
-- Accessibility, responsive behavior, loading states, error states, and keyboard-operable controls are required for production readiness.
+The backend persists authentication, master, feasibility, program, and sample-request data in PostgreSQL. The sample-request router also contains JSON-file storage helpers for design-request records. The Creative, Studio, and Costing work desks include frontend workflow data and interactions; verify their backing data path before treating changes there as persisted operational records.
 
-## Brand Commitments
+## Product principles
 
-The product is branded as Navneet SAMP Operations. The existing Navneet logo and SAMP identifier are confirmed assets in `frontend-test/public` and `frontend-test/src/assets`.
+- Make the current operational state clear at a glance.
+- Keep departmental handoffs legible and actionable.
+- Preserve dense data access without making screens noisy.
+- Make state-changing actions clear to the operator.
+- Reuse Navneet/SAMP brand assets and existing workflow terminology.
+- Provide responsive behavior, accessible controls, and useful loading and error states.
 
-## Evidence on Hand
+## Source of truth and scope
 
-The existing React implementation, route structure, mock data, request workflows, shared dashboard components, and logo/hero assets are the source of truth. No external product claims or customer proof should be invented.
+The checked-in implementation under `frontend/` and `backend/`, their configuration, and the project documentation are the source of truth for current behavior. Do not assume mock-only architecture: the current frontend calls a FastAPI backend, while some department desks still use local/static workflow data. No external customer claims or production deployment guarantees are implied.
 
-## Product Principles
-
-- Make the current operational state obvious at a glance.
-- Keep department handoffs legible and actionable.
-- Preserve dense data access without making the workspace feel noisy.
-- Make every destructive or state-changing action explicit and recoverable.
-
-## Open Decisions
-
-- The definitive visual direction and long-term design-system ownership remain open.
-- Backend integration and production authentication are outside this frontend redesign.
+This document describes the current repository state, which is evolving. Update it when workflows, integrations, or route coverage change.

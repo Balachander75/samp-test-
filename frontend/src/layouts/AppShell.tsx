@@ -1,13 +1,17 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { UserProfile } from "@/features/auth";
 import { Sidebar } from "./Sidebar";
+import { ALL_NAVIGATION_ITEMS } from "./navigation";
 import { useTheme } from "@/context/ThemeContext";
-import { getNavigationTitle } from "./navigation";
+import { getBusinessYearInfo } from "@/lib/businessYear";
 import {
   Menu,
   Sun,
   Moon,
   Bell,
+  Calendar,
+  Clock,
+  RefreshCw,
 } from "lucide-react";
 
 export interface AppShellProps {
@@ -27,8 +31,50 @@ export const AppShell: React.FC<AppShellProps> = ({
 }) => {
   const { theme, toggleTheme } = useTheme();
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const activeTitle = getNavigationTitle(currentPath);
+  useEffect(() => {
+    const handleRefreshComplete = () => setIsRefreshing(false);
+    window.addEventListener("app:refresh-complete", handleRefreshComplete);
+    return () => window.removeEventListener("app:refresh-complete", handleRefreshComplete);
+  }, []);
+
+  const isWorkspaceHome = currentPath === "/" || ALL_NAVIGATION_ITEMS.some(
+    (item) => item.path === currentPath || item.aliases?.includes(currentPath)
+  );
+  const handlePageRefresh = () => {
+    setIsRefreshing(true);
+    const refreshEvent = new Event("app:refresh-requested", { cancelable: true });
+    if (window.dispatchEvent(refreshEvent)) {
+      window.location.reload();
+    }
+  };
+
+  // Live system date & time sync
+  const [currentDateTime, setCurrentDateTime] = useState<Date>(() => new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentDateTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formattedDate = currentDateTime.toLocaleDateString("en-US", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+
+  const formattedTime = currentDateTime.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+  });
+
+  const businessYearInfo = React.useMemo(() => getBusinessYearInfo(currentDateTime), [currentDateTime]);
 
   // Global Ctrl+K / Cmd+K listener
   React.useEffect(() => {
@@ -75,7 +121,7 @@ export const AppShell: React.FC<AppShellProps> = ({
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         {/* Global Enterprise Top Bar */}
         <header className="h-14 border-b border-zinc-200/80 dark:border-white/[0.08] px-4 sm:px-6 flex items-center justify-between bg-white dark:bg-[#0f1118] shrink-0 z-10 transition-colors gap-3">
-          {/* Left: Mobile Toggle & Page Context */}
+          {/* Left: Mobile Toggle & Live System Date / Time */}
           <div className="flex items-center gap-3 min-w-0">
             <button
               type="button"
@@ -86,25 +132,46 @@ export const AppShell: React.FC<AppShellProps> = ({
               <Menu className="w-5 h-5" />
             </button>
 
-            {/* Active section title (clean, no duplicate Navneet ERP prefix) */}
-            <span className="font-semibold text-sm sm:text-[15px] text-zinc-900 dark:text-zinc-100 truncate tracking-tight">
-              {activeTitle}
-            </span>
+            {/* Live System Date & Time Display */}
+            <div className="flex items-center gap-2 sm:gap-2.5 px-3 py-1.5 rounded-lg bg-zinc-100/70 dark:bg-white/[0.04] border border-zinc-200/80 dark:border-white/[0.07] text-xs select-none shadow-xs">
+              <div className="flex items-center gap-1.5 text-zinc-600 dark:text-zinc-400 font-medium">
+                <Calendar className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 shrink-0" />
+                <span className="tracking-tight">{formattedDate}</span>
+              </div>
 
-            {/* Quick Search Shortcut */}
-            <button
-              type="button"
-              onClick={handleGlobalSearchFocus}
-              className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-zinc-900/60 text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 text-xs font-mono transition-colors cursor-pointer"
-              title="Global search (Ctrl+K)"
-            >
-              <span>Search pipeline...</span>
-              <kbd className="px-1 py-0.2 rounded bg-zinc-200/60 dark:bg-zinc-800 text-[10px] text-zinc-400">Ctrl+K</kbd>
-            </button>
+              <span className="text-zinc-300 dark:text-zinc-700 font-light">|</span>
+
+              <div className="flex items-center gap-1.5 text-zinc-900 dark:text-zinc-100 font-mono font-semibold tabular-nums">
+                <Clock className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400 shrink-0" />
+                <span>{formattedTime}</span>
+              </div>
+
+              <span className="text-zinc-300 dark:text-zinc-700 font-light hidden sm:inline">|</span>
+
+              <span
+                className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/80 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800/60"
+                title="Active SAMP Business Year (October 1 – September 30 cycle)"
+              >
+                BY {businessYearInfo.businessYearStr}
+              </span>
+            </div>
           </div>
 
           {/* Right: Quick Actions */}
           <div className="flex items-center gap-2 shrink-0">
+            {isWorkspaceHome && (
+              <button
+                type="button"
+                onClick={handlePageRefresh}
+                disabled={isRefreshing}
+                aria-label="Refresh current section"
+                title="Refresh current section"
+                className="group h-9 w-9 rounded-md flex items-center justify-center text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-white/[0.06] border border-zinc-200/80 dark:border-white/[0.08] transition-[color,background-color,border-color,transform] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 cursor-pointer disabled:cursor-wait disabled:opacity-60"
+              >
+                <RefreshCw className={`w-[17px] h-[17px] transition-transform duration-200 ${isRefreshing ? "animate-spin" : "group-hover:rotate-45"}`} />
+              </button>
+            )}
+
             {/* Theme Toggle Button */}
             <button
               type="button"

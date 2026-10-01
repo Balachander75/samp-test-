@@ -13,6 +13,12 @@ import {
   DielineItem,
   CreativeBriefItem,
   CostingItem,
+  FeasibilityRequestPayload,
+  FeasibilityRequestRecord,
+  ProgramMaterialItem,
+  ProgramRequestRecord,
+  CreateProgramRequestPayload,
+  AddProgramMaterialPayload,
 } from "../types";
 import { API_BASE_URL, createApiHeaders } from "@/lib/api";
 
@@ -42,37 +48,43 @@ let bindingHierarchyCache: { data: BindingHierarchyResponse; expiresAt: number }
 function mapDesignRequest(item: Record<string, unknown>): DesignRequest {
   return {
     id: Number(item.id),
-    customerName: String(item.customer_name || ""),
-    programName: String(item.program_name || ""),
-    programYear: String(item.program_year || ""),
-    numberOfDesigns: Number(item.number_of_designs || 0),
+    srNumber: typeof item.sr_number === "string" ? item.sr_number : (typeof item.srNumber === "string" ? item.srNumber : undefined),
+    requestCode: typeof item.request_code === "string" ? item.request_code : (typeof item.requestCode === "string" ? item.requestCode : undefined),
+    customerName: String(item.customer_name || item.customer || ""),
+    programName: String(item.program_name || item.programName || ""),
+    programYear: String(item.program_year || item.programYear || "2026-2027"),
+    targetPlant: typeof item.target_plant === "string" ? item.target_plant : (typeof item.targetPlant === "string" ? item.targetPlant : undefined),
+    numberOfDesigns: Number(item.number_of_designs || item.numberOfDesigns || 1),
     trend: typeof item.trend === "string" ? item.trend : null,
-    targetAudience: typeof item.target_audience === "string" ? item.target_audience : null,
-    referenceImage: typeof item.reference_image === "string" ? item.reference_image : null,
-    productDescription: String(item.product_description || ""),
-    designRequiredDate: typeof item.design_required_date === "string" ? item.design_required_date : null,
+    targetAudience: typeof item.target_audience === "string" ? item.target_audience : (typeof item.targetAudience === "string" ? item.targetAudience : null),
+    referenceImage: typeof item.reference_image === "string" ? item.reference_image : (typeof item.referenceImage === "string" ? item.referenceImage : null),
+    productDescription: String(item.product_description || item.productDescription || "Creative Design Brief"),
+    designRequiredDate: typeof item.design_required_date === "string" ? item.design_required_date : (typeof item.designRequiredDate === "string" ? item.designRequiredDate : null),
     status: String(item.status || "Draft (Pre-SMT)"),
-    createdBy: String(item.created_by || ""),
-    updatedBy: String(item.updated_by || ""),
-    createdAt: String(item.created_at || ""),
-    updatedAt: String(item.updated_at || ""),
+    createdBy: String(item.created_by || item.createdBy || "Marketing Specialist"),
+    updatedBy: String(item.updated_by || item.updatedBy || ""),
+    createdAt: String(item.created_at || item.createdAt || ""),
+    updatedAt: String(item.updated_at || item.updatedAt || ""),
   };
 }
 
 export function mapDesignRequestToSampleRequest(item: DesignRequest): SampleRequestItem {
   const createdDate = item.createdAt ? item.createdAt.split("T")[0] : "";
+  const currentYearSuffix = new Date().getFullYear() % 100;
+  const srNum = item.srNumber || `SR-${currentYearSuffix}-DSG-${String(item.id).padStart(3, "0")}`;
+  const matCode = item.requestCode || `DSG-1505-${String(item.id).padStart(4, "0")}`;
   return {
     id: `design-${item.id}`,
-    srNumber: `DR-${String(item.id).padStart(6, "0")}`,
-    year: item.programYear,
+    srNumber: srNum,
+    year: item.programYear || "2026-2027",
     productDescription: item.productDescription,
     customer: item.customerName,
-    targetPlant: "",
-    dateRequestCreated: createdDate,
-    createdBy: item.createdBy,
-    materialCode: `DESIGN-${item.id}`,
+    targetPlant: item.targetPlant || "",
+    dateRequestCreated: createdDate || new Date().toISOString().split("T")[0],
+    createdBy: item.createdBy || "Marketing Specialist",
+    materialCode: matCode,
     sampleRequiredDate: item.designRequiredDate || undefined,
-    status: item.status,
+    status: item.status || "Draft (Pre-SMT)",
     programYear: item.programYear,
     programName: item.programName,
     requestKind: "design",
@@ -82,6 +94,8 @@ export function mapDesignRequestToSampleRequest(item: DesignRequest): SampleRequ
     targetAudience: item.targetAudience,
     referenceImage: item.referenceImage,
     createdAt: item.createdAt,
+    requestTypes: ["design"],
+    creationMode: "marketing_request",
   };
 }
 
@@ -185,50 +199,486 @@ function textOrNumber(value: unknown): string | number {
 function mapSampleRequest(item: ApiSampleRequest, fallbackDate = ""): SampleRequestItem {
   return {
     id: text(item.id),
-    srNumber: text(item.sr_number),
+    srNumber: text(item.sr_number ?? (item as any).srNumber),
     year: text(item.year, "2026-2027"),
-    productDescription: text(item.product_description),
-    programName: text(item.program_name),
+    productDescription: text(item.product_description ?? (item as any).productDescription),
+    programName: text(item.program_name ?? (item as any).programName),
     customer: text(item.customer),
-    targetPlant: text(item.target_plant, "1505- Khaniwade"),
-    dateRequestCreated: text(item.date_request_created, fallbackDate),
-    createdBy: text(item.created_by, "Admin"),
-    materialCode: text(item.material_code),
+    targetPlant: text(item.target_plant ?? (item as any).targetPlant),
+    dateRequestCreated: text(item.date_request_created ?? (item as any).dateRequestCreated, fallbackDate),
+    createdBy: text(item.created_by ?? (item as any).createdBy, "Admin"),
+    materialCode: text(item.material_code ?? (item as any).materialCode),
     barcode: text(item.barcode),
     customerProductCode: text(item.customer_product_code ?? item.customerProductCode),
-    sourceSampleCode: text(item.source_sample_code),
+    sourceSampleCode: text(item.source_sample_code ?? (item as any).sourceSampleCode),
     sourceRequestId: item.source_request_id ? Number(item.source_request_id) : undefined,
     sourceSampleRequestId: item.source_sample_request_id ? Number(item.source_sample_request_id) : (item.source_request_id ? Number(item.source_request_id) : undefined),
-    sampleRequiredDate: text(item.sample_required_date),
-    productType: text(item.product_type),
-    productTypeNavneet: text(item.product_type_navneet ?? item.product_type),
-    productTypeNewCustomer: text(item.product_type_new_customer),
-    productImagePath: text(item.product_image_path),
-    designsCustomerCreative: text(item.designs_customer_creative),
-    brandName: text(item.brand_name),
-    unitPcPack: textOrNumber(item.unit_pc_pack),
-    qtyDesignCosting: textOrNumber(item.qty_design_costing),
-    productArtworkNos: textOrNumber(item.product_artwork_nos),
-    targetArtworkDateCreative: text(item.target_artwork_date_creative),
-    targetArtworkDateStudio: text(item.target_artwork_date_studio),
-    qtyForSampling: textOrNumber(item.qty_for_sampling),
-    mockupRequired: text(item.mockup_required),
+    sampleRequiredDate: text(item.sample_required_date ?? (item as any).sampleRequiredDate),
+    productType: text(item.product_type ?? (item as any).productType),
+    productTypeNavneet: text(item.product_type_navneet ?? item.productTypeNavneet ?? item.product_type),
+    productTypeNewCustomer: text(item.product_type_new_customer ?? (item as any).productTypeNewCustomer),
+    productImagePath: text(item.product_image_path ?? (item as any).productImagePath),
+    designsCustomerCreative: text(item.designs_customer_creative ?? (item as any).designsCustomerCreative),
+    brandName: text(item.brand_name ?? (item as any).brandName),
+    unitPcPack: textOrNumber(item.unit_pc_pack ?? (item as any).unitPcPack),
+    qtyDesignCosting: textOrNumber(item.qty_design_costing ?? (item as any).qtyDesignCosting),
+    productArtworkNos: textOrNumber(item.product_artwork_nos ?? (item as any).productArtworkNos),
+    targetArtworkDateCreative: text(item.target_artwork_date_creative ?? (item as any).targetArtworkDateCreative),
+    targetArtworkDateStudio: text(item.target_artwork_date_studio ?? (item as any).targetArtworkDateStudio),
+    qtyForSampling: textOrNumber(item.qty_for_sampling ?? (item as any).qtyForSampling),
+    mockupRequired: text(item.mockup_required ?? (item as any).mockupRequired),
     status: text(item.status, "Draft (Pre-SMT)"),
-    creationMode: text(item.creation_mode, "material_code"),
-    programYear: text(item.program_year),
-    requestTypes: Array.isArray(item.request_types)
-      ? item.request_types.filter((value): value is "design" | "mockup" | "sample" | "costing" =>
+    creationMode: text(item.creation_mode ?? (item as any).creationMode, "material_code"),
+    programYear: text(item.program_year ?? (item as any).programYear),
+    requestTypes: Array.isArray(item.request_types || (item as any).requestTypes)
+      ? ((item.request_types || (item as any).requestTypes) as any[]).filter((value): value is "design" | "mockup" | "sample" | "costing" =>
           ["design", "mockup", "sample", "costing"].includes(String(value)),
         )
       : [],
-    createdAt: item.created_at ? text(item.created_at).split("T")[0] : fallbackDate,
+    createdAt: item.created_at ? text(item.created_at).split("T")[0] : ((item as any).createdAt ? text((item as any).createdAt).split("T")[0] : fallbackDate),
     plantFeasibilityResponse: (item.plant_feasibility_response || item.plantFeasibilityResponse || null) as any,
     plantFeasibilityRemark: text(item.plant_feasibility_remark || item.plantFeasibilityRemark) || null,
     samplingFeasibilityResponse: (item.sampling_feasibility_response || item.samplingFeasibilityResponse || null) as any,
     samplingFeasibilityRemark: text(item.sampling_feasibility_remark || item.samplingFeasibilityRemark) || null,
     feasibilityClosedAt: text(item.feasibility_closed_at || item.feasibilityClosedAt) || null,
     feasibilityClosedBy: (item.feasibility_closed_by || item.feasibilityClosedBy || null) as any,
+    referenceImages: Array.isArray(item.reference_images)
+      ? (item.reference_images as string[])
+      : Array.isArray((item as any).referenceImages)
+      ? ((item as any).referenceImages as string[])
+      : [],
+    referenceLinks: Array.isArray(item.reference_links)
+      ? (item.reference_links as string[])
+      : Array.isArray((item as any).referenceLinks)
+      ? ((item as any).referenceLinks as string[])
+      : [],
   };
+}
+
+export function mapFeasibilityRequestToSampleRequest(item: FeasibilityRequestRecord): SampleRequestItem {
+  const createdAt = item.requestRaisedAt || "";
+  const description = item.customFeasibilityType || item.feasibilityType;
+  return {
+    id: `feasibility-${item.id}`,
+    srNumber: item.srNumber,
+    year: createdAt ? createdAt.slice(0, 4) : "",
+    productDescription: `${description}: ${item.descriptionNotes}`,
+    customer: item.customer,
+    targetPlant: "",
+    dateRequestCreated: createdAt ? createdAt.split("T")[0] : "",
+    createdBy: item.createdBy || "",
+    materialCode: item.requestCode,
+    sampleRequiredDate: item.requiredDate,
+    status: item.status,
+    creationMode: "feasibility_check",
+    programName: description,
+    programYear: createdAt ? createdAt.slice(0, 4) : "",
+    requestTypes: ["sample"],
+    requestKind: "feasibility",
+    createdAt,
+    referenceImage: item.referenceImages?.[0] || null,
+    referenceImages: item.referenceImages || [],
+    referenceLinks: item.referenceLinks || [],
+    feasibilityType: item.feasibilityType,
+    customFeasibilityType: item.customFeasibilityType,
+    feasibilityDescription: item.descriptionNotes,
+    marketingRemarks: item.marketingRemarks,
+    samplingFeasibilityResponse: item.samplingFeasibilityResponse,
+    samplingFeasibilityRemark: item.samplingFeasibilityRemark,
+    samplingFeasibilityApprovedBy: item.samplingFeasibilityApprovedBy,
+    feasibilityClosedAt: item.feasibilityClosedAt,
+    feasibilityClosedBy: item.feasibilityClosedBy as any,
+    isRespondedOnTime: item.isRespondedOnTime,
+    marketingDecision: item.marketingDecision,
+    marketingDecisionBy: item.marketingDecisionBy,
+    marketingDecisionAt: item.marketingDecisionAt,
+    marketingDecisionRemark: item.marketingDecisionRemark,
+    activities: item.activities || [],
+  };
+}
+
+function mapFeasibilityResponse(item: Record<string, unknown>): FeasibilityRequestRecord {
+  const rawActivities = Array.isArray(item.activities) ? item.activities : [];
+  const activities = rawActivities.map((act: any) => ({
+    id: Number(act.id),
+    feasibilityRequestId: Number(act.feasibility_request_id || item.id),
+    actorId: act.actor_id != null ? Number(act.actor_id) : null,
+    actorName: String(act.actor_name || "Unknown"),
+    actorDepartment: String(act.actor_department || "Operations"),
+    action: String(act.action || "EVENT"),
+    payload: (act.payload && typeof act.payload === "object") ? act.payload : {},
+    createdAt: String(act.created_at || ""),
+  }));
+
+  return {
+    id: Number(item.id),
+    requestCode: String(item.request_code || ""),
+    srNumber: String(item.sr_number || ""),
+    customer: String(item.customer || ""),
+    feasibilityType: String(item.feasibility_type || ""),
+    customFeasibilityType: typeof item.custom_feasibility_type === "string" ? item.custom_feasibility_type : null,
+    descriptionNotes: String(item.description_notes || ""),
+    requiredDate: String(item.required_date || ""),
+    marketingRemarks: typeof item.marketing_remarks === "string" ? item.marketing_remarks : null,
+    referenceImages: Array.isArray(item.reference_images) ? (item.reference_images as string[]) : [],
+    referenceLinks: Array.isArray(item.reference_links) ? (item.reference_links as string[]) : [],
+    createdBy: typeof item.created_by === "string" ? item.created_by : null,
+    requestCreatedBy: typeof item.request_created_by === "string"
+      ? item.request_created_by
+      : (typeof item.created_by === "string" ? item.created_by : null),
+    status: String(item.status || "Pending Feasibility"),
+    requestRaisedAt: String(item.request_raised_at || ""),
+    updatedAt: typeof item.updated_at === "string" ? item.updated_at : null,
+    samplingFeasibilityResponse: (item.sampling_feasibility_response || null) as any,
+    samplingFeasibilityRemark: typeof item.sampling_feasibility_remark === "string" ? item.sampling_feasibility_remark : null,
+    samplingFeasibilityApprovedBy: typeof item.sampling_feasibility_approved_by === "string" ? item.sampling_feasibility_approved_by : null,
+    feasibilityClosedAt: typeof item.feasibility_closed_at === "string" ? item.feasibility_closed_at : null,
+    feasibilityClosedBy: typeof item.feasibility_closed_by === "string" ? item.feasibility_closed_by : null,
+    isRespondedOnTime: item.is_responded_on_time != null ? Boolean(item.is_responded_on_time) : null,
+    marketingDecision: (item.marketing_decision || null) as any,
+    marketingDecisionBy: typeof item.marketing_decision_by === "string" ? item.marketing_decision_by : null,
+    marketingDecisionAt: typeof item.marketing_decision_at === "string" ? item.marketing_decision_at : null,
+    marketingDecisionRemark: typeof item.marketing_decision_remark === "string" ? item.marketing_decision_remark : null,
+    activities,
+  };
+}
+
+export async function fetchFeasibilityRequestsApi(): Promise<SampleRequestItem[]> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/feasibility-requests`, {
+    headers: createApiHeaders(),
+  });
+  if (!response.ok) throw new Error(`Failed to fetch feasibility requests: ${response.statusText}`);
+  const data = (await response.json()) as Record<string, unknown>[];
+  return data.map((item) => mapFeasibilityRequestToSampleRequest(mapFeasibilityResponse(item)));
+}
+
+export async function createFeasibilityRequestApi(
+  payload: FeasibilityRequestPayload,
+): Promise<FeasibilityRequestRecord> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/feasibility-requests`, {
+    method: "POST",
+    headers: createApiHeaders({ json: true }),
+    body: JSON.stringify({
+      customer: payload.customer,
+      feasibility_type: payload.feasibilityType,
+      custom_feasibility_type: payload.customFeasibilityType || null,
+      description_notes: payload.descriptionNotes,
+      required_date: payload.requiredDate,
+      marketing_remarks: payload.marketingRemarks || null,
+      reference_images: payload.referenceImages || [],
+      reference_links: payload.referenceLinks || [],
+      created_by: payload.createdBy || null,
+      request_created_by: payload.createdBy || null,
+      created_by_user_id: payload.createdByUserId || null,
+    }),
+  });
+  if (!response.ok) {
+    const error = await response.json().catch(() => null);
+    throw new Error(error?.detail || `Failed to create feasibility request: ${response.statusText}`);
+  }
+  return mapFeasibilityResponse(await response.json());
+}
+
+export interface UpdateFeasibilityRequestPayload {
+  status?: string;
+  samplingFeasibilityResponse?: "Yes" | "No" | "Maybe" | null;
+  samplingFeasibilityRemark?: string | null;
+  samplingFeasibilityApprovedBy?: string | null;
+  feasibilityClosedAt?: string | null;
+  feasibilityClosedBy?: string | null;
+  isRespondedOnTime?: boolean | null;
+  marketingDecision?: "Accepted" | "Rejected" | null;
+  marketingDecisionBy?: string | null;
+  marketingDecisionAt?: string | null;
+  marketingDecisionRemark?: string | null;
+}
+
+export async function updateFeasibilityRequestApi(
+  id: number | string,
+  payload: UpdateFeasibilityRequestPayload,
+): Promise<SampleRequestItem> {
+  const rawId = String(id).replace(/^feasibility-/, "");
+  const response = await fetch(`${API_BASE_URL}/api/v1/feasibility-requests/${Number(rawId)}`, {
+    method: "PUT",
+    headers: createApiHeaders({ json: true }),
+    body: JSON.stringify({
+      ...(payload.status !== undefined ? { status: payload.status } : {}),
+      ...(payload.samplingFeasibilityResponse !== undefined
+        ? { sampling_feasibility_response: payload.samplingFeasibilityResponse }
+        : {}),
+      ...(payload.samplingFeasibilityRemark !== undefined
+        ? { sampling_feasibility_remark: payload.samplingFeasibilityRemark }
+        : {}),
+      ...(payload.samplingFeasibilityApprovedBy !== undefined
+        ? { sampling_feasibility_approved_by: payload.samplingFeasibilityApprovedBy }
+        : {}),
+      ...(payload.feasibilityClosedAt !== undefined
+        ? { feasibility_closed_at: payload.feasibilityClosedAt }
+        : {}),
+      ...(payload.feasibilityClosedBy !== undefined
+        ? { feasibility_closed_by: payload.feasibilityClosedBy }
+        : {}),
+      ...(payload.isRespondedOnTime !== undefined
+        ? { is_responded_on_time: payload.isRespondedOnTime }
+        : {}),
+      ...(payload.marketingDecision !== undefined
+        ? { marketing_decision: payload.marketingDecision }
+        : {}),
+      ...(payload.marketingDecisionBy !== undefined
+        ? { marketing_decision_by: payload.marketingDecisionBy }
+        : {}),
+      ...(payload.marketingDecisionAt !== undefined
+        ? { marketing_decision_at: payload.marketingDecisionAt }
+        : {}),
+      ...(payload.marketingDecisionRemark !== undefined
+        ? { marketing_decision_remark: payload.marketingDecisionRemark }
+        : {}),
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => null);
+    throw new Error(error?.detail || `Failed to update feasibility request: ${response.statusText}`);
+  }
+
+  return mapFeasibilityRequestToSampleRequest(mapFeasibilityResponse(await response.json()));
+}
+
+export async function recordFeasibilitySampVerdictApi(
+  id: number | string,
+  payload: {
+    response: "Yes" | "No" | "Maybe";
+    remark?: string | null;
+    approved_by?: string | null;
+  },
+): Promise<SampleRequestItem> {
+  const rawId = String(id).replace(/^feasibility-/, "");
+  const response = await fetch(`${API_BASE_URL}/api/v1/feasibility-requests/${Number(rawId)}/samp-verdict`, {
+    method: "PUT",
+    headers: createApiHeaders({ json: true }),
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => null);
+    throw new Error(error?.detail?.[0]?.msg || error?.detail || `Failed to record lab verdict: ${response.statusText}`);
+  }
+
+  return mapFeasibilityRequestToSampleRequest(mapFeasibilityResponse(await response.json()));
+}
+
+export async function recordFeasibilityMarketingDecisionApi(
+  id: number | string,
+  payload: {
+    decision: "Accepted" | "Rejected";
+    decision_remark?: string | null;
+    decision_by?: string | null;
+  },
+): Promise<SampleRequestItem> {
+  const rawId = String(id).replace(/^feasibility-/, "");
+  const response = await fetch(`${API_BASE_URL}/api/v1/feasibility-requests/${Number(rawId)}/marketing-decision`, {
+    method: "POST",
+    headers: createApiHeaders({ json: true }),
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => null);
+    throw new Error(error?.detail || `Failed to record marketing decision: ${response.statusText}`);
+  }
+
+  return mapFeasibilityRequestToSampleRequest(mapFeasibilityResponse(await response.json()));
+}
+
+export async function recordFeasibilityViewedApi(
+  id: number | string,
+  viewerName: string,
+  department = "SAMP Lab",
+): Promise<void> {
+  try {
+    const rawId = String(id).replace(/^feasibility-/, "");
+    await fetch(`${API_BASE_URL}/api/v1/feasibility-requests/${Number(rawId)}/viewed`, {
+      method: "POST",
+      headers: createApiHeaders({ json: true }),
+      body: JSON.stringify({ viewer_name: viewerName, department }),
+    });
+  } catch (err) {
+    console.debug("Telemetry view tracking skipped:", err);
+  }
+}
+
+export function mapProgramMaterial(item: Record<string, unknown>): ProgramMaterialItem {
+  return {
+    id: item.id != null ? Number(item.id) : undefined,
+    materialType: typeof item.material_type === "string" ? item.material_type : undefined,
+    supplierName: typeof item.supplier_name === "string" ? item.supplier_name : undefined,
+    grade: typeof item.grade === "string" ? item.grade : undefined,
+    colorVariant: typeof item.color_variant === "string" ? item.color_variant : undefined,
+    caliperWt: typeof item.caliper_wt === "string" ? item.caliper_wt : undefined,
+    quantity: item.quantity != null ? String(item.quantity) : undefined,
+    unit: typeof item.unit === "string" && item.unit ? item.unit : undefined,
+    remark: typeof item.remark === "string" ? item.remark : undefined,
+    sampRemark: typeof item.samp_remark === "string" ? item.samp_remark : undefined,
+    createdAt: typeof item.created_at === "string" ? item.created_at : undefined,
+    updatedAt: typeof item.updated_at === "string" ? item.updated_at : undefined,
+  };
+}
+
+export function mapProgramResponse(item: Record<string, unknown>): ProgramRequestRecord {
+  const rawMaterials = Array.isArray(item.materials) ? item.materials : [];
+  return {
+    id: Number(item.id),
+    requestCode: String(item.request_code || ""),
+    srNumber: String(item.sr_number || ""),
+    customerName: String(item.customer_name || ""),
+    targetPlant: String(item.target_plant || ""),
+    programCampaignTitle: String(item.program_campaign_title || ""),
+    programYear: String(item.program_year || "2026-2027"),
+    status: String(item.status || "Pending SAMP Review"),
+    createdBy: typeof item.created_by === "string" ? item.created_by : null,
+    createdAt: String(item.created_at || ""),
+    updatedAt: String(item.updated_at || ""),
+    materials: rawMaterials.map((m: any) => mapProgramMaterial(m)),
+  };
+}
+
+export function mapProgramRequestToSampleRequest(record: ProgramRequestRecord): SampleRequestItem {
+  const createdDate = record.createdAt ? record.createdAt.split("T")[0] : "";
+  const matrixSummary =
+    record.materials.length > 0
+      ? "\n\nMaterial Specification Matrix:\n" +
+        record.materials
+          .map(
+            (r, i) =>
+              `#${i + 1} | Type: ${r.materialType || "—"} | Supplier: ${r.supplierName || "—"} | Grade: ${r.grade || "—"} | Color: ${r.colorVariant || "—"} | Caliper: ${r.caliperWt || "—"} | Qty: ${r.quantity || "—"} | Unit: ${r.unit || "—"} | Remark: ${r.remark || "—"}${r.sampRemark ? ` | SAMP Remark: ${r.sampRemark}` : ""}`
+          )
+          .join("\n")
+      : "";
+
+  return {
+    id: `program-${record.id}`,
+    srNumber: record.srNumber,
+    materialCode: record.requestCode,
+    customer: record.customerName,
+    targetPlant: record.targetPlant,
+    productDescription: `[Seasonal Program: ${record.programCampaignTitle}]\nProgram Year: ${record.programYear}\nTarget Plant: ${record.targetPlant}${matrixSummary}`,
+    year: record.programYear,
+    programYear: record.programYear,
+    programName: record.programCampaignTitle,
+    programCampaignTitle: record.programCampaignTitle,
+    programMaterials: record.materials,
+    status: record.status,
+    createdBy: record.createdBy || "Marketing Team",
+    dateRequestCreated: createdDate,
+    createdAt: record.createdAt,
+    creationMode: "program_planning",
+    requestKind: "program",
+    requestTypes: ["sample", "costing", "design"] as any,
+  };
+}
+
+export async function fetchProgramRequestsApi(): Promise<SampleRequestItem[]> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/program-requests`, {
+    headers: createApiHeaders(),
+  });
+  if (!response.ok) throw new Error(`Failed to fetch program requests: ${response.statusText}`);
+  const data = (await response.json()) as Record<string, unknown>[];
+  return data.map((item) => mapProgramRequestToSampleRequest(mapProgramResponse(item)));
+}
+
+export async function createProgramRequestApi(
+  payload: CreateProgramRequestPayload
+): Promise<ProgramRequestRecord> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/program-requests`, {
+    method: "POST",
+    headers: createApiHeaders({ json: true }),
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const error = await response.json().catch(() => null);
+    throw new Error(error?.detail || `Failed to create program request: ${response.statusText}`);
+  }
+  return mapProgramResponse(await response.json());
+}
+
+export async function updateSingleMaterialSampRemarkApi(
+  requestId: number | string,
+  materialId: number | string,
+  sampRemark: string
+): Promise<ProgramRequestRecord> {
+  const cleanId = String(requestId).replace(/^program-/, "");
+  const response = await fetch(
+    `${API_BASE_URL}/api/v1/program-requests/${cleanId}/materials/${materialId}/samp-remark`,
+    {
+      method: "PATCH",
+      headers: createApiHeaders({ json: true }),
+      body: JSON.stringify({ samp_remark: sampRemark }),
+    }
+  );
+  if (!response.ok) {
+    const error = await response.json().catch(() => null);
+    throw new Error(error?.detail || `Failed to update SAMP remark: ${response.statusText}`);
+  }
+  return mapProgramResponse(await response.json());
+}
+
+export async function updateBatchProgramSampRemarksApi(
+  requestId: number | string,
+  remarks: Array<{ material_id: number; samp_remark: string }>
+): Promise<ProgramRequestRecord> {
+  const cleanId = String(requestId).replace(/^program-/, "");
+  const response = await fetch(
+    `${API_BASE_URL}/api/v1/program-requests/${cleanId}/samp-remarks`,
+    {
+      method: "PUT",
+      headers: createApiHeaders({ json: true }),
+      body: JSON.stringify({ remarks }),
+    }
+  );
+  if (!response.ok) {
+    const error = await response.json().catch(() => null);
+    throw new Error(error?.detail || `Failed to update SAMP remarks: ${response.statusText}`);
+  }
+  return mapProgramResponse(await response.json());
+}
+
+export async function addProgramMaterialApi(
+  requestId: number | string,
+  payload: AddProgramMaterialPayload
+): Promise<ProgramRequestRecord> {
+  const cleanId = String(requestId).replace(/^program-/, "");
+  const response = await fetch(
+    `${API_BASE_URL}/api/v1/program-requests/${cleanId}/materials`,
+    {
+      method: "POST",
+      headers: createApiHeaders({ json: true }),
+      body: JSON.stringify(payload),
+    }
+  );
+  if (!response.ok) {
+    const error = await response.json().catch(() => null);
+    throw new Error(error?.detail || `Failed to add material: ${response.statusText}`);
+  }
+  return mapProgramResponse(await response.json());
+}
+
+export async function deleteProgramMaterialApi(
+  requestId: number | string,
+  materialId: number | string
+): Promise<ProgramRequestRecord> {
+  const cleanId = String(requestId).replace(/^program-/, "");
+  const response = await fetch(
+    `${API_BASE_URL}/api/v1/program-requests/${cleanId}/materials/${materialId}`,
+    {
+      method: "DELETE",
+      headers: createApiHeaders(),
+    }
+  );
+  if (!response.ok) {
+    const error = await response.json().catch(() => null);
+    throw new Error(error?.detail || `Failed to delete material: ${response.statusText}`);
+  }
+  return mapProgramResponse(await response.json());
 }
 
 export async function fetchSampleRequestsApi(): Promise<SampleRequestItem[]> {
@@ -245,17 +695,57 @@ export async function fetchSampleRequestsApi(): Promise<SampleRequestItem[]> {
   }
 }
 
+/**
+ * Fetches all marketing intake requests across the persisted workflow types.
+ */
+export async function fetchAllMarketingRequestsApi(): Promise<SampleRequestItem[]> {
+  try {
+    const [sampleRequests, designRequests, feasibilityRequests, programRequests] =
+      await Promise.all([
+        fetchSampleRequestsApi(),
+        fetchDesignRequestsApi().catch(() => []),
+        fetchFeasibilityRequestsApi().catch(() => []),
+        fetchProgramRequestsApi().catch(() => []),
+      ]);
+    const mappedDesignRequests = designRequests
+      .map(mapDesignRequestToSampleRequest)
+      .filter(
+        (dr) =>
+          !sampleRequests.some(
+            (sr) =>
+              (dr.materialCode && sr.materialCode && dr.materialCode === sr.materialCode) ||
+              (dr.customer && sr.customer === dr.customer && dr.productDescription === sr.productDescription)
+          )
+      );
+
+    return [
+      ...sampleRequests,
+      ...mappedDesignRequests,
+      ...feasibilityRequests,
+      ...programRequests,
+    ].sort((a, b) => {
+      const da = new Date(a.createdAt || a.dateRequestCreated || 0).getTime();
+      const db = new Date(b.createdAt || b.dateRequestCreated || 0).getTime();
+      return db - da;
+    });
+  } catch (err) {
+    console.error("Error fetching all marketing requests:", err);
+    return [];
+  }
+}
+
 export async function createSampleRequestApi(form: CreateSampleRequestForm): Promise<SampleRequestItem | null> {
   try {
     const rawYear = form.programYear || "2026";
     const selectedYear = String(rawYear).replace(/BTS/gi, "").trim() || "2026";
     const payload = {
+      sr_number: (form as any).srNumber || (form as any).sr_number || undefined,
       year: form.year || "2026-2027",
       program_year: selectedYear,
       program_name: form.programName ? form.programName.trim() : null,
       product_description: form.productDescription || form.programName || "Standard Notebook Specification",
       customer: form.customer || "",
-      target_plant: form.targetPlant || "1505- Khaniwade",
+      target_plant: form.targetPlant || null,
       date_request_created: form.dateRequestCreated || new Date().toISOString().split("T")[0],
       created_by: form.createdBy || "Admin",
       material_code: form.materialCode || "",
@@ -276,7 +766,7 @@ export async function createSampleRequestApi(form: CreateSampleRequestForm): Pro
       product_image_path: form.productImagePath || null,
       target_artwork_date_creative: form.targetArtworkDateCreative || null,
       target_artwork_date_studio: form.targetArtworkDateStudio || null,
-      creation_mode: form.creationMode || "material_code",
+      creation_mode: form.creationMode || "marketing_request",
       request_types: form.requestTypes || [],
       request_type_selected_at: form.requestTypeSelectedAt || {},
       custom_binding_1: form.customBinding1 || null,
@@ -284,6 +774,12 @@ export async function createSampleRequestApi(form: CreateSampleRequestForm): Pro
       custom_details: form.customDetails || null,
       status: form.status || "Draft (Pre-SMT)",
       source_sample_request_id: form.sourceRequestId,
+      reference_images: form.referenceImages || [],
+      reference_links: form.referenceLinks || [],
+      plant_feasibility_response: form.plantFeasibilityResponse || null,
+      plant_feasibility_remark: form.plantFeasibilityRemark || null,
+      sampling_feasibility_response: form.samplingFeasibilityResponse || null,
+      sampling_feasibility_remark: form.samplingFeasibilityRemark || null,
     };
 
     const res = await fetch(`${API_BASE_URL}/api/v1/sample-requests`, {
@@ -296,7 +792,9 @@ export async function createSampleRequestApi(form: CreateSampleRequestForm): Pro
       throw new Error(`Failed to create sample request: ${res.statusText}`);
     }
 
-    return mapSampleRequest(await res.json(), new Date().toISOString().split("T")[0]);
+    const resJson = await res.json();
+    const itemData = resJson?.data && typeof resJson.data === "object" ? resJson.data : resJson;
+    return mapSampleRequest(itemData, new Date().toISOString().split("T")[0]);
   } catch (err) {
     console.error("Error creating sample request:", err);
     return null;
@@ -440,17 +938,77 @@ export async function batchUpdateStatusApi(
   }
 }
 
+export async function deleteProgramRequestApi(requestId: number | string): Promise<boolean> {
+  const cleanId = String(requestId).replace(/^program-/, "");
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/v1/program-requests/${cleanId}`, {
+      method: "DELETE",
+      headers: createApiHeaders(),
+    });
+    return res.ok || res.status === 204;
+  } catch (err) {
+    console.error("Error deleting program request from DB:", err);
+    return false;
+  }
+}
+
+export async function deleteFeasibilityRequestApi(requestId: number | string): Promise<boolean> {
+  const cleanId = String(requestId).replace(/^feasibility-/, "");
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/v1/feasibility-requests/${cleanId}`, {
+      method: "DELETE",
+      headers: createApiHeaders(),
+    });
+    return res.ok || res.status === 204;
+  } catch (err) {
+    console.error("Error deleting feasibility request from DB:", err);
+    return false;
+  }
+}
+
 export async function deleteSampleRequestApi(id: number | string): Promise<boolean> {
   try {
     const res = await fetch(`${API_BASE_URL}/api/v1/sample-requests/${id}`, {
       method: "DELETE",
       headers: createApiHeaders(),
     });
-    return res.ok;
+    return res.ok || res.status === 204;
   } catch (err) {
     console.error("Error deleting sample request:", err);
     return false;
   }
+}
+
+/**
+ * Universal request deletion helper (used for testing and cleanup).
+ * Automatically resolves whether the record is stored in program_requests,
+ * feasibility_requests, or standard sample_requests and deletes it from DB.
+ */
+export async function deleteAnyRequestApi(
+  request: SampleRequestItem | { id: string | number; requestKind?: string; creationMode?: string; srNumber?: string }
+): Promise<boolean> {
+  const idStr = String(request.id || "");
+  const kind = (request as any).requestKind;
+  const mode = (request as any).creationMode;
+
+  if (idStr.startsWith("program-") || kind === "program" || mode === "program_planning") {
+    return deleteProgramRequestApi(idStr);
+  }
+
+  if (idStr.startsWith("feasibility-") || kind === "feasibility" || mode === "feasibility_check") {
+    return deleteFeasibilityRequestApi(idStr);
+  }
+
+  if (idStr.startsWith("design-") || kind === "design") {
+    const rawId = idStr.replace(/^design-/, "");
+    const numId = Number(rawId);
+    if (!isNaN(numId)) {
+      await deleteDesignRequestApi(numId).catch(() => false);
+    }
+    return deleteSampleRequestApi(request.id);
+  }
+
+  return deleteSampleRequestApi(request.id);
 }
 
 export async function batchDeleteSampleRequestsApi(ids: (number | string)[]): Promise<boolean> {
@@ -459,6 +1017,35 @@ export async function batchDeleteSampleRequestsApi(ids: (number | string)[]): Pr
     return results.every(Boolean);
   } catch (err) {
     console.error("Error batch deleting sample requests:", err);
+    return false;
+  }
+}
+
+export async function batchDeleteAnyRequestsApi(requests: SampleRequestItem[]): Promise<boolean> {
+  try {
+    const results = await Promise.all(requests.map((req) => deleteAnyRequestApi(req)));
+    return results.every(Boolean);
+  } catch (err) {
+    console.error("Error batch deleting requests:", err);
+    return false;
+  }
+}
+
+export async function resetAllSampleCodesApi(): Promise<boolean> {
+  try {
+    await Promise.all([
+      fetch(`${API_BASE_URL}/api/v1/program-requests/reset-sample-codes`, {
+        method: "POST",
+        headers: createApiHeaders(),
+      }).catch(() => null),
+      fetch(`${API_BASE_URL}/api/v1/feasibility-requests/reset-sample-codes`, {
+        method: "POST",
+        headers: createApiHeaders(),
+      }).catch(() => null),
+    ]);
+    return true;
+  } catch (err) {
+    console.error("Failed to reset sample codes:", err);
     return false;
   }
 }
@@ -482,11 +1069,7 @@ export async function fetchPlantsApi(): Promise<PlantItem[]> {
     }));
   } catch (err) {
     console.error("Error fetching plants from API:", err);
-    return [
-      { id: 1, code: "1503", name: "1503- Silvasa", location: "Silvasa, D&NH", isActive: true, createdBy: "System Initializer", createdAt: "", updatedAt: "" },
-      { id: 2, code: "1505", name: "1505- Khaniwade", location: "Khaniwade, Maharashtra", isActive: true, createdBy: "System Initializer", createdAt: "", updatedAt: "" },
-      { id: 3, code: "1003", name: "1003- Pariya", location: "Pariya, Gujarat", isActive: true, createdBy: "System Initializer", createdAt: "", updatedAt: "" },
-    ];
+    return [];
   }
 }
 

@@ -7,7 +7,6 @@ import { DataTable, ColumnDef } from "@/components/erp/DataTable";
 import { StatusPill } from "@/components/ui/StatusPill";
 import {
   Search,
-  RefreshCw,
   X,
   CheckCircle2,
   XCircle,
@@ -56,155 +55,7 @@ export interface CreativeBriefItem {
   accentColor: string;
 }
 
-const INITIAL_BRIEFS: CreativeBriefItem[] = [
-  {
-    id: "cr-101",
-    artCode: "ART-26-001",
-    srNumber: "SR-26-00101",
-    title: "Youva Neon Flare Geometry Series",
-    brand: "Navneet Youva",
-    category: "Notebook Covers",
-    variantsCount: 4,
-    designer: "Ananya Sharma",
-    colorSpecs: "CMYK + Spot Pantone 805C Neon Red",
-    proofVersion: "v2 (Rev 1)",
-    proofStatus: "Client Review",
-    dueDate: "2026-10-15",
-    dimensions: "180 × 240 mm",
-    finishingNotes: "Matte Lamination + Spot UV on Geometric Poly-mesh",
-    cmykCheckPassed: true,
-    resolutionDpi: 450,
-    bleedMm: 3,
-    clientFeedback: "Increase contrast on author tagline; front foil title is sharp.",
-    accentColor: "#f43f5e",
-  },
-  {
-    id: "cr-102",
-    artCode: "ART-26-002",
-    srNumber: "SR-26-00102",
-    title: "Classmate Pulse Luxury Gift Carton",
-    brand: "ITC Classmate",
-    category: "Rigid Packaging",
-    variantsCount: 2,
-    designer: "Rohan Patel",
-    colorSpecs: "CMYK + Spot Pantone 871C Metallic Gold",
-    proofVersion: "v3 (Final)",
-    proofStatus: "Prepress Approved",
-    dueDate: "2026-10-12",
-    dimensions: "260 × 190 × 45 mm",
-    finishingNotes: "Hot Stamping Foil + Soft-Touch Velvet Lam",
-    cmykCheckPassed: true,
-    resolutionDpi: 600,
-    bleedMm: 4,
-    clientFeedback: "Color proofs signed off by brand director on 26-Sep.",
-    accentColor: "#eab308",
-  },
-  {
-    id: "cr-103",
-    artCode: "ART-26-003",
-    srNumber: "SR-26-00104",
-    title: "Kokuyo Camlin Artist Brush Tin Lid",
-    brand: "Camlin Kokuyo",
-    category: "Tin / Metal Containers",
-    variantsCount: 3,
-    designer: "Vikram Mehta",
-    colorSpecs: "4C White Baseplate + Tin Metal Tint",
-    proofVersion: "v1 (Draft)",
-    proofStatus: "In Concept",
-    dueDate: "2026-10-22",
-    dimensions: "310 × 120 × 22 mm",
-    finishingNotes: "Embossed Brand Crest + High-Gloss Overvarnish",
-    cmykCheckPassed: true,
-    resolutionDpi: 300,
-    bleedMm: 2.5,
-    clientFeedback: "Awaiting primary brand guideline vector assets.",
-    accentColor: "#06b6d4",
-  },
-  {
-    id: "cr-104",
-    artCode: "ART-26-004",
-    srNumber: "SR-26-00105",
-    title: "HQ Royal Flora Hardbound Journal",
-    brand: "Navneet HQ",
-    category: "Notebook Covers",
-    variantsCount: 5,
-    designer: "Pooja Deshmukh",
-    colorSpecs: "CMYK + Pantone 876C Copper Foil",
-    proofVersion: "v2 (Rev 2)",
-    proofStatus: "Revisions Requested",
-    dueDate: "2026-10-14",
-    dimensions: "148 × 210 mm (A5)",
-    finishingNotes: "Debossed Leatherette with Micro-grain Register",
-    cmykCheckPassed: false,
-    resolutionDpi: 300,
-    bleedMm: 3,
-    clientFeedback: "Spine text shifted 1.5mm left; please recenter spine title.",
-    accentColor: "#d97706",
-  },
-  {
-    id: "cr-105",
-    artCode: "ART-26-005",
-    srNumber: "SR-26-00108",
-    title: "Sundaram Scholar Geometry Box Carton",
-    brand: "Sundaram Multi-pap",
-    category: "Stationery Packs",
-    variantsCount: 2,
-    designer: "Rohan Patel",
-    colorSpecs: "CMYK Full Process",
-    proofVersion: "v1 (Intake)",
-    proofStatus: "Brief Intake",
-    dueDate: "2026-10-25",
-    dimensions: "165 × 75 × 25 mm",
-    finishingNotes: "Aqueous Gloss Coated 300 GSM FBB",
-    cmykCheckPassed: true,
-    resolutionDpi: 350,
-    bleedMm: 3,
-    clientFeedback: "Brand assets ingested from sales intake form.",
-    accentColor: "#8b5cf6",
-  },
-  {
-    id: "cr-106",
-    artCode: "ART-26-006",
-    srNumber: "SR-26-00109",
-    title: "Target Global Pastel Math Kit Sleeve",
-    brand: "Target Global Sourcing",
-    category: "Stationery Packs",
-    variantsCount: 4,
-    designer: "Ananya Sharma",
-    colorSpecs: "CMYK + Pantone Pastel 9280C",
-    proofVersion: "v2 (Client Draft)",
-    proofStatus: "Client Review",
-    dueDate: "2026-10-18",
-    dimensions: "220 × 150 × 30 mm",
-    finishingNotes: "Matte Drip-off UV Varnish with Texture",
-    cmykCheckPassed: true,
-    resolutionDpi: 500,
-    bleedMm: 3.5,
-    clientFeedback: "Color balance is pleasing; waiting for compliance bar-code.",
-    accentColor: "#10b981",
-  },
-  {
-    id: "cr-107",
-    artCode: "ART-26-007",
-    srNumber: "SR-26-00110",
-    title: "Oxford Elite Academic Diary 2026",
-    brand: "Oxford Publishing",
-    category: "Notebook Covers",
-    variantsCount: 3,
-    designer: "Vikram Mehta",
-    colorSpecs: "Deep Navy Monotone + Silver Stamping",
-    proofVersion: "v3 (Signed)",
-    proofStatus: "Prepress Approved",
-    dueDate: "2026-10-10",
-    dimensions: "190 × 255 mm",
-    finishingNotes: "Silver Foil Stamping on Thermal PU Leather",
-    cmykCheckPassed: true,
-    resolutionDpi: 600,
-    bleedMm: 3,
-    clientFeedback: "Final sign-off recorded. Ready for plate cylinder output.",
-    accentColor: "#3b82f6",
-  },
-];
+const INITIAL_BRIEFS: CreativeBriefItem[] = [];
 
 const CREATIVE_STAGES: { id: string; stepNumber: string; label: string }[] = [
   { id: "all", stepNumber: "ALL", label: "All Creative Projects" },
@@ -223,25 +74,30 @@ export const CreativeWorkDesk: React.FC<CreativeWorkDeskProps> = ({ user }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBrand, setSelectedBrand] = useState<string>("all");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Sync from cross-desk API on mount
   const loadBriefs = useCallback(async () => {
-    setIsRefreshing(true);
     try {
       const live = await fetchCreativeBriefsApi();
-      if (live && live.length > 0) {
+      if (Array.isArray(live)) {
         setBriefs(live);
       }
     } catch {
       // Keep existing state
-    } finally {
-      setIsRefreshing(false);
     }
   }, []);
 
   useEffect(() => {
     loadBriefs();
+  }, [loadBriefs]);
+
+  useEffect(() => {
+    const handleRefresh = (event: Event) => {
+      event.preventDefault();
+      void loadBriefs().finally(() => window.dispatchEvent(new Event("app:refresh-complete")));
+    };
+    window.addEventListener("app:refresh-requested", handleRefresh);
+    return () => window.removeEventListener("app:refresh-requested", handleRefresh);
   }, [loadBriefs]);
 
   // Inspector State
@@ -754,18 +610,6 @@ export const CreativeWorkDesk: React.FC<CreativeWorkDeskProps> = ({ user }) => {
 
         {/* Right Actions */}
         <div className="flex items-center gap-2 shrink-0 ml-auto">
-          <button
-            type="button"
-            onClick={async () => {
-              await loadBriefs();
-              showToast("Creative artwork pipeline refreshed");
-            }}
-            className="h-9 px-3.5 rounded-md border border-zinc-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-800 flex items-center gap-1.5 text-xs font-semibold transition-colors cursor-pointer shadow-2xs"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
-            <span className="hidden sm:inline">Refresh</span>
-          </button>
-
           <button
             type="button"
             onClick={handleExportCSV}

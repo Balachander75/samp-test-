@@ -1,13 +1,14 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { UserProfile } from "@/features/auth";
 import {
-  fetchSampleRequestsApi,
+  fetchAllMarketingRequestsApi,
   fetchCreativeBriefsApi,
   fetchStudioDielinesApi,
   fetchCostingEstimationsApi,
 } from "@/features/sample-requests/api";
 import { SampleRequestItem } from "@/features/sample-requests/types";
+import { useMasterData } from "@/features/sample-requests/hooks/useMasterData";
 import { MetricRibbon, MetricTileItem } from "@/components/erp/MetricRibbon";
 import {
   Sparkles,
@@ -16,7 +17,6 @@ import {
   Clock,
   CheckCircle2,
   AlertTriangle,
-  RefreshCw,
   Download,
   Building2,
   Calendar,
@@ -37,18 +37,17 @@ interface OperationsOverviewProps {
 
 export const OperationsOverview: React.FC<OperationsOverviewProps> = ({ user }) => {
   const navigate = useNavigate();
+  const { plants } = useMasterData();
   const [requests, setRequests] = useState<SampleRequestItem[]>([]);
   const [briefsCount, setBriefsCount] = useState<number>(0);
   const [dielinesCount, setDielinesCount] = useState<number>(0);
   const [costingsCount, setCostingsCount] = useState<number>(0);
-  const [isLoading, setIsLoading] = useState(false);
   const [lastRefreshed, setLastRefreshed] = useState<string>("");
 
-  const loadData = async () => {
-    setIsLoading(true);
+  const loadData = useCallback(async () => {
     try {
       const [requestsData, briefsData, dielinesData, costingsData] = await Promise.all([
-        fetchSampleRequestsApi(),
+        fetchAllMarketingRequestsApi().catch(() => []),
         fetchCreativeBriefsApi().catch(() => []),
         fetchStudioDielinesApi().catch(() => []),
         fetchCostingEstimationsApi().catch(() => []),
@@ -61,25 +60,34 @@ export const OperationsOverview: React.FC<OperationsOverviewProps> = ({ user }) 
       setLastRefreshed(now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
     } catch (err) {
       console.error("Failed to load operations telemetry:", err);
-    } finally {
-      setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
+
+  useEffect(() => {
+    const handleRefresh = (event: Event) => {
+      event.preventDefault();
+      void loadData().finally(() => window.dispatchEvent(new Event("app:refresh-complete")));
+    };
+    window.addEventListener("app:refresh-requested", handleRefresh);
+    return () => window.removeEventListener("app:refresh-requested", handleRefresh);
+  }, [loadData]);
 
   // Compute live pipeline metrics
   const telemetry = useMemo(() => {
     const total = requests.length;
 
-    // Pending Feasibility Check (neither plant nor sampling responded yet)
+    // Pending Feasibility means an open SAMP review, not a request already finalized by Marketing.
     const pendingFeasibility = requests.filter(
-      (r) =>
-        String(r.creationMode || "").toLowerCase() === "feasibility_check" &&
-        !r.plantFeasibilityResponse &&
-        !r.samplingFeasibilityResponse
+      (r) => {
+        if (String(r.creationMode || "").toLowerCase() !== "feasibility_check") return false;
+        if (r.samplingFeasibilityResponse) return false;
+        const status = String(r.status || "").toLowerCase();
+        return !["completed", "closed", "approved", "rejected"].some((term) => status.includes(term));
+      }
     ).length;
 
     // Urgent SLA (<72h)
@@ -167,6 +175,27 @@ export const OperationsOverview: React.FC<OperationsOverviewProps> = ({ user }) 
     [telemetry, navigate]
   );
 
+  const pipelineStages = useMemo(() => {
+    const statusCount = (matches: string[]) =>
+      requests.filter((request) => {
+        const status = String(request.status || "").toLowerCase();
+        return matches.some((match) => status.includes(match));
+      }).length;
+
+    const stages = [
+      { stage: "01. Intake & Feasibility Audit", count: statusCount(["draft", "feasibility", "pending"]), dept: "Marketing & Plant Engineering", color: "bg-amber-500" },
+      { stage: "02. Creative Artwork & Prepress", count: statusCount(["creative"]), dept: "Creative Studio", color: "bg-purple-500" },
+      { stage: "03. Structural CAD & Dieline Engineering", count: statusCount(["studio", "cad"]), dept: "Packaging Engineering Studio", color: "bg-cyan-500" },
+      { stage: "04. Prototyping Laboratory Fabrication", count: telemetry.inFabrication, dept: "SAMP Lab & Plants", color: "bg-indigo-500" },
+      { stage: "05. BOM Costing & Quotation", count: statusCount(["cost", "quote", "deal"]), dept: "Finance & Costing", color: "bg-emerald-500" },
+    ];
+
+    return stages.map((stage) => ({
+      ...stage,
+      pct: Math.min(100, Math.round((stage.count / Math.max(1, telemetry.total)) * 100)),
+    }));
+  }, [requests, telemetry]);
+
   // Department Desks Definition
   const DEPARTMENT_DESKS = [
     {
@@ -238,41 +267,22 @@ export const OperationsOverview: React.FC<OperationsOverviewProps> = ({ user }) 
 
   // Recent operational activity
   const recentActivities = useMemo(() => {
-    return [
-      {
-        id: "act-1",
-        time: "10 mins ago",
-        department: "SAMP Lab",
-        badgeColor: "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800",
-        message: "Technical Feasibility sign-off recorded for SR-26-00101 (Youva Neon Geometry)",
-        actionLink: "/samp-team-work",
-      },
-      {
-        id: "act-2",
-        time: "24 mins ago",
-        department: "Costing",
-        badgeColor: "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800",
-        message: "Margin locked at 18.5% for CST-26-404 (Kokuyo Camlin) · Official quotation released",
-        actionLink: "/costing-team",
-      },
-      {
-        id: "act-3",
-        time: "1 hour ago",
-        department: "Creative",
-        badgeColor: "text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/40 border-purple-200 dark:border-purple-800",
-        message: "Prepress certification approved for ART-26-202 (ITC Classmate Pulse)",
-        actionLink: "/creative-work",
-      },
-      {
-        id: "act-4",
-        time: "2 hours ago",
-        department: "Studio CAD",
-        badgeColor: "text-cyan-600 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-950/40 border-cyan-200 dark:border-cyan-800",
-        message: "CAD Dieline package DL-26-104 released to Silvasa Plant Line 2",
-        actionLink: "/studio-work",
-      },
+    const colors = [
+      "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800",
+      "text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/40 border-purple-200 dark:border-purple-800",
+      "text-cyan-600 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-950/40 border-cyan-200 dark:border-cyan-800",
+      "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800",
     ];
-  }, []);
+
+    return requests.slice(0, 4).map((request, index) => ({
+      id: request.id,
+      time: request.createdAt ? new Date(request.createdAt).toLocaleString("en-IN") : "",
+      department: request.status || "Pipeline",
+      badgeColor: colors[index % colors.length],
+      message: `${request.srNumber || "Request"} · ${request.productDescription || "Request created"}${request.customer ? ` · ${request.customer}` : ""}`,
+      actionLink: "/sample-requests",
+    }));
+  }, [requests]);
 
   return (
     <div className="flex-1 flex flex-col h-full min-h-0 overflow-y-auto bg-[#fafafa] dark:bg-[#08090d] select-text">
@@ -295,17 +305,6 @@ export const OperationsOverview: React.FC<OperationsOverviewProps> = ({ user }) 
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          <button
-            type="button"
-            onClick={loadData}
-            disabled={isLoading}
-            className="h-9 px-3.5 rounded-md border border-zinc-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 flex items-center gap-1.5 text-xs font-semibold transition-colors cursor-pointer shadow-2xs"
-            title="Refresh telemetry"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`} />
-            <span className="hidden sm:inline">Refresh</span>
-          </button>
-
           <button
             type="button"
             onClick={() => navigate("/sample-requests")}
@@ -406,24 +405,24 @@ export const OperationsOverview: React.FC<OperationsOverviewProps> = ({ user }) 
               {[
                 {
                   stage: "01. Intake & Dual Feasibility Audit",
-                  count: telemetry.pendingFeasibility + 2,
+                  count: telemetry.pendingFeasibility,
                   dept: "Marketing & Plant Engineering",
                   color: "bg-amber-500",
-                  pct: Math.min(100, Math.round(((telemetry.pendingFeasibility + 2) / Math.max(1, telemetry.total)) * 100)),
+                  pct: Math.min(100, Math.round((telemetry.pendingFeasibility / Math.max(1, telemetry.total)) * 100)),
                 },
                 {
                   stage: "02. Creative Artwork & Prepress Certification",
-                  count: 5,
+                  count: briefsCount,
                   dept: "Creative Studio",
                   color: "bg-purple-500",
-                  pct: Math.min(100, Math.round((5 / Math.max(1, telemetry.total)) * 100)),
+                  pct: Math.min(100, Math.round((briefsCount / Math.max(1, telemetry.total)) * 100)),
                 },
                 {
                   stage: "03. Structural CAD & Dieline Engineering",
-                  count: 6,
+                  count: dielinesCount,
                   dept: "Packaging Engineering Studio",
                   color: "bg-cyan-500",
-                  pct: Math.min(100, Math.round((6 / Math.max(1, telemetry.total)) * 100)),
+                  pct: Math.min(100, Math.round((dielinesCount / Math.max(1, telemetry.total)) * 100)),
                 },
                 {
                   stage: "04. Prototyping Laboratory Fabrication",
@@ -434,10 +433,10 @@ export const OperationsOverview: React.FC<OperationsOverviewProps> = ({ user }) 
                 },
                 {
                   stage: "05. Multi-tier BOM Costing & Quotation",
-                  count: 6,
+                  count: costingsCount,
                   dept: "Finance & Costing Estimation",
                   color: "bg-emerald-500",
-                  pct: Math.min(100, Math.round((6 / Math.max(1, telemetry.total)) * 100)),
+                  pct: Math.min(100, Math.round((costingsCount / Math.max(1, telemetry.total)) * 100)),
                 },
               ].map((item) => (
                 <div key={item.stage} className="space-y-1">
@@ -459,7 +458,9 @@ export const OperationsOverview: React.FC<OperationsOverviewProps> = ({ user }) 
             </div>
 
             <div className="pt-2 border-t border-zinc-100 dark:border-white/[0.05] flex items-center justify-between text-[11px] text-zinc-400 font-mono">
-              <span>Facility sync: Khaniwade Unit 1, Silvasa Plant Line 2 & Vasai Unit 3</span>
+              <span>
+                Facility sync: {plants.length ? plants.map((plant) => plant.name).join(", ") : "No plants loaded"}
+              </span>
               <span className="text-emerald-600 dark:text-emerald-400 font-semibold">✓ 100% Operational</span>
             </div>
           </div>

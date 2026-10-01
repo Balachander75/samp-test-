@@ -7,7 +7,6 @@ import { DataTable, ColumnDef } from "@/components/erp/DataTable";
 import { StatusPill } from "@/components/ui/StatusPill";
 import {
   Search,
-  RefreshCw,
   X,
   CheckCircle2,
   XCircle,
@@ -51,116 +50,7 @@ export interface CostingItem {
   substrateSpec: string;
 }
 
-const INITIAL_COSTINGS: CostingItem[] = [
-  {
-    id: "cst-401",
-    costingCode: "CST-26-401",
-    srNumber: "SR-26-00101",
-    customer: "Navneet Youva",
-    productTitle: "Youva Neon Geometry Hardbound Notebook",
-    targetVolume: 50000,
-    substrateUnitCost: 16.4,
-    conversionUnitCost: 7.2,
-    netUnitCost: 23.6,
-    marginPct: 22.0,
-    quotedUnitPrice: 30.25,
-    totalProjectValue: 1512500,
-    status: "Quote Released",
-    dueDate: "2026-10-14",
-    targetPlant: "Khaniwade Unit",
-    substrateSpec: "70 GSM Maplitho Inside + 300 GSM Cyber Xpack Cover",
-  },
-  {
-    id: "cst-402",
-    costingCode: "CST-26-402",
-    srNumber: "SR-26-00102",
-    customer: "ITC Classmate",
-    productTitle: "Classmate Pulse Rigid Gift Box Edition",
-    targetVolume: 25000,
-    substrateUnitCost: 38.5,
-    conversionUnitCost: 19.8,
-    netUnitCost: 58.3,
-    marginPct: 26.5,
-    quotedUnitPrice: 79.32,
-    totalProjectValue: 1983000,
-    status: "Margin Review",
-    dueDate: "2026-10-12",
-    targetPlant: "Khaniwade Unit",
-    substrateSpec: "1200 GSM Kappa Board + 150 GSM Metallic Art Wrap",
-  },
-  {
-    id: "cst-403",
-    costingCode: "CST-26-403",
-    srNumber: "SR-26-00104",
-    customer: "Camlin Kokuyo",
-    productTitle: "Kokuyo Camlin Artist Brush Tin Lid Outer",
-    targetVolume: 100000,
-    substrateUnitCost: 8.8,
-    conversionUnitCost: 4.1,
-    netUnitCost: 12.9,
-    marginPct: 18.5,
-    quotedUnitPrice: 15.83,
-    totalProjectValue: 1583000,
-    status: "Substrate Pricing",
-    dueDate: "2026-10-22",
-    targetPlant: "Silvassa Plant 1503",
-    substrateSpec: "0.24mm Electrolytic Tinplate with Food-Grade Baseplate",
-  },
-  {
-    id: "cst-404",
-    costingCode: "CST-26-404",
-    srNumber: "SR-26-00105",
-    customer: "Navneet HQ",
-    productTitle: "HQ Royal Flora Journal w/ Copper Stamping",
-    targetVolume: 35000,
-    substrateUnitCost: 22.0,
-    conversionUnitCost: 11.5,
-    netUnitCost: 33.5,
-    marginPct: 28.0,
-    quotedUnitPrice: 46.53,
-    totalProjectValue: 1628550,
-    status: "Won Deal",
-    dueDate: "2026-10-09",
-    targetPlant: "Silvassa Plant 1503",
-    substrateSpec: "80 GSM Woodfree Cream + Imported PU Leatherette",
-  },
-  {
-    id: "cst-405",
-    costingCode: "CST-26-405",
-    srNumber: "SR-26-00108",
-    customer: "Sundaram Multi-pap",
-    productTitle: "Sundaram Scholar Geometry Carton",
-    targetVolume: 150000,
-    substrateUnitCost: 4.6,
-    conversionUnitCost: 2.1,
-    netUnitCost: 6.7,
-    marginPct: 21.0,
-    quotedUnitPrice: 8.48,
-    totalProjectValue: 1272000,
-    status: "Quote Released",
-    dueDate: "2026-10-18",
-    targetPlant: "Daman Facility",
-    substrateSpec: "300 GSM ITC Safire Board (Aqueous Coated)",
-  },
-  {
-    id: "cst-406",
-    costingCode: "CST-26-406",
-    srNumber: "SR-26-00109",
-    customer: "Target Global Sourcing",
-    productTitle: "Target Global Pastel Math Kit E-Flute Shipper",
-    targetVolume: 75000,
-    substrateUnitCost: 14.2,
-    conversionUnitCost: 5.6,
-    netUnitCost: 19.8,
-    marginPct: 24.0,
-    quotedUnitPrice: 26.05,
-    totalProjectValue: 1953750,
-    status: "Margin Review",
-    dueDate: "2026-10-16",
-    targetPlant: "Daman Facility",
-    substrateSpec: "3-Ply E-Flute Virgin Kraft with Micro-Corrugation",
-  },
-];
+const INITIAL_COSTINGS: CostingItem[] = [];
 
 const COSTING_STAGES: { id: string; stepNumber: string; label: string }[] = [
   { id: "all", stepNumber: "ALL", label: "All Costing Requests" },
@@ -178,25 +68,30 @@ export const CostingTeamDesk: React.FC<CostingTeamDeskProps> = ({ user }) => {
   const [selectedVolumeTier, setSelectedVolumeTier] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Sync from cross-desk API on mount
   const loadCostings = useCallback(async () => {
-    setIsRefreshing(true);
     try {
       const live = await fetchCostingEstimationsApi();
-      if (live && live.length > 0) {
+      if (Array.isArray(live)) {
         setCostings(live);
       }
     } catch {
       // Keep existing state
-    } finally {
-      setIsRefreshing(false);
     }
   }, []);
 
   useEffect(() => {
     loadCostings();
+  }, [loadCostings]);
+
+  useEffect(() => {
+    const handleRefresh = (event: Event) => {
+      event.preventDefault();
+      void loadCostings().finally(() => window.dispatchEvent(new Event("app:refresh-complete")));
+    };
+    window.addEventListener("app:refresh-requested", handleRefresh);
+    return () => window.removeEventListener("app:refresh-requested", handleRefresh);
   }, [loadCostings]);
 
   // Inspector & Simulation State
@@ -755,18 +650,6 @@ export const CostingTeamDesk: React.FC<CostingTeamDeskProps> = ({ user }) => {
 
         {/* Right Actions */}
         <div className="flex items-center gap-2 shrink-0 ml-auto">
-          <button
-            type="button"
-            onClick={async () => {
-              await loadCostings();
-              showToast("Costing rates synchronized with ERP SAP Mill prices");
-            }}
-            className="h-9 px-3.5 rounded-md border border-zinc-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-800 flex items-center gap-1.5 text-xs font-semibold transition-colors cursor-pointer shadow-2xs"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
-            <span className="hidden sm:inline">Refresh</span>
-          </button>
-
           <button
             type="button"
             onClick={handleExportCSV}

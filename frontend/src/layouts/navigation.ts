@@ -35,7 +35,7 @@ export const NAVIGATION_GROUPS: NavigationGroup[] = [
         shortCode: "MK",
         path: "/sample-requests",
         aliases: ["/marketing-work", "/sales"],
-        badge: "12",
+        badge: "11",
         departmentKey: "marketing",
       },
       {
@@ -71,6 +71,14 @@ export const NAVIGATION_GROUPS: NavigationGroup[] = [
         path: "/costing-team",
         aliases: ["/costing", "/costing-work", "/bom"],
         departmentKey: "costing",
+      },
+      {
+        id: "plant",
+        title: "Plant",
+        shortCode: "PL",
+        path: "/plant",
+        aliases: ["/plant-execution", "/plant-work", "/plants"],
+        departmentKey: "plant",
       },
       {
         id: "analytics",

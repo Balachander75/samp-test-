@@ -48,8 +48,10 @@ export interface SampleRequestItem {
   creationMode?: "material_code" | "binding" | string;
   programYear?: string;
   programName?: string;
+  programCampaignTitle?: string;
+  programMaterials?: ProgramMaterialItem[];
   requestTypes?: RequestType[];
-  requestKind?: "sample" | "design";
+  requestKind?: "sample" | "design" | "feasibility" | "program";
   designRequestId?: number;
   numberOfDesigns?: number;
   trend?: string | null;
@@ -60,8 +62,80 @@ export interface SampleRequestItem {
   plantFeasibilityRemark?: string | null;
   samplingFeasibilityResponse?: "Yes" | "No" | "Maybe" | null;
   samplingFeasibilityRemark?: string | null;
+  samplingFeasibilityApprovedBy?: string | null;
   feasibilityClosedAt?: string | null;
   feasibilityClosedBy?: "plant" | "sampling" | null;
+  isRespondedOnTime?: boolean | null;
+  marketingDecision?: "Accepted" | "Rejected" | null;
+  marketingDecisionBy?: string | null;
+  marketingDecisionAt?: string | null;
+  marketingDecisionRemark?: string | null;
+  activities?: FeasibilityActivityItem[];
+  referenceImages?: string[];
+  referenceLinks?: string[];
+  feasibilityType?: string;
+  customFeasibilityType?: string | null;
+  feasibilityDescription?: string;
+  marketingRemarks?: string | null;
+}
+
+export interface FeasibilityActivityItem {
+  id: number;
+  feasibilityRequestId: number;
+  actorId?: number | null;
+  actorName: string;
+  actorDepartment: string;
+  action: "CREATED" | "VIEWED" | "SAMP_EVALUATED" | "MARKETING_DECIDED" | string;
+  payload: Record<string, any>;
+  createdAt: string;
+}
+
+export interface FeasibilityRequestPayload {
+  customer: string;
+  feasibilityType: string;
+  customFeasibilityType?: string | null;
+  descriptionNotes: string;
+  requiredDate: string;
+  marketingRemarks?: string | null;
+  referenceImages?: string[];
+  referenceLinks?: string[];
+  createdBy?: string | null;
+  createdByUserId?: number | null;
+}
+
+export interface FeasibilitySampVerdictPayload {
+  response: "Yes" | "No" | "Maybe";
+  remark?: string | null;
+  approved_by?: string | null;
+}
+
+export interface FeasibilityMarketingDecisionPayload {
+  decision: "Accepted" | "Rejected";
+  decision_remark?: string | null;
+  decision_by?: string | null;
+}
+
+export interface FeasibilityRequestRecord extends FeasibilityRequestPayload {
+  id: number;
+  requestCode: string;
+  srNumber: string;
+  status: string;
+  createdBy?: string | null;
+  requestCreatedBy?: string | null;
+  createdByUserId?: number | null;
+  requestRaisedAt: string;
+  updatedAt?: string | null;
+  samplingFeasibilityResponse?: "Yes" | "No" | "Maybe" | null;
+  samplingFeasibilityRemark?: string | null;
+  samplingFeasibilityApprovedBy?: string | null;
+  feasibilityClosedAt?: string | null;
+  feasibilityClosedBy?: string | null;
+  isRespondedOnTime?: boolean | null;
+  marketingDecision?: "Accepted" | "Rejected" | null;
+  marketingDecisionBy?: string | null;
+  marketingDecisionAt?: string | null;
+  marketingDecisionRemark?: string | null;
+  activities?: FeasibilityActivityItem[];
 }
 
 export interface CreateSampleRequestForm {
@@ -111,6 +185,8 @@ export interface CreateSampleRequestForm {
   samplingFeasibilityRemark?: string | null;
   feasibilityClosedAt?: string | null;
   feasibilityClosedBy?: "plant" | "sampling" | null;
+  referenceImages?: string[];
+  referenceLinks?: string[];
 }
 
 export type RequestType = "design" | "mockup" | "sample" | "costing";
@@ -237,9 +313,12 @@ export interface BatchCreateSampleRequestResponse {
 
 export interface DesignRequest {
   id: number;
+  srNumber?: string;
+  requestCode?: string;
   customerName: string;
   programName: string;
   programYear: string;
+  targetPlant?: string;
   numberOfDesigns: number;
   trend?: string | null;
   targetAudience?: string | null;
@@ -323,5 +402,66 @@ export interface CostingItem {
   dueDate: string;
   targetPlant: string;
   substrateSpec: string;
+}
+
+export interface ProgramMaterialItem {
+  id?: number | string;
+  materialType?: string;
+  supplierName?: string;
+  grade?: string;
+  colorVariant?: string;
+  caliperWt?: string;
+  quantity?: string;
+  unit?: string;
+  remark?: string;
+  sampRemark?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface AddProgramMaterialPayload {
+  material_type?: string | null;
+  supplier_name?: string | null;
+  grade?: string | null;
+  color_variant?: string | null;
+  caliper_wt?: string | null;
+  quantity?: string | null;
+  unit?: string | null;
+  remark?: string | null;
+  samp_remark?: string | null;
+}
+
+export interface ProgramRequestRecord {
+  id: number;
+  requestCode: string;
+  srNumber: string;
+  customerName: string;
+  targetPlant: string;
+  programCampaignTitle: string;
+  programYear: string;
+  status: string;
+  createdBy?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  materials: ProgramMaterialItem[];
+}
+
+export interface CreateProgramRequestPayload {
+  customer_name: string;
+  target_plant: string;
+  program_campaign_title: string;
+  program_year: string;
+  created_by?: string | null;
+  materials: Array<{
+    material_type?: string | null;
+    supplier_name?: string | null;
+    grade?: string | null;
+    color_variant?: string | null;
+    caliper_wt?: string | null;
+    quantity?: string | null;
+    unit?: string | null;
+    remark?: string | null;
+    samp_remark?: string | null;
+  }>;
 }
 

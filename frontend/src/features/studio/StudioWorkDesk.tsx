@@ -7,7 +7,6 @@ import { DataTable, ColumnDef } from "@/components/erp/DataTable";
 import { StatusPill } from "@/components/ui/StatusPill";
 import {
   Search,
-  RefreshCw,
   X,
   CheckCircle2,
   XCircle,
@@ -54,111 +53,7 @@ export interface DielineItem {
   fileFormats: string[];
 }
 
-const INITIAL_DIELINES: DielineItem[] = [
-  {
-    id: "dl-101",
-    dielineCode: "DL-26-042",
-    srNumber: "SR-26-00102",
-    boxFormat: "Rigid Box",
-    title: "Classmate Pulse Luxury Hinged Box w/ Magnet",
-    client: "ITC Classmate",
-    dimensions: "260 × 190 × 45 mm",
-    substrate: "1200 GSM Grey Board + 150 GSM Art Wrap",
-    caliperMicrons: 1850,
-    machineCompatibility: "Emmeci Automatic Rigid Box Line",
-    status: "3D Simulation",
-    dueDate: "2026-10-14",
-    targetPlant: "Khaniwade Unit",
-    grainDirection: "Parallel to Spine",
-    fileFormats: [".DXF", ".ARD", ".PDF"],
-  },
-  {
-    id: "dl-102",
-    dielineCode: "DL-26-081",
-    srNumber: "SR-26-00108",
-    boxFormat: "Folding Carton",
-    title: "Sundaram Scholar Geometry Reverse Tuck Carton",
-    client: "Sundaram Multi-pap",
-    dimensions: "165 × 75 × 25 mm",
-    substrate: "350 GSM Cyber Xpack FBB",
-    caliperMicrons: 480,
-    machineCompatibility: "Bobst Novacut 106 & Media 68 Gluer",
-    status: "Laser Die Cleared",
-    dueDate: "2026-10-11",
-    targetPlant: "Silvassa Plant 1503",
-    grainDirection: "Perpendicular to Crease",
-    fileFormats: [".DXF", ".CF2", ".PDF"],
-  },
-  {
-    id: "dl-103",
-    dielineCode: "DL-26-088",
-    srNumber: "SR-26-00109",
-    boxFormat: "Flute Corrugated",
-    title: "Target Global Study Kit 3-Ply E-Flute Shipper",
-    client: "Target Global Sourcing",
-    dimensions: "320 × 240 × 85 mm",
-    substrate: "Kraft 250 GSM / E-Flute / 200 GSM Liner",
-    caliperMicrons: 1600,
-    machineCompatibility: "Heidelberg Dymatrix 106 Pro",
-    status: "Plotter Sample Tested",
-    dueDate: "2026-10-18",
-    targetPlant: "Daman Facility",
-    fluteGrade: "E-Flute (1.5mm)",
-    grainDirection: "Parallel to Spine",
-    fileFormats: [".ARD", ".DXF"],
-  },
-  {
-    id: "dl-104",
-    dielineCode: "DL-26-092",
-    srNumber: "SR-26-00104",
-    boxFormat: "Blister / Sleeve",
-    title: "Kokuyo Camlin Metal Tin Slide Sleeve",
-    client: "Camlin Kokuyo",
-    dimensions: "315 × 125 × 25 mm",
-    substrate: "300 GSM SBS Board",
-    caliperMicrons: 400,
-    machineCompatibility: "Bobst SP 102 Die-Cutter",
-    status: "Dieline Construction",
-    dueDate: "2026-10-20",
-    targetPlant: "Khaniwade Unit",
-    grainDirection: "Perpendicular to Crease",
-    fileFormats: [".DXF", ".PDF"],
-  },
-  {
-    id: "dl-105",
-    dielineCode: "DL-26-095",
-    srNumber: "SR-26-00105",
-    boxFormat: "Rigid Box",
-    title: "Navneet HQ Journal Two-Piece Telescopic Box",
-    client: "Navneet HQ",
-    dimensions: "220 × 160 × 35 mm",
-    substrate: "1000 GSM Kappa Board + Wibalin Wrap",
-    caliperMicrons: 1500,
-    machineCompatibility: "Kolbus Casemaker & Rigid Wrapper",
-    status: "Laser Die Cleared",
-    dueDate: "2026-10-09",
-    targetPlant: "Silvassa Plant 1503",
-    grainDirection: "Parallel to Spine",
-    fileFormats: [".DXF", ".ARD", ".CF2"],
-  },
-  {
-    id: "dl-106",
-    dielineCode: "DL-26-101",
-    srNumber: "SR-26-00111",
-    boxFormat: "Folding Carton",
-    title: "Faber-Castell Connector Pen Auto-Lock Carton",
-    client: "Faber-Castell India",
-    dimensions: "190 × 110 × 20 mm",
-    substrate: "320 GSM ITC Safire Board",
-    caliperMicrons: 440,
-    machineCompatibility: "Bobst Ambition 76 Folder-Gluer",
-    status: "CAD Intake",
-    dueDate: "2026-10-26",
-    targetPlant: "Vasai Prototyping Unit",
-    grainDirection: "Perpendicular to Crease",
-    fileFormats: [".DXF"],
-  },
-];
+const INITIAL_DIELINES: DielineItem[] = [];
 
 const STUDIO_STAGES: { id: string; stepNumber: string; label: string }[] = [
   { id: "all", stepNumber: "ALL", label: "All Dieline Projects" },
@@ -177,25 +72,30 @@ export const StudioWorkDesk: React.FC<StudioWorkDeskProps> = ({ user }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedPlant, setSelectedPlant] = useState<string>("all");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Sync from cross-desk API on mount
   const loadDielines = useCallback(async () => {
-    setIsRefreshing(true);
     try {
       const live = await fetchStudioDielinesApi();
-      if (live && live.length > 0) {
+      if (Array.isArray(live)) {
         setDielines(live);
       }
     } catch {
       // Keep existing state
-    } finally {
-      setIsRefreshing(false);
     }
   }, []);
 
   useEffect(() => {
     loadDielines();
+  }, [loadDielines]);
+
+  useEffect(() => {
+    const handleRefresh = (event: Event) => {
+      event.preventDefault();
+      void loadDielines().finally(() => window.dispatchEvent(new Event("app:refresh-complete")));
+    };
+    window.addEventListener("app:refresh-requested", handleRefresh);
+    return () => window.removeEventListener("app:refresh-requested", handleRefresh);
   }, [loadDielines]);
 
   // Inspector State
@@ -690,18 +590,6 @@ export const StudioWorkDesk: React.FC<StudioWorkDeskProps> = ({ user }) => {
 
         {/* Right Actions */}
         <div className="flex items-center gap-2 shrink-0 ml-auto">
-          <button
-            type="button"
-            onClick={async () => {
-              await loadDielines();
-              showToast("CAD structural pipeline refreshed");
-            }}
-            className="h-9 px-3.5 rounded-md border border-zinc-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-800 flex items-center gap-1.5 text-xs font-semibold transition-colors cursor-pointer shadow-2xs"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
-            <span className="hidden sm:inline">Refresh</span>
-          </button>
-
           <button
             type="button"
             onClick={handleExportCSV}

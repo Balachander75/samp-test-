@@ -41,8 +41,8 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['"Inter"', '"IBM Plex Sans"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
-        mono: ['"IBM Plex Mono"', '"Geist Mono"', 'monospace'],
+        sans: ['"Geist"', '"Geist Sans"', '"Inter"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+        mono: ['"Geist Mono"', '"IBM Plex Mono"', 'monospace'],
       },
       boxShadow: {
         'subtle-1': '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
