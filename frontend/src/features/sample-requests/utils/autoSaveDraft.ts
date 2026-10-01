@@ -2,10 +2,9 @@ import { StagedProductItem } from "../components/ProductStagingWorkspace";
 import {
   createSampleRequestApi,
   createDesignRequestApi,
-  CreateSampleRequestForm,
-  API_BASE_URL,
-  createApiHeaders,
 } from "../api";
+import { CreateSampleRequestForm } from "../types";
+import { API_BASE_URL, createApiHeaders } from "@/lib/api";
 import { UserProfile } from "@/features/auth";
 
 export interface ProgramContextData {
