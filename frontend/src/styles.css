@@ -170,6 +170,11 @@
   }
 }
 
+.animate-smooth-toast {
+  animation: smoothToastSlideIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
 .animate-smooth-drawer {
   animation: smoothDrawerSlideIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   will-change: transform;

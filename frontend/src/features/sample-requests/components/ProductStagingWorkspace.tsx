@@ -34,6 +34,7 @@ import { useMasterData } from "../hooks/useMasterData";
 import { OperationalDatePicker } from "@/components/erp";
 import { getNextWorkingDate } from "@/lib/holidayUtils";
 import { getCurrentBusinessYear } from "@/lib/businessYear";
+import { autoSaveStagedProductsToDraft } from "../utils/autoSaveDraft";
 
 export type DeliverableScopeId = "design" | "mockup" | "sample" | "costing";
 
@@ -205,6 +206,13 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
   const [isSubmittingAll, setIsSubmittingAll] = useState(false);
   const [inspectingProduct, setInspectingProduct] = useState<StagedProductItem | null>(null);
 
+  // Auto-save refs to guarantee zero data loss if user navigates away or switches tabs
+  const hasAutoSavedRef = useRef(false);
+  const stagedProductsRef = useRef(stagedProducts);
+  stagedProductsRef.current = stagedProducts;
+  const programContextRef = useRef(programContext);
+  programContextRef.current = programContext;
+
   const showToast = (text: string, tone: "success" | "error" = "success") => {
     setToastMsg({ text, tone });
     setTimeout(() => setToastMsg(null), 3500);
@@ -214,6 +222,38 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
   useEffect(() => {
     sessionStorage.setItem("samp_active_program_form", JSON.stringify(programContext));
   }, [programContext]);
+
+  // If user navigates away / unmounts with staged products that haven't been saved yet, auto-save to draft
+  useEffect(() => {
+    return () => {
+      if (!hasAutoSavedRef.current && stagedProductsRef.current.length > 0) {
+        const cached = sessionStorage.getItem("samp_active_staged_products");
+        if (cached) {
+          sessionStorage.removeItem("samp_active_staged_products");
+          sessionStorage.removeItem("samp_active_program_form");
+          hasAutoSavedRef.current = true;
+          autoSaveStagedProductsToDraft(
+            stagedProductsRef.current,
+            programContextRef.current,
+            user
+          ).then((res) => {
+            if (res.success) {
+              window.dispatchEvent(
+                new CustomEvent("app:show-toast", {
+                  detail: {
+                    message: `✓ Auto-saved ${res.count} staged product(s) for "${res.programName || res.customer}" directly to Drafts.`,
+                    tone: "success",
+                  },
+                })
+              );
+            }
+          }).catch((err) => {
+            console.error("Unmount auto-save draft error:", err);
+          });
+        }
+      }
+    };
+  }, [user]);
 
   // Master data fallback only when context is empty
   useEffect(() => {
@@ -521,6 +561,31 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
     showToast(`Duplicated "${item.productDescription}".`);
   };
 
+  // Return to Sample Requests desk with automatic draft preservation if items staged
+  const handleReturnToDesk = async () => {
+    if (stagedProducts.length > 0) {
+      hasAutoSavedRef.current = true;
+      sessionStorage.removeItem("samp_active_staged_products");
+      sessionStorage.removeItem("samp_active_program_form");
+      showToast(`Auto-saving ${stagedProducts.length} product(s) directly to Drafts...`);
+      autoSaveStagedProductsToDraft(stagedProducts, programContext, user).then((res) => {
+        if (res.success) {
+          window.dispatchEvent(
+            new CustomEvent("app:show-toast", {
+              detail: {
+                message: `✓ Auto-saved ${res.count} staged product(s) for "${res.programName || res.customer}" directly to Drafts.`,
+                tone: "success",
+              },
+            })
+          );
+        }
+      });
+      navigate("/sample-requests", { state: { refresh: Date.now(), stage: "draft" } });
+      return;
+    }
+    navigate("/sample-requests");
+  };
+
   // Submit all staged products into Sample Requests & Design pipelines
   const handleSubmitBatch = async () => {
     if (stagedProducts.length === 0) return;
@@ -529,61 +594,21 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
       return;
     }
     setIsSubmittingAll(true);
+    hasAutoSavedRef.current = true;
 
     try {
-      for (const prod of stagedProducts) {
-        // If Design is requested, register via dedicated Design Request API
-        if (prod.designMetadata) {
-          try {
-            await createDesignRequestApi({
-              customerName: programContext.customer,
-              programName: programContext.programName,
-              programYear: programContext.programYear,
-              numberOfDesigns: String(prod.designMetadata.numberOfDesigns),
-              trend: prod.designMetadata.trend,
-              targetAudience: prod.designMetadata.targetAudience,
-              referenceImage: prod.designMetadata.referenceImage,
-              productDescription: prod.productDescription,
-              designRequiredDate: prod.designMetadata.designRequiredDate,
-            });
-          } catch (e) {
-            console.warn("Design request registered locally:", e);
-          }
-        }
-
-        // Also register into Sample Requests master pipeline
-        const payload: CreateSampleRequestForm = {
-          customer: programContext.customer,
-          programName: programContext.programName,
-          programYear: programContext.programYear,
-          year: programContext.programYear,
-          targetPlant: programContext.targetPlant,
-          productDescription: prod.productDescription,
-          materialCode: prod.materialCode,
-          barcode: "",
-          customerProductCode: "",
-          sampleRequiredDate: prod.designMetadata?.designRequiredDate,
-          dateRequestCreated: new Date().toISOString().split("T")[0],
-          createdBy: user?.name || "Marketing Specialist",
-          status: "Draft (Pre-SMT)",
-          creationMode: "marketing_request",
-          requestTypes: prod.scopes,
-          productArtworkNos: prod.designMetadata?.numberOfDesigns ? String(prod.designMetadata.numberOfDesigns) : undefined,
-          designsCustomerCreative: prod.designMetadata?.numberOfDesigns ? String(prod.designMetadata.numberOfDesigns) : undefined,
-          targetArtworkDateCreative: prod.designMetadata?.designRequiredDate,
-          productImagePath: prod.designMetadata?.referenceImage || undefined,
-          referenceImages: prod.designMetadata?.images?.map((img) => img.url) || [],
-          referenceLinks: prod.designMetadata?.webLinks || [],
-        };
-        await createSampleRequestApi(payload);
-      }
-
-      showToast(`Successfully registered ${stagedProducts.length} request(s) into Draft queue! Returning to desk...`);
       sessionStorage.removeItem("samp_active_program_form");
       sessionStorage.removeItem("samp_active_staged_products");
-      setTimeout(() => {
-        navigate("/sample-requests", { state: { refresh: Date.now(), stage: "draft" } });
-      }, 700);
+
+      const res = await autoSaveStagedProductsToDraft(stagedProducts, programContext, user);
+      if (res.success) {
+        showToast(`Successfully registered ${res.count} request(s) into Draft queue! Returning to desk...`);
+        setTimeout(() => {
+          navigate("/sample-requests", { state: { refresh: Date.now(), stage: "draft" } });
+        }, 700);
+      } else {
+        throw new Error("Draft save failed");
+      }
     } catch {
       showToast(`The staged request(s) could not be saved to the backend. Returning to desk...`, "error");
       setTimeout(() => {
@@ -627,7 +652,7 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
           <div className="flex items-center gap-3 min-w-0">
             <button
               type="button"
-              onClick={() => navigate("/sample-requests")}
+              onClick={handleReturnToDesk}
               className="p-1.5 -ml-1 rounded-md text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer shrink-0"
               title="Return to Sample Requests Desk"
               aria-label="Return to Sample Requests Desk"
@@ -638,7 +663,7 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 text-[11px] text-zinc-500 dark:text-zinc-400 font-mono">
                 <span
-                  onClick={() => navigate("/sample-requests")}
+                  onClick={handleReturnToDesk}
                   className="hover:text-brand-600 dark:hover:text-brand-400 cursor-pointer transition-colors truncate"
                 >
                   Marketing Desk

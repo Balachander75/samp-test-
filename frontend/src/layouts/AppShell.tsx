@@ -12,6 +12,9 @@ import {
   Calendar,
   Clock,
   RefreshCw,
+  CheckCircle2,
+  AlertCircle,
+  X,
 } from "lucide-react";
 
 export interface AppShellProps {
@@ -20,6 +23,12 @@ export interface AppShellProps {
   currentPath: string;
   onNavigate: (path: string) => void;
   children: React.ReactNode;
+}
+
+interface GlobalToast {
+  id: string;
+  message: string;
+  tone: "success" | "error" | "info";
 }
 
 export const AppShell: React.FC<AppShellProps> = ({
@@ -32,6 +41,32 @@ export const AppShell: React.FC<AppShellProps> = ({
   const { theme, toggleTheme } = useTheme();
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [globalToast, setGlobalToast] = useState<GlobalToast | null>(null);
+
+  // Global Toast event listener
+  useEffect(() => {
+    const handleToastEvent = (e: Event) => {
+      const customEvent = e as CustomEvent<{ message: string; tone?: "success" | "error" | "info" }>;
+      if (customEvent.detail?.message) {
+        setGlobalToast({
+          id: `toast-${Date.now()}`,
+          message: customEvent.detail.message,
+          tone: customEvent.detail.tone || "success",
+        });
+      }
+    };
+
+    window.addEventListener("app:show-toast", handleToastEvent);
+    return () => window.removeEventListener("app:show-toast", handleToastEvent);
+  }, []);
+
+  useEffect(() => {
+    if (!globalToast) return;
+    const timer = setTimeout(() => {
+      setGlobalToast(null);
+    }, 4500);
+    return () => clearTimeout(timer);
+  }, [globalToast]);
 
   useEffect(() => {
     const handleRefreshComplete = () => setIsRefreshing(false);
@@ -208,6 +243,38 @@ export const AppShell: React.FC<AppShellProps> = ({
             </div>
           </div>
         </header>
+
+        {/* Global Operational Toast Notification */}
+        {globalToast && (
+          <div
+            role="status"
+            aria-live="polite"
+            className={`fixed top-16 right-5 z-[80] flex items-center gap-3 px-4 py-3 rounded-lg shadow-2xl text-xs font-semibold border backdrop-blur-md max-w-md animate-smooth-toast transition-all ${
+              globalToast.tone === "error"
+                ? "bg-rose-950/90 text-rose-100 border-rose-700/80 shadow-rose-950/40"
+                : globalToast.tone === "info"
+                ? "bg-zinc-900/95 text-zinc-100 border-zinc-700/80 shadow-zinc-950/40"
+                : "bg-emerald-950/90 text-emerald-100 border-emerald-700/80 shadow-emerald-950/40"
+            }`}
+          >
+            {globalToast.tone === "error" ? (
+              <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+            ) : globalToast.tone === "info" ? (
+              <Clock className="w-4 h-4 shrink-0 text-amber-400 animate-spin" />
+            ) : (
+              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+            )}
+            <span className="flex-1 leading-snug">{globalToast.message}</span>
+            <button
+              type="button"
+              onClick={() => setGlobalToast(null)}
+              className="p-1 rounded hover:bg-white/20 text-white/70 hover:text-white transition-colors cursor-pointer shrink-0"
+              aria-label="Dismiss notification"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
 
         {/* Main Work Viewport */}
         <main className="flex-1 min-h-0 flex flex-col overflow-hidden">

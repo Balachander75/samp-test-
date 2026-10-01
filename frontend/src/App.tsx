@@ -194,6 +194,9 @@ function ActiveModuleView({
 }
 
 
+import { autoSaveStagedProductsToDraft } from "@/features/sample-requests/utils/autoSaveDraft";
+import type { StagedProductItem } from "@/features/sample-requests/components/ProductStagingWorkspace";
+
 function AppShellRouteWrapper({
   user,
   onLogout,
@@ -204,12 +207,74 @@ function AppShellRouteWrapper({
   const location = useLocation();
   const navigate = useNavigate();
 
+  const handleNavigate = (path: string) => {
+    // If user is currently in the Product Staging flow and clicks another section in the sidebar:
+    const isStagingRoute =
+      location.pathname === "/sample-requests/product-staging" ||
+      location.pathname === "/sample-requests/add-product";
+
+    if (isStagingRoute && path !== location.pathname) {
+      const cachedStaged = sessionStorage.getItem("samp_active_staged_products");
+      const cachedProgram = sessionStorage.getItem("samp_active_program_form");
+
+      if (cachedStaged) {
+        try {
+          const items: StagedProductItem[] = JSON.parse(cachedStaged);
+          if (Array.isArray(items) && items.length > 0) {
+            // Immediately clear sessionStorage to prevent duplicate submissions
+            sessionStorage.removeItem("samp_active_staged_products");
+            sessionStorage.removeItem("samp_active_program_form");
+
+            const programContext = cachedProgram ? JSON.parse(cachedProgram) : null;
+            const progTitle = programContext?.programName || programContext?.customer || "Program";
+
+            // Fire auto-save in background
+            autoSaveStagedProductsToDraft(items, programContext, user).then((res) => {
+              if (res.success) {
+                window.dispatchEvent(
+                  new CustomEvent("app:show-toast", {
+                    detail: {
+                      message: `✓ Auto-saved ${res.count} staged product(s) for "${res.programName || res.customer}" directly to Drafts.`,
+                      tone: "success",
+                    },
+                  })
+                );
+              }
+            }).catch((err) => {
+              console.error("Auto-save draft error:", err);
+            });
+
+            // Instant toast notification while transitioning to other section
+            window.dispatchEvent(
+              new CustomEvent("app:show-toast", {
+                detail: {
+                  message: `Auto-saving ${items.length} product(s) for "${progTitle}" to Draft queue...`,
+                  tone: "info",
+                },
+              })
+            );
+
+            // If navigating to sample requests, redirect directly to Draft stage tab
+            if (path === "/sample-requests") {
+              navigate("/sample-requests", { state: { stage: "draft", refresh: Date.now() } });
+              return;
+            }
+          }
+        } catch (e) {
+          console.error("Failed to parse staged products on navigation:", e);
+        }
+      }
+    }
+
+    navigate(path);
+  };
+
   return (
     <AppShell
       user={user}
       onLogout={onLogout}
       currentPath={location.pathname}
-      onNavigate={(path) => navigate(path)}
+      onNavigate={handleNavigate}
     >
       <ActiveModuleView user={user} />
     </AppShell>
