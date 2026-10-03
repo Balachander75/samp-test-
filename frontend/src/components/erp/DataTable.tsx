@@ -123,7 +123,7 @@ export function DataTable<T>({
 
       {/* Main Table Container */}
       <div className="flex-1 overflow-auto min-h-0 relative">
-        <table className="w-full text-left text-[12px] border-collapse min-w-[1080px]">
+        <table className="w-full text-left text-[13px] border-collapse min-w-[1080px]">
           {/* Sticky Header */}
           <thead className="sticky top-0 z-20 bg-zinc-50 dark:bg-[#0f1118] border-b border-zinc-200 dark:border-white/[0.08] shadow-2xs">
             <tr>
@@ -158,7 +158,7 @@ export function DataTable<T>({
                     key={col.id}
                     onClick={() => col.sortable && onSortChange && onSortChange(col.id)}
                     className={[
-                      "px-4 py-2.5 whitespace-nowrap text-[10px] font-bold uppercase tracking-[0.06em] text-zinc-400 dark:text-zinc-500",
+                      "px-4 py-2.5 whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.045em] text-zinc-500 dark:text-zinc-400",
                       col.width ?? "",
                       col.sortable
                         ? "cursor-pointer hover:text-zinc-700 dark:hover:text-zinc-300 group select-none transition-colors"
@@ -198,12 +198,12 @@ export function DataTable<T>({
               Array.from({ length: 12 }).map((_, rIdx) => (
                 <tr key={rIdx} className="animate-pulse">
                   {enableSelection && (
-                    <td className="px-4 py-3 text-center">
+                  <td className="px-4 py-2.5 text-center">
                       <div className="h-3.5 w-3.5 bg-zinc-200 dark:bg-zinc-800 rounded mx-auto" />
                     </td>
                   )}
                   {columns.map((col, cIdx) => (
-                    <td key={cIdx} className="px-4 py-3">
+                    <td key={cIdx} className="px-4 py-2.5">
                       <div
                         className={`h-3.5 bg-zinc-100 dark:bg-zinc-800/70 rounded ${
                           cIdx === 0 ? "w-3/4" : cIdx % 3 === 0 ? "w-2/5" : "w-3/5"
@@ -244,8 +244,15 @@ export function DataTable<T>({
                   <tr
                     key={rowKey}
                     onClick={() => onRowClick && onRowClick(row)}
+                    onKeyDown={(event) => {
+                      if (event.target !== event.currentTarget || !onRowClick || (event.key !== "Enter" && event.key !== " ")) return;
+                      event.preventDefault();
+                      onRowClick(row);
+                    }}
+                    tabIndex={onRowClick ? 0 : undefined}
+                    aria-selected={isSelected}
                     className={[
-                      "transition-colors duration-150 ease-out group",
+                      "transition-colors duration-100 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-500",
                       onRowClick ? "cursor-pointer" : "",
                       isSelected
                         ? "bg-brand-50/60 dark:bg-brand-950/25 shadow-[inset_3px_0_0_0_#2563eb] dark:shadow-[inset_3px_0_0_0_#3b82f6]"
@@ -282,7 +289,7 @@ export function DataTable<T>({
                         <td
                           key={col.id}
                           className={[
-                            "px-4 py-3",
+                        "px-4 py-2.5",
                             col.width ?? "",
                             col.align === "right"
                               ? "text-right"

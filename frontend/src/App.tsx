@@ -1,6 +1,8 @@
 import { useState, Suspense, lazy } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
+import { ArrowRight, LayoutGrid, Settings2 } from "lucide-react";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { BusinessYearProvider } from "@/context/BusinessYearContext";
 import { SignInPage, UserProfile, AuthResponse } from "@/features/auth";
 import { readAuthToken, readAuthUser, clearAuthStorage } from "@/lib/session";
 import { AppShell, getNavigationTitle } from "@/layouts";
@@ -53,6 +55,7 @@ function ActiveModuleView({
   user: UserProfile;
 }) {
   const location = useLocation();
+  const navigate = useNavigate();
 
   return (
     <ErrorBoundary variant="page">
@@ -60,7 +63,7 @@ function ActiveModuleView({
       {(() => {
         // Executive Operations Overview (Dashboard Landing)
         if (location.pathname === "/dashboard" || location.pathname === "/") {
-          return <OperationsOverview user={user} />;
+          return <OperationsOverview />;
         }
 
         // Seasonal Program Planning Workspace
@@ -119,75 +122,70 @@ function ActiveModuleView({
           return <SampleRequestsDesk user={user} />;
         }
 
-        // Default: Production-quality module placeholder
+        // Keep unconfigured destinations honest while giving them the same workspace navigation language.
         const title = getNavigationTitle(location.pathname);
-        const now = new Date();
-        const dateStr = now.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+        const descriptionByPath: Record<string, string> = {
+          "/plant": "Plant execution and production-floor workflows are not configured in this workspace yet.",
+          "/analytics": "Analytics and service-level views are not configured in this workspace yet.",
+          "/members": "Member and plant administration workflows are not configured in this workspace yet.",
+          "/settings": "Workspace settings are not available on this page yet.",
+          "/help": "Help articles and support guidance are not available on this page yet.",
+        };
+        const destinations = [
+          { label: "Marketing", detail: "Requests and program planning", path: "/sample-requests" },
+          { label: "Creative Studio", detail: "Artwork briefs", path: "/creative-work" },
+          { label: "Studio", detail: "Structural design and dielines", path: "/studio-work" },
+          { label: "SAMP Team", detail: "Sampling operations", path: "/samp-team-work" },
+          { label: "Costing", detail: "Estimates and pricing", path: "/costing-team" },
+        ];
 
-  return (
-    <div className="flex-1 overflow-y-auto">
-      {/* Module Header */}
-      <div className="px-6 py-4 border-b border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0f1118] flex items-center justify-between">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-[15px] font-bold text-zinc-950 dark:text-zinc-50 tracking-tight">{title}</h1>
-            <span className="px-2 py-0.5 rounded font-mono text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200/80 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-700/50">
-              IN DEV
-            </span>
-          </div>
-          <p className="text-[11px] text-zinc-400 dark:text-zinc-500 font-mono mt-0.5">{dateStr} · Navneet ERP · {user.sub_role || user.role}</p>
-        </div>
-      </div>
+        return (
+          <div className="flex-1 min-h-0 overflow-y-auto bg-[var(--bg-app)]">
+            <header className="border-b border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0f1118] px-5 sm:px-7 py-4">
+              <div className="text-[11px] text-zinc-500 dark:text-zinc-400">Workspace <span className="px-1.5 text-zinc-300 dark:text-zinc-600">/</span> {title}</div>
+              <h1 className="mt-1 text-lg font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">{title}</h1>
+            </header>
 
-      <div className="p-6 space-y-5 max-w-5xl">
-        {/* Metric skeleton row */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[
-            { label: "Active Requests", value: "—", tone: "neutral" },
-            { label: "Pending Review", value: "—", tone: "warning" },
-            { label: "In Progress", value: "—", tone: "neutral" },
-            { label: "Completed", value: "—", tone: "positive" },
-          ].map((m) => (
-            <div
-              key={m.label}
-              className="rounded border border-zinc-200 dark:border-white/[0.07] bg-white dark:bg-[#0f1018] p-4"
-            >
-              <p className="text-[10px] font-bold uppercase tracking-[0.07em] text-zinc-400 dark:text-zinc-500 font-mono">{m.label}</p>
-              <p className="mt-2 text-2xl font-bold font-mono text-zinc-900 dark:text-zinc-50">{m.value}</p>
-              <div className="mt-1.5 h-1 rounded-full bg-zinc-100 dark:bg-zinc-800" />
+            <div className="mx-auto w-full max-w-6xl space-y-6 p-5 sm:p-7">
+              <section className="rounded-lg border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0f1118] p-6 sm:p-8">
+                <div className="flex max-w-2xl items-start gap-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-brand-200 bg-brand-50 text-brand-700 dark:border-brand-800 dark:bg-brand-950/40 dark:text-brand-300">
+                    <Settings2 className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <span className="inline-flex items-center rounded border border-zinc-200 bg-zinc-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">Not configured</span>
+                    <h2 className="mt-3 text-base font-semibold text-zinc-900 dark:text-zinc-100">This workspace is not ready yet</h2>
+                    <p className="mt-1.5 text-sm leading-6 text-zinc-600 dark:text-zinc-400">{descriptionByPath[location.pathname] || "This workspace is not configured yet."}</p>
+                    <button type="button" onClick={() => navigate("/dashboard")} className="mt-5 inline-flex h-9 items-center gap-2 rounded-md bg-brand-600 px-3.5 text-[13px] font-semibold text-white transition-colors hover:bg-brand-700">
+                      <LayoutGrid className="h-4 w-4" />
+                      Operations overview
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </section>
+
+              <section>
+                <div className="mb-3">
+                  <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Available workspaces</h2>
+                  <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">Continue in one of the configured department workspaces.</p>
+                </div>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                  {destinations.map((item) => (
+                    <button key={item.path} type="button" onClick={() => navigate(item.path)} className="group flex items-center justify-between rounded-lg border border-zinc-200 bg-white p-4 text-left transition-colors hover:border-brand-300 hover:bg-brand-50/40 dark:border-white/[0.08] dark:bg-[#0f1118] dark:hover:border-brand-800 dark:hover:bg-brand-950/20">
+                      <span>
+                        <span className="block text-[13px] font-semibold text-zinc-900 dark:text-zinc-100">{item.label}</span>
+                        <span className="mt-0.5 block text-xs text-zinc-500 dark:text-zinc-400">{item.detail}</span>
+                      </span>
+                      <ArrowRight className="h-4 w-4 shrink-0 text-zinc-400 transition-transform group-hover:translate-x-0.5 group-hover:text-brand-600" />
+                    </button>
+                  ))}
+                </div>
+              </section>
             </div>
-          ))}
-        </div>
-
-        {/* Pipeline status skeleton */}
-        <div className="rounded border border-zinc-200 dark:border-white/[0.07] bg-white dark:bg-[#0f1018] overflow-hidden">
-          <div className="px-4 py-2.5 border-b border-zinc-100 dark:border-white/[0.05] flex items-center justify-between">
-            <span className="text-[12px] font-semibold text-zinc-700 dark:text-zinc-300">Pipeline Overview</span>
-            <span className="text-[10px] font-mono text-zinc-400">Loading data…</span>
           </div>
-          <div className="divide-y divide-zinc-100 dark:divide-white/[0.04]">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="px-4 py-3 flex items-center gap-4 animate-pulse">
-                <div className="h-3 w-24 bg-zinc-200 dark:bg-zinc-800 rounded" />
-                <div className="h-3 w-40 bg-zinc-100 dark:bg-zinc-800/60 rounded" />
-                <div className="h-3 w-20 bg-zinc-100 dark:bg-zinc-800/60 rounded ml-auto" />
-                <div className="h-5 w-16 bg-zinc-100 dark:bg-zinc-800/60 rounded-full" />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Info card */}
-        <div className="rounded border border-dashed border-zinc-200 dark:border-zinc-800 p-8 text-center">
-          <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">{title} is being configured</p>
-          <p className="text-[12px] text-zinc-400 dark:text-zinc-500 mt-1">
-            This module will be designed based on your team's specific workflow requirements.
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-})()}
+        );
+      })()}
     </Suspense>
     </ErrorBoundary>
   );
@@ -461,9 +459,11 @@ function AppRoutes() {
 export default function App() {
   return (
     <ThemeProvider>
-      <ErrorBoundary variant="page">
-        <AppRoutes />
-      </ErrorBoundary>
+      <BusinessYearProvider>
+        <ErrorBoundary variant="page">
+          <AppRoutes />
+        </ErrorBoundary>
+      </BusinessYearProvider>
     </ThemeProvider>
   );
 }

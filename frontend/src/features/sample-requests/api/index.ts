@@ -21,7 +21,32 @@ import {
   AddProgramMaterialPayload,
 } from "../types";
 import { API_BASE_URL, createApiHeaders } from "@/lib/api";
+import { getBusinessYearForDate } from "@/lib/businessYear";
 
+export interface BusinessYearOption {
+  year: string;
+  label: string;
+  is_current: boolean;
+  count: number;
+}
+
+export interface BusinessYearsResponse {
+  current_business_year: string;
+  total_records: number;
+  years: BusinessYearOption[];
+}
+
+
+function getApiErrorMessage(error: any, fallback: string): string {
+  const detail = error?.detail;
+  if (typeof detail === "string") return detail;
+  if (Array.isArray(detail)) {
+    const messages = detail.map((item) => item?.msg).filter((value): value is string => typeof value === "string");
+    if (messages.length) return messages.join(" ");
+  }
+  if (typeof detail?.message === "string") return detail.message;
+  return fallback;
+}
 
 
 
@@ -76,7 +101,7 @@ export function mapDesignRequestToSampleRequest(item: DesignRequest): SampleRequ
   return {
     id: `design-${item.id}`,
     srNumber: srNum,
-    year: item.programYear || "2026-2027",
+    year: item.programYear && item.programYear.includes("-") ? item.programYear : getBusinessYearForDate(createdDate),
     productDescription: item.productDescription,
     customer: item.customerName,
     targetPlant: item.targetPlant || "",
@@ -255,14 +280,29 @@ function mapSampleRequest(item: ApiSampleRequest, fallbackDate = ""): SampleRequ
   };
 }
 
+export function cleanFeasibilityDescription(text?: string | null): string {
+  if (!text) return "—";
+  let cleaned = text.trim();
+  // Strip bracketed type tags: [New Category], [new_category], etc.
+  cleaned = cleaned.replace(/^\[[^\]]+\]\s*/, "");
+  // Strip snake_case or standard type prefixes: new_category:, new_format:, etc.
+  cleaned = cleaned.replace(/^(new_category|new_format|new_finish|new_accessories|bespoke|other|feasibility_check|feasibility):\s*/i, "");
+  // Strip human-readable equivalents: New Category:, New Format:, etc.
+  cleaned = cleaned.replace(/^(New Category|New Format|New Finish|New Accessories|Other Custom|Custom Evaluation):\s*/i, "");
+  // Strip concatenated secondary blocks if any exist
+  cleaned = cleaned.split(/Attached Images:|Reference Web Links:|Marketing Remarks:/i)[0].trim();
+  return cleaned || "—";
+}
+
 export function mapFeasibilityRequestToSampleRequest(item: FeasibilityRequestRecord): SampleRequestItem {
   const createdAt = item.requestRaisedAt || "";
   const description = item.customFeasibilityType || item.feasibilityType;
+  const cleanDesc = cleanFeasibilityDescription(item.descriptionNotes);
   return {
     id: `feasibility-${item.id}`,
     srNumber: item.srNumber,
-    year: createdAt ? createdAt.slice(0, 4) : "",
-    productDescription: `${description}: ${item.descriptionNotes}`,
+    year: getBusinessYearForDate(createdAt),
+    productDescription: cleanDesc,
     customer: item.customer,
     targetPlant: "",
     dateRequestCreated: createdAt ? createdAt.split("T")[0] : "",
@@ -278,10 +318,11 @@ export function mapFeasibilityRequestToSampleRequest(item: FeasibilityRequestRec
     createdAt,
     referenceImage: item.referenceImages?.[0] || null,
     referenceImages: item.referenceImages || [],
+    referenceImageNames: item.referenceImageNames || [],
     referenceLinks: item.referenceLinks || [],
     feasibilityType: item.feasibilityType,
     customFeasibilityType: item.customFeasibilityType,
-    feasibilityDescription: item.descriptionNotes,
+    feasibilityDescription: cleanDesc,
     marketingRemarks: item.marketingRemarks,
     samplingFeasibilityResponse: item.samplingFeasibilityResponse,
     samplingFeasibilityRemark: item.samplingFeasibilityRemark,
@@ -321,6 +362,7 @@ function mapFeasibilityResponse(item: Record<string, unknown>): FeasibilityReque
     requiredDate: String(item.required_date || ""),
     marketingRemarks: typeof item.marketing_remarks === "string" ? item.marketing_remarks : null,
     referenceImages: Array.isArray(item.reference_images) ? (item.reference_images as string[]) : [],
+    referenceImageNames: Array.isArray(item.reference_image_names) ? (item.reference_image_names as string[]) : [],
     referenceLinks: Array.isArray(item.reference_links) ? (item.reference_links as string[]) : [],
     createdBy: typeof item.created_by === "string" ? item.created_by : null,
     requestCreatedBy: typeof item.request_created_by === "string"
@@ -366,82 +408,21 @@ export async function createFeasibilityRequestApi(
       required_date: payload.requiredDate,
       marketing_remarks: payload.marketingRemarks || null,
       reference_images: payload.referenceImages || [],
+      reference_image_names: payload.referenceImageNames || [],
       reference_links: payload.referenceLinks || [],
-      created_by: payload.createdBy || null,
-      request_created_by: payload.createdBy || null,
-      created_by_user_id: payload.createdByUserId || null,
     }),
   });
   if (!response.ok) {
     const error = await response.json().catch(() => null);
-    throw new Error(error?.detail || `Failed to create feasibility request: ${response.statusText}`);
+    throw new Error(getApiErrorMessage(error, `Failed to create feasibility request: ${response.statusText}`));
   }
   return mapFeasibilityResponse(await response.json());
 }
 
-export interface UpdateFeasibilityRequestPayload {
-  status?: string;
-  samplingFeasibilityResponse?: "Yes" | "No" | "Maybe" | null;
-  samplingFeasibilityRemark?: string | null;
-  samplingFeasibilityApprovedBy?: string | null;
-  feasibilityClosedAt?: string | null;
-  feasibilityClosedBy?: string | null;
-  isRespondedOnTime?: boolean | null;
-  marketingDecision?: "Accepted" | "Rejected" | null;
-  marketingDecisionBy?: string | null;
-  marketingDecisionAt?: string | null;
-  marketingDecisionRemark?: string | null;
-}
-
-export async function updateFeasibilityRequestApi(
-  id: number | string,
-  payload: UpdateFeasibilityRequestPayload,
-): Promise<SampleRequestItem> {
-  const rawId = String(id).replace(/^feasibility-/, "");
-  const response = await fetch(`${API_BASE_URL}/api/v1/feasibility-requests/${Number(rawId)}`, {
-    method: "PUT",
-    headers: createApiHeaders({ json: true }),
-    body: JSON.stringify({
-      ...(payload.status !== undefined ? { status: payload.status } : {}),
-      ...(payload.samplingFeasibilityResponse !== undefined
-        ? { sampling_feasibility_response: payload.samplingFeasibilityResponse }
-        : {}),
-      ...(payload.samplingFeasibilityRemark !== undefined
-        ? { sampling_feasibility_remark: payload.samplingFeasibilityRemark }
-        : {}),
-      ...(payload.samplingFeasibilityApprovedBy !== undefined
-        ? { sampling_feasibility_approved_by: payload.samplingFeasibilityApprovedBy }
-        : {}),
-      ...(payload.feasibilityClosedAt !== undefined
-        ? { feasibility_closed_at: payload.feasibilityClosedAt }
-        : {}),
-      ...(payload.feasibilityClosedBy !== undefined
-        ? { feasibility_closed_by: payload.feasibilityClosedBy }
-        : {}),
-      ...(payload.isRespondedOnTime !== undefined
-        ? { is_responded_on_time: payload.isRespondedOnTime }
-        : {}),
-      ...(payload.marketingDecision !== undefined
-        ? { marketing_decision: payload.marketingDecision }
-        : {}),
-      ...(payload.marketingDecisionBy !== undefined
-        ? { marketing_decision_by: payload.marketingDecisionBy }
-        : {}),
-      ...(payload.marketingDecisionAt !== undefined
-        ? { marketing_decision_at: payload.marketingDecisionAt }
-        : {}),
-      ...(payload.marketingDecisionRemark !== undefined
-        ? { marketing_decision_remark: payload.marketingDecisionRemark }
-        : {}),
-    }),
-  });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => null);
-    throw new Error(error?.detail || `Failed to update feasibility request: ${response.statusText}`);
-  }
-
-  return mapFeasibilityRequestToSampleRequest(mapFeasibilityResponse(await response.json()));
+export async function fetchFeasibilityImageObjectUrl(url: string): Promise<string> {
+  const response = await fetch(`${API_BASE_URL}${url}`, { headers: createApiHeaders() });
+  if (!response.ok) throw new Error(`Failed to load reference image: ${response.statusText}`);
+  return URL.createObjectURL(await response.blob());
 }
 
 export async function recordFeasibilitySampVerdictApi(
@@ -449,7 +430,6 @@ export async function recordFeasibilitySampVerdictApi(
   payload: {
     response: "Yes" | "No" | "Maybe";
     remark?: string | null;
-    approved_by?: string | null;
   },
 ): Promise<SampleRequestItem> {
   const rawId = String(id).replace(/^feasibility-/, "");
@@ -461,7 +441,7 @@ export async function recordFeasibilitySampVerdictApi(
 
   if (!response.ok) {
     const error = await response.json().catch(() => null);
-    throw new Error(error?.detail?.[0]?.msg || error?.detail || `Failed to record lab verdict: ${response.statusText}`);
+    throw new Error(getApiErrorMessage(error, `Failed to record lab verdict: ${response.statusText}`));
   }
 
   return mapFeasibilityRequestToSampleRequest(mapFeasibilityResponse(await response.json()));
@@ -472,7 +452,6 @@ export async function recordFeasibilityMarketingDecisionApi(
   payload: {
     decision: "Accepted" | "Rejected";
     decision_remark?: string | null;
-    decision_by?: string | null;
   },
 ): Promise<SampleRequestItem> {
   const rawId = String(id).replace(/^feasibility-/, "");
@@ -484,7 +463,7 @@ export async function recordFeasibilityMarketingDecisionApi(
 
   if (!response.ok) {
     const error = await response.json().catch(() => null);
-    throw new Error(error?.detail || `Failed to record marketing decision: ${response.statusText}`);
+    throw new Error(getApiErrorMessage(error, `Failed to record marketing decision: ${response.statusText}`));
   }
 
   return mapFeasibilityRequestToSampleRequest(mapFeasibilityResponse(await response.json()));
@@ -492,15 +471,12 @@ export async function recordFeasibilityMarketingDecisionApi(
 
 export async function recordFeasibilityViewedApi(
   id: number | string,
-  viewerName: string,
-  department = "SAMP Lab",
 ): Promise<void> {
   try {
     const rawId = String(id).replace(/^feasibility-/, "");
     await fetch(`${API_BASE_URL}/api/v1/feasibility-requests/${Number(rawId)}/viewed`, {
       method: "POST",
-      headers: createApiHeaders({ json: true }),
-      body: JSON.stringify({ viewer_name: viewerName, department }),
+      headers: createApiHeaders(),
     });
   } catch (err) {
     console.debug("Telemetry view tracking skipped:", err);
@@ -562,7 +538,7 @@ export function mapProgramRequestToSampleRequest(record: ProgramRequestRecord): 
     customer: record.customerName,
     targetPlant: record.targetPlant,
     productDescription: `[Seasonal Program: ${record.programCampaignTitle}]\nProgram Year: ${record.programYear}\nTarget Plant: ${record.targetPlant}${matrixSummary}`,
-    year: record.programYear,
+    year: record.programYear && String(record.programYear).includes("-") ? String(record.programYear) : getBusinessYearForDate(createdDate),
     programYear: record.programYear,
     programName: record.programCampaignTitle,
     programCampaignTitle: record.programCampaignTitle,
@@ -681,9 +657,30 @@ export async function deleteProgramMaterialApi(
   return mapProgramResponse(await response.json());
 }
 
-export async function fetchSampleRequestsApi(): Promise<SampleRequestItem[]> {
+export async function fetchBusinessYearsApi(): Promise<BusinessYearsResponse> {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/v1/sample-requests`, { headers: createApiHeaders() });
+    const res = await fetch(`${API_BASE_URL}/api/v1/sample-requests/business-years`, {
+      headers: createApiHeaders(),
+    });
+    if (!res.ok) throw new Error(`Failed to fetch business years: ${res.statusText}`);
+    return await res.json();
+  } catch (err) {
+    console.error("Error fetching business years:", err);
+    return {
+      current_business_year: "2026-2027",
+      total_records: 0,
+      years: [
+        { year: "2026-2027", label: "BY 2026-2027", is_current: true, count: 0 },
+        { year: "2025-2026", label: "BY 2025-2026", is_current: false, count: 0 },
+      ],
+    };
+  }
+}
+
+export async function fetchSampleRequestsApi(year?: string): Promise<SampleRequestItem[]> {
+  try {
+    const query = year && year.toUpperCase() !== "ALL" ? `?year=${encodeURIComponent(year)}` : "";
+    const res = await fetch(`${API_BASE_URL}/api/v1/sample-requests${query}`, { headers: createApiHeaders() });
     if (!res.ok) {
       throw new Error(`Failed to fetch sample requests: ${res.statusText}`);
     }
@@ -698,11 +695,11 @@ export async function fetchSampleRequestsApi(): Promise<SampleRequestItem[]> {
 /**
  * Fetches all marketing intake requests across the persisted workflow types.
  */
-export async function fetchAllMarketingRequestsApi(): Promise<SampleRequestItem[]> {
+export async function fetchAllMarketingRequestsApi(year?: string): Promise<SampleRequestItem[]> {
   try {
     const [sampleRequests, designRequests, feasibilityRequests, programRequests] =
       await Promise.all([
-        fetchSampleRequestsApi(),
+        fetchSampleRequestsApi(year),
         fetchDesignRequestsApi().catch(() => []),
         fetchFeasibilityRequestsApi().catch(() => []),
         fetchProgramRequestsApi().catch(() => []),
@@ -718,12 +715,18 @@ export async function fetchAllMarketingRequestsApi(): Promise<SampleRequestItem[
           )
       );
 
-    return [
+    let allItems = [
       ...sampleRequests,
       ...mappedDesignRequests,
       ...feasibilityRequests,
       ...programRequests,
-    ].sort((a, b) => {
+    ];
+
+    if (year && year.toUpperCase() !== "ALL") {
+      allItems = allItems.filter((r) => r.year === year);
+    }
+
+    return allItems.sort((a, b) => {
       const da = new Date(a.createdAt || a.dateRequestCreated || 0).getTime();
       const db = new Date(b.createdAt || b.dateRequestCreated || 0).getTime();
       return db - da;
@@ -1027,25 +1030,6 @@ export async function batchDeleteAnyRequestsApi(requests: SampleRequestItem[]): 
     return results.every(Boolean);
   } catch (err) {
     console.error("Error batch deleting requests:", err);
-    return false;
-  }
-}
-
-export async function resetAllSampleCodesApi(): Promise<boolean> {
-  try {
-    await Promise.all([
-      fetch(`${API_BASE_URL}/api/v1/program-requests/reset-sample-codes`, {
-        method: "POST",
-        headers: createApiHeaders(),
-      }).catch(() => null),
-      fetch(`${API_BASE_URL}/api/v1/feasibility-requests/reset-sample-codes`, {
-        method: "POST",
-        headers: createApiHeaders(),
-      }).catch(() => null),
-    ]);
-    return true;
-  } catch (err) {
-    console.error("Failed to reset sample codes:", err);
     return false;
   }
 }
@@ -1515,10 +1499,12 @@ export async function addCharacteristicOptionApi(
   return characteristic;
 }
 
-export async function searchProductsByMaterialApi(code: string): Promise<ProductSearchResult[]> {
+export async function searchProductsByMaterialApi(code?: string): Promise<ProductSearchResult[]> {
   try {
-    if (!code || !code.trim()) return [];
-    const res = await fetch(`${API_BASE_URL}/api/v1/sample-requests/search-material?code=${encodeURIComponent(code.trim())}`, { headers: createApiHeaders() });
+    const url = code && code.trim()
+      ? `${API_BASE_URL}/api/v1/sample-requests/search-material?code=${encodeURIComponent(code.trim())}`
+      : `${API_BASE_URL}/api/v1/sample-requests/search-material`;
+    const res = await fetch(url, { headers: createApiHeaders() });
     if (!res.ok) return [];
     return await res.json();
   } catch (err) {

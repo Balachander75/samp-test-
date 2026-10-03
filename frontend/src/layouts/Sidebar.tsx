@@ -5,9 +5,19 @@ import {
   NavigationItem,
 } from "./navigation";
 import {
+  BarChart3,
+  Calculator,
+  CircleHelp,
+  ClipboardList,
+  Factory,
+  FlaskConical,
+  LayoutDashboard,
   LogOut,
+  Palette,
+  Ruler,
+  Settings,
+  Users,
   X,
-  ChevronRight,
 } from "lucide-react";
 import logoImg from "@/assets/logo.png";
 import {
@@ -16,6 +26,7 @@ import {
   fetchStudioDielinesApi,
   fetchCostingEstimationsApi,
 } from "@/features/sample-requests/api";
+import { useBusinessYear } from "@/context/BusinessYearContext";
 
 export interface SidebarProps {
   user?: UserProfile | null;
@@ -26,20 +37,22 @@ export interface SidebarProps {
   onCloseMobile?: () => void;
 }
 
-// Dept color accents for active state left-bar indicator
-const DEPT_ACCENT: Record<string, string> = {
-  operations: "bg-brand-600",
-  marketing:  "bg-violet-500",
-  creative:   "bg-pink-500",
-  studio:     "bg-cyan-500",
-  samp:       "bg-amber-500",
-  costing:    "bg-emerald-500",
-  plant:      "bg-orange-500",
-  analytics:  "bg-indigo-500",
-  members:    "bg-teal-500",
-  settings:   "bg-zinc-400",
-  help:       "bg-zinc-400",
-};
+// Single brand cobalt accent for active state left-bar indicator (Anti-color-carnival)
+const ACTIVE_ACCENT = "bg-brand-600 dark:bg-brand-500";
+
+const NAV_ICONS = {
+  dashboard: LayoutDashboard,
+  marketing: ClipboardList,
+  creative: Palette,
+  studio: Ruler,
+  samp: FlaskConical,
+  costing: Calculator,
+  plant: Factory,
+  analytics: BarChart3,
+  members: Users,
+  settings: Settings,
+  help: CircleHelp,
+} as const;
 
 export const Sidebar: React.FC<SidebarProps> = ({
   user,
@@ -49,19 +62,30 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isMobileOpen = false,
   onCloseMobile,
 }) => {
+  const { selectedYear } = useBusinessYear();
   const [dynamicBadges, setDynamicBadges] = useState<Record<string, number | string>>({});
 
   // Sync live operational counts
   useEffect(() => {
     let isMounted = true;
     Promise.all([
-      fetchAllMarketingRequestsApi().catch(() => []),
+      fetchAllMarketingRequestsApi(selectedYear).catch(() => []),
       fetchCreativeBriefsApi().catch(() => []),
       fetchStudioDielinesApi().catch(() => []),
       fetchCostingEstimationsApi().catch(() => []),
     ]).then(([requests, briefs, dielines, costings]) => {
       if (!isMounted) return;
-      const total = requests.length;
+      const activeMarketing = requests.filter((r) => {
+        const s = String(r.status || "").toLowerCase().trim();
+        return !(
+          s.includes("dispatch") ||
+          s.includes("close") ||
+          s.includes("complete") ||
+          s.includes("deal") ||
+          s.includes("actual")
+        );
+      }).length;
+
       const inSampling = requests.filter(
         (r) =>
           r.status === "in_sampling" ||
@@ -69,8 +93,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
           r.samplingFeasibilityResponse === "Yes" ||
           (Array.isArray(r.requestTypes) && r.requestTypes.includes("sample"))
       ).length;
+
       setDynamicBadges({
-        marketing: total,
+        marketing: activeMarketing,
         creative: briefs.length,
         studio: dielines.length,
         samp: inSampling,
@@ -78,7 +103,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       });
     });
     return () => { isMounted = false; };
-  }, [selectedPath]);
+  }, [selectedPath, selectedYear]);
 
   // Escape to close mobile
   useEffect(() => {
@@ -127,11 +152,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <div className="flex flex-col h-full select-none">
 
       {/* ── Brand Header ─────────────────────────────── */}
-      <div className="flex items-center justify-between h-14 px-4 sm:px-5 shrink-0 border-b border-zinc-200/60 dark:border-white/[0.06]">
+      <div className="flex items-center justify-between h-[58px] px-4 sm:px-5 shrink-0 border-b border-zinc-200 dark:border-white/[0.08]">
         <img
           src={logoImg}
           alt="Navneet"
-          className="h-8 w-auto max-w-[140px] object-contain object-left"
+          className="h-8 w-auto max-w-[148px] object-contain object-left"
         />
         {isDrawer && onCloseMobile && (
           <button
@@ -146,27 +171,26 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* ── Navigation Groups ─────────────────────────── */}
-      <div className="flex-1 overflow-y-auto py-2.5 space-y-4">
+      <div className="flex-1 overflow-y-auto py-3 space-y-5">
         {NAVIGATION_GROUPS.map((group, gIdx) => (
           <div key={group.groupTitle}>
 
             {/* Inter-group divider */}
             {gIdx > 0 && (
-              <div className="mx-4 mb-3 h-px bg-zinc-100 dark:bg-white/[0.04]" />
+              <div className="mx-4 mb-3 h-px bg-zinc-200/80 dark:bg-white/[0.08]" />
             )}
 
             {/* Group label */}
             <div className="px-4 mb-1.5">
-              <span className="text-[9px] font-semibold uppercase tracking-[0.12em] text-zinc-400/80 dark:text-zinc-600">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-zinc-500 dark:text-zinc-500">
                 {group.groupTitle}
               </span>
             </div>
 
             {/* Nav items */}
-            <div className="space-y-px px-2">
+            <div className="space-y-0.5 px-2">
               {group.items.map((item) => {
                 const active = isItemActive(item);
-                const accentColor = DEPT_ACCENT[item.departmentKey] || "bg-brand-600";
                 const badgeValue =
                   dynamicBadges[item.id] !== undefined
                     ? String(dynamicBadges[item.id])
@@ -178,19 +202,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     type="button"
                     onClick={() => handleItemClick(item)}
                     className={[
-                      "group relative w-full flex items-center h-9 px-3.5 rounded-md text-[13px] transition-all duration-150 ease-out cursor-pointer text-left gap-2",
+                      "group relative w-full flex items-center h-9 px-3 rounded-md text-[13px] transition-colors duration-150 cursor-pointer text-left gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-500",
                       active
                         ? "bg-brand-600/10 dark:bg-brand-600/[0.14] text-brand-700 dark:text-brand-300 font-semibold"
-                        : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100/80 font-medium dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-white/[0.05]",
+                        : "text-zinc-600 hover:text-zinc-950 hover:bg-zinc-100 font-medium dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-white/[0.06]",
                     ].join(" ")}
+                    aria-current={active ? "page" : undefined}
                   >
                     {/* Active accent bar */}
                     <span
                       className={[
                         "absolute left-0 inset-y-1.5 w-[3px] rounded-full transition-all duration-200",
-                        active ? `${accentColor} opacity-100` : "opacity-0",
+                        active ? `${ACTIVE_ACCENT} opacity-100` : "opacity-0",
                       ].join(" ")}
                     />
+
+                    {(() => {
+                      const Icon = NAV_ICONS[item.id as keyof typeof NAV_ICONS] || ClipboardList;
+                      return <Icon className={`w-4 h-4 shrink-0 ${active ? "text-brand-700 dark:text-brand-300" : "text-zinc-500 dark:text-zinc-500"}`} strokeWidth={1.8} aria-hidden="true" />;
+                    })()}
 
                     {/* Title */}
                     <span className="flex-1 truncate">{item.title}</span>
@@ -209,10 +239,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       </span>
                     )}
 
-                    {/* Subtle chevron on hover (inactive only) */}
-                    {!active && (
-                      <ChevronRight className="w-3 h-3 shrink-0 opacity-0 group-hover:opacity-40 transition-opacity" />
-                    )}
                   </button>
                 );
               })}
@@ -227,10 +253,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
           {/* Avatar with online pip */}
           <div className="relative shrink-0">
-            <div className="w-8 h-8 rounded-md bg-gradient-to-br from-zinc-800 to-zinc-900 dark:from-zinc-200 dark:to-white text-white dark:text-zinc-900 font-bold text-[11px] flex items-center justify-center font-mono shadow-xs">
+            <div className="w-8 h-8 rounded-md bg-brand-700 text-white font-semibold text-[12px] flex items-center justify-center">
               {initials}
             </div>
-            <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-500 ring-[1.5px] ring-white dark:ring-[#0f1118]" />
           </div>
 
           {/* Name + role */}
@@ -238,7 +263,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <span className="block text-[12px] font-semibold text-zinc-800 dark:text-zinc-100 truncate leading-tight">
               {user?.name || "Corporate User"}
             </span>
-            <span className="block text-[10px] text-zinc-400 dark:text-zinc-500 truncate leading-tight font-mono tracking-wide uppercase">
+            <span className="block text-[11px] text-zinc-500 dark:text-zinc-400 truncate leading-tight">
               {roleLabel}
             </span>
           </div>
@@ -249,7 +274,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               type="button"
               onClick={onLogout}
               title="Sign Out"
-              className="h-7 w-7 rounded-md flex items-center justify-center text-zinc-300 hover:text-rose-500 dark:text-zinc-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer shrink-0 opacity-0 group-hover:opacity-100"
+              className="h-7 w-7 rounded-md flex items-center justify-center text-zinc-400 hover:text-rose-600 dark:text-zinc-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
               aria-label="Sign out"
             >
               <LogOut className="w-3.5 h-3.5" />
@@ -263,7 +288,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   return (
     <>
       {/* Desktop Sticky Sidebar */}
-      <aside className="hidden md:flex flex-col sticky top-0 h-screen shrink-0 border-r border-zinc-200/60 dark:border-white/[0.06] bg-white dark:bg-[#0c0d12] z-30 w-[228px]">
+      <aside className="hidden md:flex flex-col sticky top-0 h-screen shrink-0 border-r border-zinc-200 dark:border-white/[0.08] bg-[var(--bg-panel)] z-30 w-[240px]">
         {renderNavContent(false)}
       </aside>
 
@@ -274,7 +299,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             className="fixed inset-0 bg-black/50 backdrop-blur-sm animate-smooth-backdrop"
             onClick={onCloseMobile}
           />
-          <aside className="fixed inset-y-0 left-0 z-50 w-[256px] bg-white dark:bg-[#0c0d12] border-r border-zinc-200/60 dark:border-white/[0.06] shadow-2xl flex flex-col animate-smooth-drawer">
+          <aside className="fixed inset-y-0 left-0 z-50 w-[256px] bg-[var(--bg-panel)] border-r border-zinc-200/60 dark:border-white/[0.06] shadow-2xl flex flex-col animate-smooth-drawer">
             {renderNavContent(true)}
           </aside>
         </div>

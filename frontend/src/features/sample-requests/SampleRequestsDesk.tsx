@@ -6,9 +6,9 @@ import {
   fetchAllMarketingRequestsApi,
   createSampleRequestApi,
   createFeasibilityRequestApi,
+  cleanFeasibilityDescription,
   mapFeasibilityRequestToSampleRequest,
   updateSampleRequestApi,
-  updateFeasibilityRequestApi,
   deleteSampleRequestApi,
   deleteAnyRequestApi,
   batchDeleteAnyRequestsApi,
@@ -19,6 +19,8 @@ import { MetricRibbon, MetricTileItem } from "@/components/erp/MetricRibbon";
 import { DataTable, ColumnDef } from "@/components/erp/DataTable";
 import { SampleRequestInspector } from "./components/SampleRequestInspector";
 import { NewSampleRequestModal } from "./components/NewSampleRequestModal";
+import { useBusinessYear } from "@/context/BusinessYearContext";
+import { getBusinessYearForDate } from "@/lib/businessYear";
 import {
   Search,
   Plus,
@@ -204,6 +206,8 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
     user?.userid === "admin" ||
     user?.role === "Administrator";
 
+  const { selectedYear } = useBusinessYear();
+
   const [requests, setRequests] = useState<SampleRequestItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedStageId, setSelectedStageId] = useState<string>("all");
@@ -266,14 +270,14 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
   const loadRequests = useCallback(async () => {
     setIsLoading(true);
     try {
-      const merged = await fetchAllMarketingRequestsApi();
+      const merged = await fetchAllMarketingRequestsApi(selectedYear);
       setRequests(merged);
     } catch (err) {
       console.error("Failed to load sample requests:", err);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [selectedYear]);
 
   useEffect(() => {
     loadRequests();
@@ -498,6 +502,12 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
         if (track !== selectedType) return false;
       }
 
+      // Business Year Filter (strictly aligned with selected business year)
+      if (selectedYear !== "ALL") {
+        const itemYear = r.year || (r.dateRequestCreated ? getBusinessYearForDate(r.dateRequestCreated) : "");
+        if (itemYear && itemYear !== selectedYear) return false;
+      }
+
       // Customer Filter
       if (selectedCustomer !== "all" && r.customer !== selectedCustomer) {
         return false;
@@ -527,7 +537,7 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
 
       return true;
     });
-  }, [requests, selectedStageId, quickFilter, selectedType, selectedCustomer, searchTerm]);
+  }, [requests, selectedStageId, quickFilter, selectedType, selectedCustomer, searchTerm, selectedYear]);
 
   // Sorting
   const sortedRequests = useMemo(() => {
@@ -575,93 +585,13 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
     setIsInspectorOpen(true);
   };
 
-  // Feasibility Update Handler
-  const handleUpdateFeasibility = async (
-    requestId: string | number,
-    team: "plant" | "sampling",
-    response: "Yes" | "No" | "Maybe",
-    remark?: string
-  ) => {
-    const closedStamp = new Date().toISOString();
-    const currentItem = requests.find((r) => String(r.id) === String(requestId));
-    const isFirst = !currentItem?.feasibilityClosedBy;
-    const closedBy = currentItem?.feasibilityClosedBy || team;
-
-    let updatedStatus = currentItem?.status || "Pending Feasibility";
-    if (isFirst) {
-      if (response === "Yes") {
-        updatedStatus = team === "sampling" ? "Feasible (SAMP Approved)" : "Feasible (Plant Approved)";
-      } else if (response === "Maybe") {
-        updatedStatus = "Conditional Feasibility";
-      } else {
-        updatedStatus = "Feasibility Rejected";
-      }
-    }
-
-    const payload: Partial<SampleRequestItem> = {
-      ...(team === "plant"
-        ? {
-            plantFeasibilityResponse: response,
-            plantFeasibilityRemark: remark || null,
-          }
-        : {
-            samplingFeasibilityResponse: response,
-            samplingFeasibilityRemark: remark || null,
-          }),
-      feasibilityClosedAt: currentItem?.feasibilityClosedAt || closedStamp,
-      feasibilityClosedBy: closedBy,
-      status: updatedStatus,
-    };
-
-    try {
-      if (currentItem && getRequestTrackType(currentItem) === "feasibility_check") {
-        await updateFeasibilityRequestApi(requestId, payload as any);
-      } else {
-        await updateSampleRequestApi(requestId, payload as any);
-      }
-    } catch {
-      showToast("Could not save the feasibility decision to the backend.");
-      return;
-    }
-
-    setRequests((prev) =>
-      prev.map((r) =>
-        String(r.id) === String(requestId)
-          ? {
-              ...r,
-              ...payload,
-              status: updatedStatus,
-            }
-          : r
-      )
-    );
-
-    if (selectedRequest && String(selectedRequest.id) === String(requestId)) {
-      setSelectedRequest((prev) =>
-        prev
-          ? {
-              ...prev,
-              ...payload,
-              status: updatedStatus,
-            }
-          : null
-      );
-    }
-
-    showToast(
-      isFirst
-        ? `⚡ Technical evaluation (${team === "sampling" ? "SAMP Lab" : "Plant"}) recorded: ${response}`
-        : `Feasibility decision recorded: ${response} by ${team.toUpperCase()}`
-    );
-  };
-
   // Marketing Final Feasibility Sign-off / Closure
   const handleMarketingApproveFeasibility = async (
     requestId: string | number,
     approved: boolean,
     remark?: string
   ) => {
-    const newStatus = approved ? "Completed" : "Closed (Rejected)";
+    const newStatus = approved ? "Approved by Marketing" : "Closed (Rejected)";
     const decision = approved ? "Accepted" : "Rejected";
     const nowIso = new Date().toISOString();
     const payload: Partial<SampleRequestItem> = {
@@ -676,9 +606,9 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
       prev.map((r) =>
         String(r.id) === String(requestId)
           ? {
-              ...r,
-              ...payload,
-            }
+            ...r,
+            ...payload,
+          }
           : r
       )
     );
@@ -687,9 +617,9 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
       setSelectedRequest((prev) =>
         prev
           ? {
-              ...prev,
-              ...payload,
-            }
+            ...prev,
+            ...payload,
+          }
           : null
       );
     }
@@ -837,7 +767,7 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
 
 
   // Create Request Handler
-  const handleCreateRequest = async (newForm: Partial<SampleRequestItem>) => {
+  const handleCreateRequest = async (newForm: Partial<SampleRequestItem>): Promise<boolean> => {
     if (newForm.creationMode === "feasibility_check") {
       try {
         const created = await createFeasibilityRequestApi({
@@ -848,16 +778,17 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
           requiredDate: newForm.sampleRequiredDate || "",
           marketingRemarks: newForm.marketingRemarks,
           referenceImages: newForm.referenceImages || [],
+          referenceImageNames: newForm.referenceImageNames || [],
           referenceLinks: newForm.referenceLinks || [],
-          createdBy: newForm.createdBy,
         });
         setRequests((prev) => [mapFeasibilityRequestToSampleRequest(created), ...prev]);
         showToast(`Feasibility ${created.requestCode} registered with ${created.srNumber}.`);
+        return true;
       } catch (err) {
         console.error("Error creating feasibility request:", err);
         showToast(err instanceof Error ? err.message : "The feasibility request could not be saved.");
+        return false;
       }
-      return;
     }
 
     const yr = new Date().getFullYear() % 100;
@@ -876,12 +807,14 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
         setRequests((prev) => [created, ...prev]);
       } else {
         showToast("The sample request could not be saved to the backend.");
-        return;
+        return false;
       }
       showToast(`Sample Request ${nextSrNum} registered successfully!`);
+      return true;
     } catch (err) {
       console.error("Error creating request:", err);
       showToast("The sample request could not be saved to the backend.");
+      return false;
     }
   };
 
@@ -1011,8 +944,8 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
         }
         // marketing_request
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-blue-50 text-blue-800 border border-blue-200/90 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800/60 whitespace-nowrap shadow-xs">
-            <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-brand-50 text-brand-800 border border-brand-200/90 dark:bg-brand-950/40 dark:text-brand-300 dark:border-brand-800/60 whitespace-nowrap shadow-xs">
+            <span className="w-1.5 h-1.5 rounded-full bg-brand-500 shrink-0" />
             Sampling Request
           </span>
         );
@@ -1041,37 +974,42 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
       header: "Product Description",
       sortable: true,
       width: "min-w-[240px]",
-      cell: (row) => (
-        <div>
-          <div
-            className="font-medium text-zinc-900 dark:text-zinc-100 truncate max-w-[320px]"
-            title={row.productDescription || undefined}
-          >
-            {row.productDescription || "—"}
-          </div>
-          {row.brandName && (
-            <div className="text-[10px] text-zinc-500 dark:text-zinc-400 truncate max-w-[240px]">
-              Brand: {row.brandName}
+      cell: (row) => {
+        const isFeasibility = getRequestTrackType(row) === "feasibility_check";
+        const displayDesc = isFeasibility
+          ? cleanFeasibilityDescription(row.feasibilityDescription || row.productDescription)
+          : (row.productDescription || "—");
+
+        return (
+          <div>
+            <div
+              className="font-medium text-zinc-900 dark:text-zinc-100 truncate max-w-[320px]"
+              title={displayDesc !== "—" ? displayDesc : undefined}
+            >
+              {displayDesc}
             </div>
-          )}
-        </div>
-      ),
+            {row.brandName && (
+              <div className="text-[10px] text-zinc-500 dark:text-zinc-400 truncate max-w-[240px]">
+                Brand: {row.brandName}
+              </div>
+            )}
+          </div>
+        );
+      },
     };
 
-    // 5a. Common: Request Date (Date Request Created in SAMP ECO DB)
+    // 5a. Common: Request Date & Business Year Cycle
     const colRequestDate: ColumnDef<SampleRequestItem> = {
       id: "dateRequestCreated",
       header: "Request Date",
       sortable: true,
-      width: "min-w-[110px] w-[120px]",
+      width: "min-w-[130px] w-[140px]",
       cell: (row) => {
         const d = row.dateRequestCreated || (row.createdAt ? row.createdAt.split("T")[0] : "");
-        return d ? (
-          <span className="font-mono font-medium text-[12px] text-zinc-700 dark:text-zinc-300 tabular-nums">
-            {d.includes("T") ? d.split("T")[0] : d}
+        return (
+          <span className="font-mono font-medium text-[12px] text-zinc-900 dark:text-zinc-100 tabular-nums">
+            {d ? (d.includes("T") ? d.split("T")[0] : d) : "—"}
           </span>
-        ) : (
-          <span className="text-zinc-400 font-sans text-[11px]">—</span>
         );
       },
     };
@@ -1122,11 +1060,12 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
             </span>
           );
         }
+        if (getRequestTrackType(row) === "feasibility_check") {
+          return <span className="text-zinc-400 font-sans text-[11px]">—</span>;
+        }
         return (
           <span className="font-sans text-[12px] font-medium text-zinc-700 dark:text-zinc-300">
-            {getRequestTrackType(row) === "feasibility_check"
-              ? "SAMP Team"
-              : (row.targetPlant?.replace(/^\d{4}-?\s*/, "").trim() || "Khaniwade")}
+            {row.targetPlant?.replace(/^\d{4}-?\s*/, "").trim() || "Khaniwade"}
           </span>
         );
       },
@@ -1248,9 +1187,7 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
       sortable: true,
       width: "min-w-[280px]",
       cell: (row) => {
-        let cleanText = row.productDescription || "";
-        cleanText = cleanText.replace(/^\[.*?\]\s*/, "");
-        cleanText = cleanText.split(/Attached Images:|Reference Web Links:|Marketing Remarks:/i)[0].trim();
+        const cleanText = cleanFeasibilityDescription(row.feasibilityDescription || row.productDescription);
 
         const imgCount = row.referenceImages?.length || 0;
         const linkCount = row.referenceLinks?.length || 0;
@@ -1259,9 +1196,9 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
           <div className="space-y-1">
             <div
               className="font-medium text-zinc-900 dark:text-zinc-100 truncate max-w-[340px]"
-              title={cleanText || row.productDescription || undefined}
+              title={cleanText !== "—" ? cleanText : undefined}
             >
-              {cleanText || row.productDescription || "—"}
+              {cleanText}
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               {row.marketingRemarks && (
@@ -1273,13 +1210,13 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
                 </span>
               )}
               {imgCount > 0 && (
-                <span className="inline-flex items-center gap-1 text-[9px] font-mono font-semibold px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
+                <span className="inline-flex items-center gap-1 text-[10px] font-mono font-semibold px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
                   <ImageIcon className="w-2.5 h-2.5" />
                   {imgCount} {imgCount === 1 ? "photo" : "photos"}
                 </span>
               )}
               {linkCount > 0 && (
-                <span className="inline-flex items-center gap-1 text-[9px] font-mono font-semibold px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
+                <span className="inline-flex items-center gap-1 text-[10px] font-mono font-semibold px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
                   <ExternalLink className="w-2.5 h-2.5" />
                   {linkCount} {linkCount === 1 ? "link" : "links"}
                 </span>
@@ -1312,13 +1249,12 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
             {!isResponded && countdown && (
               <div>
                 <span
-                  className={`inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-mono font-bold ${
-                    countdown.status === "overdue"
+                  className={`inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-mono font-bold ${countdown.status === "overdue"
                       ? "bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-900/60"
                       : countdown.status === "today"
-                      ? "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-900/60"
-                      : "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900/60"
-                  }`}
+                        ? "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-900/60"
+                        : "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900/60"
+                    }`}
                 >
                   <Clock className="w-2.5 h-2.5" />
                   {countdown.text}
@@ -1430,11 +1366,10 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
         const onTime = row.isRespondedOnTime !== false;
         return (
           <span
-            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider ${
-              onTime
+            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider ${onTime
                 ? "bg-emerald-50 text-emerald-800 border border-emerald-200/90 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/60"
                 : "bg-rose-50 text-rose-800 border border-rose-200/90 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/60"
-            }`}
+              }`}
           >
             {onTime ? "On-Time" : "Delayed"}
           </span>
@@ -1483,10 +1418,10 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
               e.stopPropagation();
               handleSelectRow(row);
             }}
-            className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-blue-50 text-blue-800 border border-blue-300 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-700/80 animate-pulse hover:bg-blue-100 transition-colors cursor-pointer shadow-2xs"
+            className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-brand-50 text-brand-800 border border-brand-300 dark:bg-brand-950/60 dark:text-brand-300 dark:border-brand-700/80 animate-pulse hover:bg-brand-100 transition-colors cursor-pointer shadow-2xs"
             title="Click to inspect and record Marketing Decision"
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
+            <span className="w-1.5 h-1.5 rounded-full bg-brand-600" />
             Action Needed
           </button>
         );
@@ -1588,22 +1523,22 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
         return (
           <div className="flex items-center gap-1">
             {activeScopes.includes("design") && (
-              <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-purple-50 text-purple-700 border border-purple-200 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-800/60" title="Artwork & Creative Design">
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-purple-50 text-purple-700 border border-purple-200 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-800/60" title="Artwork & Creative Design">
                 DES
               </span>
             )}
             {activeScopes.includes("mockup") && (
-              <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/60" title="CAD & Mockup">
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/60" title="CAD & Mockup">
                 MCK
               </span>
             )}
             {activeScopes.includes("sample") && (
-              <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800/60" title="SAMP Physical Sampling">
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-brand-50 text-brand-700 border border-brand-200 dark:bg-brand-950/40 dark:text-brand-300 dark:border-brand-800/60" title="SAMP Physical Sampling">
                 SMP
               </span>
             )}
             {activeScopes.includes("costing") && (
-              <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/60" title="Costing & Estimation">
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/60" title="Costing & Estimation">
                 CST
               </span>
             )}
@@ -1741,7 +1676,7 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
       <MetricRibbon metrics={metrics} />
 
       {/* 3. Operational Command & Filter Toolbar */}
-      <div className="px-4 sm:px-6 py-2.5 bg-zinc-50/70 dark:bg-[#0b0c10] border-b border-zinc-200 dark:border-white/[0.08] shrink-0 flex flex-wrap items-center justify-between gap-3 transition-colors duration-150">
+      <div className="erp-command-bar px-4 sm:px-6 py-2.5 shrink-0 flex flex-wrap items-center justify-between gap-3 transition-colors duration-150">
         {/* Left: Filters & Search */}
         <div className="flex w-full sm:w-auto items-center flex-wrap gap-2.5">
           {/* Search Input */}
@@ -1756,7 +1691,7 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
                 setCurrentPage(1);
               }}
               placeholder="Search SR#, SKU, Customer… (Ctrl+K)"
-              className="h-9 w-full sm:w-60 lg:w-72 pl-9 pr-8 rounded-md border border-zinc-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-900/60 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 outline-none transition-[border-color,box-shadow,background-color] duration-150 focus:border-brand-500 focus:bg-white dark:focus:bg-zinc-900 focus:ring-2 focus:ring-brand-500/15 font-sans"
+              className="h-9 w-full sm:w-60 lg:w-72 pl-9 pr-8 rounded-md border border-zinc-300 dark:border-white/15 bg-white dark:bg-[#111318] text-[13px] text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-500 outline-none transition-colors focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15 font-sans"
             />
             {searchTerm && (
               <button
@@ -1778,11 +1713,10 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
                 setSelectedType("all");
                 setCurrentPage(1);
               }}
-              className={`h-8 px-3.5 rounded whitespace-nowrap transition-[color,background-color,box-shadow,transform] duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 text-xs font-medium cursor-pointer ${
-                selectedType === "all"
+              className={`h-8 px-3.5 rounded whitespace-nowrap transition-[color,background-color,box-shadow,transform] duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 text-xs font-medium cursor-pointer ${selectedType === "all"
                   ? "bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-50 font-semibold shadow-xs"
                   : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200"
-              }`}
+                }`}
             >
               All ({requests.length})
             </button>
@@ -1792,13 +1726,12 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
                 setSelectedType("marketing_request");
                 setCurrentPage(1);
               }}
-              className={`h-8 px-3.5 rounded whitespace-nowrap transition-[color,background-color,box-shadow,transform] duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 text-xs font-medium cursor-pointer flex items-center gap-1.5 ${
-                selectedType === "marketing_request"
-                  ? "bg-white dark:bg-zinc-700 text-blue-700 dark:text-blue-300 font-semibold shadow-xs"
+              className={`h-8 px-3.5 rounded whitespace-nowrap transition-[color,background-color,box-shadow,transform] duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 text-xs font-medium cursor-pointer flex items-center gap-1.5 ${selectedType === "marketing_request"
+                  ? "bg-white dark:bg-zinc-700 text-brand-700 dark:text-brand-300 font-semibold shadow-xs"
                   : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200"
-              }`}
+                }`}
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+              <span className="w-1.5 h-1.5 rounded-full bg-brand-500" />
               Sampling Requests ({typeCounts.marketing})
             </button>
             <button
@@ -1807,11 +1740,10 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
                 setSelectedType("feasibility_check");
                 setCurrentPage(1);
               }}
-              className={`h-8 px-3.5 rounded whitespace-nowrap transition-[color,background-color,box-shadow,transform] duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 text-xs font-medium cursor-pointer flex items-center gap-1.5 ${
-                selectedType === "feasibility_check"
+              className={`h-8 px-3.5 rounded whitespace-nowrap transition-[color,background-color,box-shadow,transform] duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 text-xs font-medium cursor-pointer flex items-center gap-1.5 ${selectedType === "feasibility_check"
                   ? "bg-white dark:bg-zinc-700 text-amber-700 dark:text-amber-300 font-semibold shadow-xs"
                   : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200"
-              }`}
+                }`}
             >
               <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
               Feasibility ({typeCounts.feasibility})
@@ -1822,11 +1754,10 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
                 setSelectedType("program_planning");
                 setCurrentPage(1);
               }}
-              className={`h-8 px-3.5 rounded whitespace-nowrap transition-[color,background-color,box-shadow,transform] duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 text-xs font-medium cursor-pointer flex items-center gap-1.5 ${
-                selectedType === "program_planning"
+              className={`h-8 px-3.5 rounded whitespace-nowrap transition-[color,background-color,box-shadow,transform] duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 text-xs font-medium cursor-pointer flex items-center gap-1.5 ${selectedType === "program_planning"
                   ? "bg-white dark:bg-zinc-700 text-indigo-700 dark:text-indigo-300 font-semibold shadow-xs"
                   : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200"
-              }`}
+                }`}
             >
               <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
               Program ({typeCounts.program})
@@ -1840,7 +1771,7 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
               setSelectedCustomer(e.target.value);
               setCurrentPage(1);
             }}
-            className="h-9 px-3 rounded-md border border-zinc-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-900/60 text-xs text-zinc-700 dark:text-zinc-300 outline-none transition-[border-color,box-shadow,background-color] duration-150 hover:border-zinc-300 dark:hover:border-zinc-600 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15 cursor-pointer max-w-[160px] truncate font-medium"
+            className="h-9 px-3 rounded-md border border-zinc-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-900/60 text-xs text-zinc-700 dark:text-zinc-300 outline-none transition-[border-color,box-shadow,background-color] duration-150 hover:border-zinc-300 dark:hover:border-zinc-600 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15 cursor-pointer max-w-[150px] truncate font-medium"
           >
             <option value="all">All Customers</option>
             {uniqueCustomers.map((c) => (
@@ -1876,20 +1807,20 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
 
       {/* 4. Attention Required: Marketing Commercial Decisions on SAMP Evaluated Feasibilities */}
       {pendingMarketingDecisions.length > 0 && (
-        <div className="mx-4 sm:mx-6 mt-2.5 px-4 py-2.5 rounded-lg bg-blue-50/90 dark:bg-blue-950/40 border border-blue-200/90 dark:border-blue-800/80 flex flex-wrap items-center justify-between gap-3 shadow-2xs shrink-0">
+        <div className="mx-4 sm:mx-6 mt-2.5 px-4 py-2.5 rounded-lg bg-brand-50/90 dark:bg-brand-950/40 border border-brand-200/90 dark:border-brand-800/80 flex flex-wrap items-center justify-between gap-3 shadow-2xs shrink-0">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-7 h-7 rounded-md bg-blue-600 text-white flex items-center justify-center shrink-0">
+            <div className="w-7 h-7 rounded-md bg-brand-600 text-white flex items-center justify-center shrink-0">
               <AlertCircle className="w-4 h-4" />
             </div>
             <div className="min-w-0">
-              <div className="text-xs font-bold text-blue-950 dark:text-blue-100 flex items-center gap-2">
-                <span>Attention Required: SAMP Lab Evaluated Feasibility</span>
-                <span className="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-blue-200/80 text-blue-900 dark:bg-blue-900 dark:text-blue-200">
+              <div className="text-xs font-bold text-brand-950 dark:text-brand-100 flex items-center gap-2">
+                <span>Attention Required: SAMP Team Evaluated Feasibility</span>
+                <span className="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-brand-200/80 text-brand-900 dark:bg-brand-900 dark:text-brand-200">
                   {pendingMarketingDecisions.length} {pendingMarketingDecisions.length === 1 ? "Request" : "Requests"}
                 </span>
               </div>
-              <p className="text-[11px] text-blue-800 dark:text-blue-300/90 truncate mt-0.5">
-                Central Sampling Lab has completed technical evaluation. Marketing commercial decision (Accept / Drop) is pending.
+              <p className="text-[11px] text-brand-800 dark:text-brand-300/90 truncate mt-0.5">
+                SAMP Team has completed technical evaluation. Marketing commercial decision (Accept / Drop) is pending.
               </p>
             </div>
           </div>
@@ -1899,7 +1830,7 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
               setSelectedType("feasibility_check");
               setCurrentPage(1);
             }}
-            className="px-3 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs font-semibold shrink-0 cursor-pointer shadow-2xs transition-colors flex items-center gap-1.5 font-mono"
+            className="px-3 py-1.5 rounded-md bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white text-xs font-semibold shrink-0 cursor-pointer shadow-2xs transition-colors flex items-center gap-1.5 font-mono"
           >
             <span>Review Now</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -1933,6 +1864,7 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
         pageSize={pageSize}
         totalCount={filteredRequests.length}
         onPageChange={setCurrentPage}
+        emptyMessage="No matching requests found"
         toolbarLeft={
           <div className="flex items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400">
             <span>
@@ -1982,7 +1914,6 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
         request={selectedRequest}
         isOpen={isInspectorOpen}
         onClose={() => setIsInspectorOpen(false)}
-        onUpdateFeasibility={handleUpdateFeasibility}
         onMarketingApprove={handleMarketingApproveFeasibility}
         onMaterialsUpdated={handleMaterialsUpdated}
         onDeleteRequest={(req) => handleDeleteRequest(req)}

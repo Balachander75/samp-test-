@@ -131,15 +131,11 @@ export const SignInPage: React.FC<SignInPageProps> = ({ onSignInSuccess }) => {
   };
 
   return (
-    <div className="min-h-screen w-full relative flex flex-col justify-center items-center p-3 sm:p-6 lg:p-8 select-none overflow-x-hidden overflow-y-auto">
-      {/* Background */}
+    <div className="min-h-screen w-full relative flex flex-col justify-center items-center p-3 sm:p-6 lg:p-8 select-none overflow-x-hidden overflow-y-auto bg-zinc-950">
+      {/* Keep the original Navneet hero image as the sign-in backdrop. */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
-        <img
-          src={brandHeroImg}
-          alt="Navneet Enterprise"
-          className="w-full h-full object-cover object-center"
-        />
-        <div className="absolute inset-0 bg-black/45 dark:bg-black/80 backdrop-blur-[2.5px] transition-colors duration-300" />
+        <img src={brandHeroImg} alt="" className="h-full w-full object-cover object-center" />
+        <div className="absolute inset-0 bg-zinc-950/45 dark:bg-zinc-950/70 backdrop-blur-[1px]" />
       </div>
 
       {/* Top bar: Brand Logo */}
@@ -147,7 +143,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({ onSignInSuccess }) => {
         <img
           src={logoImg}
           alt="Navneet"
-          className="h-12 sm:h-14 w-auto object-contain filter drop-shadow-[0_2px_12px_rgba(0,0,0,0.7)]"
+          className="h-10 sm:h-11 w-auto object-contain drop-shadow-[0_1px_5px_rgba(0,0,0,0.35)]"
         />
       </div>
 
@@ -221,12 +217,15 @@ export const SignInPage: React.FC<SignInPageProps> = ({ onSignInSuccess }) => {
 
       {/* Sign-In Card */}
       <main className="relative z-10 w-full max-w-[440px] sm:max-w-[460px] md:max-w-[480px] my-auto py-4 sm:py-6">
-        <div className="w-full rounded-xl p-6 sm:p-8 md:p-9 transition-colors duration-200 erp-auth-card backdrop-blur-xl">
+        <div className="w-full rounded-lg p-6 sm:p-8 md:p-9 transition-colors duration-200 erp-auth-card">
           {/* Header */}
           <div className="mb-6 sm:mb-7">
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900 dark:text-white leading-tight">
               Sign In
             </h1>
+            <p className="mt-1.5 text-sm text-zinc-500 dark:text-zinc-400">
+              Access your Navneet SAMP operations workspace.
+            </p>
           </div>
 
           {/* Form */}
@@ -311,10 +310,10 @@ export const SignInPage: React.FC<SignInPageProps> = ({ onSignInSuccess }) => {
               variant="primary"
               size="lg"
               isLoading={isLoading}
-              className="w-full mt-3 font-semibold h-11 sm:h-12 text-sm sm:text-base cursor-pointer shadow-md hover:shadow-lg"
+              className="w-full mt-3 font-semibold h-11 text-sm cursor-pointer shadow-xs"
             >
               {isLoading ? "Signing In…" : "Sign In to Workspace"}
-            </Button>
+          </Button>
           </form>
         </div>
       </main>

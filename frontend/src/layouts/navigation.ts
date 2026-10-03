@@ -35,7 +35,6 @@ export const NAVIGATION_GROUPS: NavigationGroup[] = [
         shortCode: "MK",
         path: "/sample-requests",
         aliases: ["/marketing-work", "/sales"],
-        badge: "11",
         departmentKey: "marketing",
       },
       {
@@ -44,7 +43,6 @@ export const NAVIGATION_GROUPS: NavigationGroup[] = [
         shortCode: "CR",
         path: "/creative-work",
         aliases: ["/creative", "/artwork"],
-        badge: "5",
         departmentKey: "creative",
       },
       {

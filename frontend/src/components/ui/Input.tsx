@@ -24,9 +24,9 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     ref
   ) => {
     const sizeClasses = {
-      sm: "h-9 px-3 text-xs",
-      md: "h-10 px-3.5 text-sm",
-      lg: "h-11 px-4 text-sm sm:text-[14px]",
+      sm: "h-8 px-3 text-[13px]",
+      md: "h-9 px-3 text-[13px]",
+      lg: "h-10 px-3.5 text-sm",
     };
 
     return (
@@ -41,12 +41,12 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           type={type}
           data-mono={isMono ? "true" : undefined}
           className={cn(
-            "w-full rounded-md transition-all duration-150 outline-none",
+            "w-full rounded-md transition-colors duration-150 outline-none",
             sizeClasses[inputSize],
             // Light mode: clean, crisp paper input with subtle border and focus ring
-            "bg-zinc-50/70 hover:bg-white focus:bg-white text-zinc-900 placeholder:text-zinc-400 border border-zinc-300 hover:border-zinc-400 focus:border-brand-600 focus:ring-2 focus:ring-brand-500/20 shadow-xs",
+            "bg-white hover:bg-white focus:bg-white text-zinc-900 placeholder:text-zinc-500 border border-zinc-300 hover:border-zinc-400 focus:border-brand-600 focus:ring-2 focus:ring-brand-500/15 shadow-none",
             // Dark mode: professional matte dark input with fine border and focus ring
-            "dark:bg-[#15151a] dark:text-white dark:placeholder:text-zinc-500 dark:border-white/12 dark:hover:border-white/22 dark:focus:border-brand-500 dark:focus:ring-2 dark:focus:ring-brand-500/25 dark:shadow-none",
+            "dark:bg-[#111318] dark:text-white dark:placeholder:text-zinc-400 dark:border-white/15 dark:hover:border-white/25 dark:focus:border-brand-500 dark:focus:ring-2 dark:focus:ring-brand-500/25 dark:shadow-none",
             leftIcon && "pl-11",
             rightIcon && "pr-11",
             isMono && "font-mono tracking-tight",

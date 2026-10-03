@@ -472,7 +472,7 @@ export const CostingTeamDesk: React.FC<CostingTeamDeskProps> = ({ user }) => {
             <span className="font-semibold text-zinc-800 dark:text-zinc-200">
               ₹ {row.netUnitCost.toFixed(2)}
             </span>
-            <span className="text-[9px] text-zinc-400">
+            <span className="text-[10px] text-zinc-400">
               Sub: ₹{row.substrateUnitCost.toFixed(1)} · Conv: ₹{row.conversionUnitCost.toFixed(1)}
             </span>
           </div>
@@ -559,7 +559,7 @@ export const CostingTeamDesk: React.FC<CostingTeamDeskProps> = ({ user }) => {
       <MetricRibbon metrics={metrics} />
 
       {/* 3. Operational Command & Filter Toolbar */}
-      <div className="px-4 sm:px-6 py-2.5 bg-white dark:bg-[#0f1118] border-b border-zinc-200 dark:border-white/[0.08] shrink-0 flex flex-wrap items-center justify-between gap-3">
+      <div className="erp-command-bar px-4 sm:px-6 py-2.5 shrink-0 flex flex-wrap items-center justify-between gap-3">
         {/* Left: Filters & Search */}
         <div className="flex items-center flex-wrap gap-2.5">
           <div className="relative">
@@ -569,7 +569,7 @@ export const CostingTeamDesk: React.FC<CostingTeamDeskProps> = ({ user }) => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search Costing ID, Customer, Substrate… (Ctrl+K)"
-              className="h-9 w-60 sm:w-72 pl-9 pr-8 rounded-md border border-zinc-200 dark:border-zinc-700/80 bg-zinc-50/60 dark:bg-zinc-900/60 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 outline-none focus:border-brand-500 focus:bg-white dark:focus:bg-zinc-900 focus:ring-1 focus:ring-brand-500/20 transition-all font-sans"
+              className="h-9 w-60 sm:w-72 pl-9 pr-8 rounded-md border border-zinc-300 dark:border-white/15 bg-white dark:bg-[#111318] text-[13px] text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-500 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15 transition-colors font-sans"
             />
             {searchTerm && (
               <button
@@ -679,32 +679,40 @@ export const CostingTeamDesk: React.FC<CostingTeamDeskProps> = ({ user }) => {
         }
       />
 
-      {/* 5. Master-Detail Inspector Drawer */}
+      {/* 5. Master-Detail Inspector Modal */}
       {isInspectorOpen && selectedItem && (
-        <div className="fixed inset-0 z-50 flex justify-end bg-black/50 backdrop-blur-xs">
-          <div className="bg-white dark:bg-[#0f1118] border-l border-zinc-200 dark:border-white/[0.08] w-full max-w-xl h-full shadow-2xl flex flex-col overflow-hidden animate-slide-left">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/60"
+          onClick={() => setIsInspectorOpen(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            className="relative w-full max-w-5xl max-h-[94vh] flex flex-col bg-white dark:bg-[#0f1118] border border-zinc-200 dark:border-white/10 rounded-xl shadow-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Top Bar */}
-            <div className="px-5 py-3 border-b border-zinc-200 dark:border-white/[0.08] bg-zinc-50/70 dark:bg-[#0f1118] flex items-center justify-between shrink-0">
-              <div className="flex items-center gap-2">
-                <span className="p-1.5 rounded bg-brand-500/10 text-brand-600 dark:text-brand-400">
-                  <Calculator className="w-4 h-4" />
+            <div className="px-5 py-3.5 border-b border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0f1118] flex items-center justify-between gap-3 shrink-0">
+              <div className="flex items-center flex-wrap gap-2">
+                <span className="inline-flex items-center gap-1 bg-white dark:bg-zinc-800 px-2 py-0.5 rounded border border-zinc-200 dark:border-zinc-700 text-xs font-mono font-bold text-zinc-900 dark:text-zinc-100">
+                  {selectedItem.costingCode}
                 </span>
-                <div>
-                  <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-                    <span>{selectedItem.costingCode}</span>
-                    <span className="text-[11px] font-normal text-zinc-400 font-mono">({selectedItem.customer})</span>
-                  </h3>
-                  <p className="text-[11px] text-zinc-400">{selectedItem.productTitle}</p>
-                </div>
+                <span className="text-[11px] font-mono text-zinc-400">({selectedItem.customer})</span>
+                <span className="text-xs font-semibold text-zinc-800 dark:text-zinc-200">{selectedItem.productTitle}</span>
               </div>
-              <button
-                type="button"
-                onClick={() => setIsInspectorOpen(false)}
-                className="h-8 w-8 rounded-md flex items-center justify-center text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
-                title="Close drawer"
-              >
-                <X className="w-4 h-4" />
-              </button>
+              <div className="flex items-center gap-2">
+                <span className="hidden sm:inline-block text-[10px] font-mono text-zinc-400 uppercase tracking-wider">
+                  [Esc]
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsInspectorOpen(false)}
+                  className="h-8 w-8 rounded-md flex items-center justify-center text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-200/60 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                  title="Close (Esc)"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
             {/* Context Strip */}
@@ -956,6 +964,20 @@ export const CostingTeamDesk: React.FC<CostingTeamDeskProps> = ({ user }) => {
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* Footer Bar */}
+            <div className="px-5 py-3 border-t border-zinc-200 dark:border-white/[0.08] bg-zinc-50/50 dark:bg-[#161822] flex items-center justify-between gap-3 shrink-0">
+              <div className="flex items-center gap-2 text-xs text-zinc-500 font-mono">
+                <span>Code: {selectedItem.costingCode}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsInspectorOpen(false)}
+                className="h-8 px-4 rounded-md bg-zinc-900 hover:bg-black dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-mono font-bold transition-colors cursor-pointer"
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>

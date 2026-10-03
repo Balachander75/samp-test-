@@ -2,15 +2,16 @@
 
 ## Direction
 
-The interface is an operational workspace for reviewing requests and coordinating departmental handoffs. It uses compact controls, clear section labels, neutral surfaces, thin borders, and restrained semantic color so status and next actions remain easy to scan.
+The interface is an operational workspace for reviewing requests and coordinating departmental handoffs. Its interaction model takes cues from Odoo 19's app navigation, record views, search controls, and manufacturing work queues, adapted to Navneet SAMP terminology and workflows. Keep the Navneet identity and operational context; do not copy Odoo branding or reproduce its UI pixel for pixel.
 
-The dashboard uses a construction-grid treatment in its overview/workflow surface. Other department desks retain their own domain layouts while sharing the application shell and common visual tokens.
+Use compact controls, clear section labels, neutral surfaces, thin borders, and restrained semantic color so status and next actions remain easy to scan. Department desks retain domain-specific layouts while sharing the application shell and common visual tokens.
 
 ## Visual language in the current app
 
 - Light mode uses cool slate and white surfaces; dark mode uses near-black and charcoal surfaces.
 - Cobalt/blue is the primary action and navigation accent. Green, amber, red, and slate communicate operational status where used.
-- Interface typography uses Geist/Inter system fallbacks; mono-styled values use Geist Mono/IBM Plex Mono fallbacks and tabular numerals.
+- Interface typography uses the operating system UI font stack, following Odoo 19's system-font approach. Monospace is reserved for identifiers and measured data, with tabular numerals.
+- Keep the working type scale readable and compact: 18–20px page titles, 14–16px panel headings, 13–14px table and control text, and 11–12px metadata.
 - Controls and data surfaces use compact spacing, visible borders, and modest corner radii. The UI favors dense but readable operational views over oversized decorative cards.
 - Existing Navneet brand assets are in `frontend/src/assets/` and `frontend/public/`.
 

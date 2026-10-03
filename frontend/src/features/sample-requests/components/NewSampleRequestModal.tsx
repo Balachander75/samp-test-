@@ -31,7 +31,7 @@ import { useMasterData } from "../hooks/useMasterData";
 export interface NewSampleRequestModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (newRequest: Partial<SampleRequestItem>) => void;
+  onSubmit: (newRequest: Partial<SampleRequestItem>) => Promise<boolean>;
   initialTrack?: TrackType;
   requestCreatedBy?: string;
 }
@@ -65,11 +65,11 @@ export const MARKETING_REQUEST_TYPES: MarketingDeliverableType[] = [
     desc: "Cover artwork, graphic themes, illustrations, typography & creative brief",
     icon: Palette,
     tone: {
-      borderActive: "border-indigo-500 dark:border-indigo-500",
-      bgActive: "bg-indigo-50/60 dark:bg-indigo-950/20",
-      badge: "bg-indigo-50 text-indigo-700 border-indigo-200/80 dark:bg-indigo-950/50 dark:text-indigo-300 dark:border-indigo-800/60",
-      text: "text-indigo-600 dark:text-indigo-400",
-      ring: "ring-indigo-500/20",
+      borderActive: "border-brand-600 dark:border-brand-500",
+      bgActive: "bg-brand-50/50 dark:bg-brand-950/25",
+      badge: "bg-brand-50 text-brand-800 border-brand-200 dark:bg-brand-950/60 dark:text-brand-300 dark:border-brand-800/80",
+      text: "text-brand-600 dark:text-brand-400",
+      ring: "ring-brand-500/20",
     },
   },
   {
@@ -81,11 +81,11 @@ export const MARKETING_REQUEST_TYPES: MarketingDeliverableType[] = [
     desc: "CAD structural white dummy, die-line verification, folding format & digital 3D proof",
     icon: Box,
     tone: {
-      borderActive: "border-amber-500 dark:border-amber-500",
-      bgActive: "bg-amber-50/70 dark:bg-amber-950/25",
-      badge: "bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800/60",
-      text: "text-amber-600 dark:text-amber-400",
-      ring: "ring-amber-500/25",
+      borderActive: "border-brand-600 dark:border-brand-500",
+      bgActive: "bg-brand-50/50 dark:bg-brand-950/25",
+      badge: "bg-brand-50 text-brand-800 border-brand-200 dark:bg-brand-950/60 dark:text-brand-300 dark:border-brand-800/80",
+      text: "text-brand-600 dark:text-brand-400",
+      ring: "ring-brand-500/20",
     },
   },
   {
@@ -97,11 +97,11 @@ export const MARKETING_REQUEST_TYPES: MarketingDeliverableType[] = [
     desc: "Finished physical prototype with actual binding, ruling, paper stock & cover finishes",
     icon: Sparkles,
     tone: {
-      borderActive: "border-blue-500 dark:border-blue-500",
-      bgActive: "bg-blue-50/70 dark:bg-blue-950/25",
-      badge: "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-800/60",
-      text: "text-blue-600 dark:text-blue-400",
-      ring: "ring-blue-500/25",
+      borderActive: "border-brand-600 dark:border-brand-500",
+      bgActive: "bg-brand-50/50 dark:bg-brand-950/25",
+      badge: "bg-brand-50 text-brand-800 border-brand-200 dark:bg-brand-950/60 dark:text-brand-300 dark:border-brand-800/80",
+      text: "text-brand-600 dark:text-brand-400",
+      ring: "ring-brand-500/20",
     },
   },
   {
@@ -113,11 +113,11 @@ export const MARKETING_REQUEST_TYPES: MarketingDeliverableType[] = [
     desc: "Comprehensive Bill of Materials costing, machine run-rates & volume tiered pricing",
     icon: Calculator,
     tone: {
-      borderActive: "border-emerald-500 dark:border-emerald-500",
-      bgActive: "bg-emerald-50/70 dark:bg-emerald-950/25",
-      badge: "bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800/60",
-      text: "text-emerald-600 dark:text-emerald-400",
-      ring: "ring-emerald-500/25",
+      borderActive: "border-brand-600 dark:border-brand-500",
+      bgActive: "bg-brand-50/50 dark:bg-brand-950/25",
+      badge: "bg-brand-50 text-brand-800 border-brand-200 dark:bg-brand-950/60 dark:text-brand-300 dark:border-brand-800/80",
+      text: "text-brand-600 dark:text-brand-400",
+      ring: "ring-brand-500/20",
     },
   },
 ];
@@ -160,6 +160,7 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
   const navigate = useNavigate();
   const [selectedTrack, setSelectedTrack] = useState<TrackType>(initialTrack || "gateway");
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const {
     customers,
     plants,
@@ -233,8 +234,8 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
     if (isOpen && masterDataError) setError(masterDataError);
   }, [isOpen, masterDataError]);
 
-  // Compress every uploaded image to JPEG at 50% quality before it is stored in the request.
-  const compressImageFile = (file: File, maxDim = 800, quality = 0.5): Promise<{ url: string; sizeKb: number }> => {
+  // Compress to a database-safe JPEG size before including the image in the create request.
+  const compressImageFile = (file: File, maxDim = 800): Promise<{ url: string; sizeKb: number }> => {
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -257,18 +258,21 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
           const ctx = canvas.getContext("2d");
           if (ctx) {
             ctx.drawImage(img, 0, 0, width, height);
-            const dataUrl = canvas.toDataURL("image/jpeg", quality);
-            const sizeKb = Math.max(1, Math.round((dataUrl.length * 3) / 4 / 1024));
-            resolve({ url: dataUrl, sizeKb });
+            for (const quality of [0.5, 0.4, 0.3]) {
+              const dataUrl = canvas.toDataURL("image/jpeg", quality);
+              const encoded = dataUrl.slice(dataUrl.indexOf(",") + 1);
+              const sizeBytes = Math.floor(encoded.length * 3 / 4);
+              if (sizeBytes <= 1_048_576) {
+                resolve({ url: dataUrl, sizeKb: Math.max(1, Math.ceil(sizeBytes / 1024)) });
+                return;
+              }
+            }
+            resolve({ url: "", sizeKb: 0 });
           } else {
-            const rawUrl = (e.target?.result as string) || "";
-            resolve({ url: rawUrl, sizeKb: Math.round(file.size / 1024) });
+            resolve({ url: "", sizeKb: 0 });
           }
         };
-        img.onerror = () => {
-          const rawUrl = (e.target?.result as string) || "";
-          resolve({ url: rawUrl, sizeKb: Math.round(file.size / 1024) });
-        };
+        img.onerror = () => resolve({ url: "", sizeKb: 0 });
         img.src = e.target?.result as string;
       };
       reader.onerror = () => resolve({ url: "", sizeKb: 0 });
@@ -295,7 +299,10 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
 
     for (const file of filesToProcess) {
       const { url, sizeKb } = await compressImageFile(file);
-      if (!url) continue;
+      if (!url) {
+        setError(`${file.name} could not be compressed below the 1 MB image limit. Try a smaller image.`);
+        continue;
+      }
       setUploadedImages((prev) => {
         if (prev.length >= 2) return prev;
         return [
@@ -380,8 +387,9 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
   };
 
   // Submit Handler: Track 2 (Feasibility Check)
-  const handleSubmitFeasibility = (e: React.FormEvent) => {
+  const handleSubmitFeasibility = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     if (!customer.trim()) {
       setError("Please select a customer account.");
       return;
@@ -404,7 +412,7 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
     }
 
     const sections: string[] = [
-      `[${effectiveTypeLabel}] ${feasibilityDescription.trim()}`,
+      feasibilityDescription.trim(),
     ];
 
     if (releaseRemarks.trim()) {
@@ -427,7 +435,7 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
 
     const payload: Partial<SampleRequestItem> = {
       customer,
-      productDescription: sections.join("\n\n"),
+      productDescription: feasibilityDescription.trim(),
       programName: `${customer} · ${effectiveTypeLabel}`,
       programYear: byInfo.businessYearStr,
       year: byInfo.businessYearStr,
@@ -445,6 +453,7 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
       creationMode: "feasibility_check",
       productImagePath: uploadedImages[0]?.url || (webLinks[0]?.startsWith("http") ? webLinks[0] : undefined),
       referenceImages: uploadedImages.map((img) => img.url),
+      referenceImageNames: uploadedImages.map((img) => img.name),
       referenceLinks: webLinks,
       feasibilityType: selectedFeasibilityType,
       customFeasibilityType: selectedFeasibilityType === "other" ? customTypeOther.trim() : null,
@@ -452,8 +461,16 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
       marketingRemarks: releaseRemarks.trim() || null,
     };
 
-    onSubmit(payload);
-    onClose();
+    setIsSubmitting(true);
+    try {
+      const saved = await onSubmit(payload);
+      if (saved) onClose();
+      else setError("The feasibility request could not be saved. Please check the details and try again.");
+    } catch (submitError) {
+      setError(submitError instanceof Error ? submitError.message : "The feasibility request could not be saved.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Proceed Handler: Track 3 -> Navigate to Dedicated Planning Page
@@ -508,7 +525,7 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
           <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-200 dark:border-white/[0.08] bg-zinc-50/70 dark:bg-[#161822] shrink-0">
             <div className="flex items-center gap-2.5">
               <div>
-                <h3 className="text-[13px] font-bold text-zinc-950 dark:text-zinc-50 tracking-tight flex items-center gap-2">
+              <h3 className="text-sm font-semibold text-zinc-950 dark:text-zinc-50 tracking-tight flex items-center gap-2">
                   {selectedTrack === "gateway" && "Create New Request"}
                   {selectedTrack === "marketing_request" && (
                     <>
@@ -584,7 +601,7 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                       <h4 className="text-[13px] font-bold text-zinc-950 dark:text-zinc-50 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
                         Marketing Request
                       </h4>
-                      <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-medium text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700/60 uppercase">
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700/60 uppercase">
                         Direct Intake · 4 Scopes
                       </span>
                     </div>
@@ -594,7 +611,7 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
 
                     {/* Step Sequence Badges */}
                     <div className="flex items-center gap-2 mt-2.5">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800/60">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300 border border-brand-200/80 dark:border-brand-800/60">
                         Step 1: Program Setup
                       </span>
                       <span className="text-[10px] text-zinc-400 font-mono">→</span>
@@ -626,12 +643,12 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                       <h4 className="text-[13px] font-bold text-zinc-950 dark:text-zinc-50 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
                         Feasibility Check
                       </h4>
-                      <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 border border-blue-200/80 dark:border-blue-800/60 uppercase">
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/60 border border-brand-200/80 dark:border-brand-800/60 uppercase">
                         Sampling Desk
                       </span>
                     </div>
                     <p className="text-[12px] text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">
-                      Verify whether Central Sampling Lab (SAMP team) can execute specific paper GSM, novel binding structures, custom finishes, or prototypes.
+                      Verify whether SAMP Team can execute specific paper GSM, novel binding structures, custom finishes, or prototypes.
                     </p>
                   </div>
 
@@ -657,7 +674,7 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                       <h4 className="text-[13px] font-bold text-zinc-950 dark:text-zinc-50 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
                         Program Planning
                       </h4>
-                      <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-medium text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700/60 uppercase">
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700/60 uppercase">
                         Seasonal Line
                       </span>
                     </div>
@@ -1049,7 +1066,7 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                                     alt={img.name}
                                     className="w-6 h-6 rounded object-cover border border-zinc-200 dark:border-zinc-800 shrink-0"
                                   />
-                                  <span className="text-[9px] font-bold px-1 py-0.2 rounded bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200/50 shrink-0">
+                                  <span className="text-[10px] font-bold px-1 py-0.2 rounded bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 border border-brand-200/50 shrink-0">
                                     IMG
                                   </span>
                                   <span className="truncate font-medium text-zinc-800 dark:text-zinc-200" title={img.name}>
@@ -1079,7 +1096,7 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                                 className="flex items-center justify-between gap-2 px-2 py-1 rounded-md border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/90 text-[11px] shadow-2xs group"
                               >
                                 <div className="flex items-center gap-2 min-w-0 flex-1">
-                                  <span className="text-[9px] font-bold px-1 py-0.2 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 shrink-0">
+                                  <span className="text-[10px] font-bold px-1 py-0.2 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 shrink-0">
                                     URL
                                   </span>
                                   <a
@@ -1131,17 +1148,19 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                   <div className="flex items-center gap-2.5">
                     <button
                       type="button"
+                      disabled={isSubmitting}
                       onClick={onClose}
-                      className="h-10 px-4 rounded-md border border-zinc-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-semibold cursor-pointer transition-colors shadow-2xs"
+                      className="h-10 px-4 rounded-md border border-zinc-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-semibold cursor-pointer transition-colors shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className="h-10 px-5 rounded-md bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white text-xs font-semibold cursor-pointer transition-colors shadow-sm flex items-center gap-1.5"
+                      disabled={isSubmitting}
+                      className="h-10 px-5 rounded-md bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white text-xs font-semibold cursor-pointer transition-colors shadow-sm flex items-center gap-1.5 disabled:opacity-60 disabled:cursor-wait"
                     >
                       <CheckCircle2 className="w-4 h-4" />
-                      <span>Submit Feasibility Check</span>
+                      <span>{isSubmitting ? "Saving Feasibility Check…" : "Submit Feasibility Check"}</span>
                     </button>
                   </div>
                 </div>

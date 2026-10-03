@@ -1,6 +1,6 @@
 """Database model for marketing feasibility-check requests and activity logs."""
 
-from sqlalchemy import Boolean, Column, Date, DateTime, ForeignKey, Integer, JSON, String, Text
+from sqlalchemy import Boolean, Column, Date, DateTime, ForeignKey, Integer, JSON, LargeBinary, String, Text
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -55,6 +55,12 @@ class FeasibilityRequest(Base):
         cascade="all, delete-orphan",
         order_by="FeasibilityActivityLog.id.asc()",
     )
+    reference_image_records = relationship(
+        "FeasibilityReferenceImage",
+        back_populates="feasibility_request",
+        cascade="all, delete-orphan",
+        order_by="FeasibilityReferenceImage.sort_order.asc()",
+    )
 
 
 class FeasibilityActivityLog(Base):
@@ -78,3 +84,25 @@ class FeasibilityActivityLog(Base):
 
     feasibility_request = relationship("FeasibilityRequest", back_populates="activities")
 
+
+class FeasibilityReferenceImage(Base):
+    """Compressed reference image bytes stored in the database."""
+
+    __tablename__ = "feasibility_reference_images"
+
+    id = Column(Integer, primary_key=True, index=True)
+    feasibility_request_id = Column(
+        Integer,
+        ForeignKey("feasibility_requests.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    original_name = Column(String(255), nullable=False, default="Reference image")
+    content_type = Column(String(64), nullable=False)
+    image_data = Column(LargeBinary, nullable=False)
+    sort_order = Column(Integer, nullable=False, default=0)
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+
+    feasibility_request = relationship(
+        "FeasibilityRequest", back_populates="reference_image_records"
+    )

@@ -281,7 +281,7 @@ export const ProgramPlanningWorkspace: React.FC<ProgramPlanningWorkspaceProps> =
                 <ChevronRight className="w-3 h-3 text-zinc-300 dark:text-zinc-600 shrink-0" />
                 <span className="text-zinc-800 dark:text-zinc-300 font-medium truncate">Seasonal Program Planning</span>
               </div>
-              <h1 className="text-[15px] font-bold text-zinc-950 dark:text-zinc-50 tracking-tight truncate mt-0.5">
+              <h1 className="text-lg font-bold text-zinc-950 dark:text-zinc-50 tracking-tight truncate mt-0.5">
                 Seasonal Program Planning Workspace
               </h1>
             </div>
@@ -289,7 +289,7 @@ export const ProgramPlanningWorkspace: React.FC<ProgramPlanningWorkspaceProps> =
 
           {/* Right: Operational Status Pill */}
           <div className="flex items-center gap-2 shrink-0">
-            <span className="px-2.5 py-1 rounded-md text-[10px] font-mono font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800/80 uppercase tracking-wide">
+            <span className="px-2.5 py-1 rounded-md text-[10px] font-mono font-bold bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300 border border-brand-200/80 dark:border-brand-800/80 uppercase tracking-wide">
               Track 03 · Operational Planning
             </span>
           </div>
@@ -328,7 +328,7 @@ export const ProgramPlanningWorkspace: React.FC<ProgramPlanningWorkspaceProps> =
 
               <span className="text-zinc-300 dark:text-zinc-700 font-mono">•</span>
 
-              <span className="font-semibold text-blue-600 dark:text-blue-400">
+              <span className="font-semibold text-brand-600 dark:text-brand-400">
                 "{programPlanName}"
               </span>
 
@@ -349,7 +349,7 @@ export const ProgramPlanningWorkspace: React.FC<ProgramPlanningWorkspaceProps> =
             <button
               type="button"
               onClick={() => setIsEditingSetup((prev) => !prev)}
-              className="text-[11px] font-mono font-medium text-zinc-500 hover:text-blue-600 dark:text-zinc-400 dark:hover:text-blue-400 flex items-center gap-1.5 cursor-pointer shrink-0 transition-colors self-end md:self-center"
+              className="text-[11px] font-mono font-medium text-zinc-500 hover:text-brand-600 dark:text-zinc-400 dark:hover:text-brand-400 flex items-center gap-1.5 cursor-pointer shrink-0 transition-colors self-end md:self-center"
             >
               {isEditingSetup ? (
                 <>
@@ -389,7 +389,7 @@ export const ProgramPlanningWorkspace: React.FC<ProgramPlanningWorkspaceProps> =
                   value={targetPlant}
                   disabled={isMasterDataLoading || plants.length === 0}
                   onChange={(e) => setTargetPlant(e.target.value)}
-                  className="w-full h-7 px-2 rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-[11px] font-mono text-zinc-900 dark:text-zinc-100 outline-none focus:border-blue-500 cursor-pointer"
+                  className="w-full h-7 px-2 rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-[11px] font-mono text-zinc-900 dark:text-zinc-100 outline-none focus:border-brand-500 cursor-pointer"
                 >
                   {plants.map((item: { id: string | number; name: string }) => (
                     <option key={item.id} value={item.name}>{item.name}</option>
@@ -405,7 +405,7 @@ export const ProgramPlanningWorkspace: React.FC<ProgramPlanningWorkspaceProps> =
                   type="text"
                   value={programPlanName}
                   onChange={(e) => setProgramPlanName(e.target.value)}
-                  className="w-full h-7 px-2.5 rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-[11px] text-zinc-900 dark:text-zinc-100 outline-none focus:border-blue-500 font-medium"
+                  className="w-full h-7 px-2.5 rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-[11px] text-zinc-900 dark:text-zinc-100 outline-none focus:border-brand-500 font-medium"
                 />
               </div>
 
@@ -416,7 +416,7 @@ export const ProgramPlanningWorkspace: React.FC<ProgramPlanningWorkspaceProps> =
                 <select
                   value={programPlanYear}
                   onChange={(e) => setProgramPlanYear(e.target.value)}
-                  className="w-full h-7 px-2 rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-[11px] font-mono text-zinc-900 dark:text-zinc-100 outline-none focus:border-blue-500 cursor-pointer"
+                  className="w-full h-7 px-2 rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-[11px] font-mono text-zinc-900 dark:text-zinc-100 outline-none focus:border-brand-500 cursor-pointer"
                 >
                   {byInfo.businessYearOptions.map((by) => (
                     <option key={by} value={by}>{by}</option>
@@ -432,7 +432,7 @@ export const ProgramPlanningWorkspace: React.FC<ProgramPlanningWorkspaceProps> =
           {/* Matrix Header */}
           <div className="p-4 sm:p-5 border-b border-zinc-200 dark:border-white/[0.08] bg-zinc-50/70 dark:bg-[#161822] flex flex-col md:flex-row md:items-center md:justify-between gap-3.5">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-200/70 dark:border-blue-800/80 shrink-0 shadow-2xs">
+              <div className="w-10 h-10 rounded-xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 flex items-center justify-center border border-brand-200/70 dark:border-brand-800/80 shrink-0 shadow-2xs">
                 <Layers className="w-5 h-5" />
               </div>
               <div>
@@ -450,7 +450,7 @@ export const ProgramPlanningWorkspace: React.FC<ProgramPlanningWorkspaceProps> =
               <button
                 type="button"
                 onClick={handleAddRow}
-                className="h-8 px-4 rounded-md bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white text-[12px] font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-xs"
+                className="h-8 px-4 rounded-md bg-brand-600 hover:bg-brand-700 active:scale-[0.98] text-white text-[12px] font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-xs"
               >
                 <Plus className="w-4 h-4" />
                 <span>Add Row</span>
@@ -477,7 +477,7 @@ export const ProgramPlanningWorkspace: React.FC<ProgramPlanningWorkspaceProps> =
               </thead>
               <tbody className="divide-y divide-zinc-200/70 dark:divide-white/[0.05]">
                 {materialRows.map((row, index) => (
-                  <tr key={row.id} className="hover:bg-blue-50/20 dark:hover:bg-blue-950/10 transition-colors">
+                  <tr key={row.id} className="hover:bg-brand-50/20 dark:hover:bg-brand-950/10 transition-colors">
                     {/* Row Index */}
                     <td className="py-2.5 px-3 text-center font-mono font-bold text-zinc-400 dark:text-zinc-500 text-[11px]">
                       {index + 1}
@@ -491,7 +491,7 @@ export const ProgramPlanningWorkspace: React.FC<ProgramPlanningWorkspaceProps> =
                         placeholder="e.g. Kappa Board"
                         value={row.materialType}
                         onChange={(e) => updateRow(row.id, "materialType", e.target.value)}
-                        className="w-full h-8 px-2.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/90 text-[11px] text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all font-medium"
+                        className="w-full h-8 px-2.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/90 text-[11px] text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20 transition-all font-medium"
                       />
                     </td>
 
@@ -502,7 +502,7 @@ export const ProgramPlanningWorkspace: React.FC<ProgramPlanningWorkspaceProps> =
                         placeholder="e.g. BILT / ITC"
                         value={row.supplierInfo}
                         onChange={(e) => updateRow(row.id, "supplierInfo", e.target.value)}
-                        className="w-full h-8 px-2.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/90 text-[11px] text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all"
+                        className="w-full h-8 px-2.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/90 text-[11px] text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20 transition-all"
                       />
                     </td>
 
@@ -513,7 +513,7 @@ export const ProgramPlanningWorkspace: React.FC<ProgramPlanningWorkspaceProps> =
                         placeholder="e.g. Grade A"
                         value={row.grade}
                         onChange={(e) => updateRow(row.id, "grade", e.target.value)}
-                        className="w-full h-8 px-2.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/90 text-[11px] text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all"
+                        className="w-full h-8 px-2.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/90 text-[11px] text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20 transition-all"
                       />
                     </td>
 
@@ -524,7 +524,7 @@ export const ProgramPlanningWorkspace: React.FC<ProgramPlanningWorkspaceProps> =
                         placeholder="e.g. Natural White"
                         value={row.colorVariant}
                         onChange={(e) => updateRow(row.id, "colorVariant", e.target.value)}
-                        className="w-full h-8 px-2.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/90 text-[11px] text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all"
+                        className="w-full h-8 px-2.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/90 text-[11px] text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20 transition-all"
                       />
                     </td>
 
@@ -535,7 +535,7 @@ export const ProgramPlanningWorkspace: React.FC<ProgramPlanningWorkspaceProps> =
                         placeholder="e.g. 70 GSM"
                         value={row.caliperWt}
                         onChange={(e) => updateRow(row.id, "caliperWt", e.target.value)}
-                        className="w-full h-8 px-2.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/90 text-[11px] text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 font-mono transition-all"
+                        className="w-full h-8 px-2.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/90 text-[11px] text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20 font-mono transition-all"
                       />
                     </td>
 
@@ -546,7 +546,7 @@ export const ProgramPlanningWorkspace: React.FC<ProgramPlanningWorkspaceProps> =
                         placeholder="5000"
                         value={row.qty}
                         onChange={(e) => updateRow(row.id, "qty", e.target.value)}
-                        className="w-full h-8 px-2.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/90 text-[11px] font-mono text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all"
+                        className="w-full h-8 px-2.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/90 text-[11px] font-mono text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20 transition-all"
                       />
                     </td>
 
@@ -555,7 +555,7 @@ export const ProgramPlanningWorkspace: React.FC<ProgramPlanningWorkspaceProps> =
                       <select
                         value={row.unit || "pcs"}
                         onChange={(e) => updateRow(row.id, "unit", e.target.value)}
-                        className="w-full h-8 px-2 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/90 text-[11px] font-mono text-zinc-900 dark:text-zinc-100 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 cursor-pointer"
+                        className="w-full h-8 px-2 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/90 text-[11px] font-mono text-zinc-900 dark:text-zinc-100 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20 cursor-pointer"
                       >
                         <option value="pcs">pcs</option>
                         <option value="sheets">sheets</option>
@@ -582,7 +582,7 @@ export const ProgramPlanningWorkspace: React.FC<ProgramPlanningWorkspaceProps> =
                             }
                           }
                         }}
-                        className="w-full h-8 px-2.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/90 text-[11px] text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all"
+                        className="w-full h-8 px-2.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/90 text-[11px] text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20 transition-all"
                       />
                     </td>
 
@@ -592,7 +592,7 @@ export const ProgramPlanningWorkspace: React.FC<ProgramPlanningWorkspaceProps> =
                         <button
                           type="button"
                           onClick={() => handleDuplicateRow(row)}
-                          className="p-1.5 rounded-md text-blue-600/70 hover:text-blue-700 dark:text-blue-400/70 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/40 cursor-pointer transition-colors"
+                          className="p-1.5 rounded-md text-brand-600/70 hover:text-brand-700 dark:text-brand-400/70 dark:hover:text-brand-300 hover:bg-brand-50 dark:hover:bg-brand-950/40 cursor-pointer transition-colors"
                           title="Duplicate Row"
                         >
                           <Copy className="w-3.5 h-3.5" />
@@ -617,7 +617,7 @@ export const ProgramPlanningWorkspace: React.FC<ProgramPlanningWorkspaceProps> =
           {/* Matrix Footer Counter & Metrics */}
           <div className="px-4 sm:px-5 py-3 bg-zinc-50/70 dark:bg-zinc-900/50 border-t border-zinc-200 dark:border-white/[0.08] flex flex-col sm:flex-row sm:items-center sm:justify-between text-[11px] text-zinc-500 dark:text-zinc-400 font-mono gap-2">
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-blue-500" />
+              <span className="w-2 h-2 rounded-full bg-brand-500" />
               <span>
                 {materialRows.length} row{materialRows.length > 1 ? "s" : ""} configured
               </span>
@@ -653,7 +653,7 @@ export const ProgramPlanningWorkspace: React.FC<ProgramPlanningWorkspaceProps> =
             type="button"
             onClick={handleCreateProgram}
             disabled={isSubmitting}
-            className="w-full sm:w-auto h-9 px-6 rounded-md bg-blue-600 hover:bg-blue-700 active:scale-[0.99] disabled:opacity-50 text-white text-[12px] font-semibold cursor-pointer transition-all shadow-xs flex items-center justify-center gap-2"
+            className="w-full sm:w-auto h-9 px-6 rounded-md bg-brand-600 hover:bg-brand-700 active:scale-[0.99] disabled:opacity-50 text-white text-[12px] font-semibold cursor-pointer transition-all shadow-xs flex items-center justify-center gap-2"
           >
             {isSubmitting ? (
               <>

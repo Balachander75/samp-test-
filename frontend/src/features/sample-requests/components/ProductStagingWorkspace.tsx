@@ -26,10 +26,19 @@ import {
   Users,
   FileText,
   Clock,
+  BookOpen,
+  Hash,
+  Package,
 } from "lucide-react";
 import { UserProfile } from "@/features/auth";
-import { createSampleRequestApi, createDesignRequestApi } from "../api";
-import { CreateSampleRequestForm } from "../types";
+import {
+  createSampleRequestApi,
+  createDesignRequestApi,
+  searchProductsByMaterialApi,
+  searchProductsByBindingApi,
+  fetchBindingHierarchyApi,
+} from "../api";
+import { CreateSampleRequestForm, ProductSearchResult, BindingHierarchyResponse } from "../types";
 import { useMasterData } from "../hooks/useMasterData";
 import { OperationalDatePicker } from "@/components/erp";
 import { getNextWorkingDate } from "@/lib/holidayUtils";
@@ -40,41 +49,14 @@ export type DeliverableScopeId = "design" | "mockup" | "sample" | "costing";
 
 interface DeliverableDefinition {
   id: DeliverableScopeId;
-  code: string;
   label: string;
-  department: string;
-  desc: string;
 }
 
 const DELIVERABLES: DeliverableDefinition[] = [
-  {
-    id: "design",
-    code: "01",
-    label: "Design Artwork",
-    department: "Creative Studio",
-    desc: "Cover artwork styling, themes, illustrations & typography brief routing",
-  },
-  {
-    id: "mockup",
-    code: "02",
-    label: "CAD Mockup",
-    department: "Studio CAD",
-    desc: "CAD structural white dummy, die-line verification & folding proof",
-  },
-  {
-    id: "sample",
-    code: "03",
-    label: "Physical Prototype",
-    department: "SAMP Tech Lab",
-    desc: "Finished physical prototype with actual binding, ruling & paper stock",
-  },
-  {
-    id: "costing",
-    code: "04",
-    label: "BOM Costing",
-    department: "Commercial PMT",
-    desc: "Bill of materials costing, machine run-rates & volume tiered quotes",
-  },
+  { id: "design", label: "Design" },
+  { id: "mockup", label: "Mockup" },
+  { id: "sample", label: "Sampling" },
+  { id: "costing", label: "Costing" },
 ];
 
 export interface StagedProductItem {
@@ -93,6 +75,18 @@ export interface StagedProductItem {
     images: Array<{ id: string; url: string; name: string; size?: string }>;
     webLinks: string[];
     referenceImage: string;
+  };
+  samplingMetadata?: {
+    sampleType: "full" | "partial";
+    partialRequirements?: string;
+    searchMode: "material_code" | "binding";
+    sourceSampleId?: number;
+    sourceSrNumber?: string;
+    selectedMaterialCode?: string;
+    bindingType1?: string;
+    bindingType2?: string;
+    customerReference?: string;
+    targetPlant?: string;
   };
 }
 
@@ -176,7 +170,7 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
 
   // Add Product Modal & Flow State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [addModalStep, setAddModalStep] = useState<"scopes" | "design_brief">("scopes");
+  const [addModalStep, setAddModalStep] = useState<"scopes" | "design_brief" | "sampling_config">("scopes");
   const [selectedScopes, setSelectedScopes] = useState<DeliverableScopeId[]>([]);
 
   // ONLY THE DECIDED FIELDS FOR DESIGN:
@@ -200,6 +194,34 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
   const [mediaTab, setMediaTab] = useState<"files" | "links">("files");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [modalError, setModalError] = useState<string | null>(null);
+
+  // SAMPLING CONFIGURATION STATE (Option 03 Sampling - SAMP Tech Lab)
+  // Question 1: Sample Type (Full Sample vs Partial Sample)
+  const [sampleType, setSampleType] = useState<"full" | "partial">("full");
+  const [partialRequirements, setPartialRequirements] = useState("");
+
+  // Question 2: Sample Source & Selection Method
+  const [samplingSearchMode, setSamplingSearchMode] = useState<"material_code" | "binding">("material_code");
+
+  // Mode A: Search by Material Code
+  const [materialSearchQuery, setMaterialSearchQuery] = useState("");
+  const [materialSearchResults, setMaterialSearchResults] = useState<ProductSearchResult[]>([]);
+  const [isSearchingMaterial, setIsSearchingMaterial] = useState(false);
+  const [selectedDbSample, setSelectedDbSample] = useState<ProductSearchResult | null>(null);
+
+  // Mode B: Search by Binding (Binding 1 & Binding 2)
+  const [bindingHierarchy, setBindingHierarchy] = useState<BindingHierarchyResponse>({
+    binding1_options: [],
+    hierarchy: {},
+  });
+  const [selectedBinding1, setSelectedBinding1] = useState("");
+  const [selectedBinding2, setSelectedBinding2] = useState("");
+  const [bindingSearchResults, setBindingSearchResults] = useState<ProductSearchResult[]>([]);
+  const [isSearchingBinding, setIsSearchingBinding] = useState(false);
+  const [isLoadingBindingData, setIsLoadingBindingData] = useState(false);
+
+  // Staged product description for sampling item
+  const [samplingDescription, setSamplingDescription] = useState("");
 
   // Toast / Notifications
   const [toastMsg, setToastMsg] = useState<{ text: string; tone: "success" | "error" } | null>(null);
@@ -269,6 +291,19 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
     if (masterDataError) showToast(masterDataError, "error");
   }, [masterDataError]);
 
+  const resetSamplingState = () => {
+    setSampleType("full");
+    setPartialRequirements("");
+    setSamplingSearchMode("material_code");
+    setMaterialSearchQuery("");
+    setSelectedDbSample(null);
+    setSelectedBinding1("");
+    setSelectedBinding2("");
+    setSamplingDescription("");
+    setBindingSearchResults([]);
+    setModalError(null);
+  };
+
   // Open modal starting in Step 1 (Deliverables Selection)
   const handleOpenAddProduct = () => {
     setAddModalStep("scopes");
@@ -284,7 +319,64 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
     setLinkInput("");
     setMediaTab("files");
     setModalError(null);
+    resetSamplingState();
     setIsAddModalOpen(true);
+  };
+
+  // Fetch binding hierarchy and initial database materials on demand
+  useEffect(() => {
+    if (isAddModalOpen && (addModalStep === "sampling_config" || selectedScopes.includes("sample"))) {
+      if (bindingHierarchy.binding1_options.length === 0) {
+        setIsLoadingBindingData(true);
+        fetchBindingHierarchyApi()
+          .then((res) => {
+            setBindingHierarchy(res);
+          })
+          .catch((err) => console.error("Failed to fetch binding hierarchy:", err))
+          .finally(() => setIsLoadingBindingData(false));
+      }
+      if (materialSearchResults.length === 0) {
+        setIsSearchingMaterial(true);
+        searchProductsByMaterialApi()
+          .then((res) => setMaterialSearchResults(res.slice(0, 20)))
+          .catch((err) => console.error("Failed to load initial material samples:", err))
+          .finally(() => setIsSearchingMaterial(false));
+      }
+    }
+  }, [isAddModalOpen, addModalStep, selectedScopes]);
+
+  // Debounced live material code search
+  useEffect(() => {
+    if (addModalStep !== "sampling_config" || samplingSearchMode !== "material_code") return;
+    const timer = setTimeout(() => {
+      setIsSearchingMaterial(true);
+      searchProductsByMaterialApi(materialSearchQuery)
+        .then((res) => setMaterialSearchResults(res.slice(0, 30)))
+        .catch((err) => console.error("Search material error:", err))
+        .finally(() => setIsSearchingMaterial(false));
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [materialSearchQuery, addModalStep, samplingSearchMode]);
+
+  // Dynamic filter for Binding 1 & Binding 2
+  useEffect(() => {
+    if (addModalStep !== "sampling_config" || samplingSearchMode !== "binding") return;
+    if (!selectedBinding1) {
+      setBindingSearchResults([]);
+      return;
+    }
+    setIsSearchingBinding(true);
+    searchProductsByBindingApi(selectedBinding1, selectedBinding2)
+      .then((res) => setBindingSearchResults(res.slice(0, 50)))
+      .catch((err) => console.error("Search binding error:", err))
+      .finally(() => setIsSearchingBinding(false));
+  }, [selectedBinding1, selectedBinding2, addModalStep, samplingSearchMode]);
+
+  const handleSelectDbSample = (item: ProductSearchResult) => {
+    setSelectedDbSample(item);
+    setSamplingDescription(item.product_description || "");
+    if (item.binding_type_1) setSelectedBinding1(item.binding_type_1);
+    if (item.binding_type_2) setSelectedBinding2(item.binding_type_2);
   };
 
   // Compress image file to JPEG before storing
@@ -462,6 +554,13 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
       return;
     }
 
+    // If Sampling is selected, proceed to dedicated Sampling Configuration page
+    if (selectedScopes.includes("sample")) {
+      setAddModalStep("sampling_config");
+      setModalError(null);
+      return;
+    }
+
     // Otherwise, stage non-design product directly
     const nextCount = stagedProducts.length + 1;
     const plantCode = programContext.targetPlant
@@ -534,6 +633,68 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
     setStagedProducts((prev) => [...prev, nextItem]);
     setIsAddModalOpen(false);
     showToast(`Added "${nextItem.productDescription}" to batch.`);
+  };
+
+  // Step 3: Submit Sampling Configuration and Stage Product
+  const handleStageSamplingProduct = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (sampleType === "partial" && !partialRequirements.trim()) {
+      setModalError("Partial sample details are mandatory.");
+      showToast("Partial sample details are required.", "error");
+      return;
+    }
+
+    const desc =
+      samplingDescription.trim() ||
+      selectedDbSample?.product_description ||
+      (selectedBinding1
+        ? `${selectedBinding1} Notebook${selectedBinding2 ? ` (${selectedBinding2})` : ""}`
+        : "");
+
+    if (!desc) {
+      setModalError("Please select a sample from the database or enter a product description.");
+      showToast("Please choose a sample or enter product description.", "error");
+      return;
+    }
+
+    const matCode =
+      selectedDbSample?.material_code ||
+      (programContext.targetPlant
+        ? `SMP-${programContext.targetPlant.split(/[-–\s]/)[0]}-${Math.floor(1000 + Math.random() * 9000)}`
+        : `SMP-1505-${Math.floor(1000 + Math.random() * 9000)}`);
+
+    const now = new Date();
+    const formattedDate = now.toISOString().split("T")[0];
+    const formattedTime = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+    const nextItem: StagedProductItem = {
+      id: `staged-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      materialCode: matCode,
+      productDescription: desc,
+      scopes: [...selectedScopes],
+      stagedDate: formattedDate,
+      timestamp: formattedTime,
+      samplingMetadata: {
+        sampleType,
+        partialRequirements: partialRequirements.trim() || undefined,
+        searchMode: samplingSearchMode,
+        sourceSampleId: selectedDbSample?.id,
+        sourceSrNumber: selectedDbSample?.sr_number,
+        selectedMaterialCode: selectedDbSample?.material_code,
+        bindingType1: selectedBinding1 || selectedDbSample?.binding_type_1,
+        bindingType2: selectedBinding2 || selectedDbSample?.binding_type_2,
+        customerReference: selectedDbSample?.customer,
+        targetPlant: selectedDbSample?.target_plant,
+      },
+    };
+
+    setStagedProducts((prev) => [...prev, nextItem]);
+    setIsAddModalOpen(false);
+    resetSamplingState();
+    showToast(
+      `Added Sampling (${sampleType === "full" ? "Full Sample" : "Partial Sample"}): "${nextItem.productDescription}" to batch.`
+    );
   };
 
   const handleRemoveStagedItem = (id: string) => {
@@ -619,27 +780,7 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
     }
   };
 
-  // Clear live description of currently selected routing
-  const getActiveRouteDescription = () => {
-    const hasDesign = selectedScopes.includes("design");
-    const hasMockup = selectedScopes.includes("mockup");
-    const hasSample = selectedScopes.includes("sample");
-    const hasCosting = selectedScopes.includes("costing");
 
-    // Design combinations
-    if (hasDesign && hasMockup) return "01 Creative Studio (Design) + 02 Studio CAD (CAD Mockup)";
-    if (hasDesign) return "01 Creative Studio (Artwork & Styling Only)";
-
-    // Non-design combinations (Mockup, Sample, Costing)
-    if (hasMockup && hasSample && hasCosting) return "02 Studio CAD + 03 SAMP Lab + 04 Commercial PMT (Full Pipeline)";
-    if (hasMockup && hasSample) return "02 Studio CAD (Mockup Dummy) + 03 SAMP Lab (Physical Sample)";
-    if (hasMockup && hasCosting) return "02 Studio CAD (Mockup Dummy) + 04 Commercial PMT (BOM Costing)";
-    if (hasSample && hasCosting) return "03 SAMP Tech Lab (Physical Prototype) + 04 Commercial PMT (BOM Costing)";
-    if (hasMockup) return "02 Studio CAD (CAD Mockup & Dieline Dummy Only)";
-    if (hasSample) return "03 SAMP Tech Lab (Physical Prototype Only)";
-    if (hasCosting) return "04 Commercial PMT (BOM Costing & Volume Quotes Only)";
-    return "No scopes selected yet";
-  };
 
   const totalAttachments = uploadedImages.length + webLinks.length;
 
@@ -673,7 +814,7 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
                 <ChevronRight className="w-3 h-3 text-zinc-400 dark:text-zinc-600 shrink-0" />
                 <span className="text-zinc-900 dark:text-zinc-100 font-medium truncate">Product Staging</span>
               </div>
-              <h1 className="text-[15px] font-bold text-zinc-950 dark:text-zinc-50 tracking-tight truncate mt-0.5">
+              <h1 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50 tracking-tight truncate mt-0.5">
                 Marketing Request Staging Workspace
               </h1>
             </div>
@@ -695,7 +836,7 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
                 type="button"
                 onClick={handleSubmitBatch}
                 disabled={isSubmittingAll}
-                className="h-8 px-3.5 rounded-md bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold text-xs shadow-xs transition-colors flex items-center gap-1.5 disabled:opacity-50 cursor-pointer tracking-tight"
+                className="h-8 px-3.5 rounded-md bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white font-semibold text-xs shadow-xs transition-colors flex items-center gap-1.5 disabled:opacity-50 cursor-pointer tracking-tight"
               >
                 <Check className="w-3.5 h-3.5 stroke-[2.5]" />
                 <span>Submit Batch ({stagedProducts.length})</span>
@@ -864,6 +1005,27 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
                         {prod.designMetadata.designRequiredDate ? ` • Due: ${prod.designMetadata.designRequiredDate}` : ""}
                         {(prod.designMetadata.images.length > 0 || prod.designMetadata.webLinks.length > 0) ? ` • ${prod.designMetadata.images.length + prod.designMetadata.webLinks.length} file(s)` : ""}
                       </p>
+                    ) : prod.samplingMetadata ? (
+                      <div className="text-[11px] font-mono mt-0.5 flex items-center gap-1.5 flex-wrap">
+                        <span className={`font-semibold uppercase tracking-wider px-1.5 py-0.2 rounded text-[10px] ${
+                          prod.samplingMetadata.sampleType === "full"
+                            ? "bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800"
+                            : "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800"
+                        }`}>
+                          {prod.samplingMetadata.sampleType === "full" ? "Full Sample" : "Partial Sample"}
+                        </span>
+                        {prod.samplingMetadata.partialRequirements && (
+                          <span className="text-amber-800 dark:text-amber-300 text-[10px] truncate max-w-xs">
+                            ({prod.samplingMetadata.partialRequirements})
+                          </span>
+                        )}
+                        {prod.samplingMetadata.bindingType1 && (
+                          <span className="text-zinc-600 dark:text-zinc-400">• {prod.samplingMetadata.bindingType1}{prod.samplingMetadata.bindingType2 ? ` / ${prod.samplingMetadata.bindingType2}` : ""}</span>
+                        )}
+                        {prod.samplingMetadata.sourceSrNumber && (
+                          <span className="text-zinc-400 dark:text-zinc-500">• Ref: {prod.samplingMetadata.sourceSrNumber}</span>
+                        )}
+                      </div>
                     ) : (
                       <p className="text-[11px] text-zinc-400 dark:text-zinc-500 font-mono mt-0.5">
                         Batch Item #{idx + 1}
@@ -881,7 +1043,7 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
                             key={scope}
                             className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700"
                           >
-                            {def?.code || ""} {def?.label.toUpperCase() || scope.toUpperCase()}
+                            {def?.label.toUpperCase() || scope.toUpperCase()}
                           </span>
                         );
                       })}
@@ -943,133 +1105,90 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
           <div
-            className="fixed inset-0 bg-black/60 dark:bg-black/85 backdrop-blur-xs transition-opacity"
+            className="fixed inset-0 bg-black/60 transition-opacity"
             onClick={() => setIsAddModalOpen(false)}
           />
 
-          <div className="flex min-h-full items-center justify-center p-4 sm:p-6">
+          <div className="flex min-h-full items-center justify-center p-3 sm:p-5">
             {/* ============================================================== */}
             {/* SCREEN 1: 4 DELIVERABLE SCOPE CARDS                            */}
             {/* ============================================================== */}
             {addModalStep === "scopes" && (
-              <div className="relative w-full max-w-2xl bg-white dark:bg-[#0f1118] border border-zinc-200 dark:border-white/[0.08] rounded-xl shadow-2xl overflow-hidden animate-smooth-modal flex flex-col">
+              <div className="relative w-full max-w-lg bg-white dark:bg-[#0f1118] border border-zinc-200 dark:border-white/[0.08] rounded-lg shadow-xl overflow-hidden animate-smooth-modal flex flex-col">
                 {/* Header */}
-                <div className="px-6 py-4 border-b border-zinc-200 dark:border-white/[0.08] bg-zinc-50/70 dark:bg-[#161822] flex items-center justify-between shrink-0">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-200 dark:border-white/[0.08] bg-zinc-50/70 dark:bg-[#161822] shrink-0">
                   <div>
-                    <h3 className="text-sm font-bold text-zinc-950 dark:text-zinc-50 tracking-tight flex items-center gap-2">
-                      <span>Stage Product Deliverables</span>
-                      <span className="px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300 border border-brand-200/80 dark:border-brand-800">
-                        Step 1: Scopes
-                      </span>
+                    <h3 className="text-sm font-semibold text-zinc-950 dark:text-zinc-50 tracking-tight flex items-center gap-2">
+                      <span>Select Deliverables</span>
                     </h3>
-                    <p className="text-xs text-zinc-500 font-mono mt-0.5">
-                      Select deliverable routing scopes for this product specification.
+                    <p className="text-[11px] text-zinc-500 dark:text-zinc-500 font-mono mt-0.5">
+                      Choose required deliverables for this product specification
                     </p>
                   </div>
 
                   <button
                     type="button"
                     onClick={() => setIsAddModalOpen(false)}
-                    className="h-8 w-8 rounded-md flex items-center justify-center text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                    className="h-8 w-8 rounded-md flex items-center justify-center border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-white/[0.06] transition-colors duration-150 cursor-pointer"
+                    aria-label="Close modal"
                   >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
 
-                {/* Form Body - 4 Cards Grid */}
-                <form onSubmit={handleProceedFromScopes} className="p-6 space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                    {DELIVERABLES.map((item) => {
-                      const isSelected = selectedScopes.includes(item.id);
-                      const disabled = isScopeDisabled(item.id);
+                {/* Form Body - 4 Clean Cards: Design, Mockup, Sampling, Costing */}
+                <form onSubmit={handleProceedFromScopes} className="flex flex-col">
+                  <div className="p-6 space-y-4">
+                    <div className="grid grid-cols-2 gap-3">
+                      {DELIVERABLES.map((item) => {
+                        const isSelected = selectedScopes.includes(item.id);
+                        const disabled = isScopeDisabled(item.id);
 
-                      return (
-                        <div
-                          key={item.id}
-                          onClick={() => {
-                            if (!disabled) handleToggleScope(item.id);
-                          }}
-                          className={`h-full min-h-[118px] p-4 sm:p-5 rounded-lg border transition-all duration-150 select-none flex items-start justify-between gap-3.5 ${
-                            disabled
-                              ? "opacity-35 bg-zinc-50/60 dark:bg-zinc-900/20 border-zinc-200/60 dark:border-zinc-800/50 cursor-not-allowed pointer-events-none"
-                              : isSelected
-                              ? "border-brand-600 bg-brand-50/50 dark:bg-brand-950/20 ring-1 ring-brand-600 dark:ring-brand-500 shadow-xs cursor-pointer"
-                              : "border-zinc-200 dark:border-white/[0.08] hover:border-zinc-300 dark:hover:border-zinc-700 bg-white dark:bg-zinc-900/40 text-zinc-700 dark:text-zinc-300 hover:shadow-2xs cursor-pointer"
-                          }`}
-                        >
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2">
-                              <span
-                                className={`font-mono text-[11px] font-bold px-2 py-0.5 rounded transition-colors ${
-                                  isSelected
-                                    ? "bg-brand-600 text-white shadow-2xs"
-                                    : disabled
-                                    ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-600"
-                                    : "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700"
-                                }`}
-                              >
-                                {item.code}
-                              </span>
-                              <span
-                                className={`text-[14px] font-bold tracking-tight ${
-                                  disabled ? "text-zinc-400 dark:text-zinc-600" : "text-zinc-950 dark:text-zinc-50"
-                                }`}
-                              >
-                                {item.label}
-                              </span>
-                            </div>
-
-                            <span className="font-mono text-[10px] text-zinc-400 dark:text-zinc-500 block mt-1">
-                              {item.department}
-                            </span>
-
-                            <p
-                              className={`text-[12px] leading-relaxed mt-1.5 ${
-                                disabled ? "text-zinc-400/80 dark:text-zinc-600" : "text-zinc-500 dark:text-zinc-400"
-                              }`}
-                            >
-                              {item.desc}
-                            </p>
-                          </div>
-
+                        return (
                           <div
-                            className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 mt-0.5 transition-colors ${
-                              isSelected
-                                ? "bg-brand-600 border-transparent text-white shadow-xs"
-                                : disabled
-                                ? "border-zinc-200 dark:border-zinc-800 bg-zinc-100/40 dark:bg-zinc-900/40"
-                                : "border-zinc-300 dark:border-zinc-600 bg-transparent"
+                            key={item.id}
+                            onClick={() => {
+                              if (!disabled) handleToggleScope(item.id);
+                            }}
+                            className={`p-3.5 rounded-lg border transition-all duration-150 select-none flex items-center justify-between cursor-pointer ${
+                              disabled
+                                ? "opacity-35 bg-zinc-50/60 dark:bg-zinc-900/20 border-zinc-200/60 dark:border-zinc-800/50 cursor-not-allowed pointer-events-none"
+                                : isSelected
+                                ? "border-brand-600 bg-brand-50/50 dark:bg-brand-950/25 ring-1 ring-brand-500/20"
+                                : "border-zinc-200 dark:border-white/[0.08] hover:border-brand-500/80 bg-white dark:bg-zinc-900/40 text-zinc-700 dark:text-zinc-300"
                             }`}
                           >
-                            {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                            <span
+                              className={`text-[13px] font-semibold tracking-tight ${
+                                disabled ? "text-zinc-400 dark:text-zinc-600" : "text-zinc-950 dark:text-zinc-50"
+                              }`}
+                            >
+                              {item.label}
+                            </span>
 
-                  {/* Fixed-Height Live Route Status Strip */}
-                  <div className="h-10 px-4 rounded-md bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-2 font-mono text-[11px] text-zinc-600 dark:text-zinc-300 truncate">
-                      <span
-                        className={`w-2 h-2 rounded-full shrink-0 ${
-                          selectedScopes.length > 0 ? "bg-brand-600 animate-pulse" : "bg-zinc-300 dark:bg-zinc-700"
-                        }`}
-                      />
-                      <strong className="text-zinc-900 dark:text-zinc-100 font-semibold">Active Route:</strong>
-                      <span className="truncate">{getActiveRouteDescription()}</span>
+                            <div
+                              className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors ${
+                                isSelected
+                                  ? "bg-brand-600 border-brand-600 text-white"
+                                  : disabled
+                                  ? "border-zinc-200 dark:border-zinc-800 bg-zinc-100/40 dark:bg-zinc-900/40"
+                                  : "border-zinc-300 dark:border-zinc-600 bg-transparent"
+                              }`}
+                            >
+                              {isSelected && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                    <span className="font-mono text-[10px] text-zinc-400 dark:text-zinc-500 uppercase tracking-wider shrink-0 hidden sm:inline">
-                      {selectedScopes.length} Scope{selectedScopes.length !== 1 ? "s" : ""}
-                    </span>
                   </div>
 
                   {/* Footer Controls */}
-                  <div className="pt-4 border-t border-zinc-200 dark:border-white/[0.08] flex items-center justify-between shrink-0">
+                  <div className="px-6 py-3.5 border-t border-zinc-200 dark:border-white/[0.08] bg-zinc-50/70 dark:bg-[#161822] flex items-center justify-between shrink-0">
                     <button
                       type="button"
                       onClick={() => setIsAddModalOpen(false)}
-                      className="h-10 px-5 rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700/60 cursor-pointer shadow-2xs transition-colors"
+                      className="h-8 px-4 rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700/60 transition-colors cursor-pointer"
                     >
                       Cancel
                     </button>
@@ -1077,17 +1196,22 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
                     <button
                       type="submit"
                       disabled={selectedScopes.length === 0}
-                      className="h-10 px-6 rounded-md bg-brand-600 hover:bg-brand-500 active:bg-brand-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold flex items-center gap-2 shadow-xs cursor-pointer select-none transition-all tracking-tight"
+                      className="h-8 px-4 rounded-md bg-brand-600 hover:bg-brand-500 active:bg-brand-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer select-none tracking-tight"
                     >
                       {selectedScopes.includes("design") ? (
                         <>
                           <span>Configure Design Brief</span>
                           <ChevronRight className="w-3.5 h-3.5 stroke-[2.5]" />
                         </>
+                      ) : selectedScopes.includes("sample") ? (
+                        <>
+                          <span>Configure Sampling</span>
+                          <ChevronRight className="w-3.5 h-3.5 stroke-[2.5]" />
+                        </>
                       ) : (
                         <>
                           <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-                          <span>Stage Product Specification</span>
+                          <span>Stage Product</span>
                         </>
                       )}
                     </button>
@@ -1100,14 +1224,14 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
             {/* SCREEN 2: DEDICATED DESIGN SPECIFICATION VIEW (ONLY THE DECIDED FIELDS)                  */}
             {/* ========================================================================================= */}
             {addModalStep === "design_brief" && (
-              <div className="relative w-full max-w-4xl bg-white dark:bg-[#0f1118] border border-zinc-200 dark:border-white/[0.08] rounded-xl shadow-2xl overflow-hidden animate-smooth-modal max-h-[92vh] flex flex-col">
+              <div className="relative w-full max-w-4xl bg-white dark:bg-[#0f1118] border border-zinc-200 dark:border-white/[0.08] rounded-lg shadow-xl overflow-hidden animate-smooth-modal max-h-[92vh] flex flex-col">
                 {/* Header */}
-                <div className="px-6 py-4 border-b border-zinc-200 dark:border-white/[0.08] bg-zinc-50/70 dark:bg-[#161822] flex items-center justify-between shrink-0">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-200 dark:border-white/[0.08] bg-zinc-50/70 dark:bg-[#161822] shrink-0">
                   <div>
-                    <h3 className="text-sm font-bold text-zinc-950 dark:text-zinc-50 tracking-tight">
-                      Creative Design Brief
+                    <h3 className="text-sm font-semibold text-zinc-950 dark:text-zinc-50 tracking-tight flex items-center gap-2">
+                      <span>Creative Design Brief</span>
                     </h3>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">
+                    <p className="text-[11px] text-zinc-500 dark:text-zinc-500 font-mono mt-0.5">
                       Specify product description, variants, required date &amp; reference moodboard
                     </p>
                   </div>
@@ -1115,7 +1239,8 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
                   <button
                     type="button"
                     onClick={() => setIsAddModalOpen(false)}
-                    className="h-8 w-8 rounded-md flex items-center justify-center text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                    className="h-8 w-8 rounded-md flex items-center justify-center border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-white/[0.06] transition-colors duration-150 cursor-pointer"
+                    aria-label="Close modal"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -1422,7 +1547,7 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
                                       alt={img.name}
                                       className="w-6 h-6 rounded object-cover border border-zinc-200 dark:border-zinc-800 shrink-0"
                                     />
-                                    <span className="text-[9px] font-bold px-1 py-0.2 rounded bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200/50 shrink-0">
+                                    <span className="text-[10px] font-bold px-1 py-0.2 rounded bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 border border-brand-200/50 shrink-0">
                                       IMG
                                     </span>
                                     <span className="truncate font-medium text-zinc-800 dark:text-zinc-200" title={img.name}>
@@ -1452,7 +1577,7 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
                                   className="flex items-center justify-between gap-2 px-2 py-1 rounded-md border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/90 text-[11px] shadow-2xs group"
                                 >
                                   <div className="flex items-center gap-2 min-w-0 flex-1">
-                                    <span className="text-[9px] font-bold px-1 py-0.2 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 shrink-0">
+                                    <span className="text-[10px] font-bold px-1 py-0.2 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 shrink-0">
                                       URL
                                     </span>
                                     <a
@@ -1490,14 +1615,14 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
                   </div>
 
                   {/* Actions Footer: Back to Deliverables (left), Cancel & Add (right) */}
-                  <div className="flex items-center justify-between pt-4 border-t border-zinc-100 dark:border-white/[0.07] mt-5">
+                  <div className="px-6 py-3.5 border-t border-zinc-200 dark:border-white/[0.08] bg-zinc-50/70 dark:bg-[#161822] flex items-center justify-between shrink-0">
                     <button
                       type="button"
                       onClick={() => {
                         setAddModalStep("scopes");
                         setModalError(null);
                       }}
-                      className="h-9 px-4 rounded-md border border-zinc-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700/60 transition-colors cursor-pointer shadow-2xs"
+                      className="h-8 px-4 rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700/60 transition-colors cursor-pointer"
                     >
                       Back to Deliverables
                     </button>
@@ -1505,17 +1630,428 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
                       <button
                         type="button"
                         onClick={() => setIsAddModalOpen(false)}
-                        className="h-9 px-4 rounded-md border border-zinc-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-semibold cursor-pointer transition-colors shadow-2xs"
+                        className="h-8 px-4 rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-semibold cursor-pointer transition-colors"
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
                         disabled={isSubmittingAll}
-                        className="h-9 px-5 rounded-md bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white text-xs font-bold cursor-pointer transition-colors shadow-xs flex items-center gap-1.5 disabled:opacity-50 tracking-tight"
+                        className="h-8 px-4 rounded-md bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white text-xs font-bold cursor-pointer transition-colors flex items-center gap-1.5 disabled:opacity-50 tracking-tight"
                       >
                         <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                         <span>Add</span>
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {/* ========================================================================================= */}
+            {/* SCREEN 3: SAMPLING SPECIFICATION VIEW (CLEAN & DIRECT)                                    */}
+            {/* ========================================================================================= */}
+            {addModalStep === "sampling_config" && (
+              <div className="relative w-full max-w-2xl bg-white dark:bg-[#0f1118] border border-zinc-200 dark:border-white/[0.08] rounded-lg shadow-xl overflow-hidden animate-smooth-modal max-h-[90vh] flex flex-col">
+                {/* Header */}
+                <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-200 dark:border-white/[0.08] bg-zinc-50/70 dark:bg-[#161822] shrink-0">
+                  <div>
+                    <h3 className="text-sm font-semibold text-zinc-950 dark:text-zinc-50 tracking-tight flex items-center gap-2">
+                      <span>Sampling</span>
+                    </h3>
+                    <p className="text-[11px] text-zinc-500 dark:text-zinc-500 font-mono mt-0.5">
+                      Configure prototype specifications, sample type &amp; database reference
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsAddModalOpen(false)}
+                    className="h-8 w-8 rounded-md flex items-center justify-center border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-white/[0.06] transition-colors duration-150 cursor-pointer"
+                    aria-label="Close modal"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Form Error Message */}
+                {modalError && (
+                  <div className="mx-6 mt-4 p-2.5 rounded-md bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-xs text-rose-700 dark:text-rose-300 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+                      <span>{modalError}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setModalError(null)}
+                      className="text-rose-600 hover:text-rose-800 dark:text-rose-400 cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
+
+                {/* Form Body */}
+                <form onSubmit={handleStageSamplingProduct} className="flex-1 flex flex-col min-h-0 overflow-hidden">
+                  <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                    {/* Scope Selection: Full Sample vs Partial Sample */}
+                    <div className="space-y-2">
+                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
+                        Sample Scope <span className="text-rose-500">*</span>
+                      </label>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        {/* Full Sample */}
+                        <div
+                          onClick={() => setSampleType("full")}
+                          className={`p-3.5 rounded-lg border transition-all cursor-pointer select-none flex items-center justify-between ${
+                            sampleType === "full"
+                              ? "border-brand-600 bg-brand-50/50 dark:bg-brand-950/25 ring-1 ring-brand-500/20"
+                              : "border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-zinc-900/40 hover:border-brand-500/80"
+                          }`}
+                        >
+                          <span className="text-[13px] font-semibold text-zinc-900 dark:text-zinc-100">
+                            Full Sample
+                          </span>
+                          <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                            sampleType === "full" ? "border-brand-600 bg-brand-600 text-white" : "border-zinc-300 dark:border-zinc-600"
+                          }`}>
+                            {sampleType === "full" && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                          </div>
+                        </div>
+
+                        {/* Partial Sample */}
+                        <div
+                          onClick={() => setSampleType("partial")}
+                          className={`p-3.5 rounded-lg border transition-all cursor-pointer select-none flex items-center justify-between ${
+                            sampleType === "partial"
+                              ? "border-brand-600 bg-brand-50/50 dark:bg-brand-950/25 ring-1 ring-brand-500/20"
+                              : "border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-zinc-900/40 hover:border-brand-500/80"
+                          }`}
+                        >
+                          <span className="text-[13px] font-semibold text-zinc-900 dark:text-zinc-100">
+                            Partial Sample
+                          </span>
+                          <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                            sampleType === "partial" ? "border-brand-600 bg-brand-600 text-white" : "border-zinc-300 dark:border-zinc-600"
+                          }`}>
+                            {sampleType === "partial" && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* ONLY MANDATORY INPUT FIELD WHEN PARTIAL IS CHOSEN */}
+                      {sampleType === "partial" && (
+                        <div className="space-y-1 pt-1">
+                          <label className="block text-[11px] font-semibold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
+                            Partial Sample Details <span className="text-rose-500">*</span>
+                          </label>
+                          <textarea
+                            required
+                            rows={3}
+                            value={partialRequirements}
+                            onChange={(e) => setPartialRequirements(e.target.value)}
+                            placeholder="Enter partial sample requirements..."
+                            className="w-full p-2.5 rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-[12px] text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20 resize-none leading-relaxed"
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                  {/* Choose Sample: Material Code or Sequential Binding */}
+                  <div className="space-y-2.5">
+                    <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+                      Select Sample <span className="text-rose-500">*</span>
+                    </label>
+
+                    {/* Mode Toggle Bar */}
+                    <div className="flex items-center gap-1 p-1 rounded-lg bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200/80 dark:border-white/[0.05]">
+                      <button
+                        type="button"
+                        onClick={() => setSamplingSearchMode("material_code")}
+                        className={`flex-1 h-8 rounded-md text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                          samplingSearchMode === "material_code"
+                            ? "bg-white dark:bg-zinc-700 text-zinc-950 dark:text-zinc-50 shadow-xs"
+                            : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200"
+                        }`}
+                      >
+                        <Hash className="w-3.5 h-3.5" />
+                        <span>Material Code</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setSamplingSearchMode("binding")}
+                        className={`flex-1 h-8 rounded-md text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                          samplingSearchMode === "binding"
+                            ? "bg-white dark:bg-zinc-700 text-zinc-950 dark:text-zinc-50 shadow-xs"
+                            : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200"
+                        }`}
+                      >
+                        <BookOpen className="w-3.5 h-3.5" />
+                        <span>Binding (Binding 1 &amp; 2)</span>
+                      </button>
+                    </div>
+
+                    {/* Mode 1: Material Code */}
+                    {samplingSearchMode === "material_code" && (
+                      <div className="space-y-2">
+                        <div className="relative">
+                          <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                          <input
+                            type="text"
+                            value={materialSearchQuery}
+                            onChange={(e) => setMaterialSearchQuery(e.target.value)}
+                            placeholder="Search material code, SKU, or customer..."
+                            className="w-full h-9 pl-9 pr-8 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-medium text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 outline-none focus:border-brand-600"
+                          />
+                          {materialSearchQuery && (
+                            <button
+                              type="button"
+                              onClick={() => setMaterialSearchQuery("")}
+                              className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 h-5 w-5 flex items-center justify-center cursor-pointer"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
+
+                        <div className="border border-zinc-200 dark:border-white/[0.08] rounded-lg max-h-52 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-800/80 bg-zinc-50/30 dark:bg-zinc-900/30">
+                          {isSearchingMaterial ? (
+                            <div className="py-6 text-center text-xs text-zinc-400">
+                              Searching samples...
+                            </div>
+                          ) : materialSearchResults.length === 0 ? (
+                            <div className="py-6 text-center text-xs text-zinc-400">
+                              No matching samples found.
+                            </div>
+                          ) : (
+                            materialSearchResults.map((item) => {
+                              const isSelected = selectedDbSample?.id === item.id;
+                              return (
+                                <div
+                                  key={item.id}
+                                  onClick={() => handleSelectDbSample(item)}
+                                  className={`p-2.5 transition-colors cursor-pointer flex items-center justify-between gap-3 text-left ${
+                                    isSelected
+                                      ? "bg-brand-50/70 dark:bg-brand-950/40 border-l-2 border-brand-600"
+                                      : "hover:bg-white dark:hover:bg-zinc-800/60"
+                                  }`}
+                                >
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-mono text-[11px] font-bold px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700">
+                                        {item.material_code || "—"}
+                                      </span>
+                                      <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 truncate">
+                                        {item.product_description}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center gap-2 mt-0.5 text-[10px] text-zinc-400">
+                                      <span>{item.customer || "Navneet"}</span>
+                                      <span>• Plant: {item.target_plant || "1505"}</span>
+                                      {item.sr_number && <span>• Ref: {item.sr_number}</span>}
+                                    </div>
+                                  </div>
+
+                                  <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
+                                    isSelected ? "border-brand-600 bg-brand-600 text-white" : "border-zinc-300 dark:border-zinc-600"
+                                  }`}>
+                                    {isSelected && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                                  </div>
+                                </div>
+                              );
+                            })
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Mode 2: Sequential Binding (Binding 1 then Binding 2) */}
+                    {samplingSearchMode === "binding" && (
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {/* Binding 1 */}
+                          <div>
+                            <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                              Binding 1 <span className="text-rose-500">*</span>
+                            </label>
+                            <select
+                              value={selectedBinding1}
+                              onChange={(e) => {
+                                const newB1 = e.target.value;
+                                setSelectedBinding1(newB1);
+                                setSelectedBinding2("");
+                                setSelectedDbSample(null);
+                                if (newB1 && !samplingDescription) {
+                                  setSamplingDescription(`${newB1} Notebook`);
+                                }
+                              }}
+                              className="w-full h-9 px-3 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-medium text-zinc-900 dark:text-zinc-100 outline-none focus:border-brand-600 cursor-pointer"
+                            >
+                              <option value="">Select Binding 1...</option>
+                              {bindingHierarchy.binding1_options.map((opt) => (
+                                <option key={opt} value={opt}>
+                                  {opt}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          {/* Binding 2 */}
+                          <div>
+                            <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                              Binding 2
+                            </label>
+                            <select
+                              disabled={!selectedBinding1}
+                              value={selectedBinding2}
+                              onChange={(e) => {
+                                const newB2 = e.target.value;
+                                setSelectedBinding2(newB2);
+                                setSelectedDbSample(null);
+                                if (selectedBinding1 && newB2) {
+                                  setSamplingDescription(`${selectedBinding1} Notebook (${newB2})`);
+                                }
+                              }}
+                              className={`w-full h-9 px-3 rounded-lg border text-xs font-medium outline-none ${
+                                !selectedBinding1
+                                  ? "border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800/40 text-zinc-400 cursor-not-allowed"
+                                  : "border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:border-brand-600 cursor-pointer"
+                              }`}
+                            >
+                              <option value="">
+                                {!selectedBinding1 ? "Select Binding 1 first..." : "Select Binding 2..."}
+                              </option>
+                              {selectedBinding1 &&
+                                (
+                                  (bindingHierarchy.hierarchy[selectedBinding1]?.length
+                                    ? bindingHierarchy.hierarchy[selectedBinding1]
+                                    : bindingHierarchy.binding2_options) || []
+                                ).map((opt: string) => (
+                                  <option key={opt} value={opt}>
+                                    {opt}
+                                  </option>
+                                ))}
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* Products with that specific binding */}
+                        <div>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
+                              Products with this Binding ({bindingSearchResults.length})
+                            </span>
+                            {selectedBinding1 && (
+                              <span className="text-[11px] text-zinc-500 font-mono">
+                                {selectedBinding1}{selectedBinding2 ? ` / ${selectedBinding2}` : ""}
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="border border-zinc-200 dark:border-white/[0.08] rounded-lg max-h-52 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-800/80 bg-zinc-50/30 dark:bg-zinc-900/30">
+                            {!selectedBinding1 ? (
+                              <div className="py-6 text-center text-xs text-zinc-400">
+                                Select Binding 1 to view matching products
+                              </div>
+                            ) : isSearchingBinding ? (
+                              <div className="py-6 text-center text-xs text-zinc-400">
+                                Searching database...
+                              </div>
+                            ) : bindingSearchResults.length === 0 ? (
+                              <div className="py-6 text-center text-xs text-zinc-400">
+                                No matching products found. You can proceed with this binding directly.
+                              </div>
+                            ) : (
+                              bindingSearchResults.map((item) => {
+                                const isSelected = selectedDbSample?.id === item.id;
+                                return (
+                                  <div
+                                    key={item.id}
+                                    onClick={() => handleSelectDbSample(item)}
+                                    className={`p-2.5 transition-colors cursor-pointer flex items-center justify-between gap-3 text-left ${
+                                      isSelected
+                                        ? "bg-brand-50/70 dark:bg-brand-950/40 border-l-2 border-brand-600"
+                                        : "hover:bg-white dark:hover:bg-zinc-800/60"
+                                    }`}
+                                  >
+                                    <div className="min-w-0 flex-1">
+                                      <div className="flex items-center gap-2">
+                                        <span className="font-mono text-[11px] font-bold px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700">
+                                          {item.material_code || "—"}
+                                        </span>
+                                        <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 truncate">
+                                          {item.product_description}
+                                        </span>
+                                      </div>
+                                      <div className="flex items-center gap-2 mt-0.5 text-[10px] text-zinc-400">
+                                        <span>{item.customer || "Navneet"}</span>
+                                        <span>• Plant: {item.target_plant || "1505"}</span>
+                                        {item.sr_number && <span>• Ref: {item.sr_number}</span>}
+                                      </div>
+                                    </div>
+
+                                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
+                                      isSelected ? "border-brand-600 bg-brand-600 text-white" : "border-zinc-300 dark:border-zinc-600"
+                                    }`}>
+                                      {isSelected && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                                    </div>
+                                  </div>
+                                );
+                              })
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Product Title */}
+                  <div className="space-y-1">
+                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
+                      Product Title <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={samplingDescription}
+                      onChange={(e) => setSamplingDescription(e.target.value)}
+                      placeholder="Enter product title..."
+                      className="w-full h-8.5 px-3 rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-[12px] font-medium text-zinc-900 dark:text-zinc-100 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20"
+                    />
+                  </div>
+                  </div>
+
+                  {/* Actions Footer */}
+                  <div className="px-6 py-3.5 border-t border-zinc-200 dark:border-white/[0.08] bg-zinc-50/70 dark:bg-[#161822] flex items-center justify-between shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAddModalStep("scopes");
+                        setModalError(null);
+                      }}
+                      className="h-8 px-4 rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700/60 transition-colors cursor-pointer"
+                    >
+                      Back
+                    </button>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setIsAddModalOpen(false)}
+                        className="h-8 px-4 rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-semibold cursor-pointer transition-colors"
+                      >
+                        Cancel
+                      </button>
+
+                      <button
+                        type="submit"
+                        disabled={isSubmittingAll}
+                        className="h-8 px-4 rounded-md bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer select-none tracking-tight"
+                      >
+                        <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                        <span>Stage Product</span>
                       </button>
                     </div>
                   </div>
@@ -1529,12 +2065,12 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
       {inspectingProduct && (
         <div className="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
           <div
-            className="fixed inset-0 bg-black/60 dark:bg-black/85 backdrop-blur-xs transition-opacity"
+            className="fixed inset-0 bg-black/60 transition-opacity"
             onClick={() => setInspectingProduct(null)}
           />
 
-          <div className="flex min-h-full items-center justify-center p-4 sm:p-6">
-            <div className="relative w-full max-w-3xl bg-white dark:bg-[#0f1118] border border-zinc-200 dark:border-white/[0.08] rounded-xl shadow-2xl overflow-hidden animate-smooth-modal flex flex-col max-h-[90vh]">
+          <div className="flex min-h-full items-center justify-center p-3 sm:p-5">
+            <div className="relative w-full max-w-3xl bg-white dark:bg-[#0f1118] border border-zinc-200 dark:border-white/[0.08] rounded-lg shadow-xl overflow-hidden animate-smooth-modal flex flex-col max-h-[90vh]">
               {/* Header */}
               <div className="px-6 py-4 border-b border-zinc-200 dark:border-white/[0.08] bg-zinc-50/70 dark:bg-[#161822] flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-2">
@@ -1549,7 +2085,8 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
                 <button
                   type="button"
                   onClick={() => setInspectingProduct(null)}
-                  className="h-7 w-7 rounded-md flex items-center justify-center text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                  className="h-8 w-8 rounded-md flex items-center justify-center border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-white/[0.06] transition-colors duration-150 cursor-pointer"
+                  aria-label="Close modal"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -1580,7 +2117,7 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
                         key={scope}
                         className="px-2.5 py-0.5 rounded text-xs font-mono font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700"
                       >
-                        {def?.code || ""} {def?.label.toUpperCase() || scope.toUpperCase()}
+                        {def?.label.toUpperCase() || scope.toUpperCase()}
                       </span>
                     );
                   })}
@@ -1681,6 +2218,55 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
                             </div>
                           )}
                         </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Sampling Specifications (Full vs Partial, Binding 1 & 2, Source Material Ref) */}
+                {inspectingProduct.samplingMetadata && (
+                  <div className="space-y-3 pt-3 border-t border-zinc-100 dark:border-white/[0.06]">
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <div className="p-3 rounded-lg border border-blue-200/80 dark:border-blue-900 bg-blue-50/50 dark:bg-blue-950/30">
+                        <span className="text-[10px] font-mono text-blue-600 dark:text-blue-400 block uppercase font-medium">Sample Scope Type</span>
+                        <span className="font-mono font-bold text-sm text-blue-950 dark:text-blue-100 mt-0.5 block">
+                          {inspectingProduct.samplingMetadata.sampleType === "full" ? "Full Sample (Finished Unit)" : "Partial Sample (Component / Dummy)"}
+                        </span>
+                      </div>
+
+                      <div className="p-3 rounded-lg border border-zinc-200/80 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-900/50">
+                        <span className="text-[10px] font-mono text-zinc-400 block uppercase font-medium">Selection Source</span>
+                        <span className="font-mono font-bold text-sm text-zinc-900 dark:text-zinc-100 mt-0.5 block">
+                          {inspectingProduct.samplingMetadata.searchMode === "material_code" ? "Material Code Search" : "Binding Structure"}
+                        </span>
+                      </div>
+
+                      <div className="p-3 rounded-lg border border-zinc-200/80 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-900/50">
+                        <span className="text-[10px] font-mono text-zinc-400 block uppercase font-medium">Binding 1 (Primary)</span>
+                        <span className="font-medium text-xs text-zinc-900 dark:text-zinc-100 mt-0.5 block">
+                          {inspectingProduct.samplingMetadata.bindingType1 || "Standard / As Per Sample"}
+                        </span>
+                      </div>
+
+                      <div className="p-3 rounded-lg border border-zinc-200/80 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-900/50">
+                        <span className="text-[10px] font-mono text-zinc-400 block uppercase font-medium">Binding 2 (Spine)</span>
+                        <span className="font-medium text-xs text-zinc-900 dark:text-zinc-100 mt-0.5 block">
+                          {inspectingProduct.samplingMetadata.bindingType2 || "Standard / None"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {inspectingProduct.samplingMetadata.partialRequirements && (
+                      <div className="p-3 rounded-lg border border-amber-200 dark:border-amber-900 bg-amber-50/50 dark:bg-amber-950/20 text-xs font-sans">
+                        <span className="text-[10px] font-mono text-amber-700 dark:text-amber-400 block uppercase font-medium mb-1">Partial Sample Details:</span>
+                        <p className="text-zinc-800 dark:text-zinc-200 whitespace-pre-wrap">{inspectingProduct.samplingMetadata.partialRequirements}</p>
+                      </div>
+                    )}
+
+                    {inspectingProduct.samplingMetadata.sourceSrNumber && (
+                      <div className="p-2.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-xs font-mono text-zinc-600 dark:text-zinc-400 flex items-center justify-between">
+                        <span>Database Source Sample Ref:</span>
+                        <strong className="text-zinc-900 dark:text-zinc-100">{inspectingProduct.samplingMetadata.sourceSrNumber}</strong>
                       </div>
                     )}
                   </div>

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useLayoutEffect, useRef, useState } from "react";
 
 type Theme = "dark" | "light";
 
@@ -15,30 +15,41 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     try {
       const stored = localStorage.getItem("erp_theme");
       if (stored === "dark" || stored === "light") return stored;
-      return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      return "light";
     } catch {
-      return "dark";
+      return "light";
     }
   });
+  const currentTheme = useRef(theme);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const root = document.documentElement;
     if (theme === "dark") {
       root.classList.add("dark");
       root.classList.remove("light");
+      root.style.colorScheme = "dark";
     } else {
       root.classList.add("light");
       root.classList.remove("dark");
+      root.style.colorScheme = "light";
     }
     localStorage.setItem("erp_theme", theme);
   }, [theme]);
 
-  const toggleTheme = () => {
-    setThemeState((prev) => (prev === "dark" ? "light" : "dark"));
+  const setTheme = (newTheme: Theme) => {
+    if (newTheme === currentTheme.current) return;
+
+    const root = document.documentElement;
+    currentTheme.current = newTheme;
+    root.classList.toggle("dark", newTheme === "dark");
+    root.classList.toggle("light", newTheme === "light");
+    root.style.colorScheme = newTheme;
+    localStorage.setItem("erp_theme", newTheme);
+    setThemeState(newTheme);
   };
 
-  const setTheme = (newTheme: Theme) => {
-    setThemeState(newTheme);
+  const toggleTheme = () => {
+    setTheme(currentTheme.current === "dark" ? "light" : "dark");
   };
 
   return (

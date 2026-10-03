@@ -67,6 +67,15 @@ export async function autoSaveStagedProductsToDraft(
         product_image_path: prod.designMetadata?.referenceImage || null,
         reference_images: prod.designMetadata?.images?.map((img) => img.url) || [],
         reference_links: prod.designMetadata?.webLinks || [],
+        remarks:
+          prod.designMetadata?.remarks ||
+          (prod.samplingMetadata?.partialRequirements
+            ? `[Partial Scope]: ${prod.samplingMetadata.partialRequirements}`
+            : null),
+        product_type: prod.samplingMetadata ? (prod.samplingMetadata.sampleType === "full" ? "Full Sample" : "Partial Sample") : null,
+        source_sample_code: prod.samplingMetadata?.sourceSrNumber || prod.samplingMetadata?.selectedMaterialCode || null,
+        custom_binding_1: prod.samplingMetadata?.bindingType1 || null,
+        custom_binding_2: prod.samplingMetadata?.bindingType2 || null,
       })),
     };
 

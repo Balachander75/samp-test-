@@ -27,18 +27,18 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const baseStyles =
-      "group inline-flex items-center justify-center font-medium transition-all duration-150 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-black disabled:opacity-50 disabled:pointer-events-none active:scale-[0.99] cursor-pointer";
+      "group inline-flex items-center justify-center font-medium transition-colors duration-150 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-black disabled:opacity-50 disabled:pointer-events-none cursor-pointer";
 
     const sizeStyles = {
-      xs: "h-7 px-2.5 text-xs rounded gap-1.5",
-      sm: "h-8 px-3 text-xs rounded-md gap-2",
-      md: "h-10 px-4 text-sm rounded-md gap-2",
-      lg: "h-11 px-5 text-sm rounded-md gap-2.5",
+      xs: "h-7 px-2.5 text-[12px] rounded gap-1.5",
+      sm: "h-8 px-3 text-[13px] rounded-md gap-2",
+      md: "h-9 px-3.5 text-[13px] rounded-md gap-2",
+      lg: "h-10 px-4 text-sm rounded-md gap-2.5",
     };
 
     const variantStyles = {
       primary:
-        "bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white shadow-[0_1px_2px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(255,255,255,0.2)] border border-brand-700/50",
+        "bg-brand-700 hover:bg-brand-800 active:bg-brand-900 text-white shadow-sm border border-brand-800/50",
       secondary:
         "bg-white hover:bg-zinc-50 active:bg-zinc-100 text-zinc-800 border border-zinc-200/90 shadow-xs dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:active:bg-zinc-850 dark:text-zinc-200 dark:border-white/10 dark:shadow-none",
       subtle:

@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { UserProfile } from "@/features/auth";
 import { Sidebar } from "./Sidebar";
-import { ALL_NAVIGATION_ITEMS } from "./navigation";
+import { ALL_NAVIGATION_ITEMS, getNavigationTitle } from "./navigation";
 import { useTheme } from "@/context/ThemeContext";
+import { useBusinessYear } from "@/context/BusinessYearContext";
 import { getBusinessYearInfo } from "@/lib/businessYear";
 import {
   Menu,
@@ -12,9 +13,11 @@ import {
   Calendar,
   Clock,
   RefreshCw,
+  Search,
   CheckCircle2,
   AlertCircle,
   X,
+  ChevronDown,
 } from "lucide-react";
 
 export interface AppShellProps {
@@ -39,6 +42,28 @@ export const AppShell: React.FC<AppShellProps> = ({
   children,
 }) => {
   const { theme, toggleTheme } = useTheme();
+  const {
+    selectedYear,
+    setSelectedYear,
+    yearsList,
+    totalRecords,
+  } = useBusinessYear();
+
+  const [isYearDropdownOpen, setIsYearDropdownOpen] = useState(false);
+  const yearDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (yearDropdownRef.current && !yearDropdownRef.current.contains(e.target as Node)) {
+        setIsYearDropdownOpen(false);
+      }
+    };
+    if (isYearDropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isYearDropdownOpen]);
+
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [globalToast, setGlobalToast] = useState<GlobalToast | null>(null);
@@ -95,17 +120,16 @@ export const AppShell: React.FC<AppShellProps> = ({
     return () => clearInterval(timer);
   }, []);
 
-  const formattedDate = currentDateTime.toLocaleDateString("en-US", {
+  const formattedDate = currentDateTime.toLocaleDateString("en-IN", {
     weekday: "short",
     day: "numeric",
     month: "short",
     year: "numeric",
   });
 
-  const formattedTime = currentDateTime.toLocaleTimeString("en-US", {
+  const formattedTime = currentDateTime.toLocaleTimeString("en-IN", {
     hour: "2-digit",
     minute: "2-digit",
-    second: "2-digit",
     hour12: true,
   });
 
@@ -141,7 +165,7 @@ export const AppShell: React.FC<AppShellProps> = ({
   };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#f8fafc] dark:bg-[#08090d] text-zinc-900 dark:text-zinc-100 font-sans transition-colors duration-150">
+    <div className="flex h-screen w-screen overflow-hidden bg-[var(--bg-app)] text-zinc-900 dark:text-zinc-100 font-sans transition-colors duration-150">
       {/* Universal Sidebar */}
       <Sidebar
         user={user}
@@ -153,9 +177,9 @@ export const AppShell: React.FC<AppShellProps> = ({
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+        <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         {/* Global Enterprise Top Bar */}
-        <header className="h-14 border-b border-zinc-200/80 dark:border-white/[0.08] px-4 sm:px-6 flex items-center justify-between bg-white dark:bg-[#0f1118] shrink-0 z-10 transition-colors gap-3">
+        <header className="h-14 border-b border-zinc-200/80 dark:border-white/[0.08] px-4 sm:px-6 flex items-center justify-between bg-[var(--bg-panel)] shrink-0 z-10 transition-colors gap-3">
           {/* Left: Mobile Toggle & Live System Date / Time */}
           <div className="flex items-center gap-3 min-w-0">
             <button
@@ -167,8 +191,18 @@ export const AppShell: React.FC<AppShellProps> = ({
               <Menu className="w-5 h-5" />
             </button>
 
+            {currentPath !== "/dashboard" && (
+              <span className="hidden xl:block text-[13px] font-semibold text-zinc-800 dark:text-zinc-100 whitespace-nowrap">
+                {getNavigationTitle(currentPath)}
+              </span>
+            )}
+
+            {currentPath !== "/dashboard" && (
+              <span className="hidden xl:block h-5 w-px bg-zinc-200 dark:bg-white/10" aria-hidden="true" />
+            )}
+
             {/* Live System Date & Time Display */}
-            <div className="flex items-center gap-2 sm:gap-2.5 px-3 py-1.5 rounded-lg bg-zinc-100/70 dark:bg-white/[0.04] border border-zinc-200/80 dark:border-white/[0.07] text-xs select-none shadow-xs">
+            <div className="flex items-center gap-2 sm:gap-2.5 px-2.5 py-1.5 rounded-md bg-zinc-50 dark:bg-white/[0.03] border border-zinc-200 dark:border-white/[0.08] text-xs select-none">
               <div className="flex items-center gap-1.5 text-zinc-600 dark:text-zinc-400 font-medium">
                 <Calendar className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 shrink-0" />
                 <span className="tracking-tight">{formattedDate}</span>
@@ -183,14 +217,92 @@ export const AppShell: React.FC<AppShellProps> = ({
 
               <span className="text-zinc-300 dark:text-zinc-700 font-light hidden sm:inline">|</span>
 
-              <span
-                className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/80 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800/60"
-                title="Active SAMP Business Year (October 1 – September 30 cycle)"
-              >
-                BY {businessYearInfo.businessYearStr}
-              </span>
+              {/* Business Year Dropdown Selector */}
+              <div className="relative hidden sm:inline-block" ref={yearDropdownRef}>
+                <button
+                  type="button"
+                  onClick={() => setIsYearDropdownOpen((prev) => !prev)}
+                  className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-mono font-medium text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-200/60 dark:hover:bg-white/[0.08] transition-colors cursor-pointer select-none"
+                  title="Switch Business Year"
+                >
+                  <span className="font-semibold text-zinc-900 dark:text-zinc-100">
+                    {selectedYear === "ALL" ? "All Years" : `BY ${selectedYear}`}
+                  </span>
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 transition-transform duration-150 ${
+                      isYearDropdownOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+
+                {/* Dropdown Menu */}
+                {isYearDropdownOpen && (
+                  <div className="absolute left-0 mt-2 w-52 rounded-md bg-white dark:bg-[#12131a] border border-zinc-200 dark:border-zinc-800 shadow-lg z-50 p-1 select-none">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedYear("ALL");
+                        setIsYearDropdownOpen(false);
+                      }}
+                      className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs font-mono transition-colors cursor-pointer ${
+                        selectedYear === "ALL"
+                          ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 font-semibold"
+                          : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 hover:text-zinc-900 dark:hover:text-zinc-100"
+                      }`}
+                    >
+                      <span>All Business Years</span>
+                      <span className="text-[11px] text-zinc-400 dark:text-zinc-500">
+                        {totalRecords.toLocaleString()}
+                      </span>
+                    </button>
+
+                    {yearsList.map((y) => {
+                      const isSelected = selectedYear === y.year;
+                      return (
+                        <button
+                          key={y.year}
+                          type="button"
+                          onClick={() => {
+                            setSelectedYear(y.year);
+                            setIsYearDropdownOpen(false);
+                          }}
+                          className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs font-mono transition-colors cursor-pointer ${
+                            isSelected
+                              ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 font-semibold"
+                              : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 hover:text-zinc-900 dark:hover:text-zinc-100"
+                          }`}
+                        >
+                          <span className="flex items-center gap-1.5">
+                            <span>BY {y.year}</span>
+                            {y.is_current && (
+                              <span className="text-[10px] text-zinc-400 dark:text-zinc-500 font-sans">
+                                (Current)
+                              </span>
+                            )}
+                          </span>
+                          <span className="text-[11px] text-zinc-400 dark:text-zinc-500">
+                            {y.count.toLocaleString()}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+        </div>
+
+          {/* Quick access to request search from any workspace. */}
+          <button
+            type="button"
+            onClick={handleGlobalSearchFocus}
+            className="hidden lg:flex flex-1 max-w-[440px] h-9 items-center gap-2.5 px-3 rounded-md border border-zinc-300 bg-white text-zinc-500 hover:border-zinc-400 hover:text-zinc-700 dark:border-white/15 dark:bg-[#111318] dark:text-zinc-400 dark:hover:border-white/25 transition-colors text-left"
+            aria-label="Open sample request search"
+          >
+            <Search className="w-4 h-4 shrink-0" aria-hidden="true" />
+            <span className="flex-1 text-[13px]">Search sample requests, SKUs, customers…</span>
+            <kbd className="px-1.5 py-0.5 rounded border border-zinc-200 bg-zinc-50 text-[10px] font-medium text-zinc-500 dark:border-white/10 dark:bg-white/[0.04] dark:text-zinc-400">Ctrl K</kbd>
+          </button>
 
           {/* Right: Quick Actions */}
           <div className="flex items-center gap-2 shrink-0">
@@ -213,7 +325,7 @@ export const AppShell: React.FC<AppShellProps> = ({
               onClick={toggleTheme}
               aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
               title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-              className="h-9 w-9 rounded-md flex items-center justify-center text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-white/[0.06] border border-zinc-200/80 dark:border-white/[0.08] transition-colors cursor-pointer"
+              className="h-9 w-9 rounded-md flex items-center justify-center bg-[var(--bg-panel)] text-zinc-500 dark:text-zinc-400 hover:text-brand-700 dark:hover:text-brand-300 hover:bg-brand-50 dark:hover:bg-brand-950/30 border border-zinc-200/80 dark:border-white/[0.08] transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 active:scale-[0.97]"
             >
               {theme === "dark" ? (
                 <Sun className="w-[18px] h-[18px] text-amber-400" />
@@ -230,8 +342,6 @@ export const AppShell: React.FC<AppShellProps> = ({
               title="Notifications"
             >
               <Bell className="w-[18px] h-[18px]" />
-              {/* Unread indicator */}
-              <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-brand-600 ring-2 ring-white dark:ring-[#0f1118]" />
             </button>
 
             {/* User Avatar */}

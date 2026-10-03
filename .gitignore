@@ -34,3 +34,13 @@ __pycache__/
 **/__pycache__/
 *.py[cod]
 *$py.class
+.pytest_cache/
+
+# Vite & Bundler Cache
+.vite/
+**/.vite/
+
+# Temporary and swap files
+*.tmp
+*.tmp.*
+

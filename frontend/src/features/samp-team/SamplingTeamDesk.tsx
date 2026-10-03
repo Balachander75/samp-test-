@@ -2,16 +2,18 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { UserProfile } from "@/features/auth";
 import { SampleRequestItem } from "@/features/sample-requests/types";
 import {
+  fetchAllMarketingRequestsApi,
   fetchFeasibilityRequestsApi,
   fetchSampleRequestsApi,
   fetchProgramRequestsApi,
   updateSampleRequestApi,
-  updateFeasibilityRequestApi,
   updateSingleMaterialSampRemarkApi,
   recordFeasibilitySampVerdictApi,
   recordFeasibilityViewedApi,
 } from "@/features/sample-requests/api";
+import { useBusinessYear } from "@/context/BusinessYearContext";
 import { FeasibilityActivityTimeline } from "@/features/sample-requests/components/FeasibilityActivityTimeline";
+import { useFeasibilityImageSources } from "@/features/sample-requests/hooks/useFeasibilityImageSources";
 import { ProcessStageRibbon, StageStep } from "@/components/erp/ProcessStageRibbon";
 import { MetricRibbon, MetricTileItem } from "@/components/erp/MetricRibbon";
 import { DataTable, ColumnDef } from "@/components/erp/DataTable";
@@ -68,15 +70,17 @@ export interface SamplingTeamDeskProps {
 }
 
 const SAMP_STAGES: { id: string; stepNumber: string; label: string }[] = [
-  { id: "all", stepNumber: "ALL", label: "All Lab Tasks" },
+  { id: "all", stepNumber: "ALL", label: "Active Lab Tasks" },
   { id: "feasibility", stepNumber: "01", label: "Feasibility Reviews" },
   { id: "material_prep", stepNumber: "02", label: "Material & Board Prep" },
   { id: "prototyping", stepNumber: "03", label: "Machine Prototyping" },
   { id: "finishing", stepNumber: "04", label: "Finishing & Foiling" },
   { id: "qc", stepNumber: "05", label: "QC Inspection" },
+  { id: "dispatched", stepNumber: "06", label: "Dispatched / Closed" },
 ];
 
 export const SamplingTeamDesk: React.FC<SamplingTeamDeskProps> = ({ user }) => {
+  const { selectedYear } = useBusinessYear();
   const [requests, setRequests] = useState<SampleRequestItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedStageId, setSelectedStageId] = useState<string>("all");
@@ -107,8 +111,8 @@ export const SamplingTeamDesk: React.FC<SamplingTeamDeskProps> = ({ user }) => {
 
   // Copy SR Number feedback
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const handleCopyCode = (code: string, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleCopyCode = (code: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
     navigator.clipboard.writeText(code);
     setCopiedId(code);
     setTimeout(() => setCopiedId(null), 1200);
@@ -128,19 +132,15 @@ export const SamplingTeamDesk: React.FC<SamplingTeamDeskProps> = ({ user }) => {
   const loadRequests = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [sampleRequests, feasibilityRequests, programRequests] = await Promise.all([
-        fetchSampleRequestsApi(),
-        fetchFeasibilityRequestsApi(),
-        fetchProgramRequestsApi().catch(() => []),
-      ]);
-      setRequests([...feasibilityRequests, ...programRequests, ...sampleRequests]);
+      const allRequests = await fetchAllMarketingRequestsApi(selectedYear);
+      setRequests(allRequests);
     } catch (err) {
       console.error("Failed to load sampling requests:", err);
       showToast("Failed to fetch sampling work data");
     } finally {
       setIsLoading(false);
     }
-  }, [showToast]);
+  }, [selectedYear, showToast]);
 
   useEffect(() => {
     loadRequests();
@@ -169,7 +169,8 @@ export const SamplingTeamDesk: React.FC<SamplingTeamDeskProps> = ({ user }) => {
           selectedItem.productDescription,
           selectedItem.referenceImages,
           selectedItem.referenceLinks,
-          selectedItem.productImagePath
+          selectedItem.productImagePath,
+          selectedItem.referenceImageNames
         );
         const images = details.referenceImages.filter((image) => Boolean(image.url));
         const currentIndex = images.findIndex((image) => image.url === selectedPreviewImage);
@@ -195,30 +196,61 @@ export const SamplingTeamDesk: React.FC<SamplingTeamDeskProps> = ({ user }) => {
     return SAMP_STAGES.map((st) => {
       let count = 0;
       if (st.id === "all") {
-        count = requests.length;
+        // Active Lab Tasks (not yet closed/dispatched)
+        count = requests.filter((r) => {
+          const s = (r.status || "").toLowerCase();
+          return !s.includes("dispatch") && !s.includes("closed") && !s.includes("approved");
+        }).length;
       } else if (st.id === "feasibility") {
         count = requests.filter(
-          (r) => String(r.creationMode || "").toLowerCase() === "feasibility_check"
+          (r) =>
+            String(r.creationMode || "").toLowerCase() === "feasibility_check" &&
+            !r.samplingFeasibilityResponse
         ).length;
       } else if (st.id === "material_prep") {
         count = requests.filter((r) => {
           const s = (r.status || "").toLowerCase();
-          return s.includes("draft") || s.includes("creative") || s.includes("prep");
+          return (
+            (s.includes("draft") || s.includes("creative") || s.includes("prep")) &&
+            !s.includes("dispatch") &&
+            !s.includes("closed") &&
+            !s.includes("approved")
+          );
         }).length;
       } else if (st.id === "prototyping") {
         count = requests.filter((r) => {
           const s = (r.status || "").toLowerCase();
-          return s.includes("samp") || s.includes("studio") || s.includes("in plant") || s.includes("machine");
+          return (
+            (s.includes("samp") || s.includes("studio") || s.includes("in plant") || s.includes("machine")) &&
+            !s.includes("dispatch") &&
+            !s.includes("closed") &&
+            !s.includes("approved")
+          );
         }).length;
       } else if (st.id === "finishing") {
         count = requests.filter((r) => {
           const s = (r.status || "").toLowerCase();
-          return s.includes("finishing") || s.includes("foil") || s.includes("cost");
+          return (
+            (s.includes("finishing") || s.includes("foil") || s.includes("cost")) &&
+            !s.includes("dispatch") &&
+            !s.includes("closed") &&
+            !s.includes("approved")
+          );
         }).length;
       } else if (st.id === "qc") {
         count = requests.filter((r) => {
           const s = (r.status || "").toLowerCase();
-          return s.includes("qc") || s.includes("inspection");
+          return (
+            (s.includes("qc") || s.includes("inspection")) &&
+            !s.includes("dispatch") &&
+            !s.includes("closed") &&
+            !s.includes("approved")
+          );
+        }).length;
+      } else if (st.id === "dispatched") {
+        count = requests.filter((r) => {
+          const s = (r.status || "").toLowerCase();
+          return s.includes("dispatch") || s.includes("closed") || s.includes("approved");
         }).length;
       }
 
@@ -233,7 +265,6 @@ export const SamplingTeamDesk: React.FC<SamplingTeamDeskProps> = ({ user }) => {
 
   // Metric Ribbon items
   const metrics: MetricTileItem[] = useMemo(() => {
-    const total = requests.length;
     const pendingFeasibility = requests.filter(
       (r) =>
         String(r.creationMode || "").toLowerCase() === "feasibility_check" &&
@@ -243,12 +274,15 @@ export const SamplingTeamDesk: React.FC<SamplingTeamDeskProps> = ({ user }) => {
     const inLab = requests.filter((r) => {
       const s = (r.status || "").toLowerCase();
       return (
-        s.includes("samp") ||
-        s.includes("creative") ||
-        s.includes("studio") ||
-        s.includes("in plant") ||
-        s.includes("machine") ||
-        s.includes("prep")
+        (s.includes("samp") ||
+          s.includes("creative") ||
+          s.includes("studio") ||
+          s.includes("in plant") ||
+          s.includes("machine") ||
+          s.includes("prep")) &&
+        !s.includes("dispatch") &&
+        !s.includes("closed") &&
+        !s.includes("approved")
       );
     }).length;
 
@@ -257,11 +291,16 @@ export const SamplingTeamDesk: React.FC<SamplingTeamDeskProps> = ({ user }) => {
       return s.includes("dispatch") || s.includes("closed") || s.includes("approved");
     }).length;
 
+    const activeLabTasks = requests.filter((r) => {
+      const s = (r.status || "").toLowerCase();
+      return !s.includes("dispatch") && !s.includes("closed") && !s.includes("approved");
+    }).length;
+
     return [
       {
         id: "total",
-        label: "Total Lab Tasks",
-        value: total,
+        label: "Active Lab Tasks",
+        value: activeLabTasks,
         deltaText: "Central Prototyping Pool",
         deltaTone: "neutral",
         isActive: selectedStageId === "all" && quickFilter === "none" && selectedType === "all",
@@ -304,10 +343,10 @@ export const SamplingTeamDesk: React.FC<SamplingTeamDeskProps> = ({ user }) => {
         value: readyOrDispatched,
         deltaText: "Client Courier Ready",
         deltaTone: "positive",
-        isActive: quickFilter === "ready",
+        isActive: quickFilter === "ready" || selectedStageId === "dispatched",
         onClick: () => {
-          setQuickFilter((prev) => (prev === "ready" ? "none" : "ready"));
-          setSelectedStageId("all");
+          setSelectedStageId("dispatched");
+          setQuickFilter("none");
           setCurrentPage(1);
         },
       },
@@ -324,8 +363,15 @@ export const SamplingTeamDesk: React.FC<SamplingTeamDeskProps> = ({ user }) => {
       if (quickFilter === "pending_feasibility") {
         if (!isFeas || Boolean(r.samplingFeasibilityResponse)) return false;
       } else if (quickFilter === "active_lab") {
-        if (!s.includes("samp") && !s.includes("creative") && !s.includes("studio") && !s.includes("in plant") && !s.includes("prep"))
+        if (
+          !s.includes("samp") &&
+          !s.includes("creative") &&
+          !s.includes("studio") &&
+          !s.includes("in plant") &&
+          !s.includes("prep")
+        )
           return false;
+        if (s.includes("dispatch") || s.includes("closed") || s.includes("approved")) return false;
       } else if (quickFilter === "urgent") {
         // SLA due within 48h
         if (!r.sampleRequiredDate) return false;
@@ -336,8 +382,15 @@ export const SamplingTeamDesk: React.FC<SamplingTeamDeskProps> = ({ user }) => {
       }
 
       // Stage Ribbon filter
-      if (selectedStageId !== "all") {
-        if (selectedStageId === "feasibility" && !isFeas) return false;
+      if (selectedStageId === "all") {
+        // Default on "all": show only active lab tasks (exclude closed/dispatched unless quickFilter === "ready")
+        if (quickFilter !== "ready") {
+          if (s.includes("dispatch") || s.includes("closed") || s.includes("approved")) {
+            return false;
+          }
+        }
+      } else {
+        if (selectedStageId === "feasibility" && (!isFeas || Boolean(r.samplingFeasibilityResponse))) return false;
         if (selectedStageId === "material_prep" && !s.includes("draft") && !s.includes("creative") && !s.includes("prep")) return false;
         if (
           selectedStageId === "prototyping" &&
@@ -420,7 +473,7 @@ export const SamplingTeamDesk: React.FC<SamplingTeamDeskProps> = ({ user }) => {
     setSignOffRemark(item.samplingFeasibilityRemark || "");
     const isFeas = String(item.creationMode || "").toLowerCase() === "feasibility_check" || item.requestKind === "feasibility";
     if (isFeas) {
-      recordFeasibilityViewedApi(item.id, user?.name || user?.userid || "SAMP Lab Engineer", "SAMP Lab");
+      recordFeasibilityViewedApi(item.id);
     }
     setInspectorTab(isFeas ? "feasibility" : "spec");
     setIsInspectorOpen(true);
@@ -462,7 +515,6 @@ export const SamplingTeamDesk: React.FC<SamplingTeamDeskProps> = ({ user }) => {
         updated = await recordFeasibilitySampVerdictApi(selectedItem.id, {
           response: signOffResponse,
           remark: signOffRemark.trim() || null,
-          approved_by: user?.name || user?.userid || "SAMP Lab Lead",
         });
       } else {
         const closedAt = new Date().toISOString();
@@ -473,7 +525,7 @@ export const SamplingTeamDesk: React.FC<SamplingTeamDeskProps> = ({ user }) => {
 
         const payload = {
           samplingFeasibilityResponse: signOffResponse,
-          samplingFeasibilityRemark: signOffRemark.trim() || "Specifications verified feasible by Central Sampling Lab.",
+          samplingFeasibilityRemark: signOffRemark.trim() || null,
           samplingFeasibilityApprovedBy: user?.name || user?.userid || "SAMP Team",
           feasibilityClosedBy: "sampling",
           feasibilityClosedAt: closedAt,
@@ -486,7 +538,7 @@ export const SamplingTeamDesk: React.FC<SamplingTeamDeskProps> = ({ user }) => {
         setRequests((prev) => prev.map((r) => (r.id === updated!.id ? updated! : r)));
         setSelectedItem(updated);
       }
-      showToast(`✓ SAMP Lab verdict (${signOffResponse}) recorded and broadcast to Marketing Desk.`);
+      showToast(`✓ SAMP Team verdict (${signOffResponse}) recorded and broadcast to Marketing Desk.`);
     } catch (err: any) {
       console.error("Failed to sign off feasibility:", err);
       showToast(err?.message || "Error recording feasibility sign-off");
@@ -571,7 +623,7 @@ export const SamplingTeamDesk: React.FC<SamplingTeamDeskProps> = ({ user }) => {
 
     if (diffDays < 0) {
       return (
-        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/60">
+        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/60">
           <AlertTriangle className="w-2.5 h-2.5 text-rose-600" />
           Overdue ({Math.abs(diffDays)}d)
         </span>
@@ -579,7 +631,7 @@ export const SamplingTeamDesk: React.FC<SamplingTeamDeskProps> = ({ user }) => {
     }
     if (diffDays <= 2) {
       return (
-        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/60">
+        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/60">
           <Clock className="w-2.5 h-2.5 text-amber-600" />
           Due {diffDays === 0 ? "Today" : `${diffDays}d`}
         </span>
@@ -675,8 +727,8 @@ export const SamplingTeamDesk: React.FC<SamplingTeamDeskProps> = ({ user }) => {
             );
           }
           return (
-            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-blue-50 text-blue-800 border border-blue-200/90 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800/60 whitespace-nowrap">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
+            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-brand-50 text-brand-800 border border-brand-200/90 dark:bg-brand-950/40 dark:text-brand-300 dark:border-brand-800/60 whitespace-nowrap">
+              <span className="w-1.5 h-1.5 rounded-full bg-brand-500 shrink-0" />
               Standard Prototype
             </span>
           );
@@ -766,7 +818,7 @@ export const SamplingTeamDesk: React.FC<SamplingTeamDeskProps> = ({ user }) => {
                   <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                   Feasible (Approved)
                 </span>
-                <span className="text-[9px] text-brand-600 dark:text-brand-400 font-bold uppercase">
+                <span className="text-[10px] text-brand-600 dark:text-brand-400 font-bold uppercase">
                   {isFirst ? "★ Responded First" : "Recorded"}
                 </span>
               </div>
@@ -779,7 +831,7 @@ export const SamplingTeamDesk: React.FC<SamplingTeamDeskProps> = ({ user }) => {
                   <XCircle className="w-3 h-3 text-rose-600" />
                   Not Feasible
                 </span>
-                <span className="text-[9px] text-zinc-400">
+                <span className="text-[10px] text-zinc-400">
                   {isFirst ? "★ Responded First" : "Recorded"}
                 </span>
               </div>
@@ -791,7 +843,7 @@ export const SamplingTeamDesk: React.FC<SamplingTeamDeskProps> = ({ user }) => {
                 <AlertTriangle className="w-3 h-3 text-amber-600" />
                 Conditional
               </span>
-              <span className="text-[9px] text-zinc-400">
+              <span className="text-[10px] text-zinc-400">
                 {isFirst ? "★ Responded First" : "Recorded"}
               </span>
             </div>
@@ -853,9 +905,13 @@ export const SamplingTeamDesk: React.FC<SamplingTeamDeskProps> = ({ user }) => {
         selectedItem.productDescription,
         selectedItem.referenceImages,
         selectedItem.referenceLinks,
-        selectedItem.productImagePath
+        selectedItem.productImagePath,
+        selectedItem.referenceImageNames
       )
     : null;
+  const imageSourceFor = useFeasibilityImageSources(
+    isInspectorOpen ? selectedItemFeasibilityDetails?.referenceImages.map((image) => image.url) || [] : []
+  );
   const previewableImages = selectedItemFeasibilityDetails?.referenceImages.filter((image) => Boolean(image.url)) || [];
   const selectedPreviewIndex = previewableImages.findIndex((image) => image.url === selectedPreviewImage);
 
@@ -890,7 +946,7 @@ export const SamplingTeamDesk: React.FC<SamplingTeamDeskProps> = ({ user }) => {
       <MetricRibbon metrics={metrics} />
 
       {/* 3. Operational Command & Filter Toolbar */}
-      <div className="px-4 sm:px-6 py-2.5 bg-white dark:bg-[#0f1118] border-b border-zinc-200 dark:border-white/[0.08] shrink-0 flex flex-wrap items-center justify-between gap-3">
+      <div className="erp-command-bar px-4 sm:px-6 py-2.5 shrink-0 flex flex-wrap items-center justify-between gap-3">
         {/* Left: Filters & Search */}
         <div className="flex items-center flex-wrap gap-2.5">
           <div className="relative">
@@ -904,7 +960,7 @@ export const SamplingTeamDesk: React.FC<SamplingTeamDeskProps> = ({ user }) => {
                 setCurrentPage(1);
               }}
               placeholder="Search SR#, SKU, Customer… (Ctrl+K)"
-              className="h-9 w-60 sm:w-72 pl-9 pr-8 rounded-md border border-zinc-200 dark:border-zinc-700/80 bg-zinc-50/60 dark:bg-zinc-900/60 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 outline-none focus:border-brand-500 focus:bg-white dark:focus:bg-zinc-900 focus:ring-1 focus:ring-brand-500/20 transition-all font-sans"
+              className="h-9 w-60 sm:w-72 pl-9 pr-8 rounded-md border border-zinc-300 dark:border-white/15 bg-white dark:bg-[#111318] text-[13px] text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-500 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15 transition-colors font-sans"
             />
             {searchTerm && (
               <button
@@ -931,7 +987,7 @@ export const SamplingTeamDesk: React.FC<SamplingTeamDeskProps> = ({ user }) => {
                   : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200"
               }`}
             >
-              All Tasks ({requests.length})
+              All Tasks ({filteredRequests.length})
             </button>
             <button
               type="button"
@@ -956,11 +1012,11 @@ export const SamplingTeamDesk: React.FC<SamplingTeamDeskProps> = ({ user }) => {
               }}
               className={`h-8 px-3.5 rounded-md transition-colors text-xs font-medium cursor-pointer flex items-center gap-1.5 ${
                 selectedType === "standard_sample"
-                  ? "bg-white dark:bg-zinc-700 text-blue-700 dark:text-blue-300 font-semibold shadow-xs"
+                  ? "bg-white dark:bg-zinc-700 text-brand-700 dark:text-brand-300 font-semibold shadow-xs"
                   : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200"
               }`}
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+              <span className="w-1.5 h-1.5 rounded-full bg-brand-500" />
               Physical Prototypes
             </button>
           </div>
@@ -1053,6 +1109,7 @@ export const SamplingTeamDesk: React.FC<SamplingTeamDeskProps> = ({ user }) => {
         pageSize={pageSize}
         totalCount={filteredRequests.length}
         onPageChange={setCurrentPage}
+        emptyMessage="No sampling tasks found in current selection"
         toolbarLeft={
           <div className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
             <span>
@@ -1063,261 +1120,292 @@ export const SamplingTeamDesk: React.FC<SamplingTeamDeskProps> = ({ user }) => {
         }
       />
 
-      {/* 5. Master-Detail Inspector Drawer for Sampling Lab */}
+      {/* 5. Master-Detail Inspector Modal for Sampling Lab */}
       {isInspectorOpen && selectedItem && (
-        <div className="fixed inset-0 z-50 flex justify-end bg-zinc-950/45 backdrop-blur-[2px]">
-          <div className="bg-white dark:bg-[#0f1118] border-l border-zinc-200 dark:border-white/[0.08] w-full max-w-2xl h-full shadow-2xl flex flex-col overflow-hidden">
-            {/* Drawer Top Header */}
-            <div className="px-5 py-4 border-b border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0f1118] flex items-center justify-between shrink-0">
-              <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 font-mono tracking-tight">
-                      {selectedItem.srNumber}
-                    </h3>
-                    <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700">
-                      {selectedItem.materialCode || "FC-CK-TBD"}
-                    </span>
-                    {isSelectedItemFeasibility && (
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-brand-50 text-brand-800 dark:bg-brand-950/50 dark:text-brand-300 border border-brand-200 dark:border-brand-800/80">
-                        Feasibility Assessment
-                      </span>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/60"
+          onClick={() => setIsInspectorOpen(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            className="relative w-full max-w-5xl max-h-[94vh] flex flex-col bg-white dark:bg-[#0f1118] border border-zinc-200 dark:border-white/10 rounded-xl shadow-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header Bar */}
+            <div className="px-5 py-3.5 border-b border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0f1118] flex items-center justify-between gap-3 shrink-0">
+              <div className="flex items-center flex-wrap gap-2">
+                <div className="inline-flex items-center gap-1 bg-white dark:bg-zinc-800 px-2 py-0.5 rounded border border-zinc-200 dark:border-zinc-700 text-xs font-mono font-bold text-zinc-900 dark:text-zinc-100">
+                  <span>{selectedItem.srNumber || `SR-${selectedItem.id}`}</span>
+                  <button
+                    type="button"
+                    onClick={(e) => handleCopyCode(selectedItem.srNumber || `SR-${selectedItem.id}`, e)}
+                    className="p-0.5 rounded text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors cursor-pointer"
+                    title="Copy Request Code"
+                  >
+                    {copiedId === (selectedItem.srNumber || `SR-${selectedItem.id}`) ? (
+                      <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                    ) : (
+                      <Copy className="w-3 h-3" />
                     )}
-                  </div>
-                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
-                    Central Prototyping Laboratory · Technical assessment workspace
-                  </p>
+                  </button>
+                </div>
+
+                <StatusPill status={selectedItem.status || "Pending Feasibility"} size="xs" tone={isSelectedItemFeasibility ? "info" : undefined} />
+
+                {isSelectedItemFeasibility ? (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
+                    Feasibility Check
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-brand-500/10 text-brand-700 dark:text-brand-400 border border-brand-500/25">
+                    Sampling Request
+                  </span>
+                )}
               </div>
-              <button
-                type="button"
-                onClick={() => setIsInspectorOpen(false)}
-                className="h-8 w-8 rounded-md flex items-center justify-center text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
-                title="Close drawer"
-              >
-                <X className="w-4 h-4" />
-              </button>
+
+              <div className="flex items-center gap-2">
+                <span className="hidden sm:inline-block text-[10px] font-mono text-zinc-400 uppercase tracking-wider">
+                  [Esc]
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsInspectorOpen(false)}
+                  className="h-8 w-8 rounded-md flex items-center justify-center text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-200/60 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                  title="Close (Esc)"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
-            {/* Context Strip: 4 Key Operational Columns */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 border-b border-zinc-200 dark:border-white/[0.08] bg-zinc-50/60 dark:bg-[#161822] divide-y sm:divide-y-0 sm:divide-x divide-zinc-200 dark:divide-white/[0.08] shrink-0 text-xs p-3 gap-2 sm:gap-0">
-              <div className="sm:pr-3">
-                <span className="block text-[10px] uppercase font-bold text-zinc-400">Customer Account</span>
-                <span className="font-semibold text-zinc-900 dark:text-zinc-100 truncate block">
-                  {selectedItem.customer}
-                </span>
+            {/* Contiguous Operational Context Strip (4 Distinct Parameters) */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 border-b border-zinc-200 dark:border-white/[0.08] bg-zinc-50/60 dark:bg-[#161822] divide-x divide-zinc-200 dark:divide-white/[0.08] shrink-0">
+              <div className="p-3">
+                <div className="text-[10px] uppercase font-bold tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5 font-mono">Customer</div>
+                <div className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 truncate" title={selectedItem.customer}>
+                  {selectedItem.customer || "Unassigned"}
+                </div>
               </div>
-              <div className="sm:px-3 pt-1.5 sm:pt-0">
-                <span className="block text-[10px] uppercase font-bold text-zinc-400">
-                  {isSelectedItemFeasibility ? "Review Queue" : "Target Plant"}
-                </span>
-                <span className="font-semibold text-zinc-900 dark:text-zinc-100 truncate block">
-                  {isSelectedItemFeasibility ? "SAMP Team" : (selectedItem.targetPlant || "Unassigned")}
-                </span>
-              </div>
-              <div className="sm:px-3 pt-1.5 sm:pt-0">
-                <span className="block text-[10px] uppercase font-bold text-zinc-400">
-                  {isSelectedItemFeasibility ? "Feasibility Type" : "Requested By"}
-                </span>
-                <span className="font-semibold text-zinc-900 dark:text-zinc-100 truncate block">
+
+              <div className="p-3">
+                <div className="text-[10px] uppercase font-bold tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5 font-mono">
+                  {isSelectedItemFeasibility ? "Type" : "Production Plant"}
+                </div>
+                <div
+                  className="text-xs font-semibold text-brand-700 dark:text-brand-300 truncate"
+                  title={isSelectedItemFeasibility && selectedItemFeasibilityDetails ? selectedItemFeasibilityDetails.category : (selectedItem.targetPlant || "Khaniwade")}
+                >
                   {isSelectedItemFeasibility && selectedItemFeasibilityDetails
                     ? selectedItemFeasibilityDetails.category
-                    : (selectedItem.createdBy || "Marketing Team")}
-                </span>
+                    : (selectedItem.targetPlant?.replace(/^\d{4}-?\s*/, "").trim() || "Khaniwade")}
+                </div>
               </div>
-              <div className="sm:pl-3 pt-1.5 sm:pt-0">
-                <span className="block text-[10px] uppercase font-bold text-zinc-400">
-                  {isSelectedItemFeasibility ? "Required Target Date" : "SLA Due Date"}
-                </span>
-                <span className="font-mono font-semibold text-zinc-900 dark:text-zinc-100 truncate block tabular-nums">
-                  {selectedItem.sampleRequiredDate || "Pending"}
-                </span>
+
+              <div className="p-3">
+                <div className="text-[10px] uppercase font-bold tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5 font-mono">
+                  Required Target Date
+                </div>
+                <div className="text-xs font-semibold font-mono text-zinc-900 dark:text-zinc-100 tnum truncate">
+                  {selectedItem.sampleRequiredDate || selectedItem.dateRequestCreated || "—"}
+                </div>
+              </div>
+
+              <div className="p-3">
+                <div className="text-[10px] uppercase font-bold tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5 font-mono">
+                  Raised By
+                </div>
+                <div className="text-xs font-semibold font-mono text-zinc-900 dark:text-zinc-100 truncate">
+                  {selectedItem.createdBy || "Marketing Team"}
+                </div>
               </div>
             </div>
 
-            {/* Tab Navigation */}
-            <div className="flex border-b border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0f1118] px-3 shrink-0 gap-1">
-              <button
-                type="button"
-                onClick={() => setInspectorTab("spec")}
-                className={`h-9 px-3.5 text-xs font-semibold border-b-2 cursor-pointer transition-colors ${
-                  inspectorTab === "spec"
-                    ? "border-brand-600 text-brand-700 dark:text-brand-400"
-                    : "border-transparent text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
-                }`}
-              >
-                Overview &amp; Specs
-              </button>
-              {String(selectedItem.creationMode || "").toLowerCase() === "feasibility_check" ||
-              String(selectedItem.materialCode || "").toLowerCase().startsWith("fc-") ? (
+            {/* ── Segmented Tab Navigation ── */}
+            <div className="flex items-center border-b border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0f1118] px-5 py-2.5 shrink-0">
+              <div className="inline-flex rounded-lg bg-zinc-100/90 dark:bg-zinc-900 p-1 text-xs border border-zinc-200/80 dark:border-zinc-800">
                 <button
                   type="button"
-                  onClick={() => setInspectorTab("feasibility")}
-                  className={`h-9 px-3.5 text-xs font-semibold border-b-2 cursor-pointer transition-colors flex items-center gap-1.5 ${
-                    inspectorTab === "feasibility"
-                      ? "border-brand-600 text-brand-700 dark:text-brand-400 font-bold"
-                      : "border-transparent text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
+                  onClick={() => setInspectorTab("spec")}
+                  className={`px-3 py-1.5 rounded-md transition-all cursor-pointer font-mono ${
+                    inspectorTab === "spec"
+                      ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-2xs font-bold border border-zinc-200/60 dark:border-zinc-700"
+                      : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 font-medium"
                   }`}
                 >
-                  Feasibility Sign-Off
-                  {selectedItem.samplingFeasibilityResponse && (
-                    <span className="ml-1 w-2 h-2 rounded-full bg-emerald-500" title="Verdict Recorded" />
+                  1. Request Specs &amp; Scope
+                  {isSelectedItemFeasibility && selectedItemFeasibilityDetails && (selectedItemFeasibilityDetails.referenceImages.length + selectedItemFeasibilityDetails.referenceLinks.length) > 0 && (
+                    <span className="ml-2 text-[10px] font-mono px-1.5 py-0.2 rounded bg-zinc-200/80 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-semibold">
+                      {selectedItemFeasibilityDetails.referenceImages.length + selectedItemFeasibilityDetails.referenceLinks.length}
+                    </span>
                   )}
                 </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setInspectorTab("milestones")}
-                  className={`h-9 px-3.5 text-xs font-semibold border-b-2 cursor-pointer transition-colors flex items-center gap-1.5 ${
-                    inspectorTab === "milestones"
-                      ? "border-brand-600 text-brand-600 dark:text-brand-400"
-                      : "border-transparent text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
-                  }`}
-                >
-                  <Boxes className="w-3.5 h-3.5" />
-                  Milestone Stepper
-                </button>
-              )}
+
+                {(String(selectedItem.creationMode || "").toLowerCase() === "feasibility_check" ||
+                  String(selectedItem.materialCode || "").toLowerCase().startsWith("fc-")) ? (
+                  <button
+                    type="button"
+                    onClick={() => setInspectorTab("feasibility")}
+                    className={`px-3 py-1.5 rounded-md transition-all cursor-pointer font-mono ${
+                      inspectorTab === "feasibility"
+                        ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-2xs font-bold border border-zinc-200/60 dark:border-zinc-700"
+                        : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 font-medium"
+                    }`}
+                  >
+                    2. Submit Response
+                    {selectedItem.samplingFeasibilityResponse ? (
+                      <span className="ml-2 text-[10px] font-mono font-semibold px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-300/60">
+                        {selectedItem.samplingFeasibilityResponse}
+                      </span>
+                    ) : (
+                      <span className="ml-2 text-[10px] font-mono font-semibold px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-300/60">
+                        Pending
+                      </span>
+                    )}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setInspectorTab("milestones")}
+                    className={`px-3 py-1.5 rounded-md transition-all cursor-pointer font-mono ${
+                      inspectorTab === "milestones"
+                        ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-2xs font-bold border border-zinc-200/60 dark:border-zinc-700"
+                        : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 font-medium"
+                    }`}
+                  >
+                    2. Milestone Stepper
+                  </button>
+                )}
+              </div>
             </div>
 
-            {/* Scrollable Body */}
-            <div className="flex-1 overflow-y-auto bg-zinc-50/50 dark:bg-[#11131b] p-5 space-y-4 text-xs">
-              {/* TAB 1: SPECIFICATION & BLUEPRINT */}
+            {/* ── Scrollable Body ── */}
+            <div className="flex-1 overflow-y-auto bg-zinc-50/40 dark:bg-[#11131b] p-5 space-y-4 text-xs">
+              {/* TAB 1: REQUEST SPECS & SCOPE */}
               {inspectorTab === "spec" && (
-                <div className="space-y-4">
-                  {/* Scope & Requester Bar */}
-                  <div className="p-4 rounded-lg border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0f1118] space-y-3">
-                    <div className="flex items-center justify-between flex-wrap gap-2">
-                      <div className="flex items-center gap-2">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-brand-50 text-brand-800 dark:bg-brand-950/50 dark:text-brand-300 border border-brand-200 dark:border-brand-800/70">
-                          {isSelectedItemFeasibility && selectedItemFeasibilityDetails
-                            ? selectedItemFeasibilityDetails.category
-                            : "Physical Prototyping"}
-                        </span>
-                      <span className="text-[11px] text-zinc-600 dark:text-zinc-400">
-                          Scope: <strong className="text-zinc-900 dark:text-zinc-200">{isSelectedItemFeasibility ? "Technical Feasibility Assessment" : "Prototype Fabrication"}</strong>
-                        </span>
+                <div className="space-y-3.5">
+                  {/* Feasibility Type / Classification Strip */}
+                  {isSelectedItemFeasibility && selectedItemFeasibilityDetails && (
+                    <div className="rounded-lg border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0f1118] p-3 flex items-center justify-between gap-3 shadow-2xs">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-zinc-400">
+                            Feasibility Type:
+                          </span>
+                          <span className="px-2 py-0.5 rounded text-xs font-bold font-mono bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300 border border-brand-200/80 dark:border-brand-800">
+                            {selectedItemFeasibilityDetails.category}
+                          </span>
+                        </div>
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 font-mono">
+                          {isSelectedItemFeasibility ? "Technical specification evaluation & manufacturing feasibility" : "Standard prototype fabrication"}
+                        </p>
                       </div>
                       <StatusPill status={selectedItem.status || "Pending Feasibility"} />
                     </div>
-
-                    <div className="text-[11px] text-zinc-600 dark:text-zinc-400 flex items-center justify-between pt-2 border-t border-zinc-100 dark:border-zinc-800 flex-wrap gap-2">
-                      <span>
-                        Marketing Requester: <strong className="text-zinc-900 dark:text-zinc-200">{selectedItem.createdBy || "Marketing Team (Corporate)"}</strong>
-                      </span>
-                      <span className="font-mono text-[10px] text-zinc-500">
-                        Date Raised: {formatIndianDateTime(selectedItem.dateRequestCreated || selectedItem.createdAt)}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Technical Requirement Brief (clean user-filled text) */}
-                  <div className="rounded-lg border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0f1118] p-4 space-y-2.5">
-                    <span className="block text-[10px] uppercase font-bold text-zinc-400 tracking-wider">
-                      Technical Description &amp; Requirements:
-                    </span>
-                    <div className="p-3.5 rounded bg-white dark:bg-[#0f1118] border border-zinc-200/80 dark:border-white/[0.08] text-zinc-800 dark:text-zinc-200 font-sans text-xs leading-relaxed whitespace-pre-wrap max-h-56 overflow-y-auto">
-                      {isSelectedItemFeasibility && selectedItemFeasibilityDetails
-                        ? selectedItemFeasibilityDetails.requirements
-                        : selectedItem.productDescription}
-                    </div>
-                  </div>
-
-                  {/* Marketing Remarks / Context (if entered) */}
-                  {isSelectedItemFeasibility && selectedItemFeasibilityDetails?.marketingRemarks && (
-                    <div className="rounded-lg border border-blue-200/80 dark:border-blue-900/40 bg-blue-50/50 dark:bg-blue-950/20 p-4 space-y-2">
-                      <span className="block text-[10px] uppercase font-bold text-blue-700 dark:text-blue-300 tracking-wider">
-                        Marketing Remarks / Client Context:
-                      </span>
-                      <div className="p-3 rounded-md bg-white/80 dark:bg-[#0f1118] border border-blue-200/50 dark:border-blue-800/40 text-xs text-zinc-800 dark:text-zinc-200 leading-relaxed whitespace-pre-wrap">
-                        {selectedItemFeasibilityDetails.marketingRemarks}
-                      </div>
-                    </div>
                   )}
 
-                  {/* Reference Photos Gallery (all user uploaded photos) */}
-                  {isSelectedItemFeasibility &&
-                    selectedItemFeasibilityDetails &&
-                    selectedItemFeasibilityDetails.referenceImages.length > 0 && (
-                      <div className="rounded-lg border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0f1118] p-4 space-y-3">
-                        <div className="flex items-center justify-between">
-                          <span className="block text-[10px] uppercase font-bold text-zinc-400 tracking-wider">
-                            Attached Reference Photos ({selectedItemFeasibilityDetails.referenceImages.length}):
-                          </span>
-                          <span className="text-[10px] font-mono text-zinc-400">Select a photo to enlarge</span>
+                  {/* Description & Remark side-by-side */}
+                  <div className="rounded-lg border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0f1118] overflow-hidden shadow-2xs">
+                    <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-zinc-100 dark:divide-white/[0.06]">
+                      <div className="p-4 space-y-2">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 font-mono block">
+                          Description
+                        </span>
+                        <div className="text-xs text-zinc-800 dark:text-zinc-200 leading-relaxed font-sans whitespace-pre-wrap">
+                          {isSelectedItemFeasibility && selectedItemFeasibilityDetails
+                            ? (selectedItemFeasibilityDetails.requirements || "—")
+                            : (selectedItem.productDescription || "—")}
                         </div>
+                      </div>
+                      <div className="p-4 space-y-2">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 font-mono block">
+                          Remark
+                        </span>
+                        <div className="text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed font-sans whitespace-pre-wrap">
+                          {isSelectedItemFeasibility && selectedItemFeasibilityDetails?.marketingRemarks
+                            ? selectedItemFeasibilityDetails.marketingRemarks
+                            : <span className="text-zinc-400 italic">No remark provided.</span>}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Reference Attachments */}
+                  {isSelectedItemFeasibility && selectedItemFeasibilityDetails &&
+                    (selectedItemFeasibilityDetails.referenceImages.length > 0 || selectedItemFeasibilityDetails.referenceLinks.length > 0) && (
+                    <div className="rounded-lg border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0f1118] p-4 space-y-3 shadow-2xs">
+                      <div className="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-white/[0.06]">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 font-mono">
+                          Reference Attachments
+                        </span>
+                        <span className="text-[10px] font-mono text-zinc-400">
+                          {selectedItemFeasibilityDetails.referenceImages.length} images · {selectedItemFeasibilityDetails.referenceLinks.length} links
+                        </span>
+                      </div>
+
+                      {selectedItemFeasibilityDetails.referenceImages.length > 0 && (
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                           {selectedItemFeasibilityDetails.referenceImages.map((img, idx) => (
                             <div
                               key={img.id || idx}
                               onClick={() => img.url && setSelectedPreviewImage(img.url)}
-                              className={`group relative rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 overflow-hidden flex flex-col transition-all ${
-                                img.url ? "cursor-pointer hover:border-brand-300 dark:hover:border-brand-700 hover:shadow-md" : ""
+                              className={`group relative rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 overflow-hidden ${
+                                img.url ? "cursor-pointer hover:border-brand-500 hover:shadow-xs transition-all" : ""
                               }`}
                             >
                               {img.url ? (
                                 <div className="aspect-[4/3] w-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden relative">
                                   <img
-                                    src={img.url}
+                                    src={imageSourceFor(img.url)}
                                     alt={img.name}
-                                    className="w-full h-full object-cover"
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                                   />
-                                  <div className="absolute inset-0 bg-zinc-950/55 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                    <span className="rounded-md border border-white/30 bg-white/15 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur-sm">View photo</span>
+                                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                    <span className="text-[10px] font-medium text-white bg-black/60 px-2 py-0.5 rounded">View</span>
                                   </div>
                                 </div>
                               ) : (
-                                <div className="aspect-4/3 w-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-400">
-                                  <span className="text-[10px] font-semibold uppercase tracking-wider">Unavailable</span>
+                                <div className="aspect-[4/3] w-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+                                  <span className="text-[10px] text-zinc-400">Unavailable</span>
                                 </div>
                               )}
-                              <div className="p-1.5 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between gap-1 text-[11px]">
-                                <span className="truncate text-zinc-700 dark:text-zinc-300 font-medium" title={img.name}>
-                                  {img.name}
-                                </span>
-                                <span className="text-[9px] font-mono text-zinc-400 shrink-0">#{idx + 1}</span>
+                              <div className="p-1.5 flex items-center justify-between text-[10px] text-zinc-600 dark:text-zinc-400">
+                                <span className="truncate">{img.name}</span>
+                                <span className="font-mono text-zinc-400">#{idx + 1}</span>
                               </div>
                             </div>
                           ))}
                         </div>
-                      </div>
-                    )}
+                      )}
 
-                  {/* Reference Web Links */}
-                  {isSelectedItemFeasibility &&
-                    selectedItemFeasibilityDetails &&
-                    selectedItemFeasibilityDetails.referenceLinks.length > 0 && (
-                      <div className="rounded-md border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0f1118] p-3.5 space-y-2">
-                        <span className="block text-[10px] uppercase font-bold text-zinc-400 tracking-wider">
-                          Reference Web Links ({selectedItemFeasibilityDetails.referenceLinks.length}):
-                        </span>
-                        <div className="space-y-1.5">
+                      {selectedItemFeasibilityDetails.referenceLinks.length > 0 && (
+                        <div className="space-y-1.5 pt-1">
                           {selectedItemFeasibilityDetails.referenceLinks.map((url, idx) => (
                             <div
                               key={idx}
-                              className="flex items-center justify-between gap-2 px-3 py-1.5 rounded border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-900/50"
+                              className="flex items-center justify-between gap-2 px-3 py-2 rounded border border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-900/50"
                             >
-                              <span className="text-xs text-brand-600 dark:text-brand-400 truncate font-mono">
-                                {url}
-                              </span>
                               <a
                                 href={url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-[11px] font-semibold text-zinc-700 dark:text-zinc-300 hover:text-brand-600 transition-colors shrink-0"
+                                className="text-brand-600 dark:text-brand-400 hover:underline truncate font-mono text-xs flex-1"
                               >
-                                <span>Open</span>
-                                <ExternalLink className="w-3 h-3" />
+                                {url}
                               </a>
+                              <ExternalLink className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
                             </div>
                           ))}
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
+                  )}
 
                   {/* For regular non-feasibility items: standard visual preview if any */}
                   {!isSelectedItemFeasibility && selectedItem.productImagePath && (
                     <div className="rounded-md border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0f1118] p-3.5 space-y-2">
-                      <span className="block text-[10px] uppercase font-bold text-zinc-400 tracking-wider">
-                        Marketing Visual Reference / Sketch:
+                      <span className="block text-[11px] uppercase font-bold text-zinc-400 tracking-wider font-mono">
+                        Reference Visual
                       </span>
                       <div className="flex items-center gap-3">
                         <img
@@ -1325,196 +1413,189 @@ export const SamplingTeamDesk: React.FC<SamplingTeamDeskProps> = ({ user }) => {
                           alt="Visual reference"
                           className="h-20 w-20 object-cover rounded-md border border-zinc-200 dark:border-zinc-700"
                         />
-                        <div className="text-xs text-zinc-600 dark:text-zinc-400">
-                          <p className="font-semibold text-zinc-800 dark:text-zinc-200">
-                            Reference asset provided by Marketing
-                          </p>
-                          <a
-                            href={selectedItem.productImagePath}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1 text-[11px] text-brand-600 dark:text-brand-400 hover:underline mt-1 font-medium"
-                          >
-                            Open full image in new tab <ExternalLink className="w-3 h-3" />
-                          </a>
-                        </div>
+                        <a
+                          href={selectedItem.productImagePath}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 text-[11px] text-brand-600 dark:text-brand-400 hover:underline font-medium"
+                        >
+                          Open full image <ExternalLink className="w-3 h-3" />
+                        </a>
                       </div>
                     </div>
                   )}
 
-                  {/* Sign-Off Callout Action */}
-                  <div className="p-3.5 rounded-lg border border-zinc-200 dark:border-white/[0.08] bg-zinc-50 dark:bg-zinc-900/60 flex items-center justify-between">
-                    <div>
-                      <p className="text-xs font-bold text-zinc-900 dark:text-zinc-100">
-                        {selectedItem.samplingFeasibilityResponse
-                          ? `Verdict Submitted: ${selectedItem.samplingFeasibilityResponse}`
-                          : "Feasibility Sign-Off Pending"}
-                      </p>
-                      <p className="text-[11px] text-zinc-500">
-                        {selectedItem.samplingFeasibilityResponse
-                          ? "Official verdict is locked and visible to Marketing desk."
-                          : "Review specifications and record technical sign-off."}
-                      </p>
+                  {/* Quick-action callout to Submit Response tab */}
+                  {isSelectedItemFeasibility && (
+                    <div className="p-3 rounded-lg border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0f1118] flex items-center justify-between shadow-2xs">
+                      <div>
+                        <p className="text-xs font-bold text-zinc-900 dark:text-zinc-100 font-mono">
+                          {selectedItem.samplingFeasibilityResponse
+                            ? `Verdict Submitted: ${selectedItem.samplingFeasibilityResponse}`
+                            : "Response Pending"}
+                        </p>
+                        <p className="text-[11px] text-zinc-500 mt-0.5">
+                          {selectedItem.samplingFeasibilityResponse
+                            ? "Official verdict is locked and visible to Marketing desk."
+                            : "Review specifications and submit your technical response."}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setInspectorTab("feasibility")}
+                        className="px-3.5 py-1.5 rounded-md bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold font-mono cursor-pointer shadow-xs transition-colors"
+                      >
+                        {selectedItem.samplingFeasibilityResponse ? "View Response" : "Submit Response"}
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setInspectorTab("feasibility")}
-                      className="px-3.5 py-1.5 rounded-md bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs"
-                    >
-                      <span>{selectedItem.samplingFeasibilityResponse ? "View Locked Verdict" : "Proceed to Sign-Off"}</span>
-                      <ChevronRight className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+                  )}
                 </div>
               )}
 
-              {/* TAB 2: FEASIBILITY & FIRST RESPONDER */}
+              {/* TAB 2: SUBMIT RESPONSE */}
               {inspectorTab === "feasibility" && (
-                <div className="space-y-4">
-                  {/* CASE 1: VERDICT ALREADY SUBMITTED -> LOCKED VIEW (CANNOT BE CHANGED) */}
+                <div className="space-y-3.5">
+
+                  {/* CASE 1: VERDICT ALREADY SUBMITTED → LOCKED VIEW */}
                   {selectedItem.samplingFeasibilityResponse ? (
-                    <div className="rounded-lg border border-emerald-300 dark:border-emerald-800/80 bg-emerald-50/70 dark:bg-emerald-950/30 p-4 space-y-4 shadow-xs">
-                      <div className="flex items-center justify-between pb-3 border-b border-emerald-200 dark:border-emerald-800/70">
-                        <div className="flex items-center gap-2">
-                          <div className="p-1 rounded bg-emerald-600 text-white">
-                            <Lock className="w-4 h-4" />
-                          </div>
-                          <div>
-                            <h4 className="text-xs font-bold text-emerald-950 dark:text-emerald-100 uppercase tracking-wider">
-                              Official Verdict Recorded &amp; Locked
-                            </h4>
-                            <p className="text-[11px] text-emerald-700 dark:text-emerald-300">
-                              Statement permanently recorded in audit trail and broadcast to Marketing Desk.
-                            </p>
-                          </div>
-                        </div>
-
-                        <span className={`px-2.5 py-1 rounded text-xs font-bold border ${
-                          selectedItem.samplingFeasibilityResponse === "Yes"
-                            ? "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/60 dark:text-emerald-200 dark:border-emerald-700"
-                            : selectedItem.samplingFeasibilityResponse === "Maybe"
-                            ? "bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900/60 dark:text-amber-200 dark:border-amber-700"
-                            : "bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-900/60 dark:text-rose-200 dark:border-rose-700"
-                        }`}>
-                          Verdict: {selectedItem.samplingFeasibilityResponse === "Yes" ? "Feasible (Yes)" : selectedItem.samplingFeasibilityResponse === "Maybe" ? "Conditional (Maybe)" : "Not Feasible (No)"}
-                        </span>
-                      </div>
-
-                      {/* Technical Remarks Display */}
-                      <div className="space-y-1.5">
-                        <span className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider block">
-                          SAMP Lab Technical Evaluation Statement:
-                        </span>
-                        <div className="p-3.5 rounded-md bg-white dark:bg-[#0f1118] border border-zinc-200/80 dark:border-white/[0.08] text-xs text-zinc-800 dark:text-zinc-200 leading-relaxed font-sans whitespace-pre-wrap">
-                          "{selectedItem.samplingFeasibilityRemark || "Tooling, materials, and binding verified feasible."}"
-                        </div>
-                      </div>
-
-                      {/* Audit Details */}
-                      <div className="grid grid-cols-2 gap-3 pt-2 text-[11px] border-t border-emerald-200/80 dark:border-emerald-800/60 text-zinc-600 dark:text-zinc-400">
-                        <div>
-                          <span className="font-semibold text-zinc-800 dark:text-zinc-200">Evaluated By:</span> Central Prototyping Lab (SAMP)
-                          {selectedItem.samplingFeasibilityApprovedBy && (
-                            <span className="block mt-1"><span className="font-semibold text-zinc-800 dark:text-zinc-200">Accepted By:</span> {selectedItem.samplingFeasibilityApprovedBy}</span>
-                          )}
-                        </div>
-                        <div>
-                          <span className="font-semibold text-zinc-800 dark:text-zinc-200">Recorded At:</span>{" "}
-                          <span className="font-mono text-zinc-800 dark:text-zinc-200">
-                            {formatIndianDateTime(selectedItem.feasibilityClosedAt || selectedItem.createdAt || selectedItem.dateRequestCreated)}
+                    <div className="space-y-3">
+                      {/* Verdict Status Strip */}
+                      <div className="rounded-lg border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0f1118] overflow-hidden shadow-2xs">
+                        <div className="px-4 py-3 border-b border-zinc-100 dark:border-white/[0.06] flex items-center justify-between">
+                          <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 font-mono">
+                            Submitted Response
+                          </span>
+                          <span className={`px-2.5 py-1 rounded text-xs font-bold font-mono border ${
+                            selectedItem.samplingFeasibilityResponse === "Yes"
+                              ? "bg-emerald-50 text-emerald-800 border-emerald-300 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800"
+                              : selectedItem.samplingFeasibilityResponse === "Maybe"
+                              ? "bg-amber-50 text-amber-800 border-amber-300 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800"
+                              : "bg-rose-50 text-rose-800 border-rose-300 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-800"
+                          }`}>
+                            {selectedItem.samplingFeasibilityResponse === "Yes"
+                              ? "Feasible"
+                              : selectedItem.samplingFeasibilityResponse === "Maybe"
+                              ? "Conditional"
+                              : "Not Feasible"}
                           </span>
                         </div>
+
+                        {/* Description & Remark side-by-side */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-zinc-100 dark:divide-white/[0.06]">
+                          <div className="px-4 py-3 space-y-1.5">
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 font-mono block">
+                              Description
+                            </span>
+                            <div className="text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed font-sans whitespace-pre-wrap">
+                              {isSelectedItemFeasibility && selectedItemFeasibilityDetails
+                                ? (selectedItemFeasibilityDetails.requirements || "—")
+                                : (selectedItem.productDescription || "—")}
+                            </div>
+                          </div>
+                          <div className="px-4 py-3 space-y-1.5">
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 font-mono block">
+                              Remark
+                            </span>
+                            <div className="text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed font-sans whitespace-pre-wrap">
+                              {selectedItem.samplingFeasibilityRemark
+                                ? selectedItem.samplingFeasibilityRemark
+                                : <span className="text-zinc-400 italic">No remark recorded.</span>}
+                            </div>
+                          </div>
+                        </div>
                       </div>
 
-                      <div className="p-2.5 rounded bg-zinc-100 dark:bg-zinc-900/80 text-[11px] text-zinc-600 dark:text-zinc-400 flex items-center gap-2 border border-zinc-200/60 dark:border-zinc-800">
-                        <Lock className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
-                        <span>This response is officially locked. Prototyping team cannot alter the submitted evaluation.</span>
+                      {/* Audit metadata */}
+                      <div className="rounded-lg border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0f1118] overflow-hidden shadow-2xs">
+                        <div className="px-4 py-2.5 border-b border-zinc-100 dark:border-white/[0.06]">
+                          <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 font-mono">
+                            Audit Record
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-0 divide-x divide-zinc-100 dark:divide-white/[0.06]">
+                          <div className="px-4 py-2.5">
+                            <div className="text-[10px] font-mono uppercase font-bold text-zinc-400 mb-0.5">Evaluated By</div>
+                            <div className="text-xs font-semibold font-mono text-zinc-900 dark:text-zinc-100">
+                              {selectedItem.samplingFeasibilityApprovedBy || "SAMP Team"}
+                            </div>
+                          </div>
+                          <div className="px-4 py-2.5">
+                            <div className="text-[10px] font-mono uppercase font-bold text-zinc-400 mb-0.5">Recorded At</div>
+                            <div className="text-xs font-semibold font-mono text-zinc-900 dark:text-zinc-100">
+                              {formatIndianDateTime(selectedItem.feasibilityClosedAt || selectedItem.createdAt || selectedItem.dateRequestCreated)}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Locked notice */}
+                      <div className="px-4 py-2.5 rounded-lg border border-zinc-200 dark:border-white/[0.06] bg-zinc-50/80 dark:bg-zinc-900/60 text-[11px] text-zinc-500 dark:text-zinc-400 font-mono">
+                        Response is officially locked and broadcast to Marketing Desk. Cannot be altered.
                       </div>
                     </div>
                   ) : (
-                    /* CASE 2: VERDICT PENDING -> INTERACTIVE SIGN-OFF FORM */
-                    <form onSubmit={handleSubmitSignOff} className="rounded-lg border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0f1118] p-5 space-y-5 shadow-xs">
-                      <div>
-                        <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
-                          <ShieldCheck className="w-4 h-4 text-brand-600 dark:text-brand-400" />
-                          Record SAMP Lab Technical Verdict:
-                        </span>
+                    /* CASE 2: VERDICT PENDING → INTERACTIVE FORM */
+                    <form onSubmit={handleSubmitSignOff} className="space-y-4">
+                      {/* Form header */}
+                      <div className="rounded-lg border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0f1118] px-4 py-3 shadow-2xs">
+                        <p className="text-xs font-bold text-zinc-900 dark:text-zinc-100 font-mono">Record Technical Verdict</p>
                         <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
-                          Evaluate if this specification can be manufactured. Your response will lock and transmit to Marketing.
+                          Evaluate manufacturability and submit your response. It will lock and transmit to Marketing on submission.
                         </p>
                       </div>
 
-                      {/* 3 Verdict Buttons */}
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                        <button
-                          type="button"
-                          onClick={() => setSignOffResponse("Yes")}
-                          className={`min-h-14 px-3 rounded-md border text-xs font-bold flex flex-col items-center justify-center gap-1 cursor-pointer transition-all shadow-2xs select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 ${
-                            signOffResponse === "Yes"
-                              ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500 ring-2 ring-emerald-500/30"
-                              : "bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 hover:border-emerald-500/40"
-                          }`}
-                        >
-                          <div className="flex items-center gap-1.5">
-                            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                            <span>Feasible (Yes)</span>
-                          </div>
-                          <span className="text-[9px] font-normal text-emerald-600 dark:text-emerald-400 font-sans">
-                            Ready to produce
-                          </span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => setSignOffResponse("Maybe")}
-                          className={`min-h-14 px-3 rounded-md border text-xs font-bold flex flex-col items-center justify-center gap-1 cursor-pointer transition-all shadow-2xs select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/40 ${
-                            signOffResponse === "Maybe"
-                              ? "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500 ring-2 ring-amber-500/30"
-                              : "bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 hover:border-amber-500/40"
-                          }`}
-                        >
-                          <div className="flex items-center gap-1.5">
-                            <AlertTriangle className="w-4 h-4 text-amber-600" />
-                            <span>Conditional (Maybe)</span>
-                          </div>
-                          <span className="text-[9px] font-normal text-amber-600 dark:text-amber-400 font-sans">
-                            Requires changes
-                          </span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => setSignOffResponse("No")}
-                          className={`min-h-14 px-3 rounded-md border text-xs font-bold flex flex-col items-center justify-center gap-1 cursor-pointer transition-all shadow-2xs select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/40 ${
-                            signOffResponse === "No"
-                              ? "bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500 ring-2 ring-rose-500/30"
-                              : "bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 hover:border-rose-500/40"
-                          }`}
-                        >
-                          <div className="flex items-center gap-1.5">
-                            <XCircle className="w-4 h-4 text-rose-600" />
-                            <span>Not Feasible (No)</span>
-                          </div>
-                          <span className="text-[9px] font-normal text-rose-600 dark:text-rose-400 font-sans">
-                            Cannot manufacture
-                          </span>
-                        </button>
+                      {/* 3 Verdict Buttons — clean, no icons */}
+                      <div className="rounded-lg border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0f1118] p-3 shadow-2xs">
+                        <div className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 font-mono mb-2">Verdict</div>
+                        <div className="grid grid-cols-3 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setSignOffResponse("Yes")}
+                            className={`h-10 rounded-md border text-xs font-bold font-mono cursor-pointer transition-all ${
+                              signOffResponse === "Yes"
+                                ? "bg-emerald-50 text-emerald-800 border-emerald-400 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-700 ring-1 ring-emerald-400/30"
+                                : "bg-zinc-50 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 hover:border-emerald-400/50"
+                            }`}
+                          >
+                            Feasible
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setSignOffResponse("Maybe")}
+                            className={`h-10 rounded-md border text-xs font-bold font-mono cursor-pointer transition-all ${
+                              signOffResponse === "Maybe"
+                                ? "bg-amber-50 text-amber-800 border-amber-400 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-700 ring-1 ring-amber-400/30"
+                                : "bg-zinc-50 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 hover:border-amber-400/50"
+                            }`}
+                          >
+                            Conditional
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setSignOffResponse("No")}
+                            className={`h-10 rounded-md border text-xs font-bold font-mono cursor-pointer transition-all ${
+                              signOffResponse === "No"
+                                ? "bg-rose-50 text-rose-800 border-rose-400 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-700 ring-1 ring-rose-400/30"
+                                : "bg-zinc-50 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 hover:border-rose-400/50"
+                            }`}
+                          >
+                            Not Feasible
+                          </button>
+                        </div>
                       </div>
 
-                      {/* Spacious Textarea for Technical Remarks */}
-                      <div>
-                        <div className="flex items-center justify-between mb-1.5">
-                          <label className="text-[11px] font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
-                            Lab Technical Remarks
+                      {/* Remark Textarea */}
+                      <div className="rounded-lg border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0f1118] p-3 shadow-2xs space-y-2">
+                        <div className="flex items-center justify-between">
+                          <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 font-mono">
+                            Remark
                           </label>
                           {signOffResponse !== "Yes" ? (
-                            <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400">
-                              * Strictly Mandatory for {signOffResponse}
+                            <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400 font-mono">
+                              Required for {signOffResponse === "No" ? "Not Feasible" : "Conditional"}
                             </span>
                           ) : (
-                            <span className="text-[10px] text-zinc-400 font-sans">
-                              (Optional for Yes)
-                            </span>
+                            <span className="text-[10px] text-zinc-400 font-mono">Optional</span>
                           )}
                         </div>
                         <textarea
@@ -1524,31 +1605,31 @@ export const SamplingTeamDesk: React.FC<SamplingTeamDeskProps> = ({ user }) => {
                           onChange={(e) => setSignOffRemark(e.target.value)}
                           placeholder={
                             signOffResponse === "Yes"
-                              ? "Enter optional technical clearance notes (e.g. Die-block available, tooling verified on Kolbus wrapper, paper stock in house)..."
+                              ? "Optional — enter technical clearance notes..."
                               : signOffResponse === "Maybe"
-                              ? "Explain required technical conditions or modifications (e.g. Substrate GSM must be reduced to 300 GSM for folding tolerance)..."
-                              : "State the exact technical reasons why this cannot be manufactured (e.g. Die radius too tight for machine plotter, unsupported coating)..."
+                              ? "Explain conditions or modifications required..."
+                              : "State the exact reasons why this cannot be manufactured..."
                           }
-                          className="w-full p-3 rounded-md border border-zinc-200 dark:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-900 text-xs text-zinc-900 dark:text-zinc-100 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20 leading-relaxed resize-y min-h-[96px]"
+                          className="w-full p-2.5 rounded-md border border-zinc-200 dark:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-900 text-xs text-zinc-900 dark:text-zinc-100 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20 leading-relaxed resize-y min-h-[90px] font-sans"
                         />
                       </div>
 
+                      {/* Submit Button */}
                       <button
                         type="submit"
                         disabled={isSubmitting}
-                        className="w-full h-10 px-4 rounded-md bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-sm disabled:opacity-50 transition-colors"
+                        className="w-full h-9 px-4 rounded-md bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white font-bold text-xs font-mono cursor-pointer shadow-xs disabled:opacity-50 transition-colors"
                       >
-                        <CheckCircle2 className="w-4 h-4 text-white/80" />
-                        <span>{isSubmitting ? "Recording in Audit Trail..." : "Submit Feasibility Verdict & Send to Marketing"}</span>
+                        {isSubmitting ? "Submitting..." : "Submit Response"}
                       </button>
 
                       <p className="text-[10px] text-zinc-400 text-center font-mono">
-                        Note: Once submitted, your statement is locked in Indian Standard Time (IST) and cannot be edited.
+                        Once submitted, response is locked in IST and cannot be edited.
                       </p>
                     </form>
                   )}
 
-                  {/* Milestone Activity Timeline Component */}
+                  {/* Activity Timeline */}
                   <FeasibilityActivityTimeline request={selectedItem} activities={selectedItem.activities} />
                 </div>
               )}
@@ -1615,6 +1696,34 @@ export const SamplingTeamDesk: React.FC<SamplingTeamDeskProps> = ({ user }) => {
                 </div>
               )}
             </div>
+
+            {/* Footer Bar */}
+            <div className="px-5 py-3 border-t border-zinc-200 dark:border-white/[0.08] bg-zinc-50/50 dark:bg-[#161822] flex items-center justify-between gap-3 shrink-0">
+              <div className="flex items-center gap-2 text-xs text-zinc-500 font-mono">
+                <span>Created {formatIndianDateTime(selectedItem.createdAt || selectedItem.dateRequestCreated)}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={(e) => handleCopyCode(selectedItem.srNumber || `SR-${selectedItem.id}`, e)}
+                  className="h-8 px-3 rounded-md border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-xs font-mono font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  {copiedId === (selectedItem.srNumber || `SR-${selectedItem.id}`) ? (
+                    <Check className="w-3.5 h-3.5 text-emerald-600" />
+                  ) : (
+                    <Copy className="w-3.5 h-3.5" />
+                  )}
+                  <span>{copiedId === (selectedItem.srNumber || `SR-${selectedItem.id}`) ? "Copied" : "Copy Code"}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsInspectorOpen(false)}
+                  className="h-8 px-4 rounded-md bg-zinc-900 hover:bg-black dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-mono font-bold transition-colors cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -1653,7 +1762,7 @@ export const SamplingTeamDesk: React.FC<SamplingTeamDeskProps> = ({ user }) => {
             </div>
             <div className="relative min-h-0 flex-1 p-3 sm:p-6 flex items-center justify-center">
               <img
-                src={selectedPreviewImage}
+                src={imageSourceFor(selectedPreviewImage) || undefined}
                 alt={selectedPreviewIndex >= 0 ? previewableImages[selectedPreviewIndex].name : "Enlarged reference preview"}
                 className="max-w-full max-h-[78vh] object-contain rounded-lg"
               />

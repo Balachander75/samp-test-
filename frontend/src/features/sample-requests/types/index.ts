@@ -72,6 +72,7 @@ export interface SampleRequestItem {
   marketingDecisionRemark?: string | null;
   activities?: FeasibilityActivityItem[];
   referenceImages?: string[];
+  referenceImageNames?: string[];
   referenceLinks?: string[];
   feasibilityType?: string;
   customFeasibilityType?: string | null;
@@ -98,21 +99,18 @@ export interface FeasibilityRequestPayload {
   requiredDate: string;
   marketingRemarks?: string | null;
   referenceImages?: string[];
+  referenceImageNames?: string[];
   referenceLinks?: string[];
-  createdBy?: string | null;
-  createdByUserId?: number | null;
 }
 
 export interface FeasibilitySampVerdictPayload {
   response: "Yes" | "No" | "Maybe";
   remark?: string | null;
-  approved_by?: string | null;
 }
 
 export interface FeasibilityMarketingDecisionPayload {
   decision: "Accepted" | "Rejected";
   decision_remark?: string | null;
-  decision_by?: string | null;
 }
 
 export interface FeasibilityRequestRecord extends FeasibilityRequestPayload {
@@ -136,6 +134,7 @@ export interface FeasibilityRequestRecord extends FeasibilityRequestPayload {
   marketingDecisionAt?: string | null;
   marketingDecisionRemark?: string | null;
   activities?: FeasibilityActivityItem[];
+  referenceImageNames?: string[];
 }
 
 export interface CreateSampleRequestForm {
@@ -195,6 +194,7 @@ export type RequestTypeSelectedAt = Partial<Record<RequestType, string | null>>;
 
 export interface BindingHierarchyResponse {
   binding1_options: string[];
+  binding2_options?: string[];
   hierarchy: Record<string, string[]>;
 }
 

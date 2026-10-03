@@ -11,11 +11,11 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
-from sqlalchemy import func, or_
+from sqlalchemy import func, or_, and_
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models.sample_request import CreateSampleRequest
+from app.models.sample_request import CreateSampleRequest, ProductCharacteristic
 from app.utils.business_year import (
     get_business_year_for_date_str,
     get_business_year_start,
@@ -129,11 +129,43 @@ def sample_requests_health(db: Session = Depends(get_db)):
 # Sample Requests (/api/v1/sample-requests & /api/sample-requests)
 # ---------------------------------------------------------------------------
 
+@router.get("/api/v1/sample-requests/business-years", summary="Get distinct business years and counts")
+def get_sample_request_business_years(db: Session = Depends(get_db)):
+    """Return distinct business years present in sample requests, with record counts and active indicator."""
+    current_by = get_current_business_year()
+    rows = db.query(CreateSampleRequest.year, func.count(CreateSampleRequest.id)).group_by(CreateSampleRequest.year).all()
+    year_counts = {r[0]: r[1] for r in rows if r[0]}
+
+    if current_by not in year_counts:
+        year_counts[current_by] = 0
+
+    sorted_years = sorted(year_counts.keys(), reverse=True)
+    total_records = sum(year_counts.values())
+
+    return {
+        "current_business_year": current_by,
+        "total_records": total_records,
+        "years": [
+            {
+                "year": y,
+                "label": f"BY {y}",
+                "is_current": y == current_by,
+                "count": year_counts[y],
+            }
+            for y in sorted_years
+        ],
+    }
+
+
 @router.get("/api/v1/sample-requests", response_model=List[Dict[str, Any]], summary="List sample requests")
 @router.get("/api/sample-requests", response_model=List[Dict[str, Any]], summary="List sample requests (legacy alias)")
-def list_sample_requests(db: Session = Depends(get_db)):
-    """Return all sample requests from PostgreSQL database, ordered newest first."""
-    records = db.query(CreateSampleRequest).order_by(CreateSampleRequest.id.desc()).all()
+def list_sample_requests(year: Optional[str] = None, db: Session = Depends(get_db)):
+    """Return sample requests from PostgreSQL database, optionally filtered by business year."""
+    query = db.query(CreateSampleRequest)
+    if year and year.strip().upper() != "ALL":
+        clean_year = year.strip()
+        query = query.filter(CreateSampleRequest.year == clean_year)
+    records = query.order_by(CreateSampleRequest.id.desc()).all()
     return [_serialize_sample_request(r) for r in records]
 
 
@@ -639,13 +671,95 @@ def list_characteristic_classes():
 
 
 @router.get("/api/v1/product-characteristics/binding-hierarchy", summary="Get binding hierarchy")
-def get_binding_hierarchy():
-    return []
+def get_binding_hierarchy(db: Session = Depends(get_db)):
+    b1_char = (
+        db.query(ProductCharacteristic)
+        .filter(ProductCharacteristic.characteristic_name == "BINDINGTYPE1")
+        .first()
+    )
+    b2_char = (
+        db.query(ProductCharacteristic)
+        .filter(ProductCharacteristic.characteristic_name == "BINDINGTYPE2")
+        .first()
+    )
+    b1_opts = b1_char.options if b1_char and b1_char.options else []
+    b2_opts = b2_char.options if b2_char and b2_char.options else []
+
+    b1_cleaned = [o for o in b1_opts if o and str(o).strip()]
+    b2_cleaned = [o for o in b2_opts if o and str(o).strip()]
+
+    hierarchy = {b1: b2_cleaned for b1 in b1_cleaned}
+    return {
+        "binding1_options": b1_cleaned,
+        "binding2_options": b2_cleaned,
+        "hierarchy": hierarchy,
+    }
+
+
+def _extract_binding_keywords(val: Optional[str]) -> List[str]:
+    if not val or not val.strip() or val.strip().upper() == "NA" or "REFER TO SPECIAL" in val.upper():
+        return []
+    cleaned = val.strip()
+    keywords = [cleaned]
+    # Add significant individual tokens (e.g. "Soft", "Case", "Cover", "Spiral", "Wiro", "Sewn")
+    tokens = [
+        w for w in cleaned.replace("-", " ").replace("&", " ").replace("(", " ").replace(")", " ").split()
+        if len(w) >= 4 and w.lower() not in ("style", "with", "from", "layer", "layers", "type", "round", "spine")
+    ]
+    for t in tokens:
+        if t not in keywords:
+            keywords.append(t)
+    return keywords
 
 
 @router.get("/api/v1/product-characteristics/filter-by-binding", summary="Filter characteristics by binding")
-def filter_by_binding():
-    return []
+def filter_by_binding(
+    b1: Optional[str] = None,
+    b2: Optional[str] = None,
+    query: Optional[str] = None,
+    db: Session = Depends(get_db),
+):
+    q = db.query(CreateSampleRequest)
+    b1_keys = _extract_binding_keywords(b1)
+    b2_keys = _extract_binding_keywords(b2)
+
+    # 1. If both b1 and b2 are specified, find items matching both first (highest relevance)
+    both_items: List[CreateSampleRequest] = []
+    if b1_keys and b2_keys:
+        cond1 = or_(*[CreateSampleRequest.product_description.ilike(f"%{k}%") for k in b1_keys])
+        cond2 = or_(*[CreateSampleRequest.product_description.ilike(f"%{k}%") for k in b2_keys])
+        both_items = q.filter(and_(cond1, cond2)).limit(40).all()
+
+    # 2. General matching for any keyword or explicit query
+    filters = []
+    for k in b1_keys:
+        filters.append(CreateSampleRequest.product_description.ilike(f"%{k}%"))
+    for k in b2_keys:
+        filters.append(CreateSampleRequest.product_description.ilike(f"%{k}%"))
+    if query and query.strip():
+        term = f"%{query.strip()}%"
+        filters.append(CreateSampleRequest.material_code.ilike(term))
+        filters.append(CreateSampleRequest.product_description.ilike(term))
+        filters.append(CreateSampleRequest.customer.ilike(term))
+
+    other_items: List[CreateSampleRequest] = []
+    if filters:
+        existing_ids = {r.id for r in both_items}
+        other_items = q.filter(or_(*filters)).limit(60).all()
+        other_items = [r for r in other_items if r.id not in existing_ids]
+
+    # Combine: items matching both bindings come first, followed by single-match items
+    combined = both_items + other_items
+    if not combined:
+        combined = db.query(CreateSampleRequest).order_by(CreateSampleRequest.id.desc()).limit(30).all()
+
+    results = []
+    for r in combined[:60]:
+        row = _serialize_sample_request(r)
+        row["binding_type_1"] = b1 or "Standard"
+        row["binding_type_2"] = b2 or "Standard"
+        results.append(row)
+    return results
 
 
 @router.get("/api/v1/product-characteristics/details/{id}", summary="Get characteristic details")

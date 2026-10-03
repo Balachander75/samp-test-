@@ -22,10 +22,8 @@ class FeasibilityRequestCreate(BaseModel):
     required_date: date
     marketing_remarks: Optional[str] = None
     reference_images: list[str] = Field(default_factory=list, max_length=2)
+    reference_image_names: list[str] = Field(default_factory=list, max_length=2)
     reference_links: list[str] = Field(default_factory=list, max_length=1)
-    created_by: Optional[str] = Field(default=None, max_length=255)
-    request_created_by: Optional[str] = Field(default=None, max_length=255)
-    created_by_user_id: Optional[int] = None
 
     @model_validator(mode="after")
     def validate_type(self):
@@ -35,6 +33,10 @@ class FeasibilityRequestCreate(BaseModel):
             raise ValueError("Custom feasibility type is required for other")
         if len(self.reference_images) + len(self.reference_links) > 3:
             raise ValueError("A maximum of 2 images and 1 link can be attached")
+        if self.reference_image_names and len(self.reference_image_names) != len(self.reference_images):
+            raise ValueError("Each reference image must include one matching filename")
+        if any(len(image) > 1_500_000 for image in self.reference_images):
+            raise ValueError("Reference image exceeds the 1 MB compressed image limit")
         return self
 
 
@@ -43,7 +45,6 @@ class FeasibilitySampVerdictPayload(BaseModel):
 
     response: Literal["Yes", "No", "Maybe"]
     remark: Optional[str] = None
-    approved_by: Optional[str] = Field(default="SAMP Lab Team", max_length=255)
 
     @model_validator(mode="after")
     def validate_remarks_rule(self):
@@ -60,23 +61,6 @@ class FeasibilityMarketingDecisionPayload(BaseModel):
 
     decision: Literal["Accepted", "Rejected"]
     decision_remark: Optional[str] = None
-    decision_by: Optional[str] = Field(default="Marketing Team", max_length=255)
-
-
-class FeasibilityRequestUpdate(BaseModel):
-    """Mutable workflow fields used by the SAMP review team."""
-
-    status: Optional[str] = Field(default=None, max_length=64)
-    sampling_feasibility_response: Optional[Literal["Yes", "No", "Maybe"]] = None
-    sampling_feasibility_remark: Optional[str] = None
-    sampling_feasibility_approved_by: Optional[str] = Field(default=None, max_length=255)
-    feasibility_closed_at: Optional[datetime] = None
-    feasibility_closed_by: Optional[str] = Field(default=None, max_length=32)
-    is_responded_on_time: Optional[bool] = None
-    marketing_decision: Optional[str] = None
-    marketing_decision_by: Optional[str] = None
-    marketing_decision_at: Optional[datetime] = None
-    marketing_decision_remark: Optional[str] = None
 
 
 class FeasibilityActivityLogOut(BaseModel):
@@ -103,6 +87,7 @@ class FeasibilityRequestOut(BaseModel):
     required_date: date
     marketing_remarks: Optional[str] = None
     reference_images: list[str] = Field(default_factory=list)
+    reference_image_names: list[str] = Field(default_factory=list)
     reference_links: list[str] = Field(default_factory=list)
     status: str
     created_by: Optional[str] = None
@@ -128,4 +113,3 @@ class FeasibilityRequestOut(BaseModel):
     activities: List[FeasibilityActivityLogOut] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)
-
