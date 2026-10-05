@@ -1,23 +1,22 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { UserProfile } from "@/features/auth";
 import { Sidebar } from "./Sidebar";
-import { ALL_NAVIGATION_ITEMS, getNavigationTitle } from "./navigation";
+import { getNavigationTitle } from "./navigation";
 import { useTheme } from "@/context/ThemeContext";
 import { useBusinessYear } from "@/context/BusinessYearContext";
-import { getBusinessYearInfo } from "@/lib/businessYear";
+import { usePlant } from "@/context/PlantContext";
 import {
   Menu,
   Sun,
   Moon,
-  Bell,
   Calendar,
   Clock,
   RefreshCw,
   Search,
-  CheckCircle2,
-  AlertCircle,
   X,
   ChevronDown,
+  LogOut,
+  Settings,
 } from "lucide-react";
 
 export interface AppShellProps {
@@ -52,17 +51,62 @@ export const AppShell: React.FC<AppShellProps> = ({
   const [isYearDropdownOpen, setIsYearDropdownOpen] = useState(false);
   const yearDropdownRef = useRef<HTMLDivElement>(null);
 
+  const [isPlantDropdownOpen, setIsPlantDropdownOpen] = useState(false);
+  const plantDropdownRef = useRef<HTMLDivElement>(null);
+
+  const {
+    selectedPlant,
+    setSelectedPlant,
+    plantOptions,
+    activePlantLabel,
+  } = usePlant();
+
+  const plantsList = useMemo(() => [
+    { code: "ALL", name: "Consolidated (All Plants)", label: "Consolidated (All Plants)" },
+    ...plantOptions.map((p) => ({
+      code: p.code,
+      name: p.name,
+      label: p.displayName,
+    })),
+  ], [plantOptions]);
+
+  const handleSelectPlant = (plantCode: string, plantLabel: string) => {
+    setSelectedPlant(plantCode);
+    setIsPlantDropdownOpen(false);
+    window.dispatchEvent(
+      new CustomEvent("app:plant-changed", {
+        detail: { plant: plantCode, label: plantLabel },
+      })
+    );
+    window.dispatchEvent(
+      new CustomEvent("app:show-toast", {
+        detail: {
+          message: `Fulfillment plant scope updated: ${plantLabel}`,
+          tone: "info",
+        },
+      })
+    );
+  };
+
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (yearDropdownRef.current && !yearDropdownRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      if (yearDropdownRef.current && !yearDropdownRef.current.contains(target)) {
         setIsYearDropdownOpen(false);
       }
+      if (plantDropdownRef.current && !plantDropdownRef.current.contains(target)) {
+        setIsPlantDropdownOpen(false);
+      }
+      if (userMenuRef.current && !userMenuRef.current.contains(target)) {
+        setIsUserMenuOpen(false);
+      }
     };
-    if (isYearDropdownOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
+    document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isYearDropdownOpen]);
+  }, []);
 
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -99,9 +143,6 @@ export const AppShell: React.FC<AppShellProps> = ({
     return () => window.removeEventListener("app:refresh-complete", handleRefreshComplete);
   }, []);
 
-  const isWorkspaceHome = currentPath === "/" || ALL_NAVIGATION_ITEMS.some(
-    (item) => item.path === currentPath || item.aliases?.includes(currentPath)
-  );
   const handlePageRefresh = () => {
     setIsRefreshing(true);
     const refreshEvent = new Event("app:refresh-requested", { cancelable: true });
@@ -133,8 +174,6 @@ export const AppShell: React.FC<AppShellProps> = ({
     hour12: true,
   });
 
-  const businessYearInfo = React.useMemo(() => getBusinessYearInfo(currentDateTime), [currentDateTime]);
-
   // Global Ctrl+K / Cmd+K listener
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -164,9 +203,20 @@ export const AppShell: React.FC<AppShellProps> = ({
     }
   };
 
+  // User initials (up to 2 chars)
+  const initials = (user?.name || "U")
+    .split(" ")
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+
+  const activeTitle = getNavigationTitle(currentPath);
+  const plantDisplayLabel = activePlantLabel;
+
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[var(--bg-app)] text-zinc-900 dark:text-zinc-100 font-sans transition-colors duration-150">
-      {/* Universal Sidebar */}
+    <div className="flex h-screen w-screen overflow-hidden bg-[#f1f3f5] dark:bg-[#0c0d12] text-[#1e293b] dark:text-zinc-100 font-sans transition-colors duration-150 select-none">
+      {/* Primary Navigation Sidebar */}
       <Sidebar
         user={user}
         onLogout={onLogout}
@@ -177,219 +227,280 @@ export const AppShell: React.FC<AppShellProps> = ({
       />
 
       {/* Main Content Area */}
-        <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
-        {/* Global Enterprise Top Bar */}
-        <header className="h-14 border-b border-zinc-200/80 dark:border-white/[0.08] px-4 sm:px-6 flex items-center justify-between bg-[var(--bg-panel)] shrink-0 z-10 transition-colors gap-3">
-          {/* Left: Mobile Toggle & Live System Date / Time */}
-          <div className="flex items-center gap-3 min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+        {/* ========================================================================= */}
+        {/* CLEAN UTILITY TOP BAR (No Redundant Department Tabs)                      */}
+        {/* ========================================================================= */}
+        {/* ========================================================================= */}
+        {/* ODOO 19 ENTERPRISE UTILITY TOP BAR                                        */}
+        {/* ========================================================================= */}
+        <header className="h-10 bg-[#714B67] dark:bg-[#3E2938] text-white flex items-center justify-between px-3 sm:px-5 border-b border-[#5B3C53] dark:border-[#2A1B26] shrink-0 z-40 shadow-xs gap-3">
+          
+          {/* Left: Mobile Menu Toggle & Current Workspace Breadcrumb */}
+          <div className="flex items-center gap-2.5 min-w-0">
             <button
               type="button"
               onClick={() => setIsMobileNavOpen(true)}
-              className="md:hidden h-9 w-9 rounded-md flex items-center justify-center text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-white/[0.06] cursor-pointer transition-colors"
+              className="md:hidden p-1 rounded hover:bg-white/10 text-white/80 transition focus:outline-none cursor-pointer"
               aria-label="Open navigation menu"
             >
-              <Menu className="w-5 h-5" />
+              <Menu className="w-4 h-4" />
             </button>
 
-            {currentPath !== "/dashboard" && (
-              <span className="hidden xl:block text-[13px] font-semibold text-zinc-800 dark:text-zinc-100 whitespace-nowrap">
-                {getNavigationTitle(currentPath)}
+            {/* Current Active Workspace Indicator */}
+            <div className="flex items-center text-xs font-semibold">
+              <span className="text-white/60 font-normal">Workspace</span>
+              <span className="mx-1.5 text-white/30">/</span>
+              <span className="text-white font-bold truncate">
+                {activeTitle}
               </span>
-            )}
-
-            {currentPath !== "/dashboard" && (
-              <span className="hidden xl:block h-5 w-px bg-zinc-200 dark:bg-white/10" aria-hidden="true" />
-            )}
-
-            {/* Live System Date & Time Display */}
-            <div className="flex items-center gap-2 sm:gap-2.5 px-2.5 py-1.5 rounded-md bg-zinc-50 dark:bg-white/[0.03] border border-zinc-200 dark:border-white/[0.08] text-xs select-none">
-              <div className="flex items-center gap-1.5 text-zinc-600 dark:text-zinc-400 font-medium">
-                <Calendar className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 shrink-0" />
-                <span className="tracking-tight">{formattedDate}</span>
-              </div>
-
-              <span className="text-zinc-300 dark:text-zinc-700 font-light">|</span>
-
-              <div className="flex items-center gap-1.5 text-zinc-900 dark:text-zinc-100 font-mono font-semibold tabular-nums">
-                <Clock className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400 shrink-0" />
-                <span>{formattedTime}</span>
-              </div>
-
-              <span className="text-zinc-300 dark:text-zinc-700 font-light hidden sm:inline">|</span>
-
-              {/* Business Year Dropdown Selector */}
-              <div className="relative hidden sm:inline-block" ref={yearDropdownRef}>
-                <button
-                  type="button"
-                  onClick={() => setIsYearDropdownOpen((prev) => !prev)}
-                  className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-mono font-medium text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-200/60 dark:hover:bg-white/[0.08] transition-colors cursor-pointer select-none"
-                  title="Switch Business Year"
-                >
-                  <span className="font-semibold text-zinc-900 dark:text-zinc-100">
-                    {selectedYear === "ALL" ? "All Years" : `BY ${selectedYear}`}
-                  </span>
-                  <ChevronDown
-                    className={`w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 transition-transform duration-150 ${
-                      isYearDropdownOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-
-                {/* Dropdown Menu */}
-                {isYearDropdownOpen && (
-                  <div className="absolute left-0 mt-2 w-52 rounded-md bg-white dark:bg-[#12131a] border border-zinc-200 dark:border-zinc-800 shadow-lg z-50 p-1 select-none">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedYear("ALL");
-                        setIsYearDropdownOpen(false);
-                      }}
-                      className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs font-mono transition-colors cursor-pointer ${
-                        selectedYear === "ALL"
-                          ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 font-semibold"
-                          : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 hover:text-zinc-900 dark:hover:text-zinc-100"
-                      }`}
-                    >
-                      <span>All Business Years</span>
-                      <span className="text-[11px] text-zinc-400 dark:text-zinc-500">
-                        {totalRecords.toLocaleString()}
-                      </span>
-                    </button>
-
-                    {yearsList.map((y) => {
-                      const isSelected = selectedYear === y.year;
-                      return (
-                        <button
-                          key={y.year}
-                          type="button"
-                          onClick={() => {
-                            setSelectedYear(y.year);
-                            setIsYearDropdownOpen(false);
-                          }}
-                          className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs font-mono transition-colors cursor-pointer ${
-                            isSelected
-                              ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 font-semibold"
-                              : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 hover:text-zinc-900 dark:hover:text-zinc-100"
-                          }`}
-                        >
-                          <span className="flex items-center gap-1.5">
-                            <span>BY {y.year}</span>
-                            {y.is_current && (
-                              <span className="text-[10px] text-zinc-400 dark:text-zinc-500 font-sans">
-                                (Current)
-                              </span>
-                            )}
-                          </span>
-                          <span className="text-[11px] text-zinc-400 dark:text-zinc-500">
-                            {y.count.toLocaleString()}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
+              <span className="hidden sm:inline-block ml-2 text-[9px] bg-white/20 text-white px-1.5 py-0.2 rounded font-mono font-bold tracking-wider">
+                SMPS 19
+              </span>
             </div>
-        </div>
+          </div>
 
-          {/* Quick access to request search from any workspace. */}
-          <button
-            type="button"
-            onClick={handleGlobalSearchFocus}
-            className="hidden lg:flex flex-1 max-w-[440px] h-9 items-center gap-2.5 px-3 rounded-md border border-zinc-300 bg-white text-zinc-500 hover:border-zinc-400 hover:text-zinc-700 dark:border-white/15 dark:bg-[#111318] dark:text-zinc-400 dark:hover:border-white/25 transition-colors text-left"
-            aria-label="Open sample request search"
-          >
-            <Search className="w-4 h-4 shrink-0" aria-hidden="true" />
-            <span className="flex-1 text-[13px]">Search sample requests, SKUs, customers…</span>
-            <kbd className="px-1.5 py-0.5 rounded border border-zinc-200 bg-zinc-50 text-[10px] font-medium text-zinc-500 dark:border-white/10 dark:bg-white/[0.04] dark:text-zinc-400">Ctrl K</kbd>
-          </button>
+          {/* Center: Global Search Bar */}
+          <div className="flex-1 max-w-md mx-2 hidden sm:block">
+            <div
+              onClick={handleGlobalSearchFocus}
+              className="flex items-center bg-black/20 hover:bg-black/30 border border-white/15 focus-within:border-white focus-within:bg-black/35 rounded px-2.5 py-1 text-xs text-white/80 transition cursor-text"
+            >
+              <Search className="w-3.5 h-3.5 text-white/60 mr-2 shrink-0" />
+              <input
+                id="global-search-input"
+                type="text"
+                placeholder="Search requests, materials, customers... (Ctrl+K)"
+                className="bg-transparent border-none text-xs w-full focus:outline-none text-white placeholder:text-white/50"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    onNavigate("/sample-requests");
+                  }
+                }}
+              />
+              <kbd className="font-mono text-[9px] bg-white/20 px-1 py-0.5 rounded text-white shrink-0">
+                Ctrl+K
+              </kbd>
+            </div>
+          </div>
 
-          {/* Right: Quick Actions */}
-          <div className="flex items-center gap-2 shrink-0">
-            {isWorkspaceHome && (
+          {/* Right: Multi-Plant Selector, Live Date/Time & BY, Theme Toggle, Profile */}
+          <div className="flex items-center gap-2 sm:gap-2.5">
+            {/* Multi-Plant Scope Selector */}
+            <div className="relative" ref={plantDropdownRef}>
               <button
                 type="button"
-                onClick={handlePageRefresh}
-                disabled={isRefreshing}
-                aria-label="Refresh current section"
-                title="Refresh current section"
-                className="group h-9 w-9 rounded-md flex items-center justify-center text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-white/[0.06] border border-zinc-200/80 dark:border-white/[0.08] transition-[color,background-color,border-color,transform] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 cursor-pointer disabled:cursor-wait disabled:opacity-60"
+                onClick={() => setIsPlantDropdownOpen((prev) => !prev)}
+                className="flex items-center gap-1.5 bg-black/20 hover:bg-black/30 px-2.5 py-1 rounded border border-white/15 text-xs text-white cursor-pointer transition select-none"
+                title="Select Active Fulfillment Plant"
               >
-                <RefreshCw className={`w-[17px] h-[17px] transition-transform duration-200 ${isRefreshing ? "animate-spin" : "group-hover:rotate-45"}`} />
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                <span className="text-[10px] text-white/70 uppercase font-mono hidden md:inline">Plant:</span>
+                <span className="font-semibold text-xs truncate max-w-[130px] sm:max-w-none text-white">
+                  {plantDisplayLabel}
+                </span>
+                <ChevronDown className="w-3 h-3 text-white/60 ml-0.5" />
               </button>
-            )}
 
-            {/* Theme Toggle Button */}
+              {isPlantDropdownOpen && (
+                <div className="absolute right-0 top-full mt-1.5 w-64 rounded-md bg-white dark:bg-[#141722] text-[#1e293b] dark:text-zinc-100 border border-[#ced4da] dark:border-white/15 shadow-2xl z-50 p-1 text-xs select-none animate-in fade-in duration-100">
+                  <div className="px-2 py-1.5 text-[10px] font-mono uppercase text-zinc-400 font-bold border-b border-zinc-100 dark:border-white/[0.06] mb-1">
+                    Select Plant Scope
+                  </div>
+                  <div className="max-h-60 overflow-y-auto space-y-0.5">
+                    {plantsList.map((opt) => (
+                      <button
+                        key={opt.code}
+                        type="button"
+                        onClick={() => handleSelectPlant(opt.code, opt.label)}
+                        className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-left transition cursor-pointer ${
+                          selectedPlant === opt.code
+                            ? "bg-[#714b67]/10 dark:bg-[#714b67]/25 text-[#714b67] dark:text-purple-300 font-semibold"
+                            : "hover:bg-zinc-50 dark:hover:bg-white/[0.04] text-zinc-700 dark:text-zinc-300"
+                        }`}
+                      >
+                        <span className="truncate">{opt.label}</span>
+                        {selectedPlant === opt.code && <span className="text-emerald-600 font-bold ml-1">✓</span>}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Live Clock & Date Badge */}
+            <div className="hidden lg:flex items-center gap-2 px-2.5 py-1 rounded bg-black/20 border border-white/15 text-xs text-white/90">
+              <div className="flex items-center gap-1.5 text-white/70">
+                <Calendar className="w-3 h-3 text-white/60" />
+                <span>{formattedDate}</span>
+              </div>
+              <span className="text-white/30">|</span>
+              <div className="flex items-center gap-1.5 font-mono font-semibold text-white">
+                <Clock className="w-3 h-3 text-white/80" />
+                <span>{formattedTime}</span>
+              </div>
+            </div>
+
+            {/* Business Year Selector */}
+            <div className="relative hidden sm:inline-block" ref={yearDropdownRef}>
+              <button
+                type="button"
+                onClick={() => setIsYearDropdownOpen((prev) => !prev)}
+                className="flex items-center gap-1.5 bg-white/20 hover:bg-white/25 px-2.5 py-1 rounded border border-white/25 text-white font-mono text-xs font-semibold cursor-pointer select-none"
+                title="Business Year (October to September)"
+              >
+                <span>{selectedYear === "ALL" ? "All Years" : `BY ${selectedYear}`}</span>
+                <ChevronDown className="w-3 h-3 text-white/70" />
+              </button>
+
+              {isYearDropdownOpen && (
+                <div className="absolute right-0 top-full mt-1.5 w-52 rounded-md bg-white dark:bg-[#141722] text-[#1e293b] dark:text-zinc-100 border border-[#ced4da] dark:border-white/15 shadow-2xl z-50 p-1 text-xs select-none animate-in fade-in duration-100 max-h-72 overflow-y-auto">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedYear("ALL");
+                      setIsYearDropdownOpen(false);
+                    }}
+                    className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded font-mono transition cursor-pointer ${
+                      selectedYear === "ALL"
+                        ? "bg-[#714b67]/10 dark:bg-[#714b67]/25 text-[#714b67] dark:text-purple-300 font-semibold"
+                        : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-white/[0.04]"
+                    }`}
+                  >
+                    <span>All Business Years</span>
+                    <span className="text-[11px] text-zinc-400">{totalRecords.toLocaleString()}</span>
+                  </button>
+
+                  {yearsList.map((y) => {
+                    const isSelected = selectedYear === y.year;
+                    return (
+                      <button
+                        key={y.year}
+                        type="button"
+                        onClick={() => {
+                          setSelectedYear(y.year);
+                          setIsYearDropdownOpen(false);
+                        }}
+                        className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded font-mono transition cursor-pointer ${
+                          isSelected
+                            ? "bg-[#714b67]/10 dark:bg-[#714b67]/25 text-[#714b67] dark:text-purple-300 font-semibold"
+                            : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-white/[0.04]"
+                        }`}
+                      >
+                        <span className="flex items-center gap-1.5">
+                          <span>BY {y.year}</span>
+                          {y.is_current && <span className="text-[10px] text-emerald-600 font-sans">(Current)</span>}
+                        </span>
+                        <span className="text-[11px] text-zinc-400 tabular-nums">{y.count.toLocaleString()}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Refresh Action */}
+            <button
+              type="button"
+              onClick={handlePageRefresh}
+              title="Refresh Workspace"
+              className={`p-1.5 rounded hover:bg-white/10 text-white/80 hover:text-white transition cursor-pointer ${
+                isRefreshing ? "animate-spin text-white" : ""
+              }`}
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+            </button>
+
+            {/* Theme Toggle */}
             <button
               type="button"
               onClick={toggleTheme}
               aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-              title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-              className="h-9 w-9 rounded-md flex items-center justify-center bg-[var(--bg-panel)] text-zinc-500 dark:text-zinc-400 hover:text-brand-700 dark:hover:text-brand-300 hover:bg-brand-50 dark:hover:bg-brand-950/30 border border-zinc-200/80 dark:border-white/[0.08] transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 active:scale-[0.97]"
+              title="Toggle Theme"
+              className="p-1.5 rounded hover:bg-white/10 text-white/80 hover:text-white transition cursor-pointer"
             >
-              {theme === "dark" ? (
-                <Sun className="w-[18px] h-[18px] text-amber-400" />
-              ) : (
-                <Moon className="w-[18px] h-[18px] text-indigo-500" />
+              {theme === "dark" ? <Sun className="w-3.5 h-3.5 text-amber-300" /> : <Moon className="w-3.5 h-3.5 text-white" />}
+            </button>
+
+            {/* User Profile Pill & Dropdown */}
+            <div className="relative" ref={userMenuRef}>
+              <button
+                type="button"
+                onClick={() => setIsUserMenuOpen((prev) => !prev)}
+                className="flex items-center gap-2 pl-2 border-l border-white/20 cursor-pointer select-none group"
+              >
+                <span className="w-6 h-6 rounded bg-white text-[#714B67] font-bold flex items-center justify-center text-[10px] shadow-xs">
+                  {initials}
+                </span>
+                <span className="hidden xl:inline text-xs font-semibold text-white truncate max-w-[120px]">
+                  {user?.name || "Admin"}
+                </span>
+              </button>
+
+              {isUserMenuOpen && (
+                <div className="absolute right-0 mt-1.5 w-48 rounded bg-white dark:bg-[#141722] text-[#1e293b] dark:text-zinc-100 border border-[#ced4da] dark:border-white/15 shadow-xl z-50 p-1 text-xs select-none animate-in fade-in duration-100">
+                  <div className="px-3 py-2 border-b border-zinc-100 dark:border-white/[0.06]">
+                    <p className="font-semibold text-zinc-900 dark:text-zinc-100 truncate">{user?.name}</p>
+                    <p className="text-[10px] text-zinc-400 font-mono">{user?.role || "Global Admin"}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsUserMenuOpen(false);
+                      onNavigate("/settings");
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-white/[0.04] rounded transition text-left cursor-pointer"
+                  >
+                    <Settings className="w-3.5 h-3.5 text-zinc-400" />
+                    <span>Workspace Settings</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsUserMenuOpen(false);
+                      onLogout();
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded transition text-left cursor-pointer font-medium"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span>Sign Out</span>
+                  </button>
+                </div>
               )}
-            </button>
-
-            {/* Notifications Button */}
-            <button
-              type="button"
-              className="relative h-9 w-9 rounded-md flex items-center justify-center text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-white/[0.06] border border-zinc-200/80 dark:border-white/[0.08] transition-colors cursor-pointer"
-              aria-label="System notifications"
-              title="Notifications"
-            >
-              <Bell className="w-[18px] h-[18px]" />
-            </button>
-
-            {/* User Avatar */}
-            <div
-              className="h-9 w-9 rounded-md bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-bold text-xs flex items-center justify-center font-mono cursor-default select-none shadow-xs border border-zinc-700/50 dark:border-zinc-300 ml-1"
-              title={`${user?.name || "User"} (${user?.sub_role || user?.role || "Operator"})`}
-            >
-              {(user?.name || "A").charAt(0).toUpperCase()}
             </div>
+
           </div>
         </header>
 
-        {/* Global Operational Toast Notification */}
+        {/* Global Toast Alert */}
         {globalToast && (
-          <div
-            role="status"
-            aria-live="polite"
-            className={`fixed top-16 right-5 z-[80] flex items-center gap-3 px-4 py-3 rounded-lg shadow-2xl text-xs font-semibold border backdrop-blur-md max-w-md animate-smooth-toast transition-all ${
-              globalToast.tone === "error"
-                ? "bg-rose-950/90 text-rose-100 border-rose-700/80 shadow-rose-950/40"
-                : globalToast.tone === "info"
-                ? "bg-zinc-900/95 text-zinc-100 border-zinc-700/80 shadow-zinc-950/40"
-                : "bg-emerald-950/90 text-emerald-100 border-emerald-700/80 shadow-emerald-950/40"
-            }`}
-          >
-            {globalToast.tone === "error" ? (
-              <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
-            ) : globalToast.tone === "info" ? (
-              <Clock className="w-4 h-4 shrink-0 text-amber-400 animate-spin" />
-            ) : (
-              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
-            )}
-            <span className="flex-1 leading-snug">{globalToast.message}</span>
-            <button
-              type="button"
-              onClick={() => setGlobalToast(null)}
-              className="p-1 rounded hover:bg-white/20 text-white/70 hover:text-white transition-colors cursor-pointer shrink-0"
-              aria-label="Dismiss notification"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
+          <div className="fixed bottom-5 right-5 z-50 max-w-sm w-[calc(100vw-2.5rem)] animate-in fade-in slide-in-from-bottom-3 duration-200">
+            <div className="bg-[#1e293b] text-white px-4 py-2.5 rounded shadow-xl border border-white/10 flex items-center gap-2.5 text-xs">
+              <span
+                className={`w-2 h-2 rounded-full shrink-0 ${
+                  globalToast.tone === "error"
+                    ? "bg-rose-500"
+                    : globalToast.tone === "info"
+                    ? "bg-blue-400"
+                    : "bg-[#017e84]"
+                }`}
+              />
+              <span className="flex-1 leading-snug">{globalToast.message}</span>
+              <button
+                type="button"
+                onClick={() => setGlobalToast(null)}
+                className="text-zinc-400 hover:text-white p-0.5 cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
         )}
 
-        {/* Main Work Viewport */}
-        <main className="flex-1 min-h-0 flex flex-col overflow-hidden">
+        {/* Main Routed View */}
+        <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
           {children}
-        </main>
+        </div>
       </div>
     </div>
   );

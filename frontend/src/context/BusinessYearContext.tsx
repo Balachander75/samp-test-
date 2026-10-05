@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from "react";
 import { getCurrentBusinessYear } from "@/lib/businessYear";
-import { fetchBusinessYearsApi, BusinessYearOption } from "@/features/sample-requests/api";
+import { fetchBusinessYearsApi, BusinessYearOption } from "@/infrastructure/api/masterApi";
 
 export interface BusinessYearContextType {
   selectedYear: string;

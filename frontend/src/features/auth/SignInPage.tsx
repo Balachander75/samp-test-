@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { User, Lock, Eye, EyeOff, Sun, Moon, AlertCircle, X } from "lucide-react";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
+import { User, Lock, Eye, EyeOff, Sun, Moon, AlertCircle, ArrowRight, Loader2, X } from "lucide-react";
 import { AuthResponse } from "./types";
 import { API_BASE_URL } from "@/lib/api";
 import { persistAuthSession } from "@/lib/session";
@@ -16,25 +14,25 @@ export interface SignInPageProps {
 interface ParsedError {
   message: string;
   code?: string;
+  field?: "identifier" | "password" | "general";
 }
 
-/** Extract the most useful error message and code from any backend response shape. */
+/** Extract error message and code from backend response shape */
 function parseErrorMessage(data: Record<string, unknown>): ParsedError {
-  // Structured: { detail: { error: { message: "...", code: "..." } } }
   const detail = data?.detail as Record<string, unknown> | undefined;
   if (detail?.error) {
     const err = detail.error as Record<string, unknown>;
     return {
       message: (err.message as string) || "Authentication failed.",
       code: (err.code as string) || undefined,
+      field: "general",
     };
   }
-  // Flat: { detail: "string" }
-  if (typeof detail === "string") return { message: detail };
-  // Legacy: { message: "..." }
+  if (typeof detail === "string") return { message: detail, field: "general" };
   return {
-    message: (data?.message as string) || "Invalid credentials. Please try again.",
+    message: (data?.message as string) || "Invalid credentials. Please verify username and password.",
     code: (data?.code as string) || undefined,
+    field: "general",
   };
 }
 
@@ -47,22 +45,24 @@ export const SignInPage: React.FC<SignInPageProps> = ({ onSignInSuccess }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [errorInfo, setErrorInfo] = useState<ParsedError | null>(null);
 
-  // Auto-dismiss popup error message after 6 seconds
+  // Auto-dismiss floating toast notification after 5.5 seconds
   useEffect(() => {
     if (!errorInfo) return;
     const timer = setTimeout(() => {
       setErrorInfo(null);
-    }, 6000);
+    }, 5500);
     return () => clearTimeout(timer);
   }, [errorInfo]);
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const cleanId = identifier.trim();
+
     if (!cleanId) {
       setErrorInfo({
-        message: "Please enter your username or email address.",
+        message: "Please enter your username or email.",
         code: "REQUIRED_FIELD",
+        field: "identifier",
       });
       return;
     }
@@ -70,6 +70,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({ onSignInSuccess }) => {
       setErrorInfo({
         message: "Please enter your password.",
         code: "REQUIRED_FIELD",
+        field: "password",
       });
       return;
     }
@@ -83,7 +84,6 @@ export const SignInPage: React.FC<SignInPageProps> = ({ onSignInSuccess }) => {
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({
           identifier: cleanId,
-          // legacy field aliases for compatibility
           userid: cleanId,
           username: cleanId,
           email: cleanId,
@@ -104,8 +104,9 @@ export const SignInPage: React.FC<SignInPageProps> = ({ onSignInSuccess }) => {
 
       if (!token || !user) {
         setErrorInfo({
-          message: "Unexpected response from the authentication server. Please try again.",
+          message: "Unexpected response from authentication service. Please try again.",
           code: "INVALID_SERVER_RESPONSE",
+          field: "general",
         });
         return;
       }
@@ -122,8 +123,9 @@ export const SignInPage: React.FC<SignInPageProps> = ({ onSignInSuccess }) => {
       onSignInSuccess(authData);
     } catch {
       setErrorInfo({
-        message: "Unable to reach the authentication server. Please check your connection and try again.",
+        message: "Unable to reach authentication server. Please check your network connection.",
         code: "NETWORK_ERROR",
+        field: "general",
       });
     } finally {
       setIsLoading(false);
@@ -131,191 +133,220 @@ export const SignInPage: React.FC<SignInPageProps> = ({ onSignInSuccess }) => {
   };
 
   return (
-    <div className="min-h-screen w-full relative flex flex-col justify-center items-center p-3 sm:p-6 lg:p-8 select-none overflow-x-hidden overflow-y-auto bg-zinc-950">
-      {/* Keep the original Navneet hero image as the sign-in backdrop. */}
+    <div className="min-h-screen w-full relative flex flex-col justify-center items-center p-4 sm:p-6 select-none overflow-hidden font-sans">
+      {/* Brand Hero Background with warm dark atmosphere */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
-        <img src={brandHeroImg} alt="" className="h-full w-full object-cover object-center" />
-        <div className="absolute inset-0 bg-zinc-950/45 dark:bg-zinc-950/70 backdrop-blur-[1px]" />
-      </div>
-
-      {/* Top bar: Brand Logo */}
-      <div className="fixed top-6 left-6 sm:left-8 z-30 flex items-center">
         <img
-          src={logoImg}
-          alt="Navneet"
-          className="h-10 sm:h-11 w-auto object-contain drop-shadow-[0_1px_5px_rgba(0,0,0,0.35)]"
+          src={brandHeroImg}
+          alt=""
+          className="h-full w-full object-cover object-center scale-105 transition-transform duration-1000"
         />
+        {/* Dual overlay: deep dark gradient for text contrast & subtle brand tint */}
+        <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/75 via-zinc-950/60 to-zinc-950/80 backdrop-blur-[2px]" />
+        <div className="absolute inset-0 bg-[#714b67]/10 mix-blend-overlay" />
       </div>
 
-      {/* Top bar: Theme Toggle */}
-      <div className="fixed top-6 right-6 sm:right-8 z-30">
+      {/* Top Bar: Discreet Theme Switcher */}
+      <header className="absolute top-5 right-5 sm:top-6 sm:right-7 z-20">
         <button
           type="button"
           onClick={toggleTheme}
           aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-          className="group flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold cursor-pointer transition-all duration-200 backdrop-blur-md erp-theme-toggle"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-white/90 bg-black/40 hover:bg-black/60 border border-white/20 shadow-md backdrop-blur-md transition-all duration-150 cursor-pointer"
         >
           {theme === "dark" ? (
             <>
-              <Sun className="w-4 h-4 text-amber-400" />
+              <Sun className="w-3.5 h-3.5 text-amber-400" />
               <span>Light Mode</span>
             </>
           ) : (
             <>
-              <Moon className="w-4 h-4 text-indigo-600" />
+              <Moon className="w-3.5 h-3.5 text-purple-300" />
               <span>Dark Mode</span>
             </>
           )}
         </button>
-      </div>
+      </header>
 
-      {/* Sleek Floating Bottom Error Notification Popup */}
+      {/* Floating Notification Toast for Exceptions */}
       {errorInfo && (
         <div
           role="alert"
           aria-live="assertive"
-          className="fixed bottom-6 sm:bottom-8 left-1/2 z-50 w-[92%] max-w-[460px] animate-smooth-toast-bottom"
+          className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-50 max-w-sm w-[calc(100vw-2.5rem)] animate-in fade-in slide-in-from-bottom-3 duration-200"
         >
-          <div className="relative overflow-hidden rounded-lg bg-white/95 dark:bg-[#0c0e14]/95 backdrop-blur-xl border border-rose-500/30 dark:border-rose-500/40 shadow-[0_16px_40px_rgba(0,0,0,0.25)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.85)] text-zinc-900 dark:text-zinc-100 flex flex-col">
-            <div className="flex items-start gap-3.5 p-3.5 sm:p-4">
-              {/* Left accent pill icon */}
-              <div className="w-8 h-8 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 mt-0.5 border border-rose-500/20 shadow-xs">
-                <AlertCircle className="w-4 h-4" />
+          <div className="bg-[#1e293b]/95 backdrop-blur-md text-white px-4 py-3 rounded-md shadow-2xl border border-white/15 flex items-start gap-3 text-xs">
+            <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse mt-1.5 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-0.5">
+                <span className="font-semibold text-rose-400 tracking-wide uppercase text-[10px] font-mono">
+                  {errorInfo.code ? errorInfo.code.replace(/_/g, " ") : "Access Alert"}
+                </span>
               </div>
-
-              {/* Text content */}
-              <div className="flex-1 min-w-0 pr-1">
-                <div className="flex items-center gap-2">
-                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-                  <h4 className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-rose-600 dark:text-rose-400 font-mono">
-                    {errorInfo.code ? errorInfo.code.replace(/_/g, " ") : "Authentication Alert"}
-                  </h4>
-                </div>
-                <p className="mt-1 text-xs sm:text-[13px] text-zinc-700 dark:text-zinc-300 leading-snug break-words">
-                  {errorInfo.message}
-                </p>
-              </div>
-
-              {/* Close Button */}
-              <button
-                type="button"
-                onClick={() => setErrorInfo(null)}
-                className="p-1 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors rounded hover:bg-zinc-100 dark:hover:bg-zinc-800/80 shrink-0 cursor-pointer"
-                aria-label="Dismiss error"
-              >
-                <X className="w-4 h-4" />
-              </button>
+              <p className="text-zinc-200 text-xs leading-relaxed">
+                {errorInfo.message}
+              </p>
             </div>
-
-            {/* Subtle Progress Bar Countdown */}
-            <div className="w-full h-[2px] bg-rose-500/10 dark:bg-rose-500/20 overflow-hidden">
-              <div className="h-full bg-rose-500/60 dark:bg-rose-500/70 animate-toast-progress" />
-            </div>
+            <button
+              type="button"
+              onClick={() => setErrorInfo(null)}
+              className="text-zinc-400 hover:text-white p-0.5 rounded transition-colors shrink-0 cursor-pointer"
+              aria-label="Close notification"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
         </div>
       )}
 
-      {/* Sign-In Card */}
-      <main className="relative z-10 w-full max-w-[440px] sm:max-w-[460px] md:max-w-[480px] my-auto py-4 sm:py-6">
-        <div className="w-full rounded-lg p-6 sm:p-8 md:p-9 transition-colors duration-200 erp-auth-card">
-          {/* Header */}
-          <div className="mb-6 sm:mb-7">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900 dark:text-white leading-tight">
+      {/* Sign-In Card Container */}
+      <main className="relative z-10 w-full max-w-[420px]">
+        {/* Form Sheet Card */}
+        <div className="bg-white/95 dark:bg-[#12141d]/95 backdrop-blur-xl rounded-xl border border-white/40 dark:border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.35)] p-6 sm:p-8 transition-colors duration-150">
+          
+          {/* Brand Logo - Bold, Crisp & Prominent inside the card */}
+          <div className="flex flex-col items-center mb-6 text-center">
+            <div className="h-16 flex items-center justify-center mb-3">
+              <img
+                src={logoImg}
+                alt="Navneet"
+                className="h-14 sm:h-16 w-auto object-contain drop-shadow-xs"
+              />
+            </div>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#1e293b] dark:text-zinc-50">
               Sign In
             </h1>
-            <p className="mt-1.5 text-sm text-zinc-500 dark:text-zinc-400">
-              Access your Navneet SAMP operations workspace.
+            <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+              Sampling Management & Planning System
             </p>
           </div>
 
-          {/* Form */}
           <form onSubmit={handleFormSubmit} className="space-y-4" noValidate>
+            {/* Username / Email */}
             <div>
               <label
                 htmlFor="identifier"
-                className="block text-xs sm:text-[13px] font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5"
+                className="block text-xs font-semibold text-[#1e293b] dark:text-zinc-200 mb-1.5"
               >
-                Username or Email Address
+                Username or Email
               </label>
-              <Input
-                id="identifier"
-                inputSize="lg"
-                type="text"
-                autoComplete="username"
-                value={identifier}
-                onChange={(e) => {
-                  setIdentifier(e.target.value);
-                  if (errorInfo) setErrorInfo(null);
-                }}
-                placeholder="Admin  or  name@navneet.com"
-                leftIcon={<User className="w-4 h-4" />}
-                hasError={Boolean(errorInfo)}
-                required
-                autoFocus
-              />
+              <div className="relative flex items-center">
+                <div className="absolute left-3 text-zinc-400 dark:text-zinc-500 pointer-events-none">
+                  <User className="w-4 h-4" />
+                </div>
+                <input
+                  id="identifier"
+                  type="text"
+                  autoComplete="username"
+                  value={identifier}
+                  onChange={(e) => {
+                    setIdentifier(e.target.value);
+                    if (errorInfo) setErrorInfo(null);
+                  }}
+                  placeholder="Enter your username"
+                  autoFocus
+                  required
+                  className={`w-full h-10 pl-9 pr-3 text-xs sm:text-[13px] rounded bg-white dark:bg-[#1a1e2c] text-[#1e293b] dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 border transition-all duration-150 outline-none ${
+                    errorInfo?.field === "identifier"
+                      ? "border-rose-500 focus:border-rose-500 ring-2 ring-rose-500/15"
+                      : "border-[#ced4da] dark:border-white/15 focus:border-[#714b67] dark:focus:border-[#9d6b91] focus:ring-2 focus:ring-[#714b67]/15 dark:focus:ring-[#9d6b91]/25"
+                  }`}
+                />
+              </div>
+              {errorInfo?.field === "identifier" && (
+                <p className="mt-1 text-[11px] text-rose-600 dark:text-rose-400 font-medium">
+                  {errorInfo.message}
+                </p>
+              )}
             </div>
 
+            {/* Password */}
             <div>
               <label
                 htmlFor="password"
-                className="block text-xs sm:text-[13px] font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5"
+                className="block text-xs font-semibold text-[#1e293b] dark:text-zinc-200 mb-1.5"
               >
                 Password
               </label>
-              <Input
-                id="password"
-                inputSize="lg"
-                type={showPassword ? "text" : "password"}
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  if (errorInfo) setErrorInfo(null);
-                }}
-                placeholder="••••••••••••"
-                leftIcon={<Lock className="w-4 h-4" />}
-                rightIcon={
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors p-1 cursor-pointer"
-                    aria-label={showPassword ? "Hide password" : "Show password"}
-                    tabIndex={-1}
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                }
-                hasError={Boolean(errorInfo)}
-                required
-              />
+              <div className="relative flex items-center">
+                <div className="absolute left-3 text-zinc-400 dark:text-zinc-500 pointer-events-none">
+                  <Lock className="w-4 h-4" />
+                </div>
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (errorInfo) setErrorInfo(null);
+                  }}
+                  placeholder="••••••••••••"
+                  required
+                  className={`w-full h-10 pl-9 pr-10 text-xs sm:text-[13px] rounded bg-white dark:bg-[#1a1e2c] text-[#1e293b] dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 border transition-all duration-150 outline-none font-mono ${
+                    errorInfo?.field === "password"
+                      ? "border-rose-500 focus:border-rose-500 ring-2 ring-rose-500/15"
+                      : "border-[#ced4da] dark:border-white/15 focus:border-[#714b67] dark:focus:border-[#9d6b91] focus:ring-2 focus:ring-[#714b67]/15 dark:focus:ring-[#9d6b91]/25"
+                  }`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors p-0.5 cursor-pointer"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              {errorInfo?.field === "password" && (
+                <p className="mt-1 text-[11px] text-rose-600 dark:text-rose-400 font-medium">
+                  {errorInfo.message}
+                </p>
+              )}
             </div>
 
+            {/* Keep me signed in */}
             <div className="flex items-center justify-between pt-1">
-              <label className="flex items-center gap-2 sm:gap-2.5 cursor-pointer select-none">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
                 <input
                   type="checkbox"
                   id="rememberMe"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 rounded border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-brand-600 focus:ring-brand-500/20 focus:ring-offset-0 focus:ring-1 cursor-pointer shrink-0"
+                  className="w-3.5 h-3.5 rounded border-[#ced4da] dark:border-zinc-700 text-[#714b67] focus:ring-[#714b67]/20 cursor-pointer"
                 />
-                <span className="text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 font-medium leading-tight">
+                <span className="text-xs text-zinc-600 dark:text-zinc-400 font-medium">
                   Keep me signed in
                 </span>
               </label>
             </div>
 
-            <Button
+            {/* Submit Button */}
+            <button
               type="submit"
-              variant="primary"
-              size="lg"
-              isLoading={isLoading}
-              className="w-full mt-3 font-semibold h-11 text-sm cursor-pointer shadow-xs"
+              disabled={isLoading}
+              className="w-full h-10 mt-2 rounded bg-[#714b67] hover:bg-[#5b3c53] active:bg-[#3e2938] text-white text-xs sm:text-[13px] font-semibold flex items-center justify-center gap-2 shadow-sm transition-colors duration-140 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {isLoading ? "Signing In…" : "Sign In to Workspace"}
-          </Button>
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Signing In…</span>
+                </>
+              ) : (
+                <>
+                  <span>Sign In</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </>
+              )}
+            </button>
           </form>
         </div>
+
+        {/* Minimal clean footer */}
+        <p className="mt-6 text-center text-[11px] text-white/70 font-medium drop-shadow-xs">
+          Navneet Education Limited
+        </p>
       </main>
     </div>
   );

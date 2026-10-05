@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from
 import { ArrowRight, LayoutGrid, Settings2 } from "lucide-react";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { BusinessYearProvider } from "@/context/BusinessYearContext";
+import { PlantProvider } from "@/context/PlantContext";
 import { SignInPage, UserProfile, AuthResponse } from "@/features/auth";
 import { readAuthToken, readAuthUser, clearAuthStorage } from "@/lib/session";
 import { AppShell, getNavigationTitle } from "@/layouts";
@@ -82,6 +83,7 @@ function ActiveModuleView({
         // SAMP Team Work Desk (Sampling Lab)
         if (
           location.pathname === "/samp-team-work" ||
+          location.pathname.startsWith("/samp-team-work/") ||
           location.pathname === "/sampling" ||
           location.pathname === "/prototypes"
         ) {
@@ -92,7 +94,9 @@ function ActiveModuleView({
         if (
           location.pathname === "/creative-work" ||
           location.pathname === "/creative" ||
-          location.pathname === "/artwork"
+          location.pathname === "/artwork" ||
+          location.pathname.startsWith("/creative-work/") ||
+          location.pathname.startsWith("/creative/")
         ) {
           return <CreativeWorkDesk user={user} />;
         }
@@ -102,7 +106,9 @@ function ActiveModuleView({
           location.pathname === "/studio-work" ||
           location.pathname === "/studio" ||
           location.pathname === "/cad" ||
-          location.pathname === "/prepress"
+          location.pathname === "/prepress" ||
+          location.pathname.startsWith("/studio-work/") ||
+          location.pathname.startsWith("/studio/")
         ) {
           return <StudioWorkDesk user={user} />;
         }
@@ -118,7 +124,12 @@ function ActiveModuleView({
         }
 
         // Marketing Work Desk (Sample Requests)
-        if (location.pathname === "/sample-requests") {
+        if (
+          location.pathname === "/sample-requests" ||
+          location.pathname === "/sample-requests/sampling" ||
+          location.pathname === "/sample-requests/feasibility" ||
+          location.pathname === "/sample-requests/programs"
+        ) {
           return <SampleRequestsDesk user={user} />;
         }
 
@@ -329,6 +340,36 @@ function AppRoutes() {
           }
         />
         <Route
+          path="/sample-requests/sampling"
+          element={
+            currentUser ? (
+              <AppShellRouteWrapper user={currentUser} onLogout={handleLogout} />
+            ) : (
+              <Navigate to="/signin" replace />
+            )
+          }
+        />
+        <Route
+          path="/sample-requests/feasibility"
+          element={
+            currentUser ? (
+              <AppShellRouteWrapper user={currentUser} onLogout={handleLogout} />
+            ) : (
+              <Navigate to="/signin" replace />
+            )
+          }
+        />
+        <Route
+          path="/sample-requests/programs"
+          element={
+            currentUser ? (
+              <AppShellRouteWrapper user={currentUser} onLogout={handleLogout} />
+            ) : (
+              <Navigate to="/signin" replace />
+            )
+          }
+        />
+        <Route
           path="/sample-requests/program-planning"
           element={
             currentUser ? (
@@ -369,6 +410,26 @@ function AppRoutes() {
           }
         />
         <Route
+          path="/creative-work/*"
+          element={
+            currentUser ? (
+              <AppShellRouteWrapper user={currentUser} onLogout={handleLogout} />
+            ) : (
+              <Navigate to="/signin" replace />
+            )
+          }
+        />
+        <Route
+          path="/creative/*"
+          element={
+            currentUser ? (
+              <AppShellRouteWrapper user={currentUser} onLogout={handleLogout} />
+            ) : (
+              <Navigate to="/signin" replace />
+            )
+          }
+        />
+        <Route
           path="/studio-work"
           element={
             currentUser ? (
@@ -379,7 +440,57 @@ function AppRoutes() {
           }
         />
         <Route
+          path="/studio-work/*"
+          element={
+            currentUser ? (
+              <AppShellRouteWrapper user={currentUser} onLogout={handleLogout} />
+            ) : (
+              <Navigate to="/signin" replace />
+            )
+          }
+        />
+        <Route
+          path="/studio/*"
+          element={
+            currentUser ? (
+              <AppShellRouteWrapper user={currentUser} onLogout={handleLogout} />
+            ) : (
+              <Navigate to="/signin" replace />
+            )
+          }
+        />
+        <Route
           path="/samp-team-work"
+          element={
+            currentUser ? (
+              <AppShellRouteWrapper user={currentUser} onLogout={handleLogout} />
+            ) : (
+              <Navigate to="/signin" replace />
+            )
+          }
+        />
+        <Route
+          path="/samp-team-work/feasibility"
+          element={
+            currentUser ? (
+              <AppShellRouteWrapper user={currentUser} onLogout={handleLogout} />
+            ) : (
+              <Navigate to="/signin" replace />
+            )
+          }
+        />
+        <Route
+          path="/samp-team-work/sampling"
+          element={
+            currentUser ? (
+              <AppShellRouteWrapper user={currentUser} onLogout={handleLogout} />
+            ) : (
+              <Navigate to="/signin" replace />
+            )
+          }
+        />
+        <Route
+          path="/samp-team-work/programs"
           element={
             currentUser ? (
               <AppShellRouteWrapper user={currentUser} onLogout={handleLogout} />
@@ -460,9 +571,11 @@ export default function App() {
   return (
     <ThemeProvider>
       <BusinessYearProvider>
-        <ErrorBoundary variant="page">
-          <AppRoutes />
-        </ErrorBoundary>
+        <PlantProvider>
+          <ErrorBoundary variant="page">
+            <AppRoutes />
+          </ErrorBoundary>
+        </PlantProvider>
       </BusinessYearProvider>
     </ThemeProvider>
   );

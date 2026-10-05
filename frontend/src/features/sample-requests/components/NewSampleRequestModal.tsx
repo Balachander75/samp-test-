@@ -10,33 +10,33 @@ import {
   Check,
   CheckCircle2,
   Calendar,
-  Layers,
-  FileText,
-  Sliders,
   Package,
-  FlaskConical,
+  ClipboardCheck,
   Image as ImageIcon,
   Link2,
   ExternalLink,
   Plus,
   Trash2,
   UploadCloud,
+  FolderGit2,
 } from "lucide-react";
 import { CustomerCombobox, OperationalDatePicker } from "@/components/erp";
-import { isDateRestricted, getNextWorkingDate } from "@/lib/holidayUtils";
-import { getBusinessYearInfo, getCurrentBusinessYear } from "@/lib/businessYear";
+import { isDateRestricted } from "@/lib/holidayUtils";
+import { getBusinessYearInfo } from "@/lib/businessYear";
 import { SampleRequestItem } from "../types";
 import { useMasterData } from "../hooks/useMasterData";
+import { fetchProgramRequestsApi } from "@/infrastructure/api/programsApi";
 
 export interface NewSampleRequestModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (newRequest: Partial<SampleRequestItem>) => Promise<boolean>;
+  onSubmit: (newRequest: Partial<SampleRequestItem>) => Promise<boolean | SampleRequestItem>;
   initialTrack?: TrackType;
+  lockTrack?: boolean;
   requestCreatedBy?: string;
 }
 
-type TrackType = "gateway" | "marketing_request" | "feasibility_check" | "program_planning";
+type TrackType = "marketing_request" | "feasibility_check" | "program_planning";
 
 export interface MarketingDeliverableType {
   id: "design" | "mockup" | "sample" | "costing";
@@ -155,10 +155,19 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
   onClose,
   onSubmit,
   initialTrack,
+  lockTrack = false,
   requestCreatedBy,
 }) => {
   const navigate = useNavigate();
-  const [selectedTrack, setSelectedTrack] = useState<TrackType>(initialTrack || "gateway");
+
+  const resolveTrack = (track?: TrackType): "marketing_request" | "feasibility_check" | "program_planning" => {
+    if (track === "marketing_request" || track === "feasibility_check" || track === "program_planning") {
+      return track;
+    }
+    return "feasibility_check";
+  };
+
+  const [selectedTrack, setSelectedTrack] = useState<"marketing_request" | "feasibility_check" | "program_planning">(() => resolveTrack(initialTrack));
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const {
@@ -175,18 +184,18 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
   // Dynamic Business Year Information (Oct–Sep cycle)
   const byInfo = useMemo(() => getBusinessYearInfo(), [isOpen]);
 
-  // Track 1: Marketing Request Intake fields (Step 1: Program Setup)
+  // Track 1: Marketing Request Intake fields
   const [marketingCustomer, setMarketingCustomer] = useState("");
   const [marketingProgramName, setMarketingProgramName] = useState("");
   const [marketingProgramYear, setMarketingProgramYear] = useState(() => getBusinessYearInfo().seasonYearOptions[0]);
-  const [marketingPlant, setMarketingPlant] = useState("");
+  const [marketingTargetPlant, setMarketingTargetPlant] = useState("");
 
   // Track 2: Feasibility Check fields
   const [selectedFeasibilityType, setSelectedFeasibilityType] = useState<string>("new_category");
   const [customTypeOther, setCustomTypeOther] = useState("");
   const [feasibilityDescription, setFeasibilityDescription] = useState("");
   const [releaseRemarks, setReleaseRemarks] = useState("");
-  const [feasibilityTargetDate, setFeasibilityTargetDate] = useState(() => getNextWorkingDate(new Date(), 7));
+  const [feasibilityTargetDate, setFeasibilityTargetDate] = useState("");
 
   // Multi-Image & Multi-Link State (combined max 5 items total)
   const [uploadedImages, setUploadedImages] = useState<Array<{ id: string; url: string; name: string; size?: string }>>([]);
@@ -201,33 +210,54 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
   const [programPlanName, setProgramPlanName] = useState("");
   const [programPlanYear, setProgramPlanYear] = useState(() => getBusinessYearInfo().businessYearStr);
 
+  // Open Seasonal Programs for selected Customer (Walmart, etc.)
+  const [availablePrograms, setAvailablePrograms] = useState<SampleRequestItem[]>([]);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchProgramRequestsApi()
+        .then((items) => setAvailablePrograms(items || []))
+        .catch((err) => console.error("Could not fetch seasonal programs for picker:", err));
+    }
+  }, [isOpen]);
+
+  const matchingPrograms = useMemo(() => {
+    if (!marketingCustomer.trim()) return [];
+    const custClean = marketingCustomer.trim().toLowerCase();
+    return availablePrograms.filter((p) => {
+      const pCust = (p.customer || "").trim().toLowerCase();
+      return pCust === custClean || pCust.includes(custClean) || custClean.includes(pCust);
+    });
+  }, [marketingCustomer, availablePrograms]);
+
   // Reset all fields whenever modal opens so every new request starts completely fresh and empty
   useEffect(() => {
     if (isOpen) {
-      setSelectedTrack(initialTrack || "gateway");
+      setSelectedTrack(resolveTrack(initialTrack));
       setError(null);
       setMarketingCustomer("");
       setMarketingProgramName("");
       setMarketingProgramYear(byInfo.seasonYearOptions[0]);
-      setMarketingPlant("");
+      setMarketingTargetPlant(plants[0]?.name || "Navneet - Khaniwade");
       setCustomer("");
       setTargetPlant("");
       setProgramPlanName("");
       setProgramPlanYear(byInfo.businessYearStr);
       setFeasibilityDescription("");
+      setFeasibilityTargetDate("");
       setReleaseRemarks("");
       setUploadedImages([]);
       setWebLinks([]);
       setLinkInput("");
     }
-  }, [isOpen, initialTrack, byInfo]);
+  }, [isOpen, initialTrack, byInfo, plants]);
 
   // Default plant selection once plants master data loads (if not already set)
   useEffect(() => {
     if (!isOpen || !plants.length) return;
     const firstPlant = plants[0]?.name || "";
     setTargetPlant((current) => current || firstPlant);
-    setMarketingPlant((current) => current || firstPlant);
+    setMarketingTargetPlant((current) => current || firstPlant);
   }, [isOpen, plants]);
 
   useEffect(() => {
@@ -357,33 +387,57 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
   if (!isOpen) return null;
 
 
-  // Proceed Handler: Track 1 (Marketing Request -> Program Setup -> Product Staging)
-  const handleProceedToMarketingStaging = (e: React.FormEvent) => {
+  // Create the request first, then open product staging for the saved request.
+  const handleSubmitSampling = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     if (!marketingCustomer.trim()) {
       setError("Please select a customer account.");
-      return;
-    }
-    if (!marketingPlant.trim()) {
-      setError("Please select a manufacturing plant.");
       return;
     }
     if (!marketingProgramName.trim()) {
       setError("Please enter a program name.");
       return;
     }
-    setError(null);
-    const payload = {
+    const payload: Partial<SampleRequestItem> = {
       customer: marketingCustomer,
       programName: marketingProgramName,
       programYear: marketingProgramYear,
-      targetPlant: marketingPlant,
+      year: byInfo.businessYearStr,
+      targetPlant: marketingTargetPlant || undefined,
+      productDescription: `${marketingProgramName.trim()} — Product staging pending`,
+      requestTypes: [],
+      status: "Draft (Pre-SMT)",
+      createdBy: requestCreatedBy || "Marketing Team (Corporate)",
+      dateRequestCreated: new Date().toISOString().split("T")[0],
+      creationMode: "marketing_request",
     };
-    sessionStorage.setItem("samp_active_program_form", JSON.stringify(payload));
-    onClose();
-    navigate("/sample-requests/product-staging", {
-      state: payload,
-    });
+
+    setIsSubmitting(true);
+    try {
+      const saved = await onSubmit(payload);
+      if (!saved || typeof saved !== "object") {
+        setError("The sampling request could not be saved. Please check the details and try again.");
+        return;
+      }
+      const stagingContext = {
+        customer: marketingCustomer,
+        programName: marketingProgramName.trim(),
+        programYear: marketingProgramYear,
+        year: byInfo.businessYearStr,
+        targetPlant: marketingTargetPlant,
+        parentRequestId: saved.id,
+        parentSrNumber: saved.srNumber,
+      };
+      sessionStorage.setItem("samp_active_program_form", JSON.stringify(stagingContext));
+      sessionStorage.removeItem("samp_active_staged_products");
+      onClose();
+      navigate("/sample-requests/product-staging", { state: stagingContext });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "The sampling request could not be saved.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Submit Handler: Track 2 (Feasibility Check)
@@ -433,16 +487,19 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
       );
     }
 
+    const fullDescriptionWithMetadata = sections.join("\n\n");
+
     const payload: Partial<SampleRequestItem> = {
       customer,
-      productDescription: feasibilityDescription.trim(),
+      productDescription: fullDescriptionWithMetadata,
+      descriptionNotes: fullDescriptionWithMetadata,
       programName: `${customer} · ${effectiveTypeLabel}`,
       programYear: byInfo.businessYearStr,
       year: byInfo.businessYearStr,
       sampleRequiredDate: feasibilityTargetDate || undefined,
       qtyForSampling: 1,
       qtyDesignCosting: 0,
-      requestTypes: ["sample"] as any,
+      requestTypes: [] as any,
       status: "Pending Feasibility",
       samplingFeasibilityResponse: null,
       samplingFeasibilityRemark: null,
@@ -514,300 +571,150 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
       />
 
       <div className="flex min-h-full items-center justify-center p-3 sm:p-5">
-        <div
-          className={`relative w-full ${
-            selectedTrack === "feasibility_check"
-              ? "max-w-4xl"
-              : "max-w-2xl"
-          } bg-white dark:bg-[#0f1118] border border-zinc-200 dark:border-white/[0.08] rounded-lg shadow-xl select-text overflow-hidden transition-all duration-200`}
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-200 dark:border-white/[0.08] bg-zinc-50/70 dark:bg-[#161822] shrink-0">
-            <div className="flex items-center gap-2.5">
+        <div className="relative w-full max-w-4xl bg-[#F1F3F5] dark:bg-[#12141a] border border-[#D8DADD] dark:border-white/[0.08] rounded-xl shadow-2xl select-text overflow-hidden transition-all duration-200">
+          
+          {/* Odoo 19 Header Bar */}
+          <div className="flex items-center justify-between px-6 py-3.5 bg-[#714B67] text-white shrink-0 border-b border-[#5B3C53]">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded bg-white/15 flex items-center justify-center text-white shrink-0">
+                {selectedTrack === "feasibility_check" ? (
+                  <ClipboardCheck className="w-4 h-4 stroke-[2.2]" />
+                ) : selectedTrack === "program_planning" ? (
+                  <Calendar className="w-4 h-4 stroke-[2.2]" />
+                ) : (
+                  <Package className="w-4 h-4 stroke-[2.2]" />
+                )}
+              </div>
               <div>
-              <h3 className="text-sm font-semibold text-zinc-950 dark:text-zinc-50 tracking-tight flex items-center gap-2">
-                  {selectedTrack === "gateway" && "Create New Request"}
-                  {selectedTrack === "marketing_request" && (
-                    <>
-                      <span>New Marketing Request</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300 border border-brand-200/80 dark:border-brand-800">
-                        Step 1: Program Setup
-                      </span>
-                    </>
-                  )}
-                  {selectedTrack === "feasibility_check" && (
-                    <span>Feasibility Check</span>
-                  )}
-                  {selectedTrack === "program_planning" && (
-                    <>
-                      <span>Seasonal Program Planning</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300 border border-brand-200/80 dark:border-brand-800">
-                        Campaign Setup
-                      </span>
-                    </>
-                  )}
-                </h3>
-                <p className="text-[11px] text-zinc-500 dark:text-zinc-500 font-mono mt-0.5">
-                  {selectedTrack === "gateway" && "Select an operational workflow track to initiate"}
-                  {selectedTrack === "marketing_request" &&
-                    "Select target customer account, program name, and season cycle. Product staging & deliverables will open next."}
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-bold text-white tracking-tight">
+                    {selectedTrack === "feasibility_check" && "Technical Feasibility Check"}
+                    {selectedTrack === "marketing_request" && "Commercial Sample Request"}
+                    {selectedTrack === "program_planning" && "Seasonal Program Planning"}
+                  </h3>
+                  <span className="px-2 py-0.5 rounded text-[9.5px] font-mono font-bold bg-white/20 text-white tracking-wider uppercase">
+                    {selectedTrack === "feasibility_check" ? "FC-2026" : selectedTrack === "program_planning" ? "PLN-2026" : "SR-2026"}
+                  </span>
+                </div>
+                <p className="text-[11px] text-white/80 mt-0.5 font-normal">
                   {selectedTrack === "feasibility_check" &&
-                    "Technical sampling feasibility assessment & prototype specification evaluation"}
+                    "Sampling feasibility assessment, paper GSM & prototype specification evaluation"}
+                  {selectedTrack === "marketing_request" &&
+                    "Create a sampling request, then add products and specifications"}
                   {selectedTrack === "program_planning" &&
-                    "Specify customer account, target plant, campaign title, and season year"}
+                    "Define customer account, target plant, campaign title, and seasonal pipeline"}
                 </p>
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={onClose}
-              className="h-8 w-8 rounded-md flex items-center justify-center border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-white/[0.06] transition-colors duration-150 cursor-pointer"
-              aria-label="Close modal"
-            >
-              <X className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-3">
+              <span className="hidden sm:inline-flex items-center text-[10.5px] font-mono font-semibold px-2.5 py-1 rounded bg-white/20 text-white tracking-wide">
+                DRAFT INTAKE
+              </span>
+
+              <button
+                type="button"
+                onClick={onClose}
+                className="h-7 w-7 rounded flex items-center justify-center text-white/80 hover:text-white hover:bg-white/15 transition-colors cursor-pointer"
+                aria-label="Close modal"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
-          {/* Modal Body */}
-          <div className="p-6 sm:p-7 max-h-[82vh] overflow-y-auto">
+          {/* Odoo 19 Track Switcher Tabs (Only shown when not locked to a specific track) */}
+          {!lockTrack && (
+            <div className="flex items-center gap-1 px-6 bg-[#F8F9FA] dark:bg-[#161822] border-b border-[#D8DADD] dark:border-white/[0.08]">
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedTrack("feasibility_check");
+                  setError(null);
+                }}
+                className={`px-4 py-2.5 text-xs font-semibold border-b-2 flex items-center gap-2 transition-all cursor-pointer select-none ${
+                  selectedTrack === "feasibility_check"
+                    ? "border-[#714B67] text-[#714B67] dark:text-[#E8D7E3] bg-white dark:bg-[#1f212a] font-bold shadow-2xs"
+                    : "border-transparent text-[#64748B] hover:text-[#1E293B] hover:bg-black/[0.02]"
+                }`}
+              >
+                <ClipboardCheck className="w-3.5 h-3.5" />
+                <span>Feasibility Check</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedTrack("marketing_request");
+                  setError(null);
+                }}
+                className={`px-4 py-2.5 text-xs font-semibold border-b-2 flex items-center gap-2 transition-all cursor-pointer select-none ${
+                  selectedTrack === "marketing_request"
+                    ? "border-[#714B67] text-[#714B67] dark:text-[#E8D7E3] bg-white dark:bg-[#1f212a] font-bold shadow-2xs"
+                    : "border-transparent text-[#64748B] hover:text-[#1E293B] hover:bg-black/[0.02]"
+                }`}
+              >
+                <Package className="w-3.5 h-3.5" />
+                <span>Standard Sampling</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedTrack("program_planning");
+                  setError(null);
+                }}
+                className={`px-4 py-2.5 text-xs font-semibold border-b-2 flex items-center gap-2 transition-all cursor-pointer select-none ${
+                  selectedTrack === "program_planning"
+                    ? "border-[#714B67] text-[#714B67] dark:text-[#E8D7E3] bg-white dark:bg-[#1f212a] font-bold shadow-2xs"
+                    : "border-transparent text-[#64748B] hover:text-[#1E293B] hover:bg-black/[0.02]"
+                }`}
+              >
+                <Calendar className="w-3.5 h-3.5" />
+                <span>Program Planning</span>
+              </button>
+            </div>
+          )}
+
+          {/* Modal Body: Single Page Document Sheet */}
+          <div className="p-5 sm:p-6 max-h-[78vh] overflow-y-auto">
             {error && (
-              <div className="mb-4 px-3 py-2 rounded border border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 text-[12px]">
+              <div className="mb-4 px-3.5 py-2.5 rounded border border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 text-xs font-medium">
                 {error}
               </div>
             )}
 
-            {/* SCREEN 1: 3-TRACK SELECTION GATEWAY (Clean, Unified Theme, No Icon Spam) */}
-            {selectedTrack === "gateway" && (
-              <div className="space-y-3">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-2 font-mono">
-                  Select Workflow Track
-                </div>
-
-                {/* Track 1: Marketing Request */}
-                <div
-                  onClick={() => {
-                    setSelectedTrack("marketing_request");
-                    setError(null);
-                  }}
-                  className="group relative flex items-start gap-3.5 p-4 rounded-lg border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-zinc-900/40 hover:border-brand-500/80 dark:hover:border-brand-500/80 hover:bg-brand-50/20 dark:hover:bg-brand-950/15 transition-all duration-150 cursor-pointer select-none"
-                >
-                  <span className="text-[12px] font-mono font-bold text-zinc-400 dark:text-zinc-500 group-hover:text-brand-600 dark:group-hover:text-brand-400 shrink-0 w-6 pt-0.5">
-                    01
-                  </span>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h4 className="text-[13px] font-bold text-zinc-950 dark:text-zinc-50 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
-                        Marketing Request
-                      </h4>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700/60 uppercase">
-                        Direct Intake · 4 Scopes
-                      </span>
-                    </div>
-                    <p className="text-[12px] text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">
-                      Initiate commercial prototype requests covering Creative Design, Structural CAD Mockup, Finished Sampling, and BOM Costing.
-                    </p>
-
-                    {/* Step Sequence Badges */}
-                    <div className="flex items-center gap-2 mt-2.5">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300 border border-brand-200/80 dark:border-brand-800/60">
-                        Step 1: Program Setup
-                      </span>
-                      <span className="text-[10px] text-zinc-400 font-mono">→</span>
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-medium text-zinc-600 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700">
-                        Step 2: Product Staging (4 Scopes)
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="self-center shrink-0 text-zinc-400 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
-                    <ArrowRight className="w-4 h-4" />
-                  </div>
-                </div>
-
-                {/* Track 2: Feasibility Check */}
-                <div
-                  onClick={() => {
-                    setSelectedTrack("feasibility_check");
-                    setError(null);
-                  }}
-                  className="group relative flex items-start gap-3.5 p-4 rounded-lg border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-zinc-900/40 hover:border-brand-500/80 dark:hover:border-brand-500/80 hover:bg-brand-50/20 dark:hover:bg-brand-950/15 transition-all duration-150 cursor-pointer select-none"
-                >
-                  <span className="text-[12px] font-mono font-bold text-zinc-400 dark:text-zinc-500 group-hover:text-brand-600 dark:group-hover:text-brand-400 shrink-0 w-6 pt-0.5">
-                    02
-                  </span>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h4 className="text-[13px] font-bold text-zinc-950 dark:text-zinc-50 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
-                        Feasibility Check
-                      </h4>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/60 border border-brand-200/80 dark:border-brand-800/60 uppercase">
-                        Sampling Desk
-                      </span>
-                    </div>
-                    <p className="text-[12px] text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">
-                      Verify whether SAMP Team can execute specific paper GSM, novel binding structures, custom finishes, or prototypes.
-                    </p>
-                  </div>
-
-                  <div className="self-center shrink-0 text-zinc-400 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
-                    <ArrowRight className="w-4 h-4" />
-                  </div>
-                </div>
-
-                {/* Track 3: Program Planning */}
-                <div
-                  onClick={() => {
-                    setSelectedTrack("program_planning");
-                    setError(null);
-                  }}
-                  className="group relative flex items-start gap-3.5 p-4 rounded-lg border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-zinc-900/40 hover:border-brand-500/80 dark:hover:border-brand-500/80 hover:bg-brand-50/20 dark:hover:bg-brand-950/15 transition-all duration-150 cursor-pointer select-none"
-                >
-                  <span className="text-[12px] font-mono font-bold text-zinc-400 dark:text-zinc-500 group-hover:text-brand-600 dark:group-hover:text-brand-400 shrink-0 w-6 pt-0.5">
-                    03
-                  </span>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h4 className="text-[13px] font-bold text-zinc-950 dark:text-zinc-50 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
-                        Program Planning
-                      </h4>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700/60 uppercase">
-                        Seasonal Line
-                      </span>
-                    </div>
-                    <p className="text-[12px] text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">
-                      Plan seasonal product programs (e.g. BTS 2026-27), allocate SKU matrices, set delivery schedules, and organize bulk production pipelines.
-                    </p>
-                  </div>
-
-                  <div className="self-center shrink-0 text-zinc-400 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
-                    <ArrowRight className="w-4 h-4" />
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* SCREEN 2: MARKETING REQUEST (STEP 1: PROGRAM SETUP) */}
-            {selectedTrack === "marketing_request" && (
-              <form onSubmit={handleProceedToMarketingStaging} className="space-y-4">
-                <div className="space-y-4">
-                  {/* Customer Account */}
-                  <div>
-                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 font-mono mb-1.5">
-                      Customer Account <span className="text-rose-500">*</span>
-                    </label>
-                    <CustomerCombobox
-                      customers={customers}
-                      value={marketingCustomer}
-                      onChange={setMarketingCustomer}
-                      disabled={isMasterDataLoading || customers.length === 0}
-                      placeholder="Select target customer account..."
-                      className="w-full"
-                    />
-                  </div>
-
-                  {/* Program Name */}
-                  <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <label className="text-[11px] font-semibold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 font-mono">
-                        Program Name <span className="text-rose-500">*</span>
-                      </label>
-                      <span className="text-[10px] text-zinc-400 dark:text-zinc-500 font-mono">Recognizable in pipeline</span>
-                    </div>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. BTS 2026-2027 Notebook Collection..."
-                      value={marketingProgramName}
-                      onChange={(e) => setMarketingProgramName(e.target.value)}
-                      className="w-full h-10 px-3.5 rounded-md border border-zinc-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-900/80 text-[13px] font-medium text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 outline-none focus:border-brand-600 focus:ring-1 focus:ring-brand-600/20 transition-all font-sans"
-                    />
-                  </div>
-
-                  {/* Season Year Options */}
-                  <div>
-                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 font-mono mb-1.5">
-                      Season Year <span className="text-rose-500">*</span>
-                    </label>
-                    <div className="grid grid-cols-3 gap-2.5">
-                      {byInfo.seasonYearOptions.map((year) => {
-                        const isSelected = marketingProgramYear === year;
-                        return (
-                          <button
-                            key={year}
-                            type="button"
-                            onClick={() => setMarketingProgramYear(year)}
-                            className={`h-10 px-3.5 rounded-md border text-xs font-semibold transition-all flex items-center justify-between cursor-pointer select-none ${
-                              isSelected
-                                ? "border-brand-600 bg-brand-50/70 dark:bg-brand-950/40 text-brand-700 dark:text-brand-300 font-bold shadow-2xs"
-                                : "border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 text-zinc-700 dark:text-zinc-300 hover:border-zinc-300 dark:hover:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800/40"
-                            }`}
-                          >
-                            <span className="font-mono text-[13px]">{year}</span>
-                            {isSelected && <Check className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400 stroke-[2.5]" />}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Target Plant */}
-                  <div>
-                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 font-mono mb-1.5">
-                      Manufacturing Plant
-                    </label>
-                    <select
-                      value={marketingPlant}
-                      disabled={isMasterDataLoading || plants.length === 0}
-                      onChange={(e) => setMarketingPlant(e.target.value)}
-                      className="w-full h-10 px-3.5 rounded-md border border-zinc-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-900/80 text-[13px] font-medium text-zinc-900 dark:text-zinc-100 outline-none focus:border-brand-600 focus:ring-1 focus:ring-brand-600/20 cursor-pointer transition-all font-sans"
-                    >
-                      {plants.map((item) => (
-                        <option key={item.id} value={item.name}>
-                          {item.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                {/* Footer Controls */}
-                <div className="pt-4 border-t border-zinc-200 dark:border-white/[0.08] flex items-center justify-between mt-5">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedTrack("gateway");
-                      setError(null);
-                    }}
-                    className="h-10 px-4 rounded-md border border-zinc-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700/60 transition-colors cursor-pointer shadow-2xs"
-                  >
-                    Back to Tracks
-                  </button>
-
-                  <button
-                    type="submit"
-                    className="h-11 px-6 rounded-md bg-brand-600 hover:bg-brand-700 active:bg-brand-800 dark:bg-brand-600 dark:hover:bg-brand-500 text-white text-[13px] font-bold tracking-tight shadow-sm hover:shadow transition-all cursor-pointer select-none inline-flex items-center justify-center"
-                  >
-                    Continue to product staging
-                  </button>
-                </div>
-              </form>
-            )}
-
-            {/* SCREEN 3: FEASIBILITY CHECK FORM (Optimized, Unified Brand Theme, Clean Balanced Grid) */}
+            {/* TAB 1: FEASIBILITY CHECK FORM (Odoo Document Sheet) */}
             {selectedTrack === "feasibility_check" && (
               <form onSubmit={handleSubmitFeasibility} className="space-y-4">
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-                  
-                  {/* Left Column (7 cols): Customer, Feasibility Category & Technical Notes */}
-                  <div className="lg:col-span-7 space-y-4">
-                    {/* 1. Customer Account */}
-                    <div className="grid grid-cols-1 gap-3">
+                <div className="bg-white dark:bg-[#1a1c24] border border-[#D8DADD] dark:border-white/[0.08] rounded-lg p-5 sm:p-6 shadow-2xs space-y-5">
+                  {/* Sheet Header Row */}
+                  <div className="flex flex-wrap items-center justify-between pb-3 border-b border-[#E2E8F0] dark:border-zinc-800 gap-2">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="text-sm font-bold text-[#1E293B] dark:text-zinc-100">
+                          Sampling Feasibility Specification
+                        </h4>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-50 text-[#017E84] border border-[#017E84]/30 font-bold">
+                          ACTIVE ASSESSMENT
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-[#64748B] dark:text-zinc-400 mt-0.5">
+                        Define customer account, feasibility classification, technical specifications, and reference materials.
+                      </p>
+                    </div>
+
+                    <div className="hidden sm:flex items-center gap-2 bg-[#F8F9FA] dark:bg-zinc-800 border border-[#CED4DA] dark:border-zinc-700 px-3 py-1 rounded">
+                      <span className="text-[10px] font-bold text-[#64748B] uppercase">SLA TARGET</span>
+                      <span className="text-xs font-mono font-bold text-[#017E84]">48 Hours</span>
+                    </div>
+                  </div>
+
+                  {/* Two-Column Grid */}
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+                    {/* Left Column (7 cols) */}
+                    <div className="lg:col-span-7 space-y-4">
+                      {/* Customer Account */}
                       <div>
-                        <label className="block text-[11px] font-semibold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 mb-1">
+                        <label className="block text-[11px] font-bold uppercase tracking-wider text-[#64748B] dark:text-zinc-400 mb-1.5 font-sans">
                           Customer Account <span className="text-rose-500">*</span>
                         </label>
                         <CustomerCombobox
@@ -819,451 +726,667 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                         />
                       </div>
 
-                    </div>
-
-                    {/* 2. Feasibility Type Selection Tiles */}
-                    <div>
-                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 mb-1.5">
-                        Feasibility Type <span className="text-rose-500">*</span>
-                      </label>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {FEASIBILITY_TYPES.map((type) => {
-                          const isSelected = selectedFeasibilityType === type.id;
-                          return (
-                            <div
-                              key={type.id}
-                              onClick={() => setSelectedFeasibilityType(type.id)}
-                              className={[
-                                "p-2.5 rounded border text-left cursor-pointer select-none flex flex-col justify-between gap-1",
-                                isSelected
-                                  ? "border-brand-500 bg-brand-50/40 dark:bg-brand-950/20 text-zinc-900 dark:text-zinc-100 shadow-[inset_2px_0_0_0_#2563eb]"
-                                  : "border-zinc-200 dark:border-white/[0.08] hover:border-zinc-300 dark:hover:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-900/30 text-zinc-700 dark:text-zinc-300",
-                              ].join(" ")}
-                            >
-                              <div className="flex items-center justify-between">
-                                <span className={`text-[11px] font-semibold tracking-tight ${
-                                  isSelected ? "text-brand-700 dark:text-brand-300 font-bold" : ""
-                                }`}>
-                                  {type.label}
-                                </span>
-                                {isSelected && (
-                                  <span className="w-1.5 h-1.5 rounded-xs bg-brand-600" />
-                                )}
-                              </div>
-                              <span className="text-[10px] text-zinc-500 dark:text-zinc-400 leading-tight">
-                                {type.desc}
-                              </span>
-                            </div>
-                          );
-                        })}
-                      </div>
-
-                      {/* Custom input when 'other' is chosen */}
-                      {selectedFeasibilityType === "other" && (
-                        <div className="mt-2">
-                          <input
-                            type="text"
-                            required
-                            placeholder="Specify bespoke requirement (e.g., Embossed Metallic Foil Spine, Novel Die Cut)..."
-                            value={customTypeOther}
-                            onChange={(e) => setCustomTypeOther(e.target.value)}
-                            className="w-full h-8 px-3 rounded-md border border-brand-500 dark:border-brand-500 bg-white dark:bg-zinc-900 text-[12px] font-medium text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 outline-none focus:ring-1 focus:ring-brand-500/20"
-                          />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* 3. Description & Technical Notes */}
-                    <div>
-                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 mb-1">
-                        Technical Description &amp; Notes <span className="text-rose-500">*</span>
-                      </label>
-                      <textarea
-                        required
-                        rows={4}
-                        placeholder="Provide complete technical context, material GSM, binding dimensions, special coatings, machine tolerances, and manufacturing evaluation criteria..."
-                        value={feasibilityDescription}
-                        onChange={(e) => setFeasibilityDescription(e.target.value)}
-                        className="w-full p-2.5 rounded-md border border-zinc-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-900/80 text-[12px] text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20 outline-none transition-colors resize-none leading-relaxed"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Right Column (5 cols): Target Date, Release Remarks & Visual Reference */}
-                  <div className="lg:col-span-5 space-y-4">
-                    {/* 4. Required Target Date */}
-                    <div>
-                      <OperationalDatePicker
-                        label="Required Target Date"
-                        required
-                        value={feasibilityTargetDate}
-                        onChange={(val) => {
-                          setFeasibilityTargetDate(val);
-                          if (error) setError(null);
-                        }}
-                        minDate={new Date().toISOString().split("T")[0]}
-                        placeholder="Select required target date..."
-                      />
-                    </div>
-
-                    {/* 5. Marketing Remarks / Notes */}
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="text-[11px] font-semibold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
-                          Marketing Remarks / Notes
+                      {/* Feasibility Type Selection Cards */}
+                      <div>
+                        <label className="block text-[11px] font-bold uppercase tracking-wider text-[#64748B] dark:text-zinc-400 mb-1.5 font-sans">
+                          Feasibility Classification <span className="text-rose-500">*</span>
                         </label>
-                        <span className="text-[10px] text-zinc-400 font-mono">
-                          Optional
-                        </span>
-                      </div>
-                      <textarea
-                        rows={3}
-                        placeholder="Enter any additional marketing remarks, client constraints, or special evaluation instructions..."
-                        value={releaseRemarks}
-                        onChange={(e) => setReleaseRemarks(e.target.value)}
-                        className="w-full p-2.5 rounded-md border border-zinc-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-900/80 text-[12px] text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20 outline-none transition-colors resize-none leading-relaxed"
-                      />
-                    </div>
 
-                    {/* 6. Media Reference: Up to 2 compressed images and 1 link */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <label className="text-[11px] font-semibold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
-                          Reference Attachments
-                        </label>
-                        <span
-                          className={`text-[10px] font-semibold px-2 py-0.5 rounded font-mono transition-colors ${
-                            uploadedImages.length >= 2 && webLinks.length >= 1
-                              ? "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300/40"
-                              : totalAttachments > 0
-                              ? "bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300 border border-brand-200/50"
-                              : "bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400"
-                          }`}
-                        >
-                          {uploadedImages.length}/2 images · {webLinks.length}/1 link
-                        </span>
-                      </div>
-
-                      {/* Slim Mode Toggle & Action Row */}
-                      <div className="space-y-2">
-                        {/* Segmented control */}
-                        <div className="inline-flex w-full rounded-md bg-zinc-100 dark:bg-zinc-800/80 p-0.5 text-[11px]">
-                          <button
-                            type="button"
-                            onClick={() => setMediaTab("files")}
-                            className={`flex-1 py-1 rounded text-[10.5px] transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                              mediaTab === "files"
-                                ? "bg-white dark:bg-zinc-700 text-brand-600 dark:text-brand-300 shadow-2xs font-semibold"
-                                : "text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 font-medium"
-                            }`}
-                          >
-                            <ImageIcon className="w-3 h-3" />
-                            <span>Image Upload</span>
-                            {uploadedImages.length > 0 && (
-                              <span className="ml-1 text-[9.5px] font-mono px-1 rounded bg-brand-100 dark:bg-brand-900/60 text-brand-700 dark:text-brand-300">
-                                {uploadedImages.length}
-                              </span>
-                            )}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setMediaTab("links")}
-                            className={`flex-1 py-1 rounded text-[10.5px] transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                              mediaTab === "links"
-                                ? "bg-white dark:bg-zinc-700 text-brand-600 dark:text-brand-300 shadow-2xs font-semibold"
-                                : "text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 font-medium"
-                            }`}
-                          >
-                            <Link2 className="w-3 h-3" />
-                            <span>Web URL Link</span>
-                            {webLinks.length > 0 && (
-                              <span className="ml-1 text-[9.5px] font-mono px-1 rounded bg-brand-100 dark:bg-brand-900/60 text-brand-700 dark:text-brand-300">
-                                {webLinks.length}
-                              </span>
-                            )}
-                          </button>
-                        </div>
-
-                        {/* File Upload Trigger */}
-                        {mediaTab === "files" && (
-                          <div>
-                            <input
-                              ref={fileInputRef}
-                              type="file"
-                              multiple
-                              accept="image/*"
-                              onChange={handleMultipleImageUpload}
-                              className="hidden"
-                            />
-                            {uploadedImages.length < 2 ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {FEASIBILITY_TYPES.map((type) => {
+                            const isSelected = selectedFeasibilityType === type.id;
+                            const isOther = type.id === "other";
+                            return (
                               <button
+                                key={type.id}
                                 type="button"
-                                onClick={() => fileInputRef.current?.click()}
-                                className="w-full h-8 px-3 rounded-md border border-dashed border-zinc-300 dark:border-zinc-700 hover:border-brand-500 dark:hover:border-brand-500 bg-zinc-50/60 dark:bg-zinc-900/40 hover:bg-brand-50/10 text-zinc-600 dark:text-zinc-400 hover:text-brand-600 dark:hover:text-brand-400 flex items-center justify-between text-[11px] font-medium transition-colors cursor-pointer group"
+                                onClick={() => setSelectedFeasibilityType(type.id)}
+                                className={`text-left p-3 rounded-lg border transition-all cursor-pointer select-none flex flex-col justify-between gap-1 relative ${
+                                  isOther ? "sm:col-span-2" : ""
+                                } ${
+                                  isSelected
+                                    ? "border-[#714B67] bg-[#714B67]/[0.06] ring-1 ring-[#714B67]/30 shadow-xs"
+                                    : "border-[#CED4DA] dark:border-white/[0.08] hover:border-[#714B67]/50 bg-[#F8F9FA] dark:bg-zinc-900/40 hover:bg-white dark:hover:bg-zinc-850 text-neutral-700 dark:text-zinc-300"
+                                }`}
                               >
-                                <div className="flex items-center gap-2">
-                                  <UploadCloud className="w-3.5 h-3.5 text-zinc-400 group-hover:text-brand-600 transition-colors" />
-                                  <span>Choose photos (PNG, JPG, WEBP)</span>
+                                <div className="flex items-center justify-between w-full">
+                                  <span
+                                    className={`text-xs tracking-tight ${
+                                      isSelected
+                                        ? "text-[#714B67] dark:text-[#E8D7E3] font-bold"
+                                        : "font-semibold text-neutral-900 dark:text-zinc-100"
+                                    }`}
+                                  >
+                                    {type.label}
+                                  </span>
+                                  <span
+                                    className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 transition-colors ${
+                                      isSelected
+                                        ? "bg-[#714B67] text-white"
+                                        : "border border-neutral-300 dark:border-zinc-600"
+                                    }`}
+                                  >
+                                    {isSelected && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                                  </span>
                                 </div>
-                                <span className="text-[10px] font-mono text-zinc-400 dark:text-zinc-500">
-                                  {2 - uploadedImages.length} image slot{2 - uploadedImages.length === 1 ? "" : "s"} left
-                                </span>
+                                <p className="text-[11px] text-neutral-500 dark:text-zinc-400 leading-snug">
+                                  {type.desc}
+                                </p>
                               </button>
-                            ) : (
-                              <div className="w-full h-8 px-3 rounded-md bg-zinc-100 dark:bg-zinc-800/60 text-zinc-500 dark:text-zinc-400 text-[11px] font-mono flex items-center justify-center border border-zinc-200 dark:border-zinc-700/60">
-                                Maximum 2 images reached
-                              </div>
-                            )}
+                            );
+                          })}
+                        </div>
+
+                        {selectedFeasibilityType === "other" && (
+                          <div className="mt-2.5">
+                            <input
+                              type="text"
+                              required
+                              placeholder="Specify bespoke requirement (e.g., Embossed Metallic Foil Spine, Novel Die Cut)..."
+                              value={customTypeOther}
+                              onChange={(e) => setCustomTypeOther(e.target.value)}
+                              className="w-full h-9 px-3 rounded-lg border border-[#714B67] bg-white dark:bg-zinc-900 text-xs font-medium text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 outline-none ring-2 ring-[#714B67]/15 shadow-2xs"
+                            />
                           </div>
                         )}
+                      </div>
 
-                        {/* Web Link Input */}
-                        {mediaTab === "links" && (
-                          <div className="flex items-center gap-1.5">
-                            <input
-                              type="url"
-                              placeholder={
-                                webLinks.length >= 1
-                                  ? "Maximum 1 reference link reached"
-                                  : "Paste URL (e.g. drive.google.com, figma, etc.)"
-                              }
-                              disabled={webLinks.length >= 1}
-                              value={linkInput}
-                              onChange={(e) => setLinkInput(e.target.value)}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                  e.preventDefault();
-                                  handleAddWebLink(e);
-                                }
-                              }}
-                              className="flex-1 h-8 px-2.5 rounded-md border border-zinc-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-900 text-[11px] text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:border-brand-500 outline-none disabled:opacity-50"
-                            />
+                      {/* Technical Description & Notes */}
+                      <div>
+                        <label className="block text-[11px] font-bold uppercase tracking-wider text-[#64748B] dark:text-zinc-400 mb-1.5 font-sans">
+                          Technical Description &amp; Specifications <span className="text-rose-500">*</span>
+                        </label>
+                        <textarea
+                          required
+                          rows={4}
+                          placeholder="Provide complete technical context, material GSM, binding dimensions, special coatings, machine tolerances, and manufacturing evaluation criteria..."
+                          value={feasibilityDescription}
+                          onChange={(e) => setFeasibilityDescription(e.target.value)}
+                          className="w-full p-3 rounded-lg border border-[#CED4DA] dark:border-zinc-700/80 bg-white dark:bg-zinc-900/80 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:border-[#714B67] focus:ring-2 focus:ring-[#714B67]/15 outline-none transition-all resize-none leading-relaxed shadow-2xs"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Right Column (5 cols) */}
+                    <div className="lg:col-span-5 space-y-4">
+                      {/* Required Target Date */}
+                      <div>
+                        <OperationalDatePicker
+                          label="Required Target Date"
+                          required
+                          value={feasibilityTargetDate}
+                          onChange={(val) => {
+                            setFeasibilityTargetDate(val);
+                            if (error) setError(null);
+                          }}
+                          minDate={new Date().toISOString().split("T")[0]}
+                          placeholder="Select required target date..."
+                        />
+                      </div>
+
+                      {/* Marketing Remarks / Notes */}
+                      <div>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label className="text-[11px] font-bold uppercase tracking-wider text-[#64748B] dark:text-zinc-400 font-sans">
+                            Marketing Remarks / Notes
+                          </label>
+                          <span className="text-[10px] text-zinc-400 font-medium">Optional</span>
+                        </div>
+                        <textarea
+                          rows={3}
+                          placeholder="Enter any additional marketing remarks, client constraints, or special evaluation instructions..."
+                          value={releaseRemarks}
+                          onChange={(e) => setReleaseRemarks(e.target.value)}
+                          className="w-full p-2.5 rounded-lg border border-[#CED4DA] dark:border-zinc-700/80 bg-white dark:bg-zinc-900/80 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:border-[#714B67] focus:ring-2 focus:ring-[#714B67]/15 outline-none transition-all resize-none leading-relaxed shadow-2xs"
+                        />
+                      </div>
+
+                      {/* Attachments Section */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <label className="text-[11px] font-bold uppercase tracking-wider text-[#64748B] dark:text-zinc-400 font-sans">
+                            Reference Attachments
+                          </label>
+                          <span
+                            className={`text-[10px] font-semibold px-2 py-0.5 rounded-full transition-colors ${
+                              uploadedImages.length >= 2 && webLinks.length >= 1
+                                ? "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300/40"
+                                : totalAttachments > 0
+                                ? "bg-[#017E84]/10 text-[#017E84] dark:bg-[#017E84]/20 dark:text-teal-300 border border-[#017E84]/20"
+                                : "bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400"
+                            }`}
+                          >
+                            {uploadedImages.length}/2 images · {webLinks.length}/1 link
+                          </span>
+                        </div>
+
+                        <div className="space-y-2.5">
+                          <div className="inline-flex w-full rounded-lg bg-[#F8F9FA] dark:bg-zinc-800/80 p-1 text-[11px] border border-[#CED4DA] dark:border-zinc-700/60">
                             <button
                               type="button"
-                              onClick={handleAddWebLink}
-                              disabled={webLinks.length >= 1 || !linkInput.trim()}
-                              className="h-8 px-3 rounded-md bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-white text-white dark:text-zinc-900 text-[11px] font-semibold shrink-0 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-1"
+                              onClick={() => setMediaTab("files")}
+                              className={`flex-1 py-1.5 rounded-md text-[11px] transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                                mediaTab === "files"
+                                  ? "bg-white dark:bg-zinc-700 text-[#714B67] dark:text-[#E8D7E3] shadow-xs font-bold"
+                                  : "text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 font-medium"
+                              }`}
                             >
-                              <Plus className="w-3 h-3" />
-                              <span>Add</span>
+                              <ImageIcon className="w-3.5 h-3.5" />
+                              <span>Image Upload</span>
+                              {uploadedImages.length > 0 && (
+                                <span className="ml-1 text-[9.5px] font-bold px-1.5 py-0.2 rounded-full bg-[#714B67]/10 text-[#714B67] dark:bg-[#714B67]/30 dark:text-[#E8D7E3]">
+                                  {uploadedImages.length}
+                                </span>
+                              )}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setMediaTab("links")}
+                              className={`flex-1 py-1.5 rounded-md text-[11px] transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                                mediaTab === "links"
+                                  ? "bg-white dark:bg-zinc-700 text-[#714B67] dark:text-[#E8D7E3] shadow-xs font-bold"
+                                  : "text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 font-medium"
+                              }`}
+                            >
+                              <Link2 className="w-3.5 h-3.5" />
+                              <span>Web URL Link</span>
+                              {webLinks.length > 0 && (
+                                <span className="ml-1 text-[9.5px] font-bold px-1.5 py-0.2 rounded-full bg-[#714B67]/10 text-[#714B67] dark:bg-[#714B67]/30 dark:text-[#E8D7E3]">
+                                  {webLinks.length}
+                                </span>
+                              )}
                             </button>
                           </div>
-                        )}
 
-                        {/* Unified Attached Items List */}
-                        {totalAttachments > 0 ? (
-                          <div className="space-y-1.5 max-h-36 overflow-y-auto pr-0.5">
-                            {/* Images */}
-                            {uploadedImages.map((img) => (
-                              <div
-                                key={img.id}
-                                className="flex items-center justify-between gap-2 px-2 py-1 rounded-md border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/90 text-[11px] shadow-2xs group"
+                          {mediaTab === "files" && (
+                            <div>
+                              <input
+                                ref={fileInputRef}
+                                type="file"
+                                multiple
+                                accept="image/*"
+                                onChange={handleMultipleImageUpload}
+                                className="hidden"
+                              />
+                              {uploadedImages.length < 2 ? (
+                                <button
+                                  type="button"
+                                  onClick={() => fileInputRef.current?.click()}
+                                  className="w-full py-2.5 px-3 rounded-lg border-2 border-dashed border-[#CED4DA] dark:border-zinc-700 hover:border-[#017E84] bg-[#F8F9FA] dark:bg-zinc-900/40 hover:bg-[#017E84]/[0.03] text-zinc-600 dark:text-zinc-400 hover:text-[#017E84] flex items-center justify-between text-xs font-medium transition-all cursor-pointer group shadow-2xs"
+                                >
+                                  <div className="flex items-center gap-2.5">
+                                    <div className="w-7 h-7 rounded-md bg-white dark:bg-zinc-800 group-hover:bg-[#017E84]/10 text-zinc-400 group-hover:text-[#017E84] flex items-center justify-center transition-colors border border-[#CED4DA]">
+                                      <UploadCloud className="w-4 h-4" />
+                                    </div>
+                                    <div className="text-left">
+                                      <span className="block font-semibold text-[#1E293B] dark:text-zinc-200 group-hover:text-[#017E84] transition-colors">
+                                        Choose photos to upload
+                                      </span>
+                                      <span className="block text-[10px] text-[#64748B]">
+                                        Supports PNG, JPG, WEBP
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white dark:bg-zinc-800 text-zinc-500 border border-[#CED4DA] group-hover:bg-[#017E84]/10 group-hover:text-[#017E84] transition-colors">
+                                    {2 - uploadedImages.length} slot{2 - uploadedImages.length === 1 ? "" : "s"} left
+                                  </span>
+                                </button>
+                              ) : (
+                                <div className="w-full h-9 px-3 rounded-lg bg-[#F8F9FA] dark:bg-zinc-800/60 text-zinc-500 dark:text-zinc-400 text-xs font-medium flex items-center justify-center border border-[#CED4DA]">
+                                  Maximum 2 images reached
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {mediaTab === "links" && (
+                            <div className="flex items-center gap-1.5">
+                              <input
+                                type="url"
+                                placeholder={
+                                  webLinks.length >= 1
+                                    ? "Maximum 1 reference link reached"
+                                    : "Paste URL (e.g. drive.google.com, figma...)"
+                                }
+                                disabled={webLinks.length >= 1}
+                                value={linkInput}
+                                onChange={(e) => setLinkInput(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    e.preventDefault();
+                                    handleAddWebLink(e);
+                                  }
+                                }}
+                                className="flex-1 h-9 px-3 rounded-lg border border-[#CED4DA] dark:border-zinc-700/80 bg-white dark:bg-zinc-900 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:border-[#017E84] focus:ring-2 focus:ring-[#017E84]/15 outline-none disabled:opacity-50 transition-all shadow-2xs"
+                              />
+                              <button
+                                type="button"
+                                onClick={handleAddWebLink}
+                                disabled={webLinks.length >= 1 || !linkInput.trim()}
+                                className="h-9 px-3.5 rounded-lg bg-[#017E84] hover:bg-[#00666A] active:bg-[#005256] text-white text-xs font-semibold shrink-0 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-xs flex items-center gap-1"
                               >
-                                <div className="flex items-center gap-2 min-w-0 flex-1">
-                                  <img
-                                    src={img.url}
-                                    alt={img.name}
-                                    className="w-6 h-6 rounded object-cover border border-zinc-200 dark:border-zinc-800 shrink-0"
-                                  />
-                                  <span className="text-[10px] font-bold px-1 py-0.2 rounded bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 border border-brand-200/50 shrink-0">
-                                    IMG
-                                  </span>
-                                  <span className="truncate font-medium text-zinc-800 dark:text-zinc-200" title={img.name}>
-                                    {img.name}
-                                  </span>
-                                  {img.size && (
-                                    <span className="text-[9.5px] text-zinc-400 font-mono shrink-0">
-                                      ({img.size})
+                                <Plus className="w-3.5 h-3.5" />
+                                <span>Add</span>
+                              </button>
+                            </div>
+                          )}
+
+                          {totalAttachments > 0 ? (
+                            <div className="space-y-1.5 max-h-36 overflow-y-auto pr-0.5">
+                              {uploadedImages.map((img) => (
+                                <div
+                                  key={img.id}
+                                  className="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg border border-[#CED4DA] dark:border-zinc-800 bg-[#F8F9FA] dark:bg-zinc-900 text-xs shadow-2xs group"
+                                >
+                                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                    <img
+                                      src={img.url}
+                                      alt={img.name}
+                                      className="w-7 h-7 rounded-md object-cover border border-[#CED4DA] dark:border-zinc-800 shrink-0"
+                                    />
+                                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#714B67]/10 text-[#714B67] dark:bg-[#714B67]/20 border border-[#714B67]/20 shrink-0">
+                                      IMG
                                     </span>
-                                  )}
-                                </div>
-                                <button
-                                  type="button"
-                                  onClick={() => handleRemoveImage(img.id)}
-                                  title="Remove image"
-                                  className="p-1 rounded text-rose-600/70 hover:text-rose-700 hover:bg-rose-50 dark:text-rose-400/70 dark:hover:text-rose-300 dark:hover:bg-rose-950/40 transition-colors shrink-0 cursor-pointer"
-                                >
-                                  <X className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
-                            ))}
-
-                            {/* Web Links */}
-                            {webLinks.map((url, idx) => (
-                              <div
-                                key={`link-${idx}`}
-                                className="flex items-center justify-between gap-2 px-2 py-1 rounded-md border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/90 text-[11px] shadow-2xs group"
-                              >
-                                <div className="flex items-center gap-2 min-w-0 flex-1">
-                                  <span className="text-[10px] font-bold px-1 py-0.2 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 shrink-0">
-                                    URL
-                                  </span>
-                                  <a
-                                    href={url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="truncate text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1 font-mono text-[10.5px]"
-                                    title={url}
+                                    <span className="truncate font-medium text-zinc-800 dark:text-zinc-200 text-xs" title={img.name}>
+                                      {img.name}
+                                    </span>
+                                    {img.size && (
+                                      <span className="text-[10px] text-zinc-400 font-mono shrink-0">
+                                        ({img.size})
+                                      </span>
+                                    )}
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveImage(img.id)}
+                                    title="Remove image"
+                                    className="p-1 rounded-md text-zinc-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors shrink-0 cursor-pointer"
                                   >
-                                    <span className="truncate">{url}</span>
-                                    <ExternalLink className="w-2.5 h-2.5 shrink-0 opacity-60" />
-                                  </a>
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
                                 </div>
-                                <button
-                                  type="button"
-                                  onClick={() => handleRemoveWebLink(idx)}
-                                  title="Remove link"
-                                  className="p-1 rounded text-rose-600/70 hover:text-rose-700 hover:bg-rose-50 dark:text-rose-400/70 dark:hover:text-rose-300 dark:hover:bg-rose-950/40 transition-colors shrink-0 cursor-pointer"
+                              ))}
+
+                              {webLinks.map((url, idx) => (
+                                <div
+                                  key={`link-${idx}`}
+                                  className="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg border border-[#CED4DA] dark:border-zinc-800 bg-[#F8F9FA] dark:bg-zinc-900 text-xs shadow-2xs group"
                                 >
-                                  <X className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="px-2.5 py-1.5 rounded-md border border-dashed border-zinc-200 dark:border-zinc-800/80 text-center">
-                            <span className="text-[10px] text-zinc-400 font-mono">
-                              No attachments yet (optional · up to 2 images and 1 link)
-                            </span>
-                          </div>
-                        )}
+                                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 shrink-0">
+                                      URL
+                                    </span>
+                                    <a
+                                      href={url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="truncate text-[#017E84] hover:underline flex items-center gap-1 text-xs font-medium"
+                                      title={url}
+                                    >
+                                      <span className="truncate">{url}</span>
+                                      <ExternalLink className="w-3 h-3 shrink-0 opacity-60" />
+                                    </a>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveWebLink(idx)}
+                                    title="Remove link"
+                                    className="p-1 rounded-md text-zinc-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors shrink-0 cursor-pointer"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="px-3 py-2.5 rounded-lg border border-dashed border-[#CED4DA] dark:border-zinc-800 bg-[#F8F9FA] dark:bg-zinc-900/30 text-center">
+                              <span className="text-[11px] text-[#64748B]">
+                                No attachments yet (optional · up to 2 images and 1 link)
+                              </span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Actions Footer - Equalized button heights & robust styling */}
-                <div className="flex items-center justify-between pt-4 border-t border-zinc-100 dark:border-white/[0.07] mt-5">
+                {/* Footer Action Bar */}
+                <div className="flex items-center justify-between pt-2">
                   <button
                     type="button"
-                    onClick={() => {
-                      setSelectedTrack("gateway");
-                      setError(null);
-                    }}
-                    className="h-10 px-4 rounded-md border border-zinc-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700/60 transition-colors cursor-pointer shadow-2xs"
+                    onClick={onClose}
+                    className="h-9 px-4 rounded bg-white dark:bg-zinc-800 border border-[#CED4DA] dark:border-zinc-700 text-xs font-semibold text-[#64748B] hover:text-[#1E293B] hover:bg-[#F8F9FA] transition-colors cursor-pointer shadow-2xs"
                   >
-                    Back to Tracks
+                    Discard
                   </button>
-                  <div className="flex items-center gap-2.5">
-                    <button
-                      type="button"
-                      disabled={isSubmitting}
-                      onClick={onClose}
-                      className="h-10 px-4 rounded-md border border-zinc-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-semibold cursor-pointer transition-colors shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Cancel
-                    </button>
+                  <div className="flex items-center gap-3">
+                    <span className="text-[11px] text-[#64748B] font-mono hidden sm:inline">
+                      Ready to submit to Sampling Desk
+                    </span>
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="h-10 px-5 rounded-md bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white text-xs font-semibold cursor-pointer transition-colors shadow-sm flex items-center gap-1.5 disabled:opacity-60 disabled:cursor-wait"
+                      className="h-9 px-5 rounded bg-[#017E84] hover:bg-[#00666A] active:bg-[#005256] text-white text-xs font-bold cursor-pointer transition-all shadow-xs flex items-center gap-2 disabled:opacity-60 disabled:cursor-wait"
                     >
                       <CheckCircle2 className="w-4 h-4" />
-                      <span>{isSubmitting ? "Saving Feasibility Check…" : "Submit Feasibility Check"}</span>
+                      <span>{isSubmitting ? "Submitting..." : "Submit Feasibility Check"}</span>
                     </button>
                   </div>
                 </div>
               </form>
             )}
 
-            {/* SCREEN 4: PROGRAM PLANNING TRACK (Campaign Setup -> Navigates to Planning Workspace) */}
+            {/* TAB 2: STANDARD SAMPLING FORM (Commercial Sample Request Step 1 Intake) */}
+            {selectedTrack === "marketing_request" && (
+              <form onSubmit={handleSubmitSampling} className="space-y-4">
+                {/* Odoo Step Flow Indicator */}
+                <div className="flex items-center justify-between px-4 py-2.5 bg-[#F8F9FA] dark:bg-zinc-800/70 border border-[#CED4DA] dark:border-zinc-700 rounded text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#714B67] text-white text-[11px] font-bold">
+                      1
+                    </span>
+                    <span className="font-semibold text-zinc-900 dark:text-zinc-100">
+                      Step 1: Program Header Setup
+                    </span>
+                    <ArrowRight className="w-3 h-3 text-zinc-400" />
+                    <span className="text-zinc-500 dark:text-zinc-400">
+                      Step 2: Staging &amp; Deliverables
+                    </span>
+                  </div>
+                  <span className="font-mono text-[10.5px] font-bold px-2 py-0.5 rounded bg-[#F3E8EE] text-[#714B67] dark:bg-[#3E2938] dark:text-[#E8D7E3] border border-[#714B67]/25">
+                    COMMERCIAL INTAKE
+                  </span>
+                </div>
+
+                {/* Form Sheet Content */}
+                <div className="bg-white dark:bg-[#1a1c24] border border-[#CED4DA] dark:border-white/[0.08] rounded p-5 space-y-4 shadow-2xs">
+                  {/* Row 1: Customer Account & Program Name */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-[#64748B] dark:text-zinc-400 mb-1.5 font-sans">
+                        Customer Account <span className="text-rose-500">*</span>
+                      </label>
+                      <CustomerCombobox
+                        customers={customers}
+                        value={marketingCustomer}
+                        onChange={setMarketingCustomer}
+                        disabled={isMasterDataLoading || customers.length === 0}
+                        placeholder="Select target customer account..."
+                        className="w-full"
+                      />
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="block text-[11px] font-bold uppercase tracking-wider text-[#64748B] dark:text-zinc-400 font-sans">
+                          Program Name <span className="text-rose-500">*</span>
+                        </label>
+                        {matchingPrograms.length > 0 && (
+                          <span className="text-[10px] font-mono text-[#017E84] dark:text-[#2dd4bf] font-bold">
+                            {matchingPrograms.length} open program{matchingPrograms.length !== 1 ? "s" : ""} found
+                          </span>
+                        )}
+                      </div>
+                      <input
+                        type="text"
+                        required
+                        list="open-programs-datalist"
+                        placeholder="e.g. Back to school, Hardcover Notebooks..."
+                        value={marketingProgramName}
+                        onChange={(e) => setMarketingProgramName(e.target.value)}
+                        className="w-full h-10 px-3.5 rounded border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-semibold text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 outline-none focus:border-[#714B67] focus:ring-1 focus:ring-[#714B67] transition-all"
+                      />
+
+                      <datalist id="open-programs-datalist">
+                        {matchingPrograms.map((p) => (
+                          <option key={p.id} value={p.programName || p.programCampaignTitle || ""}>
+                            {p.programName || p.programCampaignTitle} (Season {p.programYear || "2026"})
+                          </option>
+                        ))}
+                      </datalist>
+
+                      {/* Open Seasonal Program Picker Pills */}
+                      {matchingPrograms.length > 0 && (
+                        <div className="mt-1.5 flex flex-wrap items-center gap-1.5 animate-smooth-toast">
+                          <span className="text-[10.5px] font-mono text-zinc-500 dark:text-zinc-400 font-semibold flex items-center gap-1">
+                            <FolderGit2 className="w-3 h-3 text-[#714B67] dark:text-purple-400" />
+                            Open:
+                          </span>
+                          {matchingPrograms.map((prog) => {
+                            const progTitle = prog.programName || prog.programCampaignTitle || "";
+                            const isCurrent =
+                              marketingProgramName.trim().toLowerCase() === progTitle.trim().toLowerCase();
+                            return (
+                              <button
+                                key={prog.id}
+                                type="button"
+                                onClick={() => {
+                                  setMarketingProgramName(progTitle);
+                                  if (prog.programYear) {
+                                    setMarketingProgramYear(prog.programYear);
+                                  }
+                                }}
+                                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10.5px] font-mono transition cursor-pointer ${
+                                  isCurrent
+                                    ? "bg-[#714B67] text-white font-bold shadow-2xs"
+                                    : "bg-[#F3E8EE] dark:bg-[#3E2938]/60 text-[#714B67] dark:text-purple-300 border border-purple-200 dark:border-purple-800/60 hover:bg-purple-100 dark:hover:bg-purple-950/60"
+                                }`}
+                                title={`Click to select: ${progTitle} (${prog.programYear || "2026"})`}
+                              >
+                                <span>{progTitle}</span>
+                                <span className="text-[9.5px] opacity-80">({prog.programYear || "2026"})</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Row 2: Program Year Horizon & Target Fulfillment Plant */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-[#64748B] dark:text-zinc-400 mb-1.5 font-sans">
+                        Program Year Horizon <span className="text-rose-500">*</span>
+                      </label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {byInfo.seasonYearOptions.map((year) => {
+                          const isSelected = marketingProgramYear === year;
+                          return (
+                            <button
+                              key={year}
+                              type="button"
+                              onClick={() => setMarketingProgramYear(year)}
+                              className={`h-10 px-2.5 rounded border text-xs font-semibold transition-all flex items-center justify-between cursor-pointer select-none ${
+                                isSelected
+                                  ? "border-[#714B67] bg-[#714B67]/10 dark:bg-[#714B67]/20 text-[#714B67] dark:text-[#E8D7E3] font-bold ring-1 ring-[#714B67]/30"
+                                  : "border-[#CED4DA] dark:border-zinc-800 bg-[#F8F9FA] dark:bg-zinc-900/60 text-zinc-700 dark:text-zinc-300 hover:border-zinc-400 hover:bg-white"
+                              }`}
+                            >
+                              <span className="font-mono text-xs">{year}</span>
+                              {isSelected && <Check className="w-3 h-3 text-[#714B67] dark:text-[#E8D7E3] stroke-[2.5]" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-[#64748B] dark:text-zinc-400 mb-1.5 font-sans">
+                        Target Fulfillment Plant <span className="text-rose-500">*</span>
+                      </label>
+                      <select
+                        value={marketingTargetPlant}
+                        onChange={(e) => setMarketingTargetPlant(e.target.value)}
+                        className="w-full h-10 px-3 rounded border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-semibold text-zinc-900 dark:text-zinc-100 outline-none focus:border-[#714B67] focus:ring-1 focus:ring-[#714B67] transition-all cursor-pointer"
+                      >
+                        {plants.length > 0 ? (
+                          plants.map((plant) => (
+                            <option key={plant.id} value={plant.name}>
+                              {plant.name}
+                            </option>
+                          ))
+                        ) : (
+                          <>
+                            <option value="Navneet - Khaniwade">Navneet - Khaniwade</option>
+                            <option value="Navneet - Dantali">Navneet - Dantali</option>
+                            <option value="Navneet - Silvassa">Navneet - Silvassa</option>
+                          </>
+                        )}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Informational Guidance Callout */}
+                  <div className="flex items-start gap-2.5 p-3 rounded bg-[#017E84]/5 dark:bg-[#017E84]/10 border border-[#017E84]/20 text-xs text-zinc-700 dark:text-zinc-300">
+                    <Package className="w-4 h-4 text-[#017E84] shrink-0 mt-0.5" />
+                    <div className="text-[11.5px] leading-relaxed">
+                      <span className="font-semibold text-[#017E84] dark:text-teal-400">Next in Product Staging:</span>{" "}
+                      Attach multiple products, define artwork briefs or physical sample specifications, and assign commercial deliverables across <strong className="text-zinc-900 dark:text-zinc-100">Design</strong>, <strong className="text-zinc-900 dark:text-zinc-100">Mockup</strong>, <strong className="text-zinc-900 dark:text-zinc-100">Sampling</strong>, and <strong className="text-zinc-900 dark:text-zinc-100">Costing</strong>.
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer Action Bar */}
+                <div className="flex items-center justify-between pt-1">
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="h-9 px-4 rounded bg-white dark:bg-zinc-800 border border-[#CED4DA] dark:border-zinc-700 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 hover:bg-[#F8F9FA] transition-colors cursor-pointer"
+                  >
+                    Discard
+                  </button>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="h-9 px-5 rounded bg-[#017E84] hover:bg-[#00666A] active:bg-[#005256] text-white text-xs font-bold cursor-pointer transition-all shadow-xs flex items-center gap-2 disabled:opacity-60 disabled:cursor-wait"
+                    >
+                      {isSubmitting ? (
+                        <span>Initializing Staging...</span>
+                      ) : (
+                        <>
+                          <CheckCircle2 className="w-4 h-4" />
+                          <span>Create &amp; Add Products</span>
+                          <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </form>
+            )}
+
+            {/* TAB 3: PROGRAM PLANNING FORM (Single-Page Setup) */}
             {selectedTrack === "program_planning" && (
               <form onSubmit={handleProceedToPlanning} className="space-y-4">
-                {/* 1. Customer Name & Target Plant */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="bg-white dark:bg-[#1a1c24] border border-[#D8DADD] dark:border-white/[0.08] rounded-lg p-5 sm:p-6 shadow-2xs space-y-5">
+                  {/* Sheet Header Row */}
+                  <div className="flex flex-wrap items-center justify-between pb-3 border-b border-[#E2E8F0] dark:border-zinc-800 gap-2">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="text-sm font-bold text-[#1E293B] dark:text-zinc-100">
+                          Seasonal Program Planning Setup
+                        </h4>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 font-bold">
+                          CAMPAIGN SETUP
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-[#64748B] dark:text-zinc-400 mt-0.5">
+                        Initialize high-volume seasonal line, define target facility, and setup planning workspace.
+                      </p>
+                    </div>
+
+                    <div className="hidden sm:flex items-center gap-2 bg-[#F8F9FA] dark:bg-zinc-800 border border-[#CED4DA] dark:border-zinc-700 px-3 py-1 rounded">
+                      <span className="text-[10px] font-bold text-[#64748B] uppercase">PLANNING CYCLE</span>
+                      <span className="text-xs font-mono font-bold text-[#714B67]">{byInfo.businessYearStr}</span>
+                    </div>
+                  </div>
+
+                  {/* Customer Account & Target Plant */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-[#64748B] dark:text-zinc-400 mb-1.5 font-sans">
+                        Customer Name <span className="text-rose-500">*</span>
+                      </label>
+                      <CustomerCombobox
+                        customers={customers}
+                        value={customer}
+                        onChange={setCustomer}
+                        disabled={isMasterDataLoading || customers.length === 0}
+                        className="w-full"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-[#64748B] dark:text-zinc-400 mb-1.5 font-sans">
+                        Target Plant <span className="text-rose-500">*</span>
+                      </label>
+                      <select
+                        value={targetPlant}
+                        disabled={isMasterDataLoading || plants.length === 0}
+                        onChange={(e) => setTargetPlant(e.target.value)}
+                        className="w-full h-10 px-3 rounded-lg border border-[#CED4DA] dark:border-zinc-700/80 bg-white dark:bg-zinc-900/80 text-xs font-semibold text-zinc-900 dark:text-zinc-100 outline-none focus:border-[#714B67] focus:ring-2 focus:ring-[#714B67]/15 transition-all cursor-pointer shadow-2xs"
+                      >
+                        {plants.map((item) => (
+                          <option key={item.id} value={item.name}>{item.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Program Campaign Title */}
                   <div>
-                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 mb-1">
-                      Customer Name <span className="text-rose-500">*</span>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-[#64748B] dark:text-zinc-400 mb-1.5 font-sans">
+                      Program Campaign Title <span className="text-rose-500">*</span>
                     </label>
-                    <CustomerCombobox
-                      customers={customers}
-                      value={customer}
-                      onChange={setCustomer}
-                      disabled={isMasterDataLoading || customers.length === 0}
-                      className="w-full"
+                    <input
+                      type="text"
+                      required
+                      value={programPlanName}
+                      onChange={(e) => setProgramPlanName(e.target.value)}
+                      placeholder="e.g. Back-to-School 2026-2027 Hardcover Line"
+                      className="w-full h-10 px-3.5 rounded-lg border border-[#CED4DA] dark:border-zinc-700/80 bg-white dark:bg-zinc-900/80 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 outline-none focus:border-[#714B67] focus:ring-2 focus:ring-[#714B67]/15 transition-all shadow-2xs"
                     />
                   </div>
 
+                  {/* Program Business Year */}
                   <div>
-                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 mb-1">
-                      Target Plant <span className="text-rose-500">*</span>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-[#64748B] dark:text-zinc-400 mb-1.5 font-sans">
+                      Program Business Year <span className="text-rose-500">*</span>
                     </label>
                     <select
-                      value={targetPlant}
-                      disabled={isMasterDataLoading || plants.length === 0}
-                      onChange={(e) => setTargetPlant(e.target.value)}
-                      className="w-full h-9 px-3 rounded-md border border-zinc-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-900/80 text-xs text-zinc-900 dark:text-zinc-100 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20 font-mono transition-colors cursor-pointer"
+                      value={programPlanYear}
+                      onChange={(e) => setProgramPlanYear(e.target.value)}
+                      className="w-full h-10 px-3 rounded-lg border border-[#CED4DA] dark:border-zinc-700/80 bg-white dark:bg-zinc-900/80 text-xs font-mono font-medium text-zinc-900 dark:text-zinc-100 outline-none focus:border-[#714B67] focus:ring-2 focus:ring-[#714B67]/15 cursor-pointer transition-all shadow-2xs"
                     >
-                      {plants.map((item) => (
-                        <option key={item.id} value={item.name}>{item.name}</option>
+                      {byInfo.businessYearOptions.map((by) => (
+                        <option key={by} value={by}>{by}</option>
                       ))}
                     </select>
                   </div>
                 </div>
 
-                {/* 2. Program Campaign Title */}
-                <div>
-                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 mb-1">
-                    Program Campaign Title <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={programPlanName}
-                    onChange={(e) => setProgramPlanName(e.target.value)}
-                    placeholder="e.g. Back-to-School 2026-2027 Hardcover Line"
-                    className="w-full h-9 px-3 rounded-md border border-zinc-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-900/80 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20 transition-colors"
-                  />
-                </div>
-
-                {/* 3. Program Year */}
-                <div>
-                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 mb-1">
-                    Program Year <span className="text-rose-500">*</span>
-                  </label>
-                  <select
-                    value={programPlanYear}
-                    onChange={(e) => setProgramPlanYear(e.target.value)}
-                    className="w-full h-9 px-3 rounded-md border border-zinc-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-900/80 text-xs font-mono text-zinc-900 dark:text-zinc-100 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20 cursor-pointer transition-colors"
-                  >
-                    {byInfo.businessYearOptions.map((by) => (
-                      <option key={by} value={by}>{by}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex items-center justify-between pt-4 border-t border-zinc-100 dark:border-white/[0.07] mt-4">
+                {/* Footer Action Bar */}
+                <div className="flex items-center justify-between pt-2">
                   <button
                     type="button"
-                    onClick={() => {
-                      setSelectedTrack("gateway");
-                      setError(null);
-                    }}
-                    className="h-10 px-4 rounded-md border border-zinc-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700/60 transition-colors cursor-pointer shadow-2xs"
+                    onClick={onClose}
+                    className="h-9 px-4 rounded bg-white dark:bg-zinc-800 border border-[#CED4DA] dark:border-zinc-700 text-xs font-semibold text-[#64748B] hover:text-[#1E293B] hover:bg-[#F8F9FA] transition-colors cursor-pointer shadow-2xs"
                   >
-                    Back to Tracks
+                    Discard
                   </button>
-                  <div className="flex items-center gap-2.5">
-                    <button
-                      type="button"
-                      onClick={onClose}
-                      className="h-10 px-4 rounded-md border border-zinc-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-semibold cursor-pointer transition-colors shadow-2xs"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      className="h-10 px-4 rounded-md bg-brand-600 hover:bg-brand-700 active:bg-brand-800 dark:bg-brand-600 dark:hover:bg-brand-500 text-white text-xs font-semibold cursor-pointer transition-colors shadow-xs inline-flex items-center justify-center select-none"
-                    >
-                      Go to Planning
-                    </button>
-                  </div>
+                  <button
+                    type="submit"
+                    className="h-9 px-5 rounded bg-[#017E84] hover:bg-[#00666A] active:bg-[#005256] text-white text-xs font-bold cursor-pointer transition-all shadow-sm inline-flex items-center justify-center gap-1.5 select-none"
+                  >
+                    <span>Initialize Program Plan</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
                 </div>
               </form>
             )}
-
           </div>
         </div>
       </div>

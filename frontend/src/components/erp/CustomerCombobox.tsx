@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Check, ChevronDown, Search, X } from "lucide-react";
 import { CustomerItem } from "@/features/sample-requests/types";
 
@@ -21,10 +22,17 @@ export const CustomerCombobox: React.FC<CustomerComboboxProps> = ({
   className = "",
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const optionsRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
+  const [dropdownPosition, setDropdownPosition] = useState<{
+    top: number;
+    left: number;
+    width: number;
+    maxHeight: number;
+  } | null>(null);
   const selectedCustomer = customers.find((customer) => customer.name === value);
 
   const filteredCustomers = useMemo(() => {
@@ -41,11 +49,65 @@ export const CustomerCombobox: React.FC<CustomerComboboxProps> = ({
 
   useEffect(() => {
     const handleOutsidePointer = (event: MouseEvent) => {
-      if (!containerRef.current?.contains(event.target as Node)) setIsOpen(false);
+      const target = event.target as Node;
+      if (!containerRef.current?.contains(target) && !optionsRef.current?.contains(target)) {
+        setIsOpen(false);
+      }
     };
     document.addEventListener("mousedown", handleOutsidePointer);
     return () => document.removeEventListener("mousedown", handleOutsidePointer);
   }, []);
+
+  useLayoutEffect(() => {
+    if (!isOpen || disabled) {
+      setDropdownPosition(null);
+      return;
+    }
+
+    const updatePosition = () => {
+      const input = inputRef.current;
+      if (!input) return;
+
+      const rect = input.getBoundingClientRect();
+      let clippingRect: DOMRect | null = null;
+      let ancestor = input.parentElement;
+      while (ancestor && ancestor !== document.body) {
+        const { overflowX, overflowY } = window.getComputedStyle(ancestor);
+        if (/(auto|scroll|hidden|clip)/.test(`${overflowX} ${overflowY}`)) {
+          clippingRect = ancestor.getBoundingClientRect();
+          break;
+        }
+        ancestor = ancestor.parentElement;
+      }
+
+      const boundaryTop = Math.max(8, clippingRect?.top ?? 0);
+      const boundaryBottom = Math.min(window.innerHeight - 8, clippingRect?.bottom ?? window.innerHeight);
+      const boundaryLeft = Math.max(8, clippingRect?.left ?? 0);
+      const boundaryRight = Math.min(window.innerWidth - 8, clippingRect?.right ?? window.innerWidth);
+      const spaceBelow = boundaryBottom - rect.bottom - 8;
+      const spaceAbove = rect.top - boundaryTop - 8;
+      const opensAbove = spaceBelow < 224 && spaceAbove > spaceBelow;
+      const availableSpace = opensAbove ? spaceAbove : spaceBelow;
+      const maxHeight = Math.max(0, Math.min(256, availableSpace));
+      const width = Math.min(rect.width, boundaryRight - boundaryLeft);
+      const left = Math.max(boundaryLeft, Math.min(rect.left, boundaryRight - width));
+
+      setDropdownPosition({
+        top: opensAbove ? rect.top - maxHeight - 4 : rect.bottom + 4,
+        left,
+        width,
+        maxHeight,
+      });
+    };
+
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [isOpen, disabled, filteredCustomers.length]);
 
   const openSearch = () => {
     if (disabled) return;
@@ -81,6 +143,7 @@ export const CustomerCombobox: React.FC<CustomerComboboxProps> = ({
           aria-controls="customer-options"
           aria-activedescendant={isOpen && filteredCustomers[activeIndex] ? `customer-option-${filteredCustomers[activeIndex].id}` : undefined}
           aria-autocomplete="list"
+          aria-label="Customer account"
           value={
             isOpen
               ? query
@@ -91,6 +154,7 @@ export const CustomerCombobox: React.FC<CustomerComboboxProps> = ({
           placeholder={disabled ? "Customer data unavailable" : placeholder}
           disabled={disabled}
           onFocus={openSearch}
+          onBlur={() => setIsOpen(false)}
           onChange={(event) => {
             setQuery(event.target.value);
             setIsOpen(true);
@@ -99,12 +163,12 @@ export const CustomerCombobox: React.FC<CustomerComboboxProps> = ({
             if (event.key === "ArrowDown") {
               event.preventDefault();
               setIsOpen(true);
-              setActiveIndex((index) => Math.min(index + 1, Math.max(0, filteredCustomers.length - 1)));
+              setActiveIndex((index) => isOpen ? Math.min(index + 1, Math.max(0, filteredCustomers.length - 1)) : 0);
             }
             if (event.key === "ArrowUp") {
               event.preventDefault();
               setIsOpen(true);
-              setActiveIndex((index) => Math.max(index - 1, 0));
+              setActiveIndex((index) => isOpen ? Math.max(index - 1, 0) : Math.max(filteredCustomers.length - 1, 0));
             }
             if (event.key === "Escape") {
               setQuery("");
@@ -115,7 +179,7 @@ export const CustomerCombobox: React.FC<CustomerComboboxProps> = ({
               selectCustomer(filteredCustomers[activeIndex]);
             }
           }}
-          className={`h-8 w-full rounded-md border border-zinc-200 bg-white pl-8 ${value ? "pr-14" : "pr-8"} text-[12px] font-medium text-zinc-900 outline-none transition-colors placeholder:text-zinc-400 focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-700/80 dark:bg-zinc-900/80 dark:text-zinc-100`}
+          className={`h-9 w-full rounded-md border border-zinc-200 bg-white pl-8 ${value ? "pr-14" : "pr-8"} text-[12px] font-medium text-zinc-900 outline-none transition-colors placeholder:text-zinc-400 focus:border-[#714B67] focus:ring-2 focus:ring-[#714B67]/15 disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-700/80 dark:bg-zinc-900/80 dark:text-zinc-100`}
         />
         {value && (
           <button
@@ -132,11 +196,19 @@ export const CustomerCombobox: React.FC<CustomerComboboxProps> = ({
         <ChevronDown className={`pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-400 transition-transform ${isOpen ? "rotate-180" : ""}`} />
       </div>
 
-      {isOpen && !disabled && (
+      {isOpen && !disabled && dropdownPosition && createPortal(
         <div
+          ref={optionsRef}
           id="customer-options"
           role="listbox"
-          className="absolute left-0 right-0 top-[calc(100%+4px)] z-[70] max-h-64 overflow-y-auto rounded-md border border-zinc-200 bg-white p-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-900"
+          style={{
+            position: "fixed",
+            top: dropdownPosition.top,
+            left: dropdownPosition.left,
+            width: dropdownPosition.width,
+            maxHeight: dropdownPosition.maxHeight,
+          }}
+          className="z-[70] overflow-y-auto rounded-md border border-zinc-200 bg-white p-1 shadow-[0_8px_22px_rgba(15,23,42,0.16)] dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-[0_10px_28px_rgba(0,0,0,0.45)]"
         >
           {filteredCustomers.length > 0 ? (
             filteredCustomers.map((customer, index) => (
@@ -145,10 +217,12 @@ export const CustomerCombobox: React.FC<CustomerComboboxProps> = ({
                 type="button"
                 role="option"
                 id={`customer-option-${customer.id}`}
-                aria-selected={customer.name === value}
+                aria-selected={index === activeIndex}
                 onMouseDown={(event) => event.preventDefault()}
+                onMouseMove={() => setActiveIndex(index)}
                 onClick={() => selectCustomer(customer)}
-                className={`flex w-full items-center justify-between gap-3 rounded px-2.5 py-2 text-left transition-colors hover:bg-brand-50 focus:bg-brand-50 focus:outline-none dark:hover:bg-brand-950/30 dark:focus:bg-brand-950/30 ${index === activeIndex ? "bg-brand-50 dark:bg-brand-950/30" : ""}`}
+                tabIndex={-1}
+                className={`flex w-full items-center justify-between gap-3 rounded px-2.5 py-1.5 text-left transition-colors hover:bg-[#F3E8EE] focus:outline-none dark:hover:bg-[#3E2938]/55 ${index === activeIndex ? "bg-[#F3E8EE] dark:bg-[#3E2938]/55" : ""}`}
               >
                 <span className="min-w-0">
                   <span className="block truncate text-[12px] font-semibold text-zinc-900 dark:text-zinc-100">
@@ -158,7 +232,7 @@ export const CustomerCombobox: React.FC<CustomerComboboxProps> = ({
                     {customer.country || "Country not set"}
                   </span>
                 </span>
-                {customer.name === value && <Check className="h-3.5 w-3.5 shrink-0 text-brand-600" />}
+                {customer.name === value && <Check className="h-3.5 w-3.5 shrink-0 text-[#714B67] dark:text-[#E8D7E3]" />}
               </button>
             ))
           ) : (
@@ -166,7 +240,8 @@ export const CustomerCombobox: React.FC<CustomerComboboxProps> = ({
               No customers match “{query}”. Search by account name or country.
             </div>
           )}
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );

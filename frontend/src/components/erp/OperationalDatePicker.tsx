@@ -333,7 +333,7 @@ export const OperationalDatePicker: React.FC<OperationalDatePickerProps> = ({
           !disabled && "bg-white dark:bg-zinc-900/90 hover:border-zinc-400 dark:hover:border-zinc-600",
           isSelectedValueHoliday || hasError
             ? "border-rose-500 bg-rose-50/20 text-rose-900 dark:text-rose-200 focus:ring-1 focus:ring-rose-500"
-            : "border-zinc-200 dark:border-zinc-700/80 text-zinc-900 dark:text-zinc-100 focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20"
+            : "border-zinc-200 dark:border-zinc-700/80 text-zinc-900 dark:text-zinc-100 focus:border-[#714B67] focus:ring-1 focus:ring-[#714B67]/20"
         )}
       >
         <div className="flex items-center gap-2 overflow-hidden">
@@ -342,7 +342,7 @@ export const OperationalDatePicker: React.FC<OperationalDatePickerProps> = ({
               "w-4 h-4 shrink-0",
               isSelectedValueHoliday || hasError
                 ? "text-rose-500"
-                : "text-zinc-400 dark:text-zinc-500 group-hover:text-brand-500"
+                : "text-zinc-400 transition-colors dark:text-zinc-500 group-hover:text-[#714B67] dark:group-hover:text-purple-300"
             )}
           />
           {value ? (
@@ -542,10 +542,10 @@ export const OperationalDatePicker: React.FC<OperationalDatePickerProps> = ({
                       "opacity-35 cursor-not-allowed text-zinc-400 dark:text-zinc-600 bg-zinc-50 dark:bg-zinc-900/30",
                     !isDisabled && !isSelected && [
                       "hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 cursor-pointer",
-                      isToday && "border border-brand-500/70 font-semibold text-brand-600 dark:text-brand-400",
+                      isToday && "border border-[#714B67]/70 font-semibold text-[#714B67] dark:text-purple-300",
                     ],
                     isSelected &&
-                      "bg-brand-600 text-white font-bold shadow-xs ring-2 ring-brand-500/30 cursor-pointer"
+                      "bg-[#714B67] text-white font-bold shadow-xs ring-2 ring-[#714B67]/30 cursor-pointer"
                   )}
                 >
                   <span className="leading-none">{dayNumber}</span>
@@ -555,7 +555,7 @@ export const OperationalDatePicker: React.FC<OperationalDatePickerProps> = ({
                     </span>
                   )}
                   {isToday && !isSelected && !isWorkingSaturday && (
-                    <span className="w-1 h-1 rounded-full bg-brand-500 mt-0.5" />
+                    <span className="mt-0.5 h-1 w-1 rounded-full bg-[#714B67] dark:bg-purple-300" />
                   )}
                 </button>
               );
@@ -582,7 +582,7 @@ export const OperationalDatePicker: React.FC<OperationalDatePickerProps> = ({
               <button
                 type="button"
                 onClick={handleSelectNextWorkingDay}
-                className="text-[10px] font-medium text-brand-600 dark:text-brand-400 hover:underline cursor-pointer flex items-center gap-1"
+                className="flex items-center gap-1 text-[10px] font-medium text-[#714B67] hover:underline dark:text-purple-300"
               >
                 <CheckCircle2 className="w-3 h-3" />
                 <span>Next Working Day</span>

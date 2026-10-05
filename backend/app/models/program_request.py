@@ -1,6 +1,6 @@
 """Database models for Seasonal Program Planning and Material Specification Matrix."""
 
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, JSON, String, Text
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -39,6 +39,14 @@ class ProgramRequest(Base):
         order_by="ProgramMaterialSpecification.id",
     )
 
+    # Activity Audit Logs
+    activities = relationship(
+        "ProgramActivityLog",
+        back_populates="program_request",
+        cascade="all, delete-orphan",
+        order_by="ProgramActivityLog.id.asc()",
+    )
+
 
 class ProgramMaterialSpecification(Base):
     """
@@ -73,3 +81,25 @@ class ProgramMaterialSpecification(Base):
     updated_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
 
     program_request = relationship("ProgramRequest", back_populates="materials")
+
+
+class ProgramActivityLog(Base):
+    """Activity and chatter audit log entry for seasonal program requests."""
+
+    __tablename__ = "program_activity_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    program_request_id = Column(
+        Integer,
+        ForeignKey("program_requests.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    actor_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    actor_name = Column(String(255), nullable=False)
+    actor_department = Column(String(100), nullable=False)  # "Marketing", "SAMP Lab", "System"
+    action = Column(String(64), nullable=False)  # "CREATED", "NOTE_POSTED", "STATUS_UPDATED", "MATERIAL_ADDED", "MATERIAL_DELETED", "SAMP_REMARK_UPDATED"
+    payload = Column(JSON, nullable=False, default=dict, server_default="{}")
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+
+    program_request = relationship("ProgramRequest", back_populates="activities")

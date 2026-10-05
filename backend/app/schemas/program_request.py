@@ -1,8 +1,8 @@
 """Pydantic schemas for Seasonal Program Planning and Material Specification Matrix."""
 
 from datetime import datetime
-from typing import List, Optional
-from pydantic import BaseModel, Field
+from typing import Any, Dict, List, Optional
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ProgramMaterialBase(BaseModel):
@@ -23,12 +23,11 @@ class ProgramMaterialCreate(ProgramMaterialBase):
 
 class ProgramMaterialOut(ProgramMaterialBase):
     id: int
-    program_request_id: int
+    program_request_id: Optional[int] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 from app.utils.business_year import get_current_business_year
@@ -36,7 +35,7 @@ from app.utils.business_year import get_current_business_year
 
 class ProgramRequestCreate(BaseModel):
     customer_name: str = Field(..., min_length=1, description="Customer account name")
-    target_plant: str = Field(..., min_length=1, description="Target manufacturing plant")
+    target_plant: str = Field(default="Plant 1", description="Target manufacturing plant")
     program_campaign_title: str = Field(..., min_length=1, description="Program campaign title")
     program_year: str = Field(default_factory=get_current_business_year, description="Fiscal / program year")
     created_by: Optional[str] = None
@@ -67,6 +66,25 @@ class SingleSampRemarkUpdate(BaseModel):
     samp_remark: Optional[str] = None
 
 
+class ProgramNoteCreate(BaseModel):
+    """Payload for adding a note/comment to the program planning audit chatter."""
+
+    note: str = Field(min_length=1, max_length=2000)
+
+
+class ProgramActivityLogOut(BaseModel):
+    id: int
+    program_request_id: int
+    actor_id: Optional[int] = None
+    actor_name: str
+    actor_department: str
+    action: str
+    payload: Dict[str, Any] = Field(default_factory=dict)
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class ProgramRequestOut(BaseModel):
     id: int
     request_code: str
@@ -77,9 +95,10 @@ class ProgramRequestOut(BaseModel):
     program_year: str
     status: str
     created_by: Optional[str] = None
-    created_at: datetime
-    updated_at: datetime
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
     materials: List[ProgramMaterialOut] = []
+    activities: List[ProgramActivityLogOut] = Field(default_factory=list)
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
+

@@ -1,5 +1,4 @@
 import React from "react";
-import { ChevronRight } from "lucide-react";
 
 export interface StageStep {
   id: string;
@@ -22,52 +21,55 @@ export const ProcessStageRibbon: React.FC<ProcessStageRibbonProps> = ({
   onSelectStage,
   className = "",
 }) => {
+  const activeIndex = stages.findIndex((s) => s.id === selectedStageId);
+
   return (
     <div
-      className={`border-b border-zinc-200/80 dark:border-white/[0.07] bg-[#fafbfc] dark:bg-[#0a0b0f] px-4 sm:px-6 overflow-x-auto select-none no-scrollbar ${className}`}
+      className={`border-b border-[#e2e8f0] dark:border-white/[0.08] bg-[#f8f9fa] dark:bg-[#0e1017] px-4 sm:px-6 py-2 overflow-x-auto select-none no-scrollbar flex items-center justify-between gap-4 ${className}`}
     >
-      <div className="flex items-center min-w-max h-11 gap-1">
+      {/* Odoo 19 Polygon Chevron Statusbar */}
+      <div className="o_statusbar_status select-none shadow-2xs">
         {stages.map((stage, idx) => {
           const isSelected = selectedStageId === stage.id;
-          const isAll = stage.id === "all" || stage.id === "All";
+          const isDone = !isSelected && activeIndex > -1 && idx < activeIndex;
+
+          const buttonClass = [
+            "o_arrow_button",
+            isSelected ? "active" : isDone ? "done" : "",
+          ]
+            .filter(Boolean)
+            .join(" ");
 
           return (
-            <React.Fragment key={stage.id}>
-              <button
-                type="button"
-                onClick={() => onSelectStage(stage.id)}
-                className={[
-                  "relative h-8 flex items-center gap-2 px-3 rounded-md text-xs transition-all duration-150 cursor-pointer whitespace-nowrap",
+            <button
+              key={stage.id}
+              type="button"
+              onClick={() => onSelectStage(stage.id)}
+              className={buttonClass}
+              title={`${stage.label} (${stage.count} requests)`}
+            >
+              <span>{stage.label}</span>
+              <span
+                className={`ml-1.5 font-mono text-[10px] px-1.5 py-0.2 rounded-full font-bold tabular-nums ${
                   isSelected
-                    ? "bg-white dark:bg-zinc-800 text-brand-700 dark:text-brand-300 font-semibold shadow-xs border border-zinc-200/90 dark:border-white/10"
-                    : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-200/60 dark:hover:bg-white/[0.04]",
-                ].join(" ")}
+                    ? "bg-white/25 text-white"
+                    : isDone
+                    ? "bg-[#017e84]/15 text-[#017e84] dark:bg-[#017e84]/30 dark:text-[#2dd4bf]"
+                    : stage.count > 0
+                    ? "bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300"
+                    : "bg-zinc-200/50 dark:bg-zinc-800/50 text-zinc-400 dark:text-zinc-500"
+                }`}
               >
-                <span className="tracking-tight">{stage.label}</span>
-
-                <span
-                  className={[
-                    "font-mono text-[11px] tabular-nums px-1.5 py-0.2 rounded-full font-bold leading-none transition-colors",
-                    stage.count > 0
-                      ? isSelected
-                        ? "bg-brand-100 text-brand-800 dark:bg-brand-900/60 dark:text-brand-200 border border-brand-300/80 dark:border-brand-700"
-                        : "bg-zinc-200/80 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
-                      : "bg-zinc-200/50 dark:bg-zinc-800/40 text-zinc-400 dark:text-zinc-500",
-                  ].join(" ")}
-                >
-                  {stage.count}
-                </span>
-              </button>
-
-              {/* Separator: vertical line after 'ALL', directional micro-chevron between pipeline stages */}
-              {isAll ? (
-                <span className="w-px h-4 bg-zinc-200 dark:bg-white/[0.1] mx-1.5 shrink-0" />
-              ) : idx < stages.length - 1 ? (
-                <ChevronRight className="w-3.5 h-3.5 text-zinc-300 dark:text-zinc-700 shrink-0 mx-0.5" />
-              ) : null}
-            </React.Fragment>
+                {stage.count}
+              </span>
+            </button>
           );
         })}
+      </div>
+
+      <div className="hidden lg:flex items-center gap-2 text-[11px] text-zinc-500 dark:text-zinc-400 font-mono">
+        <span className="w-1.5 h-1.5 rounded-full bg-[#714B67] dark:bg-purple-400" />
+        <span>Odoo 19 Enterprise Workflow Pipeline</span>
       </div>
     </div>
   );

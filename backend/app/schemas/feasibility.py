@@ -21,6 +21,7 @@ class FeasibilityRequestCreate(BaseModel):
     description_notes: str = Field(min_length=1)
     required_date: date
     marketing_remarks: Optional[str] = None
+    created_by: Optional[str] = None
     reference_images: list[str] = Field(default_factory=list, max_length=2)
     reference_image_names: list[str] = Field(default_factory=list, max_length=2)
     reference_links: list[str] = Field(default_factory=list, max_length=1)
@@ -63,6 +64,12 @@ class FeasibilityMarketingDecisionPayload(BaseModel):
     decision_remark: Optional[str] = None
 
 
+class FeasibilityNoteCreate(BaseModel):
+    """Payload for adding a note/comment to the feasibility audit chatter."""
+
+    note: str = Field(min_length=1, max_length=2000)
+
+
 class FeasibilityActivityLogOut(BaseModel):
     id: int
     feasibility_request_id: int
@@ -97,6 +104,8 @@ class FeasibilityRequestOut(BaseModel):
     updated_at: Optional[datetime] = None
 
     # SAMP Lab response fields
+    taken_by_samp: Optional[str] = None
+    taken_at_samp: Optional[datetime] = None
     sampling_feasibility_response: Optional[str] = None
     sampling_feasibility_remark: Optional[str] = None
     sampling_feasibility_approved_by: Optional[str] = None
@@ -109,6 +118,12 @@ class FeasibilityRequestOut(BaseModel):
     marketing_decision_by: Optional[str] = None
     marketing_decision_at: Optional[datetime] = None
     marketing_decision_remark: Optional[str] = None
+
+    # Sampling request conversion fields
+    converted_sample_request_id: Optional[int] = None
+    converted_sr_number: Optional[str] = None
+    converted_at: Optional[datetime] = None
+    converted_by: Optional[str] = None
 
     activities: List[FeasibilityActivityLogOut] = Field(default_factory=list)
 

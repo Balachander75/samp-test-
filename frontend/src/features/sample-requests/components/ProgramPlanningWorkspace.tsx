@@ -8,17 +8,21 @@ import {
   Copy,
   CheckCircle2,
   ChevronRight,
-  PackageCheck,
   AlertCircle,
   Pencil,
   X,
+  Package,
+  Send,
+  Building2,
+  Calendar,
+  Sparkles,
+  Info,
 } from "lucide-react";
 import { UserProfile } from "@/features/auth";
 import { createProgramRequestApi, createSampleRequestApi } from "../api";
-import { CreateProgramRequestPayload, SampleRequestItem } from "../types";
+import { CreateProgramRequestPayload } from "../types";
 import { useMasterData } from "../hooks/useMasterData";
 import { CustomerCombobox } from "@/components/erp";
-import { getBusinessYearInfo } from "@/lib/businessYear";
 
 export interface ProgramMaterialRow {
   id: string;
@@ -40,31 +44,31 @@ interface LocationState {
   customer?: string;
   targetPlant?: string;
   programPlanName?: string;
+  programName?: string;
   programPlanYear?: string;
+  programYear?: string;
 }
+
+const currentYearNum = new Date().getFullYear();
+const SINGLE_YEARS = [String(currentYearNum), String(currentYearNum + 1), String(currentYearNum + 2)];
 
 export const ProgramPlanningWorkspace: React.FC<ProgramPlanningWorkspaceProps> = ({ user }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const state = (location.state as LocationState) || {};
-  const {
-    customers,
-    plants,
-    isLoading: isMasterDataLoading,
-    error: masterDataError,
-  } = useMasterData();
+  const { customers, plants, isLoading: isMasterDataLoading, error: masterDataError } = useMasterData();
 
-  // Dynamic Business Year Information (Oct–Sep cycle)
-  const byInfo = useMemo(() => getBusinessYearInfo(), []);
+  const currentYearStr = new Date().getFullYear().toString();
 
-  // Operational Campaign Parameters (Pre-filled from Step 1 or defaults)
+  // Operational Campaign Parameters
   const [customer, setCustomer] = useState(state.customer || "");
   const [targetPlant, setTargetPlant] = useState(state.targetPlant || "");
   const [programPlanName, setProgramPlanName] = useState(
-    state.programPlanName || `BTS ${byInfo.businessYearStr} Hardcover Notebook Line`
+    state.programPlanName || state.programName || "Seasonal Scholastic Line"
   );
-  const [programPlanYear, setProgramPlanYear] = useState(state.programPlanYear || byInfo.businessYearStr);
-  const [campaignBudgetQty, setCampaignBudgetQty] = useState("50000");
+  const [programPlanYear, setProgramPlanYear] = useState(
+    state.programPlanYear || state.programYear || currentYearStr
+  );
 
   // Toggle inline editing of parameters
   const [isEditingSetup, setIsEditingSetup] = useState(false);
@@ -100,7 +104,7 @@ export const ProgramPlanningWorkspace: React.FC<ProgramPlanningWorkspaceProps> =
     if (masterDataError) setError(masterDataError);
   }, [masterDataError]);
 
-  // Row Manipulation (with auto-focus)
+  // Row Manipulation
   const handleAddRow = () => {
     const nextId = `mat-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
     setMaterialRows((prev) => [
@@ -147,88 +151,77 @@ export const ProgramPlanningWorkspace: React.FC<ProgramPlanningWorkspaceProps> =
   const summaryStats = useMemo(() => {
     const filledRows = materialRows.filter((r) => r.materialType.trim());
     const totalQty = filledRows.reduce((acc, r) => acc + (Number(r.qty) || 0), 0);
-    const uniqueSuppliers = new Set(
-      filledRows.map((r) => r.supplierInfo.trim()).filter(Boolean)
-    ).size;
-
     return {
-      rowCount: materialRows.length,
-      configuredCount: filledRows.length,
+      totalConfigured: materialRows.length,
+      totalFilled: filledRows.length,
       totalQty,
-      supplierCount: uniqueSuppliers,
     };
   }, [materialRows]);
 
-  // Submit Handler
-  const handleCreateProgram = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  // Submit to Backend & Send to Sampling Team
+  const handleSubmitProgramRequest = async () => {
     if (!customer.trim()) {
-      setError("Please select a customer account.");
+      setError("Please specify a customer account.");
       return;
     }
     if (!targetPlant.trim()) {
-      setError("Please select a target plant.");
+      setError("Please specify a target manufacturing facility.");
       return;
     }
     if (!programPlanName.trim()) {
-      setError("Please specify the program campaign title.");
+      setError("Please provide a program campaign title.");
+      return;
+    }
+
+    const filledRows = materialRows.filter((r) => r.materialType.trim());
+    if (filledRows.length === 0) {
+      setError("Please enter at least one material specification row with a material type.");
       return;
     }
 
     setIsSubmitting(true);
     setError(null);
 
-    const filledRows = materialRows.filter(
-      (r) =>
-        r.materialType.trim() ||
-        r.supplierInfo.trim() ||
-        r.grade.trim() ||
-        r.colorVariant.trim() ||
-        r.caliperWt.trim() ||
-        r.qty.trim() ||
-        r.remark.trim()
-    );
-
-    const rowsToSubmit = filledRows.length > 0 ? filledRows : materialRows;
-
     const apiPayload: CreateProgramRequestPayload = {
       customer_name: customer.trim(),
       target_plant: targetPlant.trim(),
       program_campaign_title: programPlanName.trim(),
       program_year: programPlanYear.trim(),
-      created_by: user?.name || "Marketing Team",
-      materials: rowsToSubmit.map((r) => ({
+      created_by: user?.name || user?.userid || "Marketing Specialist",
+      materials: filledRows.map((r) => ({
         material_type: r.materialType.trim() || null,
         supplier_name: r.supplierInfo.trim() || null,
         grade: r.grade.trim() || null,
         color_variant: r.colorVariant.trim() || null,
         caliper_wt: r.caliperWt.trim() || null,
         quantity: r.qty.trim() || null,
-        unit: r.unit || "pcs",
+        unit: r.unit.trim() || "pcs",
         remark: r.remark.trim() || null,
       })),
     };
 
     try {
       const record = await createProgramRequestApi(apiPayload);
-      setSuccessToast(`Program Request ${record.srNumber} (${record.requestCode}) registered successfully in database! Redirecting to Desk...`);
+      setSuccessToast(
+        `✓ Program Request ${record.srNumber} (${record.requestCode}) submitted to Sampling Team for technical review!`
+      );
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("samp:requests-changed"));
+      }
       setTimeout(() => {
-        navigate("/sample-requests");
+        navigate("/sample-requests/programs");
       }, 900);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to create program request in database, applying fallback:", err);
       // Fallback: createSampleRequestApi
       const matrixSection =
-        rowsToSubmit.length > 0
-          ? "\n\nMaterial Specification Matrix:\n" +
-            rowsToSubmit
-              .map(
-                (r, i) =>
-                  `#${i + 1} | Type: ${r.materialType || "—"} | Supplier: ${r.supplierInfo || "—"} | Grade: ${r.grade || "—"} | Color: ${r.colorVariant || "—"} | Caliper: ${r.caliperWt || "—"} | Qty: ${r.qty || "0"} ${r.unit || "pcs"} | Remark: ${r.remark || "—"}`
-              )
-              .join("\n")
-          : "";
+        "\n\nMaterial Specification Matrix:\n" +
+        filledRows
+          .map(
+            (r, i) =>
+              `#${i + 1} | Type: ${r.materialType || "—"} | Supplier: ${r.supplierInfo || "—"} | Grade: ${r.grade || "—"} | Color: ${r.colorVariant || "—"} | Caliper: ${r.caliperWt || "—"} | Qty: ${r.qty || "0"} ${r.unit || "pcs"} | Remark: ${r.remark || "—"}`
+          )
+          .join("\n");
       const fallbackSrNum = `SR-26-${String(Math.floor(100 + Math.random() * 900))}`;
       try {
         await createSampleRequestApi({
@@ -246,9 +239,12 @@ export const ProgramPlanningWorkspace: React.FC<ProgramPlanningWorkspaceProps> =
           dateRequestCreated: new Date().toISOString().split("T")[0],
           creationMode: "program_planning",
         } as any);
-        setSuccessToast(`Program Request ${fallbackSrNum} registered! Redirecting to Desk...`);
+        setSuccessToast(`✓ Program Request ${fallbackSrNum} submitted to Sampling Team!`);
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("samp:requests-changed"));
+        }
         setTimeout(() => {
-          navigate("/sample-requests");
+          navigate("/sample-requests/programs");
         }, 900);
       } catch (fallbackErr) {
         setError("Could not register program request. Please verify backend connection.");
@@ -259,117 +255,116 @@ export const ProgramPlanningWorkspace: React.FC<ProgramPlanningWorkspaceProps> =
   };
 
   return (
-    <div className="flex-1 overflow-y-auto bg-[#f8fafc] dark:bg-[#08090d] min-h-screen text-zinc-900 dark:text-zinc-100 flex flex-col transition-colors duration-150">
-      {/* 1. Single Clean Command Header (Single Back Button for whole page) */}
-      <div className="border-b border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0f1118] px-5 sm:px-8 py-3.5 sticky top-0 z-20 shadow-2xs backdrop-blur-md">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-          {/* Left: Single Dedicated Back Arrow & Title */}
+    <div className="flex-1 flex flex-col min-h-0 bg-[#F8F9FA] dark:bg-[#0b0c10] text-zinc-900 dark:text-zinc-100 overflow-y-auto select-text">
+      {/* ── 1. Page Header (Exact Match to Image 1 & 3 Breadcrumbs) ── */}
+      <header className="border-b border-[#E2E8F0] dark:border-white/[0.08] bg-white dark:bg-[#12141d] px-6 py-3 sticky top-0 z-20 shadow-2xs backdrop-blur-md">
+        <div className="w-full flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
             <button
               type="button"
-              onClick={() => navigate("/sample-requests")}
-              className="p-1.5 -ml-1.5 rounded-md text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer shrink-0"
-              title="Back to Marketing Desk"
-              aria-label="Back to Marketing Desk"
+              onClick={() => navigate("/sample-requests/programs")}
+              className="p-1.5 -ml-1 rounded-md text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-neutral-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer shrink-0"
+              title="Return to Program Planning Desk"
             >
               <ArrowLeft className="w-4 h-4" />
             </button>
 
             <div className="min-w-0">
-              <div className="flex items-center gap-2 text-[11px] text-zinc-500 dark:text-zinc-400 font-mono">
-                <span className="truncate">Marketing Work</span>
-                <ChevronRight className="w-3 h-3 text-zinc-300 dark:text-zinc-600 shrink-0" />
-                <span className="text-zinc-800 dark:text-zinc-300 font-medium truncate">Seasonal Program Planning</span>
+              <div className="flex items-center gap-1.5 text-[11px] text-zinc-500 dark:text-zinc-400 font-mono">
+                <span
+                  onClick={() => navigate("/sample-requests/programs")}
+                  className="hover:text-[#017E84] cursor-pointer transition-colors"
+                >
+                  Marketing Work
+                </span>
+                <ChevronRight className="w-3 h-3 text-zinc-400 shrink-0" />
+                <span className="text-zinc-900 dark:text-zinc-100 font-medium">Seasonal Program Planning</span>
               </div>
-              <h1 className="text-lg font-bold text-zinc-950 dark:text-zinc-50 tracking-tight truncate mt-0.5">
+              <h1 className="text-base font-bold text-neutral-900 dark:text-white tracking-tight truncate mt-0.5">
                 Seasonal Program Planning Workspace
               </h1>
             </div>
           </div>
 
-          {/* Right: Operational Status Pill */}
-          <div className="flex items-center gap-2 shrink-0">
-            <span className="px-2.5 py-1 rounded-md text-[10px] font-mono font-bold bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300 border border-brand-200/80 dark:border-brand-800/80 uppercase tracking-wide">
-              Track 03 · Operational Planning
+          <div className="flex items-center gap-2.5 shrink-0">
+            <span className="inline-flex items-center px-2.5 py-1 rounded bg-[#017E84]/10 text-[#017E84] dark:bg-[#017E84]/20 dark:text-[#2dd4bf] border border-[#017E84]/30 font-mono text-[10px] font-bold uppercase tracking-wider">
+              Track 03 • Operational Planning
             </span>
           </div>
         </div>
-      </div>
+      </header>
 
       {/* Main Workspace Body */}
-      <div className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-5">
-        {/* Toast / Error Banner */}
-        {error && (
-          <div className="px-4 py-3 rounded-lg border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 text-xs font-medium flex items-center gap-2 animate-smooth-toast">
-            <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
-            <span>{error}</span>
-          </div>
-        )}
-
+      <div className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 py-5 space-y-4">
+        {/* Success Toast */}
         {successToast && (
-          <div className="px-4 py-3 rounded-lg border border-emerald-200 dark:border-emerald-900/60 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 text-xs font-medium flex items-center gap-2 animate-smooth-toast">
-            <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
-            <span>{successToast}</span>
+          <div className="px-4 py-3 rounded-lg border border-emerald-200 dark:border-emerald-900/60 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 text-xs font-semibold flex items-center justify-between animate-smooth-toast">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>{successToast}</span>
+            </div>
           </div>
         )}
 
-        {/* 2. Sleek Single-Header Campaign Context Banner (Replaces redundant 6-field form) */}
-        <div className="rounded-lg border border-zinc-200/90 dark:border-white/[0.08] bg-white dark:bg-[#0f1118] p-3.5 sm:p-4 shadow-2xs transition-colors">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            {/* Left: Summary Sentence Strip */}
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[12px]">
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 shrink-0">
-                Planning For
+        {/* Error Toast */}
+        {error && (
+          <div className="px-4 py-3 rounded-lg border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 text-xs font-semibold flex items-center justify-between animate-smooth-toast">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+              <span>{error}</span>
+            </div>
+            <button type="button" onClick={() => setError(null)} className="p-1 cursor-pointer">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+
+        {/* ── 2. Master Parameters Ribbon Card (Exact Image 3 Aesthetic, Polished) ── */}
+        <div className="rounded-xl border border-[#CED4DA] dark:border-white/[0.08] bg-white dark:bg-[#12141d] px-5 py-3.5 shadow-2xs">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 text-xs">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              <span className="px-2.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-purple-50 dark:bg-purple-950/50 text-[#714B67] dark:text-purple-300 border border-purple-200/80 dark:border-purple-800/60">
+                PLANNING FOR
               </span>
 
-              <span className="font-bold text-zinc-950 dark:text-zinc-100 text-[13px]">
-                {customer}
+              <span className="font-bold text-neutral-900 dark:text-white text-sm">
+                {customer || "Unspecified Customer"}
               </span>
 
-              <span className="text-zinc-300 dark:text-zinc-700 font-mono">•</span>
+              <span className="text-neutral-300 dark:text-zinc-700">•</span>
 
-              <span className="font-semibold text-brand-600 dark:text-brand-400">
-                "{programPlanName}"
+              <span className="font-semibold text-[#017E84] dark:text-[#2dd4bf]">
+                &quot;{programPlanName}&quot;
               </span>
 
-              <span className="text-zinc-300 dark:text-zinc-700 font-mono">•</span>
+              <span className="text-neutral-300 dark:text-zinc-700">•</span>
 
-              <span className="font-mono text-zinc-700 dark:text-zinc-300 text-[11px] px-2 py-0.5 rounded bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+              <span className="font-mono text-neutral-700 dark:text-zinc-300 font-medium">
                 Season {programPlanYear}
               </span>
 
-              <span className="text-zinc-300 dark:text-zinc-700 font-mono">•</span>
+              <span className="text-neutral-300 dark:text-zinc-700">•</span>
 
-              <span className="font-mono text-[11px] text-zinc-500 dark:text-zinc-400">
-                Plant: <strong className="text-zinc-800 dark:text-zinc-200">{targetPlant ? targetPlant.split(" ")[0] : "Silvassa"}</strong>
+              <span className="font-mono text-neutral-600 dark:text-zinc-400 font-medium">
+                Plant: {targetPlant || "1505"}
               </span>
             </div>
 
-            {/* Right: Quick Edit Toggle */}
             <button
               type="button"
               onClick={() => setIsEditingSetup((prev) => !prev)}
-              className="text-[11px] font-mono font-medium text-zinc-500 hover:text-brand-600 dark:text-zinc-400 dark:hover:text-brand-400 flex items-center gap-1.5 cursor-pointer shrink-0 transition-colors self-end md:self-center"
+              className="text-xs font-semibold text-neutral-500 hover:text-[#017E84] flex items-center gap-1.5 cursor-pointer shrink-0 transition-colors"
             >
-              {isEditingSetup ? (
-                <>
-                  <X className="w-3.5 h-3.5" />
-                  <span>Close Editor</span>
-                </>
-              ) : (
-                <>
-                  <Pencil className="w-3 h-3" />
-                  <span>Edit Parameters</span>
-                </>
-              )}
+              <Pencil className="w-3.5 h-3.5" />
+              <span>{isEditingSetup ? "Close Editor" : "Edit Parameters"}</span>
             </button>
           </div>
 
-          {/* Smooth Collapsible Parameters Editor (Only when operator wants to edit) */}
+          {/* Collapsible Parameter Editor */}
           {isEditingSetup && (
-            <div className="mt-3.5 pt-3.5 border-t border-zinc-100 dark:border-white/[0.06] grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-3 animate-smooth-toast">
-              <div className="lg:col-span-3">
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1 font-mono">
+            <div className="mt-3.5 pt-3.5 border-t border-neutral-100 dark:border-zinc-800 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs animate-smooth-toast">
+              <div>
+                <label className="block text-[10px] font-bold uppercase text-neutral-500 mb-1 font-mono">
                   Customer
                 </label>
                 <CustomerCombobox
@@ -381,45 +376,49 @@ export const ProgramPlanningWorkspace: React.FC<ProgramPlanningWorkspaceProps> =
                 />
               </div>
 
-              <div className="lg:col-span-3">
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1 font-mono">
-                  Target Plant
-                </label>
-                <select
-                  value={targetPlant}
-                  disabled={isMasterDataLoading || plants.length === 0}
-                  onChange={(e) => setTargetPlant(e.target.value)}
-                  className="w-full h-7 px-2 rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-[11px] font-mono text-zinc-900 dark:text-zinc-100 outline-none focus:border-brand-500 cursor-pointer"
-                >
-                  {plants.map((item: { id: string | number; name: string }) => (
-                    <option key={item.id} value={item.name}>{item.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="lg:col-span-4">
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1 font-mono">
-                  Campaign Title
+              <div>
+                <label className="block text-[10px] font-bold uppercase text-neutral-500 mb-1 font-mono">
+                  Program Title
                 </label>
                 <input
                   type="text"
                   value={programPlanName}
                   onChange={(e) => setProgramPlanName(e.target.value)}
-                  className="w-full h-7 px-2.5 rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-[11px] text-zinc-900 dark:text-zinc-100 outline-none focus:border-brand-500 font-medium"
+                  className="w-full h-8.5 px-3 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-semibold outline-none focus:border-[#017E84]"
                 />
               </div>
 
-              <div className="lg:col-span-2">
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1 font-mono">
-                  Year
+              <div>
+                <label className="block text-[10px] font-bold uppercase text-neutral-500 mb-1 font-mono">
+                  Program Year (Single Year)
                 </label>
                 <select
                   value={programPlanYear}
                   onChange={(e) => setProgramPlanYear(e.target.value)}
-                  className="w-full h-7 px-2 rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-[11px] font-mono text-zinc-900 dark:text-zinc-100 outline-none focus:border-brand-500 cursor-pointer"
+                  className="w-full h-8.5 px-2.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-mono font-bold outline-none focus:border-[#017E84]"
                 >
-                  {byInfo.businessYearOptions.map((by) => (
-                    <option key={by} value={by}>{by}</option>
+                  {SINGLE_YEARS.map((yr) => (
+                    <option key={yr} value={yr}>
+                      {yr}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold uppercase text-neutral-500 mb-1 font-mono">
+                  Target Facility
+                </label>
+                <select
+                  value={targetPlant}
+                  disabled={isMasterDataLoading || plants.length === 0}
+                  onChange={(e) => setTargetPlant(e.target.value)}
+                  className="w-full h-8.5 px-2.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-semibold outline-none focus:border-[#017E84]"
+                >
+                  {plants.map((item) => (
+                    <option key={item.id} value={item.name}>
+                      {item.name}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -427,59 +426,57 @@ export const ProgramPlanningWorkspace: React.FC<ProgramPlanningWorkspaceProps> =
           )}
         </div>
 
-        {/* 3. Hero Component: Material Specification Matrix Card */}
-        <div className="rounded-lg border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0f1118] overflow-hidden shadow-2xs transition-colors">
+        {/* ── 3. Hero Component: Material Specification Matrix Card ── */}
+        <div className="rounded-xl border border-[#CED4DA] dark:border-white/[0.08] bg-white dark:bg-[#12141d] overflow-hidden shadow-2xs">
           {/* Matrix Header */}
-          <div className="p-4 sm:p-5 border-b border-zinc-200 dark:border-white/[0.08] bg-zinc-50/70 dark:bg-[#161822] flex flex-col md:flex-row md:items-center md:justify-between gap-3.5">
+          <div className="p-4 sm:p-5 border-b border-[#E2E8F0] dark:border-white/[0.08] bg-[#FBFBFC] dark:bg-[#161822] flex flex-col md:flex-row md:items-center md:justify-between gap-3.5">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 flex items-center justify-center border border-brand-200/70 dark:border-brand-800/80 shrink-0 shadow-2xs">
+              <div className="w-10 h-10 rounded-xl bg-[#017E84]/10 dark:bg-[#017E84]/20 text-[#017E84] dark:text-[#2dd4bf] flex items-center justify-center border border-[#017E84]/20 shrink-0">
                 <Layers className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="text-[14px] font-bold text-zinc-950 dark:text-zinc-50 tracking-tight">
+                <h2 className="text-sm font-bold text-neutral-900 dark:text-zinc-50 tracking-tight">
                   Material Specification Matrix
                 </h2>
-                <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                <p className="text-[11px] text-neutral-500 dark:text-zinc-400">
                   Specify raw materials, grades, and quantities planned for this program
                 </p>
               </div>
             </div>
 
-            <div>
-              {/* Blue + Add Row Button */}
-              <button
-                type="button"
-                onClick={handleAddRow}
-                className="h-8 px-4 rounded-md bg-brand-600 hover:bg-brand-700 active:scale-[0.98] text-white text-[12px] font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-xs"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Add Row</span>
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={handleAddRow}
+              className="h-8.5 px-4 rounded-lg bg-[#017E84] hover:bg-[#00666A] active:bg-[#005256] text-white text-xs font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer self-start md:self-center active:scale-95"
+            >
+              <Plus className="w-4 h-4 stroke-[2.5]" />
+              <span>Add Row</span>
+            </button>
           </div>
 
-          {/* Matrix Table */}
+          {/* Table Container */}
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-[11px]">
+            <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="border-b border-zinc-200 dark:border-white/[0.08] bg-zinc-50/70 dark:bg-zinc-900/50 text-zinc-400 dark:text-zinc-500 font-bold uppercase tracking-wider text-[10px] font-mono">
-                  <th className="py-3 px-3 w-10 text-center">#</th>
-                  <th className="py-3 px-2 min-w-[150px]">Material Type</th>
-                  <th className="py-3 px-2 min-w-[130px]">Supplier Info</th>
-                  <th className="py-3 px-2 min-w-[110px]">Grade</th>
-                  <th className="py-3 px-2 min-w-[120px]">Color Variant</th>
-                  <th className="py-3 px-2 min-w-[110px]">Caliper / Wt</th>
-                  <th className="py-3 px-2 min-w-[90px]">Qty</th>
-                  <th className="py-3 px-2 min-w-[110px]">Unit</th>
-                  <th className="py-3 px-2 min-w-[140px]">Remark</th>
-                  <th className="py-3 px-2 w-16 text-center"></th>
+                <tr className="bg-zinc-50 dark:bg-zinc-900/80 border-b border-zinc-200 dark:border-white/[0.08] text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 select-none">
+                  <th className="py-2.5 px-3 w-10 text-center">#</th>
+                  <th className="py-2.5 px-2 min-w-[140px]">MATERIAL TYPE *</th>
+                  <th className="py-2.5 px-2 min-w-[130px]">SUPPLIER INFO</th>
+                  <th className="py-2.5 px-2 min-w-[120px]">GRADE</th>
+                  <th className="py-2.5 px-2 min-w-[120px]">COLOR VARIANT</th>
+                  <th className="py-2.5 px-2 min-w-[110px]">CALIPER / WT</th>
+                  <th className="py-2.5 px-2 w-24">QTY</th>
+                  <th className="py-2.5 px-2 w-28">UNIT</th>
+                  <th className="py-2.5 px-2 min-w-[180px]">REMARK</th>
+                  <th className="py-2.5 px-3 w-16 text-right">ACTIONS</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-200/70 dark:divide-white/[0.05]">
+
+              <tbody className="divide-y divide-zinc-100 dark:divide-white/[0.05]">
                 {materialRows.map((row, index) => (
-                  <tr key={row.id} className="hover:bg-brand-50/20 dark:hover:bg-brand-950/10 transition-colors">
-                    {/* Row Index */}
-                    <td className="py-2.5 px-3 text-center font-mono font-bold text-zinc-400 dark:text-zinc-500 text-[11px]">
+                  <tr key={row.id} className="hover:bg-zinc-50/70 dark:hover:bg-zinc-900/30 transition-colors">
+                    {/* # */}
+                    <td className="py-2.5 px-3 text-center font-mono font-bold text-zinc-400 text-[11px]">
                       {index + 1}
                     </td>
 
@@ -488,10 +485,11 @@ export const ProgramPlanningWorkspace: React.FC<ProgramPlanningWorkspaceProps> =
                       <input
                         id={`mat-type-${row.id}`}
                         type="text"
+                        required
                         placeholder="e.g. Kappa Board"
                         value={row.materialType}
                         onChange={(e) => updateRow(row.id, "materialType", e.target.value)}
-                        className="w-full h-8 px-2.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/90 text-[11px] text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20 transition-all font-medium"
+                        className="w-full h-8 px-2.5 rounded border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 outline-none focus:border-[#017E84] focus:ring-1 focus:ring-[#017E84]/20 transition font-semibold"
                       />
                     </td>
 
@@ -502,7 +500,7 @@ export const ProgramPlanningWorkspace: React.FC<ProgramPlanningWorkspaceProps> =
                         placeholder="e.g. BILT / ITC"
                         value={row.supplierInfo}
                         onChange={(e) => updateRow(row.id, "supplierInfo", e.target.value)}
-                        className="w-full h-8 px-2.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/90 text-[11px] text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20 transition-all"
+                        className="w-full h-8 px-2.5 rounded border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 outline-none focus:border-[#017E84] focus:ring-1 focus:ring-[#017E84]/20 transition"
                       />
                     </td>
 
@@ -513,7 +511,7 @@ export const ProgramPlanningWorkspace: React.FC<ProgramPlanningWorkspaceProps> =
                         placeholder="e.g. Grade A"
                         value={row.grade}
                         onChange={(e) => updateRow(row.id, "grade", e.target.value)}
-                        className="w-full h-8 px-2.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/90 text-[11px] text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20 transition-all"
+                        className="w-full h-8 px-2.5 rounded border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 outline-none focus:border-[#017E84] focus:ring-1 focus:ring-[#017E84]/20 transition"
                       />
                     </td>
 
@@ -524,50 +522,44 @@ export const ProgramPlanningWorkspace: React.FC<ProgramPlanningWorkspaceProps> =
                         placeholder="e.g. Natural White"
                         value={row.colorVariant}
                         onChange={(e) => updateRow(row.id, "colorVariant", e.target.value)}
-                        className="w-full h-8 px-2.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/90 text-[11px] text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20 transition-all"
+                        className="w-full h-8 px-2.5 rounded border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 outline-none focus:border-[#017E84] focus:ring-1 focus:ring-[#017E84]/20 transition"
                       />
                     </td>
 
-                    {/* Caliper / Wt */}
+                    {/* Caliper / WT */}
                     <td className="py-2 px-2">
                       <input
                         type="text"
                         placeholder="e.g. 70 GSM"
                         value={row.caliperWt}
                         onChange={(e) => updateRow(row.id, "caliperWt", e.target.value)}
-                        className="w-full h-8 px-2.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/90 text-[11px] text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20 font-mono transition-all"
+                        className="w-full h-8 px-2.5 rounded border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs font-mono text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 outline-none focus:border-[#017E84] focus:ring-1 focus:ring-[#017E84]/20 transition"
                       />
                     </td>
 
                     {/* Qty */}
                     <td className="py-2 px-2">
                       <input
-                        type="number"
+                        type="text"
                         placeholder="5000"
                         value={row.qty}
                         onChange={(e) => updateRow(row.id, "qty", e.target.value)}
-                        className="w-full h-8 px-2.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/90 text-[11px] font-mono text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20 transition-all"
+                        className="w-full h-8 px-2.5 rounded border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs font-mono text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 outline-none focus:border-[#017E84] focus:ring-1 focus:ring-[#017E84]/20 transition font-bold"
                       />
                     </td>
 
-                    {/* Standardized UOM Select */}
+                    {/* Unit */}
                     <td className="py-2 px-2">
-                      <select
-                        value={row.unit || "pcs"}
+                      <input
+                        type="text"
+                        placeholder="e.g. pcs, sheets, kg"
+                        value={row.unit}
                         onChange={(e) => updateRow(row.id, "unit", e.target.value)}
-                        className="w-full h-8 px-2 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/90 text-[11px] font-mono text-zinc-900 dark:text-zinc-100 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20 cursor-pointer"
-                      >
-                        <option value="pcs">pcs</option>
-                        <option value="sheets">sheets</option>
-                        <option value="reams">reams</option>
-                        <option value="rolls">rolls</option>
-                        <option value="kg">kg</option>
-                        <option value="sets">sets</option>
-                        <option value="sqm">sqm</option>
-                      </select>
+                        className="w-full h-8 px-2.5 rounded border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs font-mono text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 outline-none focus:border-[#017E84] focus:ring-1 focus:ring-[#017E84]/20 transition"
+                      />
                     </td>
 
-                    {/* Remark with Tab/Enter Turbo Row Insertion */}
+                    {/* Remark */}
                     <td className="py-2 px-2">
                       <input
                         type="text"
@@ -575,34 +567,32 @@ export const ProgramPlanningWorkspace: React.FC<ProgramPlanningWorkspaceProps> =
                         value={row.remark}
                         onChange={(e) => updateRow(row.id, "remark", e.target.value)}
                         onKeyDown={(e) => {
-                          if (e.key === "Enter" || (e.key === "Tab" && !e.shiftKey)) {
-                            if (index === materialRows.length - 1) {
-                              e.preventDefault();
-                              handleAddRow();
-                            }
+                          if (e.key === "Tab" && !e.shiftKey && index === materialRows.length - 1) {
+                            e.preventDefault();
+                            handleAddRow();
                           }
                         }}
-                        className="w-full h-8 px-2.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/90 text-[11px] text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20 transition-all"
+                        className="w-full h-8 px-2.5 rounded border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 outline-none focus:border-[#017E84] focus:ring-1 focus:ring-[#017E84]/20 transition"
                       />
                     </td>
 
-                    {/* Actions: Clone & Delete */}
-                    <td className="py-2 px-2 text-center">
-                      <div className="flex items-center justify-center gap-1">
+                    {/* Actions */}
+                    <td className="py-2 px-3 text-right">
+                      <div className="flex items-center justify-end gap-1">
                         <button
                           type="button"
                           onClick={() => handleDuplicateRow(row)}
-                          className="p-1.5 rounded-md text-brand-600/70 hover:text-brand-700 dark:text-brand-400/70 dark:hover:text-brand-300 hover:bg-brand-50 dark:hover:bg-brand-950/40 cursor-pointer transition-colors"
-                          title="Duplicate Row"
+                          className="h-7 w-7 rounded-md flex items-center justify-center text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition cursor-pointer"
+                          title="Duplicate row"
                         >
                           <Copy className="w-3.5 h-3.5" />
                         </button>
                         <button
                           type="button"
                           onClick={() => handleRemoveRow(row.id)}
-                          disabled={materialRows.length === 1}
-                          className="p-1.5 rounded-md text-rose-600/70 hover:text-rose-700 dark:text-rose-400/70 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/40 disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer transition-colors"
-                          title="Delete Row"
+                          disabled={materialRows.length <= 1}
+                          className="h-7 w-7 rounded-md flex items-center justify-center text-rose-500/70 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition cursor-pointer disabled:opacity-30 disabled:pointer-events-none"
+                          title="Remove row"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -614,58 +604,44 @@ export const ProgramPlanningWorkspace: React.FC<ProgramPlanningWorkspaceProps> =
             </table>
           </div>
 
-          {/* Matrix Footer Counter & Metrics */}
-          <div className="px-4 sm:px-5 py-3 bg-zinc-50/70 dark:bg-zinc-900/50 border-t border-zinc-200 dark:border-white/[0.08] flex flex-col sm:flex-row sm:items-center sm:justify-between text-[11px] text-zinc-500 dark:text-zinc-400 font-mono gap-2">
+          {/* Matrix Footer Counts */}
+          <div className="px-5 py-3 border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/40 flex flex-wrap items-center justify-between text-xs text-zinc-500 font-mono">
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-brand-500" />
+              <span className="w-2 h-2 rounded-full bg-[#017E84]" />
               <span>
-                {materialRows.length} row{materialRows.length > 1 ? "s" : ""} configured
-              </span>
-              <span className="text-zinc-300 dark:text-zinc-700">•</span>
-              <span className="text-zinc-400">
-                {summaryStats.configuredCount} completed
+                {summaryStats.totalConfigured} row{summaryStats.totalConfigured !== 1 ? "s" : ""} configured • {summaryStats.totalFilled} completed
               </span>
             </div>
 
-            <div className="flex items-center gap-4 text-zinc-400">
-              {summaryStats.supplierCount > 0 && (
-                <span>
-                  Suppliers: <strong className="text-zinc-800 dark:text-zinc-200">{summaryStats.supplierCount}</strong>
-                </span>
-              )}
-              <span>
-                Total Raw Materials Planned:{" "}
-                <strong className="text-zinc-900 dark:text-zinc-100 font-semibold font-mono">
-                  {summaryStats.totalQty.toLocaleString()} units
-                </strong>
-              </span>
+            <div>
+              Total Raw Materials Planned: <strong className="text-zinc-900 dark:text-zinc-100">{summaryStats.totalQty.toLocaleString()} units</strong>
             </div>
           </div>
         </div>
 
-        {/* 4. Bottom Action Bar (Clean Enterprise Action) */}
-        <div className="rounded-lg border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0f1118] p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-3.5 shadow-2xs transition-colors">
-          <div className="text-[12px] text-zinc-500 dark:text-zinc-400 font-mono text-center sm:text-left">
-            Ready to initialize program request for <strong className="text-zinc-900 dark:text-zinc-100">{customer}</strong>
+        {/* ── 4. Bottom Action Card (APA Theme Solid Teal Button) ── */}
+        <div className="rounded-xl border border-[#CED4DA] dark:border-white/[0.08] bg-white dark:bg-[#12141d] p-5 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <p className="text-xs font-semibold text-neutral-800 dark:text-zinc-200">
+              Ready to initialize seasonal program for <strong className="text-neutral-900 dark:text-white">{customer}</strong> (&quot;{programPlanName}&quot;)
+            </p>
+            <p className="text-[11px] text-neutral-500 dark:text-zinc-400 font-mono mt-0.5">
+              Will be routed to Sampling Team for technical specification matrix evaluation
+            </p>
           </div>
 
           <button
             type="button"
-            onClick={handleCreateProgram}
+            onClick={handleSubmitProgramRequest}
             disabled={isSubmitting}
-            className="w-full sm:w-auto h-9 px-6 rounded-md bg-brand-600 hover:bg-brand-700 active:scale-[0.99] disabled:opacity-50 text-white text-[12px] font-semibold cursor-pointer transition-all shadow-xs flex items-center justify-center gap-2"
+            className="h-10 px-6 rounded-lg bg-[#017E84] hover:bg-[#00666A] active:bg-[#005256] text-white text-xs font-bold transition shadow-xs flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 tracking-tight shrink-0 active:scale-95"
           >
             {isSubmitting ? (
-              <>
-                <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                <span>Creating Program Request...</span>
-              </>
+              <span className="animate-spin text-white font-mono">•</span>
             ) : (
-              <>
-                <PackageCheck className="w-4 h-4" />
-                <span>Create Program Request</span>
-              </>
+              <Send className="w-4 h-4" />
             )}
+            <span>{isSubmitting ? "Submitting to Sampling..." : "Create Program Request"}</span>
           </button>
         </div>
       </div>

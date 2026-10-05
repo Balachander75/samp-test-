@@ -35,6 +35,8 @@ class FeasibilityRequest(Base):
     updated_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
 
     # Sampling Lab response fields
+    taken_by_samp = Column(String(255), nullable=True)
+    taken_at_samp = Column(DateTime(timezone=True), nullable=True)
     sampling_feasibility_response = Column(String(32), nullable=True)
     sampling_feasibility_remark = Column(Text, nullable=True)
     sampling_feasibility_approved_by = Column(String(255), nullable=True)
@@ -47,6 +49,12 @@ class FeasibilityRequest(Base):
     marketing_decision_by = Column(String(255), nullable=True)
     marketing_decision_at = Column(DateTime(timezone=True), nullable=True)
     marketing_decision_remark = Column(Text, nullable=True)
+
+    # Sampling request conversion fields
+    converted_sample_request_id = Column(Integer, nullable=True)
+    converted_sr_number = Column(String(50), nullable=True)
+    converted_at = Column(DateTime(timezone=True), nullable=True)
+    converted_by = Column(String(255), nullable=True)
 
     customer = relationship("Customer")
     activities = relationship(

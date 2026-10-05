@@ -21,6 +21,20 @@ export default {
           900: "#1e3a8a",
           950: "#172554",
         },
+        odoo: {
+          purple: "#714B67",
+          purpleHover: "#5B3C53",
+          purpleDark: "#3E2938",
+          purpleLight: "#F3E8EE",
+          teal: "#017E84",
+          tealHover: "#00666A",
+          tealLight: "#E6F4F4",
+          canvas: "#F1F3F5",
+          border: "#E2E8F0",
+          inputBorder: "#CED4DA",
+          textMain: "#1E293B",
+          textMuted: "#64748B",
+        },
         obsidian: {
           50: "#f8fafc",
           100: "#f1f5f9",
@@ -41,8 +55,8 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', '"Helvetica Neue"', 'Arial', 'sans-serif'],
-        mono: ['"Geist Mono"', '"IBM Plex Mono"', 'monospace'],
+        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', '"Helvetica Neue"', 'Arial', 'sans-serif'],
+        mono: ['"JetBrains Mono"', '"Geist Mono"', '"IBM Plex Mono"', 'monospace'],
       },
       boxShadow: {
         'subtle-1': '0 1px 2px 0 rgba(0, 0, 0, 0.05)',

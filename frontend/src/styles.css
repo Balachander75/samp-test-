@@ -4,43 +4,49 @@
 
 @layer base {
   :root {
-    --bg-app: #f8fafc;
+    --bg-app: #f1f3f5;
     --bg-panel: #ffffff;
-    --bg-subtle: #f1f5f9;
+    --bg-subtle: #f8f9fa;
     --bg-muted: #e2e8f0;
     --border-subtle: #e2e8f0;
-    --border-strong: #cbd5e1;
-    --border-focus: #1d4ed8;
-    --text-primary: #0f172a;
-    --text-secondary: #475569;
+    --border-strong: #ced4da;
+    --border-focus: #714b67;
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
     --text-muted: #94a3b8;
-    --accent-primary: #1d4ed8;
-    --accent-primary-hover: #1e40af;
-    --accent-primary-subtle: #eff6ff;
-    --font-ui: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    --font-data: "Geist Mono", "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-    --radius-control: 6px;
-    --radius-panel: 8px;
+    --accent-primary: #714b67;
+    --accent-primary-hover: #5b3c53;
+    --accent-primary-subtle: #f3e8ee;
+    --accent-teal: #017e84;
+    --accent-teal-hover: #00666a;
+    --accent-teal-subtle: #e6f4f4;
+    --font-ui: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-data: "JetBrains Mono", "Geist Mono", "IBM Plex Mono", ui-monospace, monospace;
+    --radius-control: 4px;
+    --radius-panel: 6px;
   }
 
   .dark {
-    --bg-app: #08090d;
-    --bg-panel: #0f1118;
-    --bg-subtle: #161822;
+    --bg-app: #0c0d12;
+    --bg-panel: #12141d;
+    --bg-subtle: #181b26;
     --bg-muted: #1e2230;
     --border-subtle: rgba(255, 255, 255, 0.08);
     --border-strong: rgba(255, 255, 255, 0.16);
-    --border-focus: #3b82f6;
+    --border-focus: #c084fc;
     --text-primary: #f8fafc;
     --text-secondary: #94a3b8;
     --text-muted: #64748b;
-    --accent-primary: #2563eb;
-    --accent-primary-hover: #1d4ed8;
-    --accent-primary-subtle: rgba(37, 99, 235, 0.12);
-    --font-ui: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    --font-data: "Geist Mono", "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-    --radius-control: 6px;
-    --radius-panel: 8px;
+    --accent-primary: #c084fc;
+    --accent-primary-hover: #a855f7;
+    --accent-primary-subtle: rgba(192, 132, 252, 0.15);
+    --accent-teal: #2dd4bf;
+    --accent-teal-hover: #14b8a6;
+    --accent-teal-subtle: rgba(45, 212, 191, 0.15);
+    --font-ui: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-data: "JetBrains Mono", "Geist Mono", "IBM Plex Mono", ui-monospace, monospace;
+    --radius-control: 4px;
+    --radius-panel: 6px;
   }
 
   html,
@@ -115,64 +121,10 @@
   }
 }
 
-@keyframes subtleSlowDrift {
-  0% {
-    transform: scale(1.02) translate3d(0, 0, 0);
-  }
-  50% {
-    transform: scale(1.06) translate3d(-8px, -6px, 0);
-  }
-  100% {
-    transform: scale(1.02) translate3d(0, 0, 0);
-  }
-}
-
-.animate-bg-drift {
-  animation: subtleSlowDrift 36s ease-in-out infinite;
-  will-change: transform;
-}
-
 @layer components {
   .erp-command-bar {
     background-color: var(--bg-panel);
     border-bottom: 1px solid var(--border-subtle);
-  }
-
-  .erp-auth-card {
-    background-color: rgba(255, 255, 255, 0.98);
-    border: 1px solid #e4e4e7;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-  }
-  .dark .erp-auth-card {
-    background-color: rgba(15, 17, 24, 0.98) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6) !important;
-  }
-
-  .erp-footer-pill {
-    background-color: rgba(0, 0, 0, 0.4);
-    color: #d4d4d8;
-    border: none;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-  }
-  .dark .erp-footer-pill {
-    background-color: rgba(0, 0, 0, 0.6) !important;
-    color: #a1a1aa !important;
-    border: none !important;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4) !important;
-  }
-
-  .erp-theme-toggle {
-    background-color: rgba(255, 255, 255, 0.95);
-    color: #18181b;
-    border: 1px solid rgba(228, 228, 231, 0.9);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-  }
-  .dark .erp-theme-toggle {
-    background-color: rgba(18, 18, 24, 0.92) !important;
-    color: #f4f4f5 !important;
-    border: 1px solid rgba(255, 255, 255, 0.15) !important;
-    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.6) !important;
   }
 }
 
@@ -236,31 +188,137 @@
   will-change: transform, opacity;
 }
 
-@keyframes smoothToastSlideUp {
-  from {
-    opacity: 0;
-    transform: translate3d(-50%, 20px, 0) scale(0.97);
-  }
-  to {
-    opacity: 1;
-    transform: translate3d(-50%, 0, 0) scale(1);
-  }
+/* ========================================================================= */
+/* ODOO 19 ENTERPRISE THEME COMPONENTS                                       */
+/* ========================================================================= */
+
+/* Odoo Document Sheet Canvas */
+.o_form_sheet {
+  background: #FFFFFF;
+  border: 1px solid #D8DADD;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 10px 15px -5px rgba(0, 0, 0, 0.02);
+}
+.dark .o_form_sheet {
+  background: #12141d;
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
-@keyframes toastProgressCountdown {
-  from {
-    width: 100%;
-  }
-  to {
-    width: 0%;
-  }
+/* Odoo 19 Statusbar Polygon Chevron */
+.o_statusbar_status {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid #CED4DA;
+  background: #F8F9FA;
+}
+.dark .o_statusbar_status {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: #141722;
 }
 
-.animate-smooth-toast-bottom {
-  animation: smoothToastSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  will-change: transform, opacity;
+.o_arrow_button {
+  position: relative;
+  padding: 5px 12px 5px 20px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748B;
+  background: #F8F9FA;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  transition: all 140ms cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+}
+.dark .o_arrow_button {
+  color: #94A3B8;
+  background: #141722;
 }
 
-.animate-toast-progress {
-  animation: toastProgressCountdown 6s linear forwards;
+.o_arrow_button:first-child {
+  padding-left: 12px;
 }
+.o_arrow_button::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: -10px;
+  width: 0;
+  height: 0;
+  border-top: 14px solid transparent;
+  border-bottom: 14px solid transparent;
+  border-left: 10px solid #F8F9FA;
+  z-index: 2;
+}
+.dark .o_arrow_button::after {
+  border-left-color: #141722;
+}
+
+.o_arrow_button::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: -11px;
+  width: 0;
+  height: 0;
+  border-top: 14px solid transparent;
+  border-bottom: 14px solid transparent;
+  border-left: 11px solid #CED4DA;
+  z-index: 1;
+}
+.dark .o_arrow_button::before {
+  border-left-color: rgba(255, 255, 255, 0.12);
+}
+
+.o_arrow_button.active {
+  background: #714B67 !important;
+  color: #FFFFFF !important;
+  z-index: 4;
+}
+.o_arrow_button.active::after {
+  border-left-color: #714B67 !important;
+}
+
+.o_arrow_button.done {
+  background: #E8F5F5 !important;
+  color: #017E84 !important;
+}
+.dark .o_arrow_button.done {
+  background: rgba(1, 126, 132, 0.22) !important;
+  color: #2dd4bf !important;
+}
+.o_arrow_button.done::after {
+  border-left-color: #E8F5F5 !important;
+}
+.dark .o_arrow_button.done::after {
+  border-left-color: #16383b !important;
+}
+
+/* Odoo Smart Stat Buttons */
+.oe_stat_button {
+  border-left: 1px solid #E2E8F0;
+  border-bottom: 1px solid #E2E8F0;
+  padding: 7px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #FFFFFF;
+  transition: background 120ms ease, box-shadow 120ms ease;
+}
+.oe_stat_button:hover {
+  background: #F8FAFC;
+}
+.dark .oe_stat_button {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: #12141d;
+}
+.dark .oe_stat_button:hover {
+  background: #1a1e2c;
+}
+
+/* Diff tags */
+.diff-old { background-color: #FEE2E2; color: #991B1B; text-decoration: line-through; }
+.diff-new { background-color: #DCFCE7; color: #166534; font-weight: 600; }
+

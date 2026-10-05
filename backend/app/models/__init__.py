@@ -1,9 +1,14 @@
 """SQLAlchemy model exports."""
-from app.models.feasibility import FeasibilityRequest, FeasibilityReferenceImage
+from app.models.feasibility import FeasibilityActivityLog, FeasibilityReferenceImage, FeasibilityRequest
 from app.models.master import Customer, Plant, User
-from app.models.program_request import ProgramMaterialSpecification, ProgramRequest
+from app.models.program_request import (
+    ProgramActivityLog,
+    ProgramMaterialSpecification,
+    ProgramRequest,
+)
 from app.models.sample_request import (
     CreateSampleRequest,
+    DesignRequest,
     ProductCharacteristic,
     ProductDetail,
 )
@@ -11,12 +16,16 @@ from app.models.sample_request import (
 __all__ = [
     "Customer",
     "CreateSampleRequest",
-    "FeasibilityRequest",
+    "DesignRequest",
+    "FeasibilityActivityLog",
     "FeasibilityReferenceImage",
+    "FeasibilityRequest",
     "Plant",
     "ProductCharacteristic",
     "ProductDetail",
+    "ProgramActivityLog",
     "ProgramMaterialSpecification",
     "ProgramRequest",
     "User",
 ]
+

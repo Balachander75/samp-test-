@@ -58,11 +58,13 @@ export interface SampleRequestItem {
   targetAudience?: string | null;
   referenceImage?: string | null;
   createdAt: string;
+  updatedAt?: string;
   plantFeasibilityResponse?: "Yes" | "No" | "Maybe" | null;
   plantFeasibilityRemark?: string | null;
   samplingFeasibilityResponse?: "Yes" | "No" | "Maybe" | null;
   samplingFeasibilityRemark?: string | null;
   samplingFeasibilityApprovedBy?: string | null;
+  samplingFeasibilityApprovedDate?: string | null;
   feasibilityClosedAt?: string | null;
   feasibilityClosedBy?: "plant" | "sampling" | null;
   isRespondedOnTime?: boolean | null;
@@ -70,10 +72,17 @@ export interface SampleRequestItem {
   marketingDecisionBy?: string | null;
   marketingDecisionAt?: string | null;
   marketingDecisionRemark?: string | null;
+  takenBySamp?: string | null;
+  takenAtSamp?: string | null;
+  convertedSampleRequestId?: number | string | null;
+  convertedSrNumber?: string | null;
+  convertedAt?: string | null;
+  convertedBy?: string | null;
   activities?: FeasibilityActivityItem[];
   referenceImages?: string[];
   referenceImageNames?: string[];
   referenceLinks?: string[];
+  descriptionNotes?: string;
   feasibilityType?: string;
   customFeasibilityType?: string | null;
   feasibilityDescription?: string;
@@ -86,7 +95,7 @@ export interface FeasibilityActivityItem {
   actorId?: number | null;
   actorName: string;
   actorDepartment: string;
-  action: "CREATED" | "VIEWED" | "SAMP_EVALUATED" | "MARKETING_DECIDED" | string;
+  action: "CREATED" | "VIEWED" | "TASK_CLAIMED" | "SAMP_EVALUATED" | "MARKETING_DECIDED" | "CONVERTED_TO_SAMPLING" | string;
   payload: Record<string, any>;
   createdAt: string;
 }
@@ -133,9 +142,16 @@ export interface FeasibilityRequestRecord extends FeasibilityRequestPayload {
   marketingDecisionBy?: string | null;
   marketingDecisionAt?: string | null;
   marketingDecisionRemark?: string | null;
-  activities?: FeasibilityActivityItem[];
+  takenBySamp?: string | null;
+  takenAtSamp?: string | null;
+  convertedSampleRequestId?: number | string | null;
+  convertedSrNumber?: string | null;
+  convertedAt?: string | null;
+  convertedBy?: string | null;
+  activities?: (FeasibilityActivityItem | ProgramActivityItem)[];
   referenceImageNames?: string[];
 }
+
 
 export interface CreateSampleRequestForm {
   year?: string;
@@ -207,6 +223,7 @@ export interface ProductSearchResult {
   target_plant?: string;
   binding_type_1?: string;
   binding_type_2?: string;
+  source_sample_code?: string;
   c1_caliper_weight?: string;
   c2_material_type?: string;
   c2_cover_finish?: string;
@@ -431,6 +448,17 @@ export interface AddProgramMaterialPayload {
   samp_remark?: string | null;
 }
 
+export interface ProgramActivityItem {
+  id: number;
+  programRequestId: number;
+  actorId?: number | null;
+  actorName: string;
+  actorDepartment: string;
+  action: "CREATED" | "NOTE_POSTED" | "STATUS_UPDATED" | "MATERIAL_ADDED" | "MATERIAL_DELETED" | "SAMP_REMARK_UPDATED" | "SAMP_REMARKS_UPDATED" | "UPDATED" | string;
+  payload: Record<string, any>;
+  createdAt: string;
+}
+
 export interface ProgramRequestRecord {
   id: number;
   requestCode: string;
@@ -444,7 +472,9 @@ export interface ProgramRequestRecord {
   createdAt: string;
   updatedAt: string;
   materials: ProgramMaterialItem[];
+  activities?: ProgramActivityItem[];
 }
+
 
 export interface CreateProgramRequestPayload {
   customer_name: string;

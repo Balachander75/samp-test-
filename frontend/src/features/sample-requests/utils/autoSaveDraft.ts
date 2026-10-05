@@ -2,16 +2,21 @@ import { StagedProductItem } from "../components/ProductStagingWorkspace";
 import {
   createSampleRequestApi,
   createDesignRequestApi,
+  updateSampleRequestApi,
 } from "../api";
 import { CreateSampleRequestForm } from "../types";
 import { API_BASE_URL, createApiHeaders } from "@/lib/api";
 import { UserProfile } from "@/features/auth";
+import { getBusinessYearForDate } from "@/lib/businessYear";
 
 export interface ProgramContextData {
   customer?: string;
   programName?: string;
   programYear?: string;
+  year?: string;
   targetPlant?: string;
+  parentRequestId?: string | number;
+  parentSrNumber?: string;
 }
 
 export interface AutoSaveResult {
@@ -19,6 +24,8 @@ export interface AutoSaveResult {
   count: number;
   customer: string;
   programName: string;
+  requestId?: string | number;
+  srNumber?: string;
 }
 
 /**
@@ -38,14 +45,19 @@ export async function autoSaveStagedProductsToDraft(
   const programName = programContext?.programName?.trim() || "Marketing Intake Program";
   const rawYear = programContext?.programYear || "2026";
   const programYear = String(rawYear).replace(/BTS/gi, "").trim() || "2026";
-  const year = programContext?.programYear || "2026-2027";
-  const targetPlant = programContext?.targetPlant?.trim() || "1505- Khaniwade";
-  const createdBy = user?.name || user?.userid || "Marketing Specialist";
   const dateStr = new Date().toISOString().split("T")[0];
+  const year = (programContext?.year && programContext.year.includes("-"))
+    ? programContext.year
+    : getBusinessYearForDate(dateStr);
+  const targetPlant = programContext?.targetPlant?.trim() || "";
+  const createdBy = user?.name || user?.userid || "Marketing Specialist";
 
-  // Attempt 1: Fast atomic batch creation
-  try {
-    const batchPayload = {
+  // A newly created request is completed with the first staged product. Remaining
+  // products are created as their own requests under the same customer/program.
+  // Existing staging sessions still use the batch path where available.
+  if (!programContext?.parentRequestId) {
+    try {
+      const batchPayload = {
       customer,
       program_name: programName,
       program_year: programYear,
@@ -57,6 +69,7 @@ export async function autoSaveStagedProductsToDraft(
         product_description: prod.productDescription,
         material_code: prod.materialCode,
         request_types: prod.scopes,
+        mockup_required: prod.scopes.includes("mockup") ? "Yes" : null,
         status: "Draft (Pre-SMT)",
         creation_mode: "marketing_request",
         number_of_designs: prod.designMetadata?.numberOfDesigns || 1,
@@ -73,33 +86,56 @@ export async function autoSaveStagedProductsToDraft(
             ? `[Partial Scope]: ${prod.samplingMetadata.partialRequirements}`
             : null),
         product_type: prod.samplingMetadata ? (prod.samplingMetadata.sampleType === "full" ? "Full Sample" : "Partial Sample") : null,
-        source_sample_code: prod.samplingMetadata?.sourceSrNumber || prod.samplingMetadata?.selectedMaterialCode || null,
-        custom_binding_1: prod.samplingMetadata?.bindingType1 || null,
-        custom_binding_2: prod.samplingMetadata?.bindingType2 || null,
+        source_sample_code:
+          prod.samplingMetadata?.sourceSrNumber ||
+          prod.samplingMetadata?.selectedMaterialCode ||
+          prod.catalogMetadata?.sourceMaterialCode ||
+          null,
+        custom_binding_1:
+          prod.samplingMetadata?.bindingType1 || prod.catalogMetadata?.bindingType1 || null,
+        custom_binding_2:
+          prod.samplingMetadata?.bindingType2 || prod.catalogMetadata?.bindingType2 || null,
       })),
-    };
-
-    const res = await fetch(`${API_BASE_URL}/api/v1/sample-requests/batch`, {
-      method: "POST",
-      headers: createApiHeaders({ json: true }),
-      body: JSON.stringify(batchPayload),
-    });
-
-    if (res.ok) {
-      return {
-        success: true,
-        count: items.length,
-        customer,
-        programName,
       };
+
+      const res = await fetch(`${API_BASE_URL}/api/v1/sample-requests/batch`, {
+        method: "POST",
+        headers: createApiHeaders({ json: true }),
+        body: JSON.stringify(batchPayload),
+      });
+
+      if (res.ok) {
+        let firstId: string | number | undefined;
+        let firstSr: string | undefined;
+        try {
+          const data = await res.json();
+          if (data?.results && Array.isArray(data.results) && data.results.length > 0) {
+            firstId = data.results[0].id;
+            firstSr = data.results[0].sr_number;
+          }
+        } catch {
+          // ignore
+        }
+        return {
+          success: true,
+          count: items.length,
+          customer,
+          programName,
+          requestId: firstId,
+          srNumber: firstSr,
+        };
+      }
+    } catch (err) {
+      console.warn("Batch draft save endpoint fallback:", err);
     }
-  } catch (err) {
-    console.warn("Batch draft save endpoint fallback:", err);
   }
 
   // Attempt 2: Individual item creation fallback
   let savedCount = 0;
-  for (const prod of items) {
+  let firstSavedId: string | number | undefined = programContext?.parentRequestId;
+  let firstSavedSr: string | undefined = programContext?.parentSrNumber;
+
+  for (const [index, prod] of items.entries()) {
     if (prod.designMetadata) {
       try {
         await createDesignRequestApi({
@@ -140,13 +176,33 @@ export async function autoSaveStagedProductsToDraft(
       productImagePath: prod.designMetadata?.referenceImage || undefined,
       referenceImages: prod.designMetadata?.images?.map((img) => img.url) || [],
       referenceLinks: prod.designMetadata?.webLinks || [],
+      sourceSampleCode:
+        prod.samplingMetadata?.sourceSrNumber ||
+        prod.samplingMetadata?.selectedMaterialCode ||
+        prod.catalogMetadata?.sourceMaterialCode,
+      customBinding1: prod.samplingMetadata?.bindingType1 || prod.catalogMetadata?.bindingType1,
+      customBinding2: prod.samplingMetadata?.bindingType2 || prod.catalogMetadata?.bindingType2,
+      mockupRequired: prod.scopes.includes("mockup") ? "Yes" : undefined,
     };
 
     try {
-      await createSampleRequestApi(payload);
+      if (index === 0 && programContext?.parentRequestId) {
+        const updated = await updateSampleRequestApi(programContext.parentRequestId, payload);
+        if (!updated) throw new Error("The sampling request could not be updated with the first product.");
+      } else {
+        const created = await createSampleRequestApi(payload);
+        if (!created) throw new Error("A staged product could not be saved.");
+        if (index === 0) {
+          firstSavedId = created.id;
+          firstSavedSr = created.srNumber;
+        }
+      }
       savedCount++;
     } catch (err) {
       console.error("Individual draft auto-save error:", err);
+      if (index === 0 && programContext?.parentRequestId) {
+        return { success: false, count: 0, customer, programName };
+      }
     }
   }
 
@@ -155,5 +211,7 @@ export async function autoSaveStagedProductsToDraft(
     count: savedCount,
     customer,
     programName,
+    requestId: firstSavedId,
+    srNumber: firstSavedSr,
   };
 }

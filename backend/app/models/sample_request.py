@@ -35,7 +35,7 @@ class CreateSampleRequest(Base):
     year = Column(String(50), nullable=False)
     product_description = Column(Text, nullable=False)
     customer = Column(String(150), nullable=False, index=True)
-    target_plant = Column(String(100), nullable=False, default="1505- Khaniwade", server_default="1505- Khaniwade")
+    target_plant = Column(String(100), nullable=True)
     date_request_created = Column(String(50), nullable=False)
     created_by = Column(String(100), nullable=False)
     material_code = Column(String(100), nullable=False, index=True)
@@ -117,3 +117,30 @@ class ProductDetail(Base):
     updated_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
 
     sample_request = relationship("CreateSampleRequest", back_populates="product_details")
+
+
+class DesignRequest(Base):
+    """
+    Creative Design Request entity (table: design_requests).
+    Manages creative brief, trend, audience, artwork variants, reference moodboards, and design schedules.
+    """
+
+    __tablename__ = "design_requests"
+
+    id = Column(Integer, primary_key=True, index=True)
+    request_code = Column(String(50), nullable=False, unique=True, index=True)
+    sr_number = Column(String(50), nullable=True, index=True)
+    customer_name = Column(String(150), nullable=False, index=True)
+    program_name = Column(String(150), nullable=True)
+    program_year = Column(String(50), nullable=True)
+    status = Column(String(50), nullable=False, default="Draft (Pre-SMT)")
+    number_of_designs = Column(Integer, nullable=False, default=1)
+    trend = Column(String(200), nullable=True)
+    target_audience = Column(String(200), nullable=True)
+    reference_image = Column(Text, nullable=True)
+    product_description = Column(Text, nullable=False, default="Creative Design Brief")
+    design_required_date = Column(String(50), nullable=True)
+    created_by = Column(String(100), nullable=False, default="Marketing Specialist")
+
+    created_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc), server_default=func.now(), onupdate=lambda: datetime.now(timezone.utc))
