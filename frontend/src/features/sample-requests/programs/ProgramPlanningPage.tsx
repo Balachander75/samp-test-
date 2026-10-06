@@ -118,12 +118,14 @@ export const ProgramPlanningPage: React.FC<ProgramPlanningPageProps> = ({
   selectedPlant,
   uniquePlants,
   uniqueCustomers,
+  user,
   isAdmin,
   onOpenNewModal,
   onInspectRequest,
   onDeleteRequest,
   onRefresh,
 }) => {
+
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<"list" | "kanban">("list");
   const [filterTab, setFilterTab] = useState<ProgramStageTab>("all");
