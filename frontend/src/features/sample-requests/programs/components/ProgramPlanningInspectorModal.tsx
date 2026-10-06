@@ -83,7 +83,6 @@ export const ProgramPlanningInspectorModal: React.FC<ProgramPlanningInspectorMod
 
   // Keep synced internal request for immediate chatter updates
   const [internalRequest, setInternalRequest] = useState<SampleRequestItem | null>(null);
-  const activeRequest = internalRequest || request;
 
   // Local state for material matrix rows
   const [rows, setRows] = useState<ProgramMaterialReviewItem[]>([]);
@@ -114,13 +113,14 @@ export const ProgramPlanningInspectorModal: React.FC<ProgramPlanningInspectorMod
 
   // Sync rows from activeRequest
   useEffect(() => {
-    if (!activeRequest) return;
+    const currentReq = internalRequest || request;
+    if (!currentReq) return;
     setSaveSuccess(false);
     setErrorMessage(null);
     setCopiedCode(false);
     setIsAddingRow(false);
 
-    const materials = activeRequest.programMaterials || [];
+    const materials = currentReq.programMaterials || [];
     if (materials.length > 0) {
       setRows(
         materials.map((m, idx) => {
@@ -145,7 +145,7 @@ export const ProgramPlanningInspectorModal: React.FC<ProgramPlanningInspectorMod
       setRows([
         {
           id: 1,
-          materialType: activeRequest.materialCode || "Main Material Specification",
+          materialType: currentReq.materialCode || "Main Material Specification",
           supplierName: "Pending Assignment",
           grade: "Standard",
           colorVariant: "Standard",
@@ -153,16 +153,18 @@ export const ProgramPlanningInspectorModal: React.FC<ProgramPlanningInspectorMod
           quantity: "5000",
           unit: "pcs",
           remark: "Initial matrix specification",
-          createdAt: activeRequest.createdAt,
+          createdAt: currentReq.createdAt,
           highlightedCols: [],
           sampRemarkText: "",
         },
       ]);
     }
-  }, [activeRequest]);
-
+  }, [internalRequest, request]);
 
   if (!isOpen || !request) return null;
+
+  const activeRequest: SampleRequestItem = internalRequest || request;
+
 
   // Toggle highlight for a specific column in a row (Sampling Team capability)
   const toggleColumnHighlight = (rowId: number | string, colId: string) => {
