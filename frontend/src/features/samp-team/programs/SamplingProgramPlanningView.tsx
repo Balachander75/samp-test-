@@ -4,6 +4,7 @@ import { SampleRequestItem } from "@/features/sample-requests/types";
 import { getRequestTrackType } from "@/features/sample-requests/utils/trackTypes";
 import {
   Search,
+  Filter,
   RefreshCw,
   FolderGit2,
   Building2,

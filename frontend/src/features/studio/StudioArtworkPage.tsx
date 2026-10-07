@@ -19,6 +19,7 @@ import { CopyBadge } from "@/components/ui/CopyBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { WorkflowTabStrip } from "@/components/erp/WorkflowTabStrip";
 import { exportRecordsToCsv } from "@/lib/csvExport";
+import { DielineItem } from "./types";
 
 export interface StudioArtworkPageProps {
   dielines: DielineItem[];
@@ -40,6 +41,7 @@ export const StudioArtworkPage: React.FC<StudioArtworkPageProps> = ({
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStage, setSelectedStage] = useState<string>("all");
   const [formatFilter, setFormatFilter] = useState<string>("all");
+  const [plantFilter, setPlantFilter] = useState<string>("all");
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Stage filters matching Marketing structure

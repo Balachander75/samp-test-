@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { User, Lock, Eye, EyeOff, Sun, Moon, AlertCircle, ArrowRight, Loader2, X } from "lucide-react";
+import { User, Lock, Eye, EyeOff, Sun, Moon, ArrowRight, Loader2, X, ShieldCheck, AlertCircle } from "lucide-react";
 import { AuthResponse } from "./types";
 import { API_BASE_URL } from "@/infrastructure/api/client";
 import { persistAuthSession } from "@/lib/session";
@@ -45,12 +45,12 @@ export const SignInPage: React.FC<SignInPageProps> = ({ onSignInSuccess }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [errorInfo, setErrorInfo] = useState<ParsedError | null>(null);
 
-  // Auto-dismiss floating toast notification after 5.5 seconds
+  // Auto-dismiss floating toast notification after 5 seconds
   useEffect(() => {
     if (!errorInfo) return;
     const timer = setTimeout(() => {
       setErrorInfo(null);
-    }, 5500);
+    }, 5000);
     return () => clearTimeout(timer);
   }, [errorInfo]);
 
@@ -134,25 +134,28 @@ export const SignInPage: React.FC<SignInPageProps> = ({ onSignInSuccess }) => {
 
   return (
     <div className="min-h-screen w-full relative flex flex-col justify-center items-center p-4 sm:p-6 select-none overflow-hidden font-sans">
-      {/* Brand Hero Background with warm dark atmosphere */}
+      {/* Brand Hero Background - Crystal Clear in Both Light & Night/Dark Mode */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
         <img
           src={brandHeroImg}
           alt=""
-          className="h-full w-full object-cover object-center scale-105 transition-transform duration-1000"
+          className="h-full w-full object-cover object-center scale-105 transition-transform duration-1000 opacity-90 dark:opacity-75"
         />
-        {/* Dual overlay: deep dark gradient for text contrast & subtle brand tint */}
-        <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/75 via-zinc-950/60 to-zinc-950/80 backdrop-blur-[2px]" />
-        <div className="absolute inset-0 bg-[#714b67]/10 mix-blend-overlay" />
+        {/* Cinematic atmospheric overlay: keeps hero photo rich and visible in dark mode without blacking out */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/30 to-black/60 dark:from-black/70 dark:via-black/50 dark:to-black/80 backdrop-blur-[1px]" />
+
+        {/* Luminous subtle energy ambient glow in corners */}
+        <div className="absolute -top-[10%] left-[15%] w-[500px] h-[500px] rounded-full bg-[#00d166]/15 dark:bg-[#00d166]/10 blur-[130px]" />
+        <div className="absolute -bottom-[15%] right-[15%] w-[550px] h-[550px] rounded-full bg-[#0070ff]/15 dark:bg-[#0070ff]/10 blur-[140px]" />
       </div>
 
-      {/* Top Bar: Discreet Theme Switcher */}
-      <header className="absolute top-5 right-5 sm:top-6 sm:right-7 z-20">
+      {/* Top Header: High-Contrast Floating Theme Toggle */}
+      <header className="absolute top-5 right-5 sm:top-7 sm:right-8 z-20">
         <button
           type="button"
           onClick={toggleTheme}
           aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-white/90 bg-black/40 hover:bg-black/60 border border-white/20 shadow-md backdrop-blur-md transition-all duration-150 cursor-pointer"
+          className="flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold text-white/95 bg-black/45 hover:bg-black/65 border border-white/25 shadow-lg backdrop-blur-md transition-all duration-150 cursor-pointer"
         >
           {theme === "dark" ? (
             <>
@@ -161,36 +164,42 @@ export const SignInPage: React.FC<SignInPageProps> = ({ onSignInSuccess }) => {
             </>
           ) : (
             <>
-              <Moon className="w-3.5 h-3.5 text-purple-300" />
+              <Moon className="w-3.5 h-3.5 text-[#00d166]" />
               <span>Dark Mode</span>
             </>
           )}
         </button>
       </header>
 
-      {/* Floating Notification Toast for Exceptions */}
+      {/* Luminous Floating Notification Toast for Exceptions */}
       {errorInfo && (
         <div
           role="alert"
           aria-live="assertive"
-          className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-50 max-w-sm w-[calc(100vw-2.5rem)] animate-in fade-in slide-in-from-bottom-3 duration-200"
+          className="fixed bottom-6 right-6 z-50 max-w-[400px] w-[calc(100vw-3rem)] animate-in fade-in slide-in-from-bottom-4 duration-200"
         >
-          <div className="bg-[#1e293b]/95 backdrop-blur-md text-white px-4 py-3 rounded-md shadow-2xl border border-white/15 flex items-start gap-3 text-xs">
-            <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse mt-1.5 shrink-0" />
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-0.5">
-                <span className="font-semibold text-rose-400 tracking-wide uppercase text-[10px] font-mono">
-                  {errorInfo.code ? errorInfo.code.replace(/_/g, " ") : "Access Alert"}
+          <div className="bg-white/95 dark:bg-[#0e121a]/95 backdrop-blur-2xl text-slate-900 dark:text-white p-4 rounded-2xl shadow-[0_20px_50px_-10px_rgba(225,29,72,0.25)] dark:shadow-[0_20px_50px_-10px_rgba(0,0,0,0.8)] border border-rose-200/80 dark:border-rose-900/40 flex items-start gap-3.5 text-xs">
+            {/* Luminous alert badge icon */}
+            <div className="w-8 h-8 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-500 flex items-center justify-center shrink-0 border border-rose-200/60 dark:border-rose-800/40 shadow-xs">
+              <AlertCircle className="w-4.5 h-4.5" />
+            </div>
+
+            <div className="flex-1 min-w-0 pt-0.5">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="font-bold text-rose-500 tracking-wider uppercase text-[10px] font-display">
+                  {errorInfo.code ? errorInfo.code.replace(/_/g, " ") : "Authentication Notice"}
                 </span>
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
               </div>
-              <p className="text-zinc-200 text-xs leading-relaxed">
+              <p className="text-slate-700 dark:text-slate-200 text-xs font-medium leading-relaxed">
                 {errorInfo.message}
               </p>
             </div>
+
             <button
               type="button"
               onClick={() => setErrorInfo(null)}
-              className="text-zinc-400 hover:text-white p-0.5 rounded transition-colors shrink-0 cursor-pointer"
+              className="text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 transition-colors shrink-0 cursor-pointer"
               aria-label="Close notification"
             >
               <X className="w-4 h-4" />
@@ -199,39 +208,37 @@ export const SignInPage: React.FC<SignInPageProps> = ({ onSignInSuccess }) => {
         </div>
       )}
 
-      {/* Sign-In Card Container */}
+      {/* Main Sign-In Floating Card */}
       <main className="relative z-10 w-full max-w-[420px]">
-        {/* Form Sheet Card */}
-        <div className="bg-white/95 dark:bg-[#12141d]/95 backdrop-blur-xl rounded-xl border border-white/40 dark:border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.35)] p-6 sm:p-8 transition-colors duration-150">
+        {/* High-Contrast Frosted Glass Card */}
+        <div className="bg-white/95 dark:bg-[#0e121a]/95 backdrop-blur-2xl rounded-3xl border border-white/60 dark:border-white/10 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.4)] dark:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] p-7 sm:p-9 transition-colors duration-150">
           
-          {/* Brand Logo - Bold, Crisp & Prominent inside the card */}
+          {/* Brand Header: Compact & Tight with Title */}
           <div className="flex flex-col items-center mb-6 text-center">
-            <div className="h-16 flex items-center justify-center mb-3">
-              <img
-                src={logoImg}
-                alt="Navneet"
-                className="h-14 sm:h-16 w-auto object-contain drop-shadow-xs"
-              />
-            </div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#1e293b] dark:text-zinc-50">
+            <img
+              src={logoImg}
+              alt="Navneet"
+              className="h-11 sm:h-12 w-auto object-contain mb-2.5 drop-shadow-xs"
+            />
+            <h1 className="text-2xl font-bold font-display tracking-tight text-slate-900 dark:text-white">
               Sign In
             </h1>
-            <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-              Sampling Management & Planning System
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 font-medium">
+              Enter your corporate credentials to continue
             </p>
           </div>
 
-          <form onSubmit={handleFormSubmit} className="space-y-4" noValidate>
-            {/* Username / Email */}
+          <form onSubmit={handleFormSubmit} className="space-y-5" noValidate>
+            {/* Username / Email Field */}
             <div>
               <label
                 htmlFor="identifier"
-                className="block text-xs font-semibold text-[#1e293b] dark:text-zinc-200 mb-1.5"
+                className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1.5 font-display"
               >
                 Username or Email
               </label>
               <div className="relative flex items-center">
-                <div className="absolute left-3 text-zinc-400 dark:text-zinc-500 pointer-events-none">
+                <div className="absolute left-3.5 text-slate-400 dark:text-slate-400 pointer-events-none">
                   <User className="w-4 h-4" />
                 </div>
                 <input
@@ -243,33 +250,33 @@ export const SignInPage: React.FC<SignInPageProps> = ({ onSignInSuccess }) => {
                     setIdentifier(e.target.value);
                     if (errorInfo) setErrorInfo(null);
                   }}
-                  placeholder="Enter your username"
+                  placeholder="Enter your corporate ID"
                   autoFocus
                   required
-                  className={`w-full h-10 pl-9 pr-3 text-xs sm:text-[13px] rounded bg-white dark:bg-[#1a1e2c] text-[#1e293b] dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 border transition-all duration-150 outline-none ${
+                  className={`w-full h-11 pl-10 pr-3.5 text-sm rounded-xl bg-slate-50 dark:bg-[#161c26] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 border border-slate-200/90 dark:border-white/10 transition-all duration-150 outline-none ${
                     errorInfo?.field === "identifier"
                       ? "border-rose-500 focus:border-rose-500 ring-2 ring-rose-500/15"
-                      : "border-[#ced4da] dark:border-white/15 focus:border-[#714b67] dark:focus:border-[#9d6b91] focus:ring-2 focus:ring-[#714b67]/15 dark:focus:ring-[#9d6b91]/25"
+                      : "focus:border-[#00d166] dark:focus:border-[#00d166] focus:ring-2 focus:ring-[#00d166]/20 focus:bg-white dark:focus:bg-[#1a2230]"
                   }`}
                 />
               </div>
               {errorInfo?.field === "identifier" && (
-                <p className="mt-1 text-[11px] text-rose-600 dark:text-rose-400 font-medium">
+                <p className="mt-1.5 text-[11px] text-rose-500 font-medium">
                   {errorInfo.message}
                 </p>
               )}
             </div>
 
-            {/* Password */}
+            {/* Password Field */}
             <div>
               <label
                 htmlFor="password"
-                className="block text-xs font-semibold text-[#1e293b] dark:text-zinc-200 mb-1.5"
+                className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1.5 font-display"
               >
                 Password
               </label>
               <div className="relative flex items-center">
-                <div className="absolute left-3 text-zinc-400 dark:text-zinc-500 pointer-events-none">
+                <div className="absolute left-3.5 text-slate-400 dark:text-slate-400 pointer-events-none">
                   <Lock className="w-4 h-4" />
                 </div>
                 <input
@@ -283,16 +290,16 @@ export const SignInPage: React.FC<SignInPageProps> = ({ onSignInSuccess }) => {
                   }}
                   placeholder="••••••••••••"
                   required
-                  className={`w-full h-10 pl-9 pr-10 text-xs sm:text-[13px] rounded bg-white dark:bg-[#1a1e2c] text-[#1e293b] dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 border transition-all duration-150 outline-none font-mono ${
+                  className={`w-full h-11 pl-10 pr-10 text-sm rounded-xl bg-slate-50 dark:bg-[#161c26] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 border border-slate-200/90 dark:border-white/10 transition-all duration-150 outline-none font-mono ${
                     errorInfo?.field === "password"
                       ? "border-rose-500 focus:border-rose-500 ring-2 ring-rose-500/15"
-                      : "border-[#ced4da] dark:border-white/15 focus:border-[#714b67] dark:focus:border-[#9d6b91] focus:ring-2 focus:ring-[#714b67]/15 dark:focus:ring-[#9d6b91]/25"
+                      : "focus:border-[#00d166] dark:focus:border-[#00d166] focus:ring-2 focus:ring-[#00d166]/20 focus:bg-white dark:focus:bg-[#1a2230]"
                   }`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors p-0.5 cursor-pointer"
+                  className="absolute right-3.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors p-0.5 cursor-pointer"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                   tabIndex={-1}
                 >
@@ -300,52 +307,59 @@ export const SignInPage: React.FC<SignInPageProps> = ({ onSignInSuccess }) => {
                 </button>
               </div>
               {errorInfo?.field === "password" && (
-                <p className="mt-1 text-[11px] text-rose-600 dark:text-rose-400 font-medium">
+                <p className="mt-1.5 text-[11px] text-rose-500 font-medium">
                   {errorInfo.message}
                 </p>
               )}
             </div>
 
-            {/* Keep me signed in */}
+            {/* Remember Me Option */}
             <div className="flex items-center justify-between pt-1">
-              <label className="flex items-center gap-2 cursor-pointer select-none">
+              <label className="flex items-center gap-2.5 cursor-pointer select-none">
                 <input
                   type="checkbox"
                   id="rememberMe"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-3.5 h-3.5 rounded border-[#ced4da] dark:border-zinc-700 text-[#714b67] focus:ring-[#714b67]/20 cursor-pointer"
+                  className="w-4 h-4 rounded-md border-slate-300 dark:border-zinc-700 text-[#00d166] focus:ring-[#00d166]/20 accent-[#00a854] cursor-pointer"
                 />
-                <span className="text-xs text-zinc-600 dark:text-zinc-400 font-medium">
+                <span className="text-xs text-slate-700 dark:text-slate-300 font-medium">
                   Keep me signed in
                 </span>
               </label>
+
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 font-mono">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#00d166]" />
+                256-bit Secure
+              </span>
             </div>
 
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full h-10 mt-2 rounded bg-[#714b67] hover:bg-[#5b3c53] active:bg-[#3e2938] text-white text-xs sm:text-[13px] font-semibold flex items-center justify-center gap-2 shadow-sm transition-colors duration-140 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Signing In…</span>
-                </>
-              ) : (
-                <>
-                  <span>Sign In</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </>
-              )}
-            </button>
+            {/* High-Contrast Luminous Emerald Action Button */}
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full h-12 py-3 px-4 rounded-xl bg-[#00d166] hover:bg-[#00ba5a] active:bg-[#009e4d] text-slate-950 font-bold font-display text-sm sm:text-[15px] flex items-center justify-center gap-2.5 shadow-lg shadow-[#00d166]/30 hover:shadow-[#00d166]/45 active:scale-[0.99] transition-all duration-150 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin text-slate-950" />
+                    <span>Authenticating…</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Sign In to System</span>
+                    <ArrowRight className="w-4.5 h-4.5 text-slate-950" />
+                  </>
+                )}
+              </button>
+            </div>
           </form>
         </div>
 
-        {/* Minimal clean footer */}
-        <p className="mt-6 text-center text-[11px] text-white/70 font-medium drop-shadow-xs">
-          Navneet Education Limited
+        {/* High-Legibility Footer */}
+        <p className="mt-6 text-center text-xs text-white/85 dark:text-white/65 font-medium font-display drop-shadow-sm">
+          Navneet Education Limited • Enterprise Operations
         </p>
       </main>
     </div>

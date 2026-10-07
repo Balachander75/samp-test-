@@ -1,4 +1,4 @@
-import { useState, Suspense, lazy } from "react";
+import { useState, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { ArrowRight, LayoutGrid, Settings2 } from "lucide-react";
 import { ThemeProvider } from "@/context/ThemeContext";
@@ -9,16 +9,16 @@ import { readAuthToken, readAuthUser, clearAuthStorage } from "@/lib/session";
 import { AppShell, getNavigationTitle } from "@/layouts";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 
-// Route-level code splitting for performance and zero initial bloat
-const OperationsOverview = lazy(() => import("@/features/dashboard/OperationsOverview"));
-const SampleRequestsDesk = lazy(() => import("@/features/sample-requests/SampleRequestsDesk"));
-const ProgramPlanningWorkspace = lazy(() => import("@/features/sample-requests/components/ProgramPlanningWorkspace"));
-const ProductStagingWorkspace = lazy(() => import("@/features/sample-requests/components/ProductStagingWorkspace"));
-const DraftWorkspacePage = lazy(() => import("@/features/sample-requests/components/DraftWorkspacePage"));
-const SamplingTeamDesk = lazy(() => import("@/features/samp-team/SamplingTeamDesk"));
-const CreativeWorkDesk = lazy(() => import("@/features/creative/CreativeWorkDesk"));
-const StudioWorkDesk = lazy(() => import("@/features/studio/StudioWorkDesk"));
-const CostingTeamDesk = lazy(() => import("@/features/costing/CostingTeamDesk"));
+// Primary department workspaces (direct imports for instant 0ms switching)
+import OperationsOverview from "@/features/dashboard/OperationsOverview";
+import SampleRequestsDesk from "@/features/sample-requests/SampleRequestsDesk";
+import ProgramPlanningWorkspace from "@/features/sample-requests/components/ProgramPlanningWorkspace";
+import ProductStagingWorkspace from "@/features/sample-requests/components/ProductStagingWorkspace";
+import DraftWorkspacePage from "@/features/sample-requests/components/DraftWorkspacePage";
+import SamplingTeamDesk from "@/features/samp-team/SamplingTeamDesk";
+import CreativeWorkDesk from "@/features/creative/CreativeWorkDesk";
+import StudioWorkDesk from "@/features/studio/StudioWorkDesk";
+import CostingTeamDesk from "@/features/costing/CostingTeamDesk";
 
 // Low-CLS industrial skeleton loader matching ERP table & ribbon metrics
 function DeskSkeletonLoader() {

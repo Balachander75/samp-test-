@@ -328,13 +328,13 @@ export const FeasibilityInspectorModal: React.FC<FeasibilityInspectorModalProps>
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-[2px]"
+      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/70 backdrop-blur-md"
       onClick={onClose}
     >
       <div
         role="dialog"
         aria-modal="true"
-        className="relative w-full max-w-[96vw] xl:max-w-7xl h-[92vh] max-h-[92vh] flex flex-col bg-[#F8F9FA] dark:bg-[#12141a] border border-zinc-300 dark:border-white/10 rounded-lg shadow-2xl overflow-hidden select-text text-xs"
+        className="relative w-full max-w-[96vw] xl:max-w-7xl h-[92vh] max-h-[92vh] flex flex-col bg-[#f8f9ff] dark:bg-[#0f121d] border border-slate-200/80 dark:border-white/10 rounded-2xl shadow-[0_24px_70px_-12px_rgba(11,28,48,0.25)] overflow-hidden select-text text-xs"
         onClick={(e) => e.stopPropagation()}
       >
         {/* 1. TOP CONTROL PANEL */}
@@ -346,11 +346,11 @@ export const FeasibilityInspectorModal: React.FC<FeasibilityInspectorModalProps>
           onDeleteRequest={onDeleteRequest}
         />
 
-        {/* 2. MAIN WORKSPACE VIEWPORT (SPLIT: FORM SHEET + CHATTER) */}
+        {/* 2. MAIN WORKSPACE VIEWPORT (SPLIT: FORM SHEET + TIME LOG) */}
         <div className="flex-1 flex overflow-hidden">
           {/* LEFT: FORM SHEET (DOCUMENT BODY) */}
-          <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 bg-[#F8F9FA] dark:bg-[#12141a]">
-            <div className="o_form_sheet max-w-4xl mx-auto rounded-lg bg-white dark:bg-[#1a1c24] border border-zinc-200 dark:border-white/10 shadow-sm overflow-hidden">
+          <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 bg-[#f8f9ff] dark:bg-[#0f121d]">
+            <div className="max-w-4xl mx-auto rounded-2xl bg-white dark:bg-[#161928] border border-slate-100 dark:border-white/5 shadow-[0_8px_30px_rgba(11,28,48,0.04)] overflow-hidden">
               <FeasibilitySheetHeader
                 activeRequest={activeRequest}
                 classificationLabel={classificationLabel}
@@ -368,20 +368,20 @@ export const FeasibilityInspectorModal: React.FC<FeasibilityInspectorModalProps>
               />
 
               {/* Notebook Tab Strip */}
-              <div className="px-6 pb-6 pt-3">
-                <div className="border-b border-zinc-200 dark:border-white/10 flex items-center space-x-6 text-xs font-semibold overflow-x-auto">
+              <div className="px-8 pb-6 pt-3">
+                <div className="border-b border-slate-100 dark:border-white/10 flex items-center space-x-6 text-xs font-semibold overflow-x-auto">
                   <button
                     type="button"
                     onClick={() => setActiveTab("specs")}
-                    className={`pb-2.5 border-b-2 transition cursor-pointer select-none flex items-center gap-1.5 whitespace-nowrap ${
+                    className={`pb-3 border-b-2 font-display transition cursor-pointer select-none flex items-center gap-2 whitespace-nowrap ${
                       activeTab === "specs"
-                        ? "border-[#714B67] text-[#714B67] dark:text-purple-300 font-bold"
-                        : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
+                        ? "border-[#006d32] text-[#006d32] dark:text-[#00d166] font-bold"
+                        : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-zinc-200"
                     }`}
                   >
                     <span>1. Scope &amp; Specifications</span>
                     {(previewableImages.length > 0 || feasibilityDetails.referenceLinks.length > 0) && (
-                      <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-purple-100 dark:bg-purple-950/60 text-[#714B67] dark:text-purple-300 font-bold">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-[#eff4ff] dark:bg-[#006d32]/25 text-[#006d32] dark:text-[#00d166] font-bold border border-[#006d32]/20">
                         {previewableImages.length + feasibilityDetails.referenceLinks.length}
                       </span>
                     )}
@@ -390,28 +390,28 @@ export const FeasibilityInspectorModal: React.FC<FeasibilityInspectorModalProps>
                   <button
                     type="button"
                     onClick={() => setActiveTab("review")}
-                    className={`pb-2.5 border-b-2 transition cursor-pointer select-none flex items-center gap-1.5 whitespace-nowrap ${
+                    className={`pb-3 border-b-2 font-display transition cursor-pointer select-none flex items-center gap-2 whitespace-nowrap ${
                       activeTab === "review"
-                        ? "border-[#714B67] text-[#714B67] dark:text-purple-300 font-bold"
-                        : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
+                        ? "border-[#006d32] text-[#006d32] dark:text-[#00d166] font-bold"
+                        : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-zinc-200"
                     }`}
                   >
                     <span>2. SAMP Technical Review</span>
                     {activeRequest.samplingFeasibilityResponse ? (
                       <span
-                        className={`px-1.5 py-0.2 rounded text-[10px] font-mono font-bold ${
+                        className={`px-2 py-0.5 rounded-lg text-[10px] font-display font-bold ${
                           activeRequest.samplingFeasibilityResponse === "Yes"
-                            ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"
+                            ? "bg-emerald-50 text-[#006d32] dark:bg-emerald-950/60 dark:text-[#00d166]"
                             : activeRequest.samplingFeasibilityResponse === "No"
-                            ? "bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300"
-                            : "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300"
+                            ? "bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300"
+                            : "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300"
                         }`}
                       >
                         {activeRequest.samplingFeasibilityResponse}
                       </span>
                     ) : (
-                      <span className="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">
-                        {activeRequest.takenBySamp ? "In Review" : "Pending"}
+                      <span className="px-2 py-0.5 rounded-lg text-[10px] font-display font-bold bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300">
+                        {activeRequest.takenBySamp ? "In Review" : "Pending Claim"}
                       </span>
                     )}
                   </button>
@@ -419,29 +419,29 @@ export const FeasibilityInspectorModal: React.FC<FeasibilityInspectorModalProps>
                   <button
                     type="button"
                     onClick={() => setActiveTab("decision")}
-                    className={`pb-2.5 border-b-2 transition cursor-pointer select-none flex items-center gap-1.5 whitespace-nowrap ${
+                    className={`pb-3 border-b-2 font-display transition cursor-pointer select-none flex items-center gap-2 whitespace-nowrap ${
                       activeTab === "decision"
-                        ? "border-[#714B67] text-[#714B67] dark:text-purple-300 font-bold"
-                        : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
+                        ? "border-[#006d32] text-[#006d32] dark:text-[#00d166] font-bold"
+                        : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-zinc-200"
                     }`}
                   >
                     <span>3. Commercial Decision &amp; Sampling</span>
                     {activeRequest.convertedSrNumber ? (
-                      <span className="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-purple-100 dark:bg-purple-950/60 text-[#714B67] dark:text-purple-300">
+                      <span className="px-2 py-0.5 rounded-lg text-[10px] font-display font-bold bg-[#eff4ff] dark:bg-[#006d32]/25 text-[#006d32] dark:text-[#00d166] border border-[#006d32]/20">
                         ✓ {activeRequest.convertedSrNumber}
                       </span>
                     ) : activeRequest.marketingDecision ? (
                       <span
-                        className={`px-1.5 py-0.2 rounded text-[10px] font-mono font-bold ${
+                        className={`px-2 py-0.5 rounded-lg text-[10px] font-display font-bold ${
                           activeRequest.marketingDecision === "Accepted"
-                            ? "bg-emerald-100 text-emerald-800"
-                            : "bg-rose-100 text-rose-800"
+                            ? "bg-emerald-50 text-[#006d32]"
+                            : "bg-rose-50 text-rose-700"
                         }`}
                       >
                         {activeRequest.marketingDecision}
                       </span>
                     ) : activeRequest.samplingFeasibilityResponse ? (
-                      <span className="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-teal-100 text-teal-800 dark:bg-teal-950/60 dark:text-teal-300 animate-pulse">
+                      <span className="px-2 py-0.5 rounded-lg text-[10px] font-display font-bold bg-[#eff4ff] text-[#006d32] dark:bg-[#006d32]/20 dark:text-[#00d166] animate-pulse">
                         Ready
                       </span>
                     ) : null}
@@ -450,13 +450,13 @@ export const FeasibilityInspectorModal: React.FC<FeasibilityInspectorModalProps>
 
                 {/* Tab 1: Scope & Specifications */}
                 {activeTab === "specs" && (
-                  <div className="py-4 space-y-4">
+                  <div className="py-5 space-y-5">
                     {/* Primary Technical Description */}
                     <div>
-                      <div className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5 font-mono">
+                      <div className="text-[11px] font-display font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-400 mb-2">
                         Technical Description &amp; Product Scope
                       </div>
-                      <div className="p-3.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-900/50 text-xs text-zinc-900 dark:text-zinc-100 leading-relaxed font-sans whitespace-pre-wrap">
+                      <div className="p-4 rounded-2xl border border-slate-100 dark:border-white/5 bg-[#eff4ff]/35 dark:bg-zinc-900/40 text-xs text-slate-800 dark:text-zinc-100 leading-relaxed font-sans whitespace-pre-wrap">
                         {displayDescription || "No technical description specified."}
                       </div>
                     </div>
@@ -464,10 +464,10 @@ export const FeasibilityInspectorModal: React.FC<FeasibilityInspectorModalProps>
                     {/* Marketing Directives & Commercial Notes (Render ONLY if filled!) */}
                     {displayRemark && (
                       <div>
-                        <div className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5 font-mono">
+                        <div className="text-[11px] font-display font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-400 mb-2">
                           Marketing Directives &amp; Commercial Notes
                         </div>
-                        <div className="p-3 rounded-lg border border-amber-200 dark:border-amber-900/40 bg-amber-50/30 dark:bg-amber-950/10 text-xs text-amber-950 dark:text-amber-200 italic font-sans leading-relaxed">
+                        <div className="p-4 rounded-2xl border border-amber-200/60 dark:border-amber-900/40 bg-amber-50/40 dark:bg-amber-950/15 text-xs text-amber-950 dark:text-amber-200 italic font-sans leading-relaxed">
                           "{displayRemark}"
                         </div>
                       </div>
@@ -476,19 +476,19 @@ export const FeasibilityInspectorModal: React.FC<FeasibilityInspectorModalProps>
                     {/* Benchmark URLs & Links (Render ONLY if filled!) */}
                     {feasibilityDetails.referenceLinks.length > 0 && (
                       <div>
-                        <div className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5 font-mono">
+                        <div className="text-[11px] font-display font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-400 mb-2">
                           Client Reference URLs &amp; Benchmark Links ({feasibilityDetails.referenceLinks.length})
                         </div>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-2.5">
                           {feasibilityDetails.referenceLinks.map((url, i) => (
                             <a
                               key={i}
                               href={url.startsWith("http") ? url : `https://${url}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:border-[#714B67] hover:text-[#714B67] text-xs font-mono text-zinc-700 dark:text-zinc-300 transition shadow-2xs group"
+                              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:border-[#006d32] hover:text-[#006d32] dark:hover:text-[#00d166] text-xs font-mono text-slate-700 dark:text-zinc-300 transition shadow-2xs group"
                             >
-                              <ExternalLink className="w-3.5 h-3.5 text-zinc-400 group-hover:text-[#714B67]" />
+                              <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#006d32] dark:group-hover:text-[#00d166]" />
                               <span className="truncate max-w-xs">{url.replace(/^https?:\/\//, "")}</span>
                             </a>
                           ))}
@@ -499,31 +499,31 @@ export const FeasibilityInspectorModal: React.FC<FeasibilityInspectorModalProps>
                     {/* Attached Reference Images (Render ONLY if filled!) */}
                     {previewableImages.length > 0 && (
                       <div>
-                        <div className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-2 font-mono">
+                        <div className="text-[11px] font-display font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-400 mb-2.5">
                           Attached Reference Images ({previewableImages.length})
                         </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
                           {previewableImages.map((img, idx) => (
                             <div
                               key={img.id}
                               onClick={() => img.url && setSelectedPreviewImage(img.url)}
-                              className="group relative rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 overflow-hidden cursor-pointer hover:border-[#714B67] transition shadow-2xs"
+                              className="group relative rounded-2xl border border-slate-200/80 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-900 overflow-hidden cursor-pointer hover:border-[#006d32] dark:hover:border-[#00d166] transition shadow-xs"
                             >
-                              <div className="aspect-[4/3] w-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden relative">
+                              <div className="aspect-[4/3] w-full bg-slate-100 dark:bg-zinc-800 overflow-hidden relative">
                                 <img
                                   src={imageSourceFor(img.url)}
                                   alt={img.name}
-                                  className="w-full h-full object-cover group-hover:scale-105 transition duration-200"
+                                  className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
                                 />
-                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-                                  <span className="text-[10px] font-medium text-white bg-black/70 px-2 py-0.5 rounded">
+                                <div className="absolute inset-0 bg-slate-950/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                                  <span className="text-[11px] font-display font-semibold text-white bg-black/60 px-2.5 py-1 rounded-lg backdrop-blur-xs">
                                     View Full Image
                                   </span>
                                 </div>
                               </div>
-                              <div className="p-1.5 flex items-center justify-between text-[10px] text-zinc-600 dark:text-zinc-400">
+                              <div className="p-2 flex items-center justify-between text-[10.5px] text-slate-600 dark:text-zinc-400 font-display">
                                 <span className="truncate">{img.name}</span>
-                                <span className="font-mono text-zinc-400">#{idx + 1}</span>
+                                <span className="font-mono text-slate-400">#{idx + 1}</span>
                               </div>
                             </div>
                           ))}
@@ -533,22 +533,22 @@ export const FeasibilityInspectorModal: React.FC<FeasibilityInspectorModalProps>
 
                     {/* ── In-Context SAMP Team Technical Verdict Spotlight (Immediately visible to Marketing) ── */}
                     {activeRequest.samplingFeasibilityResponse && (
-                      <div className="p-4 rounded-lg border border-teal-200 dark:border-teal-900/60 bg-teal-50/20 dark:bg-teal-950/20 space-y-2.5 mt-2">
+                      <div className="p-5 rounded-2xl border border-emerald-200/70 dark:border-emerald-900/60 bg-[#eff4ff]/60 dark:bg-[#006d32]/10 space-y-3 mt-3">
                         <div className="flex items-center justify-between flex-wrap gap-2">
                           <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-zinc-700 dark:text-zinc-300 font-sans">
+                            <span className="text-xs font-display font-bold text-slate-800 dark:text-zinc-200">
                               SAMP Team Response:
                             </span>
                             <span
-                              className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-xs font-bold font-mono border ${
+                              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-display font-bold border ${
                                 activeRequest.samplingFeasibilityResponse === "Yes"
-                                  ? "bg-emerald-50 text-emerald-800 border-emerald-300 dark:bg-emerald-950/50 dark:text-emerald-300"
+                                  ? "bg-emerald-50 text-[#006d32] border-emerald-200/70 dark:bg-emerald-950/50 dark:text-[#00d166]"
                                   : activeRequest.samplingFeasibilityResponse === "No"
-                                  ? "bg-rose-50 text-rose-800 border-rose-300 dark:bg-rose-950/50 dark:text-rose-300"
-                                  : "bg-amber-50 text-amber-800 border-amber-300 dark:bg-amber-950/50 dark:text-amber-300"
+                                  ? "bg-rose-50 text-rose-700 border-rose-200/70 dark:bg-rose-950/50 dark:text-rose-300"
+                                  : "bg-amber-50 text-amber-700 border-amber-200/70 dark:bg-amber-950/50 dark:text-amber-300"
                               }`}
                             >
-                              {activeRequest.samplingFeasibilityResponse === "Yes" && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
+                              {activeRequest.samplingFeasibilityResponse === "Yes" && <CheckCircle2 className="w-3.5 h-3.5 text-[#006d32] dark:text-[#00d166]" />}
                               {activeRequest.samplingFeasibilityResponse === "No" && <XCircle className="w-3.5 h-3.5 text-rose-600" />}
                               {activeRequest.samplingFeasibilityResponse === "Maybe" && <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />}
                               <span>
@@ -558,13 +558,13 @@ export const FeasibilityInspectorModal: React.FC<FeasibilityInspectorModalProps>
                               </span>
                             </span>
                           </div>
-                          <span className="text-[11px] font-mono text-zinc-500">
-                            Evaluated by: <span className="font-semibold text-zinc-800 dark:text-zinc-200">{activeRequest.samplingFeasibilityApprovedBy || "SAMP Team"}</span>
+                          <span className="text-[11px] font-display text-slate-500">
+                            Evaluated by: <span className="font-bold text-slate-800 dark:text-zinc-200">{activeRequest.samplingFeasibilityApprovedBy || "SAMP Team"}</span>
                           </span>
                         </div>
 
                         {activeRequest.samplingFeasibilityRemark && (
-                          <p className="text-xs text-zinc-800 dark:text-zinc-200 bg-white dark:bg-zinc-900 p-2.5 rounded border border-zinc-200 dark:border-zinc-800 leading-relaxed font-sans">
+                          <p className="text-xs text-slate-800 dark:text-zinc-200 bg-white dark:bg-zinc-900 p-3 rounded-xl border border-slate-100 dark:border-zinc-800 leading-relaxed font-sans shadow-2xs">
                             {activeRequest.samplingFeasibilityRemark}
                           </p>
                         )}
@@ -573,7 +573,7 @@ export const FeasibilityInspectorModal: React.FC<FeasibilityInspectorModalProps>
                           <button
                             type="button"
                             onClick={() => setActiveTab("review")}
-                            className="text-[#017E84] hover:underline font-semibold text-xs flex items-center gap-1 cursor-pointer"
+                            className="text-[#006d32] dark:text-[#00d166] hover:underline font-display font-bold text-xs flex items-center gap-1.5 cursor-pointer"
                           >
                             <span>View Full Technical Sign-Off</span>
                             <ArrowRight className="w-3 h-3" />
@@ -583,7 +583,7 @@ export const FeasibilityInspectorModal: React.FC<FeasibilityInspectorModalProps>
                             <button
                               type="button"
                               onClick={() => setActiveTab("decision")}
-                              className="px-3 py-1 rounded bg-[#714B67] hover:bg-[#5B3C53] text-white text-xs font-semibold flex items-center gap-1 cursor-pointer transition shadow-2xs"
+                              className="px-4 py-2 rounded-xl bg-[#006d32] hover:bg-[#00883e] text-white text-xs font-display font-bold flex items-center gap-1.5 cursor-pointer transition shadow-[0_4px_14px_rgba(0,109,50,0.25)] active:scale-95"
                             >
                               <span>Take Commercial Decision</span>
                               <ArrowRight className="w-3 h-3" />
@@ -635,7 +635,7 @@ export const FeasibilityInspectorModal: React.FC<FeasibilityInspectorModalProps>
             </div>
           </div>
 
-          {/* RIGHT: CHATTER AUDIT LOG PANEL */}
+          {/* RIGHT: TIME LOG AUDIT TRAIL PANEL */}
           <FeasibilityChatterFeed
             activeRequest={activeRequest}
             classificationLabel={classificationLabel}

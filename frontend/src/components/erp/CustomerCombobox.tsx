@@ -179,7 +179,7 @@ export const CustomerCombobox: React.FC<CustomerComboboxProps> = ({
               selectCustomer(filteredCustomers[activeIndex]);
             }
           }}
-          className={`h-9 w-full rounded-md border border-zinc-200 bg-white pl-8 ${value ? "pr-14" : "pr-8"} text-[12px] font-medium text-zinc-900 outline-none transition-colors placeholder:text-zinc-400 focus:border-[#714B67] focus:ring-2 focus:ring-[#714B67]/15 disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-700/80 dark:bg-zinc-900/80 dark:text-zinc-100`}
+          className={`h-9 w-full rounded-xl border border-zinc-200 bg-white pl-8 ${value ? "pr-14" : "pr-8"} text-[12px] font-medium text-zinc-900 outline-none transition-colors placeholder:text-zinc-400 focus:border-[#006d32] focus:ring-2 focus:ring-[#006d32]/15 disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-700/80 dark:bg-zinc-900/80 dark:text-zinc-100`}
         />
         {value && (
           <button
@@ -193,7 +193,7 @@ export const CustomerCombobox: React.FC<CustomerComboboxProps> = ({
             <X className="h-3 w-3" />
           </button>
         )}
-        <ChevronDown className={`pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-400 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+        <ChevronDown className={`pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-400 transition-transform ${isOpen ? "rotate-180 text-[#006d32]" : ""}`} />
       </div>
 
       {isOpen && !disabled && dropdownPosition && createPortal(
@@ -208,7 +208,7 @@ export const CustomerCombobox: React.FC<CustomerComboboxProps> = ({
             width: dropdownPosition.width,
             maxHeight: dropdownPosition.maxHeight,
           }}
-          className="z-[70] overflow-y-auto rounded-md border border-zinc-200 bg-white p-1 shadow-[0_8px_22px_rgba(15,23,42,0.16)] dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-[0_10px_28px_rgba(0,0,0,0.45)]"
+          className="z-[70] overflow-y-auto rounded-xl border border-zinc-200 bg-white p-1.5 shadow-[0_10px_30px_rgba(15,23,42,0.12)] dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-[0_10px_28px_rgba(0,0,0,0.45)]"
         >
           {filteredCustomers.length > 0 ? (
             filteredCustomers.map((customer, index) => (
@@ -222,7 +222,7 @@ export const CustomerCombobox: React.FC<CustomerComboboxProps> = ({
                 onMouseMove={() => setActiveIndex(index)}
                 onClick={() => selectCustomer(customer)}
                 tabIndex={-1}
-                className={`flex w-full items-center justify-between gap-3 rounded px-2.5 py-1.5 text-left transition-colors hover:bg-[#F3E8EE] focus:outline-none dark:hover:bg-[#3E2938]/55 ${index === activeIndex ? "bg-[#F3E8EE] dark:bg-[#3E2938]/55" : ""}`}
+                className={`flex w-full items-center justify-between gap-3 rounded-lg px-2.5 py-1.5 text-left transition-colors hover:bg-emerald-50 dark:hover:bg-emerald-950/40 ${index === activeIndex ? "bg-emerald-50 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200" : ""}`}
               >
                 <span className="min-w-0">
                   <span className="block truncate text-[12px] font-semibold text-zinc-900 dark:text-zinc-100">
@@ -232,7 +232,7 @@ export const CustomerCombobox: React.FC<CustomerComboboxProps> = ({
                     {customer.country || "Country not set"}
                   </span>
                 </span>
-                {customer.name === value && <Check className="h-3.5 w-3.5 shrink-0 text-[#714B67] dark:text-[#E8D7E3]" />}
+                {customer.name === value && <Check className="h-3.5 w-3.5 shrink-0 text-[#006d32] dark:text-emerald-400" />}
               </button>
             ))
           ) : (

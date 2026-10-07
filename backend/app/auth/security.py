@@ -201,7 +201,7 @@ bearer_scheme = HTTPBearer(auto_error=False)
 def get_optional_current_user(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme),
     db: Session = Depends(get_db),
-) -> Optional[User]:
+) -> Optional["User"]:
     """
     Returns the active user if a valid bearer token is provided;
     falls back to the first active user (e.g. Admin) if no credentials are provided.

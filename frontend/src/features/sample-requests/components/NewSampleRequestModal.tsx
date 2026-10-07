@@ -22,6 +22,9 @@ import {
   FileText,
   Loader2,
   UploadCloud,
+  Clock,
+  Layers,
+  BookOpen,
 } from "lucide-react";
 import { CustomerCombobox, OperationalDatePicker } from "@/components/erp";
 import { isDateRestricted } from "@/lib/holidayUtils";
@@ -130,26 +133,31 @@ const FEASIBILITY_TYPES = [
     id: "new_category",
     label: "New Category",
     desc: "Introduce new product lines or unlisted classifications",
+    icon: Layers,
   },
   {
     id: "new_format",
     label: "New Format",
     desc: "Custom sizes, unique binding structures, or novel layouts",
+    icon: BookOpen,
   },
   {
     id: "new_finish",
     label: "New Finish",
     desc: "Special cover treatments, foil, embossing, or lamination effects",
+    icon: Sparkles,
   },
   {
     id: "new_accessories",
     label: "New Accessories",
     desc: "Custom ribbons, elastic bands, pockets, stickers, or clasps",
+    icon: Package,
   },
   {
     id: "other",
     label: "Other Custom",
     desc: "Specific bespoke requirement or custom manufacturing check",
+    icon: FileText,
   },
 ];
 
@@ -578,38 +586,38 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
     <div className="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/60"
+        className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs transition-opacity duration-200"
         onClick={onClose}
         aria-hidden="true"
       />
 
       <div className="flex min-h-full items-center justify-center p-3 sm:p-5">
-        <div className="relative w-full max-w-4xl bg-[#F1F3F5] dark:bg-[#12141a] border border-[#D8DADD] dark:border-white/[0.08] rounded-xl shadow-2xl select-text overflow-hidden transition-all duration-200">
+        <div className="relative w-full max-w-4xl bg-[#f8f9ff] dark:bg-[#12141a] border border-slate-200/80 dark:border-white/[0.08] rounded-2xl shadow-2xl select-text overflow-hidden transition-all duration-200">
           
-          {/* Odoo 19 Header Bar */}
-          <div className="flex items-center justify-between px-6 py-3.5 bg-[#714B67] text-white shrink-0 border-b border-[#5B3C53]">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded bg-white/15 flex items-center justify-center text-white shrink-0">
+          {/* Luminous Engine Header Bar */}
+          <div className="flex items-center justify-between px-6 py-4 bg-white dark:bg-[#161822] shrink-0 border-b border-slate-200/70 dark:border-white/[0.06] shadow-[0_1px_4px_rgba(11,28,48,0.02)]">
+            <div className="flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#006d32]/15 to-[#00d166]/15 text-[#006d32] dark:text-emerald-400 flex items-center justify-center border border-[#006d32]/25 shadow-xs shrink-0">
                 {selectedTrack === "feasibility_check" ? (
-                  <ClipboardCheck className="w-4 h-4 stroke-[2.2]" />
+                  <ClipboardCheck className="w-5 h-5 stroke-[2.2]" />
                 ) : selectedTrack === "program_planning" ? (
-                  <Calendar className="w-4 h-4 stroke-[2.2]" />
+                  <Calendar className="w-5 h-5 stroke-[2.2]" />
                 ) : (
-                  <Package className="w-4 h-4 stroke-[2.2]" />
+                  <Package className="w-5 h-5 stroke-[2.2]" />
                 )}
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-bold text-white tracking-tight">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight font-display">
                     {selectedTrack === "feasibility_check" && "Technical Feasibility Check"}
                     {selectedTrack === "marketing_request" && "Commercial Sample Request"}
                     {selectedTrack === "program_planning" && "Seasonal Program Planning"}
                   </h3>
-                  <span className="px-2 py-0.5 rounded text-[9.5px] font-mono font-bold bg-white/20 text-white tracking-wider uppercase">
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#eff4ff] text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700 tracking-wider uppercase">
                     {selectedTrack === "feasibility_check" ? "FC-2026" : selectedTrack === "program_planning" ? "PLN-2026" : "SR-2026"}
                   </span>
                 </div>
-                <p className="text-[11px] text-white/80 mt-0.5 font-normal">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-normal">
                   {selectedTrack === "feasibility_check" &&
                     "Sampling feasibility assessment, paper GSM & prototype specification evaluation"}
                   {selectedTrack === "marketing_request" &&
@@ -620,25 +628,19 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <span className="hidden sm:inline-flex items-center text-[10.5px] font-mono font-semibold px-2.5 py-1 rounded bg-white/20 text-white tracking-wide">
-                DRAFT INTAKE
-              </span>
-
-              <button
-                type="button"
-                onClick={onClose}
-                className="h-7 w-7 rounded flex items-center justify-center text-white/80 hover:text-white hover:bg-white/15 transition-colors cursor-pointer"
-                aria-label="Close modal"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 dark:hover:text-white transition-colors cursor-pointer"
+              aria-label="Close modal"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
 
-          {/* Odoo 19 Track Switcher Tabs (Only shown when not locked to a specific track) */}
+          {/* Track Switcher Tabs (Only shown when not locked to a specific track) */}
           {!lockTrack && (
-            <div className="flex items-center gap-1 px-6 bg-[#F8F9FA] dark:bg-[#161822] border-b border-[#D8DADD] dark:border-white/[0.08]">
+            <div className="flex items-center gap-1 px-6 bg-slate-50/80 dark:bg-[#161822] border-b border-slate-200/60 dark:border-white/[0.08]">
               <button
                 type="button"
                 onClick={() => {
@@ -647,8 +649,8 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                 }}
                 className={`px-4 py-2.5 text-xs font-semibold border-b-2 flex items-center gap-2 transition-all cursor-pointer select-none ${
                   selectedTrack === "feasibility_check"
-                    ? "border-[#714B67] text-[#714B67] dark:text-[#E8D7E3] bg-white dark:bg-[#1f212a] font-bold shadow-2xs"
-                    : "border-transparent text-[#64748B] hover:text-[#1E293B] hover:bg-black/[0.02]"
+                    ? "border-[#006d32] text-[#006d32] dark:text-emerald-400 bg-white dark:bg-[#1f212a] font-bold shadow-2xs"
+                    : "border-transparent text-slate-500 hover:text-slate-900 hover:bg-black/[0.02]"
                 }`}
               >
                 <ClipboardCheck className="w-3.5 h-3.5" />
@@ -662,8 +664,8 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                 }}
                 className={`px-4 py-2.5 text-xs font-semibold border-b-2 flex items-center gap-2 transition-all cursor-pointer select-none ${
                   selectedTrack === "marketing_request"
-                    ? "border-[#714B67] text-[#714B67] dark:text-[#E8D7E3] bg-white dark:bg-[#1f212a] font-bold shadow-2xs"
-                    : "border-transparent text-[#64748B] hover:text-[#1E293B] hover:bg-black/[0.02]"
+                    ? "border-[#006d32] text-[#006d32] dark:text-emerald-400 bg-white dark:bg-[#1f212a] font-bold shadow-2xs"
+                    : "border-transparent text-slate-500 hover:text-slate-900 hover:bg-black/[0.02]"
                 }`}
               >
                 <Package className="w-3.5 h-3.5" />
@@ -677,8 +679,8 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                 }}
                 className={`px-4 py-2.5 text-xs font-semibold border-b-2 flex items-center gap-2 transition-all cursor-pointer select-none ${
                   selectedTrack === "program_planning"
-                    ? "border-[#714B67] text-[#714B67] dark:text-[#E8D7E3] bg-white dark:bg-[#1f212a] font-bold shadow-2xs"
-                    : "border-transparent text-[#64748B] hover:text-[#1E293B] hover:bg-black/[0.02]"
+                    ? "border-[#006d32] text-[#006d32] dark:text-emerald-400 bg-white dark:bg-[#1f212a] font-bold shadow-2xs"
+                    : "border-transparent text-slate-500 hover:text-slate-900 hover:bg-black/[0.02]"
                 }`}
               >
                 <Calendar className="w-3.5 h-3.5" />
@@ -695,31 +697,11 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
               </div>
             )}
 
-            {/* TAB 1: FEASIBILITY CHECK FORM (Odoo Document Sheet) */}
+            {/* TAB 1: FEASIBILITY CHECK FORM */}
             {selectedTrack === "feasibility_check" && (
               <form onSubmit={handleSubmitFeasibility} className="space-y-4">
-                <div className="bg-white dark:bg-[#1a1c24] border border-[#D8DADD] dark:border-white/[0.08] rounded-lg p-5 sm:p-6 shadow-2xs space-y-5">
-                  {/* Sheet Header Row */}
-                  <div className="flex flex-wrap items-center justify-between pb-3 border-b border-[#E2E8F0] dark:border-zinc-800 gap-2">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h4 className="text-sm font-bold text-[#1E293B] dark:text-zinc-100">
-                          Sampling Feasibility Specification
-                        </h4>
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-50 text-[#017E84] border border-[#017E84]/30 font-bold">
-                          ACTIVE ASSESSMENT
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-[#64748B] dark:text-zinc-400 mt-0.5">
-                        Define customer account, feasibility classification, technical specifications, and reference materials.
-                      </p>
-                    </div>
+                <div className="bg-white dark:bg-[#1a1c24] border border-slate-200/80 dark:border-white/[0.08] rounded-2xl p-6 shadow-[0_2px_12px_rgba(11,28,48,0.03)] space-y-5">
 
-                    <div className="hidden sm:flex items-center gap-2 bg-[#F8F9FA] dark:bg-zinc-800 border border-[#CED4DA] dark:border-zinc-700 px-3 py-1 rounded">
-                      <span className="text-[10px] font-bold text-[#64748B] uppercase">SLA TARGET</span>
-                      <span className="text-xs font-mono font-bold text-[#017E84]">48 Hours</span>
-                    </div>
-                  </div>
 
                   {/* Two-Column Grid */}
                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
@@ -727,7 +709,7 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                     <div className="lg:col-span-7 space-y-4">
                       {/* Customer Account */}
                       <div>
-                        <label className="block text-[11px] font-bold uppercase tracking-wider text-[#64748B] dark:text-zinc-400 mb-1.5 font-sans">
+                        <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-zinc-400 mb-1.5 font-sans">
                           Customer Account <span className="text-rose-500">*</span>
                         </label>
                         <CustomerCombobox
@@ -741,33 +723,34 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
 
                       {/* Feasibility Type Selection Cards */}
                       <div>
-                        <label className="block text-[11px] font-bold uppercase tracking-wider text-[#64748B] dark:text-zinc-400 mb-1.5 font-sans">
+                        <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-zinc-400 mb-1.5 font-sans">
                           Feasibility Classification <span className="text-rose-500">*</span>
                         </label>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                           {FEASIBILITY_TYPES.map((type) => {
                             const isSelected = selectedFeasibilityType === type.id;
                             const isOther = type.id === "other";
+                            const IconComponent = type.icon || Layers;
                             return (
                               <button
                                 key={type.id}
                                 type="button"
                                 onClick={() => setSelectedFeasibilityType(type.id)}
-                                className={`text-left p-3 rounded-lg border transition-all cursor-pointer select-none flex flex-col justify-between gap-1 relative ${
+                                className={`text-left p-3.5 rounded-xl border transition-all cursor-pointer select-none flex flex-col justify-between gap-1.5 relative group ${
                                   isOther ? "sm:col-span-2" : ""
                                 } ${
                                   isSelected
-                                    ? "border-[#714B67] bg-[#714B67]/[0.06] ring-1 ring-[#714B67]/30 shadow-xs"
-                                    : "border-[#CED4DA] dark:border-white/[0.08] hover:border-[#714B67]/50 bg-[#F8F9FA] dark:bg-zinc-900/40 hover:bg-white dark:hover:bg-zinc-850 text-neutral-700 dark:text-zinc-300"
+                                    ? "border-[#006d32] bg-[#006d32]/[0.035] ring-2 ring-[#006d32]/20 shadow-[0_2px_8px_rgba(0,109,50,0.08)]"
+                                    : "border-slate-200/90 dark:border-white/[0.08] hover:border-slate-300 bg-slate-50/60 dark:bg-zinc-900/40 hover:bg-white dark:hover:bg-zinc-850 text-slate-700 dark:text-zinc-300"
                                 }`}
                               >
                                 <div className="flex items-center justify-between w-full">
                                   <span
                                     className={`text-xs tracking-tight ${
                                       isSelected
-                                        ? "text-[#714B67] dark:text-[#E8D7E3] font-bold"
-                                        : "font-semibold text-neutral-900 dark:text-zinc-100"
+                                        ? "text-[#006d32] dark:text-emerald-400 font-bold"
+                                        : "font-semibold text-slate-900 dark:text-zinc-100"
                                     }`}
                                   >
                                     {type.label}
@@ -775,14 +758,14 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                                   <span
                                     className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 transition-colors ${
                                       isSelected
-                                        ? "bg-[#714B67] text-white"
-                                        : "border border-neutral-300 dark:border-zinc-600"
+                                        ? "bg-[#006d32] text-white"
+                                        : "border border-slate-300 dark:border-zinc-600"
                                     }`}
                                   >
                                     {isSelected && <Check className="w-2.5 h-2.5 stroke-[3]" />}
                                   </span>
                                 </div>
-                                <p className="text-[11px] text-neutral-500 dark:text-zinc-400 leading-snug">
+                                <p className="text-[11px] text-slate-500 dark:text-zinc-400 leading-snug">
                                   {type.desc}
                                 </p>
                               </button>
@@ -798,7 +781,7 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                               placeholder="Specify bespoke requirement (e.g., Embossed Metallic Foil Spine, Novel Die Cut)..."
                               value={customTypeOther}
                               onChange={(e) => setCustomTypeOther(e.target.value)}
-                              className="w-full h-9 px-3 rounded-lg border border-[#714B67] bg-white dark:bg-zinc-900 text-xs font-medium text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 outline-none ring-2 ring-[#714B67]/15 shadow-2xs"
+                              className="w-full h-9 px-3.5 rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-medium text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 outline-none focus:border-[#006d32] focus:ring-2 focus:ring-[#006d32]/15 shadow-2xs transition-all"
                             />
                           </div>
                         )}
@@ -806,7 +789,7 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
 
                       {/* Technical Description & Notes */}
                       <div>
-                        <label className="block text-[11px] font-bold uppercase tracking-wider text-[#64748B] dark:text-zinc-400 mb-1.5 font-sans">
+                        <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-zinc-400 mb-1.5 font-sans">
                           Technical Description &amp; Specifications <span className="text-rose-500">*</span>
                         </label>
                         <textarea
@@ -815,7 +798,7 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                           placeholder="Provide complete technical context, material GSM, binding dimensions, special coatings, machine tolerances, and manufacturing evaluation criteria..."
                           value={feasibilityDescription}
                           onChange={(e) => setFeasibilityDescription(e.target.value)}
-                          className="w-full p-3 rounded-lg border border-[#CED4DA] dark:border-zinc-700/80 bg-white dark:bg-zinc-900/80 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:border-[#714B67] focus:ring-2 focus:ring-[#714B67]/15 outline-none transition-all resize-none leading-relaxed shadow-2xs"
+                          className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-900/80 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:border-[#006d32] focus:ring-2 focus:ring-[#006d32]/15 outline-none transition-all resize-none leading-relaxed shadow-2xs"
                         />
                       </div>
                     </div>
@@ -840,7 +823,7 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                       {/* Marketing Remarks / Notes */}
                       <div>
                         <div className="flex items-center justify-between mb-1.5">
-                          <label className="text-[11px] font-bold uppercase tracking-wider text-[#64748B] dark:text-zinc-400 font-sans">
+                          <label className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-zinc-400 font-sans">
                             Marketing Remarks / Notes
                           </label>
                           <span className="text-[10px] text-zinc-400 font-medium">Optional</span>
@@ -850,23 +833,23 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                           placeholder="Enter any additional marketing remarks, client constraints, or special evaluation instructions..."
                           value={releaseRemarks}
                           onChange={(e) => setReleaseRemarks(e.target.value)}
-                          className="w-full p-2.5 rounded-lg border border-[#CED4DA] dark:border-zinc-700/80 bg-white dark:bg-zinc-900/80 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:border-[#714B67] focus:ring-2 focus:ring-[#714B67]/15 outline-none transition-all resize-none leading-relaxed shadow-2xs"
+                          className="w-full p-3 rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-900/80 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:border-[#006d32] focus:ring-2 focus:ring-[#006d32]/15 outline-none transition-all resize-none leading-relaxed shadow-2xs"
                         />
                       </div>
 
                       {/* Attachments Section */}
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                          <label className="text-[11px] font-bold uppercase tracking-wider text-[#64748B] dark:text-zinc-400 font-sans">
+                          <label className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-zinc-400 font-sans">
                             Reference Attachments
                           </label>
                           <span
-                            className={`text-[10px] font-semibold px-2 py-0.5 rounded-full transition-colors ${
+                            className={`text-[10px] font-semibold px-2.5 py-0.5 rounded-full transition-colors font-mono ${
                               uploadedImages.length >= 2 && webLinks.length >= 1
                                 ? "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300/40"
                                 : totalAttachments > 0
-                                ? "bg-[#017E84]/10 text-[#017E84] dark:bg-[#017E84]/20 dark:text-teal-300 border border-[#017E84]/20"
-                                : "bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400"
+                                ? "bg-[#006d32]/10 text-[#006d32] dark:bg-[#006d32]/20 dark:text-emerald-300 border border-[#006d32]/20"
+                                : "bg-slate-100 text-slate-500 dark:bg-zinc-800 dark:text-zinc-400"
                             }`}
                           >
                             {uploadedImages.length}/2 images · {webLinks.length}/1 link
@@ -874,20 +857,20 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                         </div>
 
                         <div className="space-y-2.5">
-                          <div className="inline-flex w-full rounded-lg bg-[#F8F9FA] dark:bg-zinc-800/80 p-1 text-[11px] border border-[#CED4DA] dark:border-zinc-700/60">
+                          <div className="inline-flex w-full rounded-xl bg-slate-100/90 dark:bg-zinc-800/80 p-1 text-[11px] border border-slate-200/70 dark:border-zinc-700/60">
                             <button
                               type="button"
                               onClick={() => setMediaTab("files")}
-                              className={`flex-1 py-1.5 rounded-md text-[11px] transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                              className={`flex-1 py-1.5 rounded-lg text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                                 mediaTab === "files"
-                                  ? "bg-white dark:bg-zinc-700 text-[#714B67] dark:text-[#E8D7E3] shadow-xs font-bold"
-                                  : "text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 font-medium"
+                                  ? "bg-white dark:bg-zinc-700 text-[#006d32] dark:text-emerald-400 shadow-xs font-bold"
+                                  : "text-slate-500 hover:text-slate-800 dark:text-zinc-400 font-medium"
                               }`}
                             >
                               <ImageIcon className="w-3.5 h-3.5" />
                               <span>Image Upload</span>
                               {uploadedImages.length > 0 && (
-                                <span className="ml-1 text-[9.5px] font-bold px-1.5 py-0.2 rounded-full bg-[#714B67]/10 text-[#714B67] dark:bg-[#714B67]/30 dark:text-[#E8D7E3]">
+                                <span className="ml-1 text-[9.5px] font-bold px-1.5 py-0.2 rounded-full bg-[#006d32]/10 text-[#006d32] dark:bg-[#006d32]/30 dark:text-emerald-300">
                                   {uploadedImages.length}
                                 </span>
                               )}
@@ -895,16 +878,16 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                             <button
                               type="button"
                               onClick={() => setMediaTab("links")}
-                              className={`flex-1 py-1.5 rounded-md text-[11px] transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                              className={`flex-1 py-1.5 rounded-lg text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                                 mediaTab === "links"
-                                  ? "bg-white dark:bg-zinc-700 text-[#714B67] dark:text-[#E8D7E3] shadow-xs font-bold"
-                                  : "text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 font-medium"
+                                  ? "bg-white dark:bg-zinc-700 text-[#006d32] dark:text-emerald-400 shadow-xs font-bold"
+                                  : "text-slate-500 hover:text-slate-800 dark:text-zinc-400 font-medium"
                               }`}
                             >
                               <Link2 className="w-3.5 h-3.5" />
                               <span>Web URL Link</span>
                               {webLinks.length > 0 && (
-                                <span className="ml-1 text-[9.5px] font-bold px-1.5 py-0.2 rounded-full bg-[#714B67]/10 text-[#714B67] dark:bg-[#714B67]/30 dark:text-[#E8D7E3]">
+                                <span className="ml-1 text-[9.5px] font-bold px-1.5 py-0.2 rounded-full bg-[#006d32]/10 text-[#006d32] dark:bg-[#006d32]/30 dark:text-emerald-300">
                                   {webLinks.length}
                                 </span>
                               )}
@@ -925,27 +908,27 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                                 <button
                                   type="button"
                                   onClick={() => fileInputRef.current?.click()}
-                                  className="w-full py-2.5 px-3 rounded-lg border-2 border-dashed border-[#CED4DA] dark:border-zinc-700 hover:border-[#017E84] bg-[#F8F9FA] dark:bg-zinc-900/40 hover:bg-[#017E84]/[0.03] text-zinc-600 dark:text-zinc-400 hover:text-[#017E84] flex items-center justify-between text-xs font-medium transition-all cursor-pointer group shadow-2xs"
+                                  className="w-full py-3 px-3.5 rounded-xl border-2 border-dashed border-slate-200 dark:border-zinc-700 hover:border-[#006d32] bg-slate-50/60 dark:bg-zinc-900/40 hover:bg-[#006d32]/[0.03] text-slate-600 dark:text-zinc-400 hover:text-[#006d32] flex items-center justify-between text-xs font-medium transition-all cursor-pointer group shadow-2xs"
                                 >
                                   <div className="flex items-center gap-2.5">
-                                    <div className="w-7 h-7 rounded-md bg-white dark:bg-zinc-800 group-hover:bg-[#017E84]/10 text-zinc-400 group-hover:text-[#017E84] flex items-center justify-center transition-colors border border-[#CED4DA]">
+                                    <div className="w-8 h-8 rounded-lg bg-white dark:bg-zinc-800 group-hover:bg-[#006d32]/10 text-slate-400 group-hover:text-[#006d32] flex items-center justify-center transition-colors border border-slate-200 dark:border-zinc-700 group-hover:border-[#006d32]/30">
                                       <UploadCloud className="w-4 h-4" />
                                     </div>
                                     <div className="text-left">
-                                      <span className="block font-semibold text-[#1E293B] dark:text-zinc-200 group-hover:text-[#017E84] transition-colors">
+                                      <span className="block font-semibold text-slate-800 dark:text-zinc-200 group-hover:text-[#006d32] transition-colors">
                                         Choose photos to upload
                                       </span>
-                                      <span className="block text-[10px] text-[#64748B]">
+                                      <span className="block text-[10px] text-slate-500">
                                         Supports PNG, JPG, WEBP
                                       </span>
                                     </div>
                                   </div>
-                                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white dark:bg-zinc-800 text-zinc-500 border border-[#CED4DA] group-hover:bg-[#017E84]/10 group-hover:text-[#017E84] transition-colors">
+                                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white dark:bg-zinc-800 text-slate-600 border border-slate-200 dark:border-zinc-700 group-hover:bg-[#006d32]/10 group-hover:text-[#006d32] transition-colors font-mono">
                                     {2 - uploadedImages.length} slot{2 - uploadedImages.length === 1 ? "" : "s"} left
                                   </span>
                                 </button>
                               ) : (
-                                <div className="w-full h-9 px-3 rounded-lg bg-[#F8F9FA] dark:bg-zinc-800/60 text-zinc-500 dark:text-zinc-400 text-xs font-medium flex items-center justify-center border border-[#CED4DA]">
+                                <div className="w-full h-9 px-3 rounded-xl bg-slate-100 dark:bg-zinc-800/60 text-slate-500 dark:text-zinc-400 text-xs font-medium flex items-center justify-center border border-slate-200 dark:border-zinc-700">
                                   Maximum 2 images reached
                                 </div>
                               )}
@@ -970,13 +953,13 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                                     handleAddWebLink(e);
                                   }
                                 }}
-                                className="flex-1 h-9 px-3 rounded-lg border border-[#CED4DA] dark:border-zinc-700/80 bg-white dark:bg-zinc-900 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:border-[#017E84] focus:ring-2 focus:ring-[#017E84]/15 outline-none disabled:opacity-50 transition-all shadow-2xs"
+                                className="flex-1 h-9 px-3.5 rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-900 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:border-[#006d32] focus:ring-2 focus:ring-[#006d32]/15 outline-none disabled:opacity-50 transition-all shadow-2xs"
                               />
                               <button
                                 type="button"
                                 onClick={handleAddWebLink}
                                 disabled={webLinks.length >= 1 || !linkInput.trim()}
-                                className="h-9 px-3.5 rounded-lg bg-[#017E84] hover:bg-[#00666A] active:bg-[#005256] text-white text-xs font-semibold shrink-0 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-xs flex items-center gap-1"
+                                className="h-9 px-4 rounded-xl bg-[#006d32] hover:bg-[#005324] text-white text-xs font-semibold shrink-0 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-xs flex items-center gap-1.5"
                               >
                                 <Plus className="w-3.5 h-3.5" />
                                 <span>Add</span>
@@ -989,22 +972,22 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                               {uploadedImages.map((img) => (
                                 <div
                                   key={img.id}
-                                  className="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg border border-[#CED4DA] dark:border-zinc-800 bg-[#F8F9FA] dark:bg-zinc-900 text-xs shadow-2xs group"
+                                  className="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50/80 dark:bg-zinc-900 text-xs shadow-2xs group"
                                 >
                                   <div className="flex items-center gap-2.5 min-w-0 flex-1">
                                     <img
                                       src={img.url}
                                       alt={img.name}
-                                      className="w-7 h-7 rounded-md object-cover border border-[#CED4DA] dark:border-zinc-800 shrink-0"
+                                      className="w-7 h-7 rounded-lg object-cover border border-slate-200 dark:border-zinc-800 shrink-0"
                                     />
-                                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#714B67]/10 text-[#714B67] dark:bg-[#714B67]/20 border border-[#714B67]/20 shrink-0">
+                                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#006d32]/10 text-[#006d32] dark:bg-[#006d32]/25 dark:text-emerald-300 border border-[#006d32]/20 shrink-0 font-mono">
                                       IMG
                                     </span>
-                                    <span className="truncate font-medium text-zinc-800 dark:text-zinc-200 text-xs" title={img.name}>
+                                    <span className="truncate font-medium text-slate-800 dark:text-zinc-200 text-xs" title={img.name}>
                                       {img.name}
                                     </span>
                                     {img.size && (
-                                      <span className="text-[10px] text-zinc-400 font-mono shrink-0">
+                                      <span className="text-[10px] text-slate-400 font-mono shrink-0">
                                         ({img.size})
                                       </span>
                                     )}
@@ -1013,7 +996,7 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                                     type="button"
                                     onClick={() => handleRemoveImage(img.id)}
                                     title="Remove image"
-                                    className="p-1 rounded-md text-zinc-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors shrink-0 cursor-pointer"
+                                    className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors shrink-0 cursor-pointer"
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />
                                   </button>
@@ -1023,17 +1006,17 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                               {webLinks.map((url, idx) => (
                                 <div
                                   key={`link-${idx}`}
-                                  className="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg border border-[#CED4DA] dark:border-zinc-800 bg-[#F8F9FA] dark:bg-zinc-900 text-xs shadow-2xs group"
+                                  className="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50/80 dark:bg-zinc-900 text-xs shadow-2xs group"
                                 >
                                   <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 shrink-0">
+                                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-[#006d32] dark:text-emerald-400 border border-[#006d32]/25 shrink-0 font-mono">
                                       URL
                                     </span>
                                     <a
                                       href={url}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="truncate text-[#017E84] hover:underline flex items-center gap-1 text-xs font-medium"
+                                      className="truncate text-[#006d32] hover:underline flex items-center gap-1 text-xs font-medium"
                                       title={url}
                                     >
                                       <span className="truncate">{url}</span>
@@ -1044,7 +1027,7 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                                     type="button"
                                     onClick={() => handleRemoveWebLink(idx)}
                                     title="Remove link"
-                                    className="p-1 rounded-md text-zinc-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors shrink-0 cursor-pointer"
+                                    className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors shrink-0 cursor-pointer"
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />
                                   </button>
@@ -1052,8 +1035,8 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                               ))}
                             </div>
                           ) : (
-                            <div className="px-3 py-2.5 rounded-lg border border-dashed border-[#CED4DA] dark:border-zinc-800 bg-[#F8F9FA] dark:bg-zinc-900/30 text-center">
-                              <span className="text-[11px] text-[#64748B]">
+                            <div className="px-3 py-3 rounded-xl border border-dashed border-slate-200 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/30 text-center">
+                              <span className="text-xs text-slate-500">
                                 No attachments yet (optional · up to 2 images and 1 link)
                               </span>
                             </div>
@@ -1065,24 +1048,29 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                 </div>
 
                 {/* Footer Action Bar */}
-                <div className="flex items-center justify-between pt-2">
+                <div className="flex items-center justify-between pt-3 border-t border-slate-200/60 dark:border-zinc-800">
                   <button
                     type="button"
                     onClick={onClose}
-                    className="h-9 px-4 rounded bg-white dark:bg-zinc-800 border border-[#CED4DA] dark:border-zinc-700 text-xs font-semibold text-[#64748B] hover:text-[#1E293B] hover:bg-[#F8F9FA] transition-colors cursor-pointer shadow-2xs"
+                    className="h-9 px-4 rounded-xl bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer shadow-2xs"
                   >
                     Discard
                   </button>
                   <div className="flex items-center gap-3">
-                    <span className="text-[11px] text-[#64748B] font-mono hidden sm:inline">
+                    <span className="text-[11px] text-slate-500 font-mono hidden sm:inline">
                       Ready to submit to Sampling Desk
                     </span>
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="h-9 px-5 rounded bg-[#017E84] hover:bg-[#00666A] active:bg-[#005256] text-white text-xs font-bold cursor-pointer transition-all shadow-xs flex items-center gap-2 disabled:opacity-60 disabled:cursor-wait"
+                      className="h-9 px-5 rounded-xl text-white text-xs font-bold cursor-pointer transition-all shadow-[0_2px_10px_rgba(0,109,50,0.25)] hover:shadow-[0_4px_14px_rgba(0,109,50,0.35)] flex items-center gap-2 disabled:opacity-60 disabled:cursor-wait active:scale-98"
+                      style={{ background: "linear-gradient(135deg, #006d32 0%, #00d166 100%)" }}
                     >
-                      <CheckCircle2 className="w-4 h-4" />
+                      {isSubmitting ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <CheckCircle2 className="w-4 h-4" />
+                      )}
                       <span>{isSubmitting ? "Submitting..." : "Submit Feasibility Check"}</span>
                     </button>
                   </div>
@@ -1096,8 +1084,8 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                 {/* Step Flow Indicator */}
                 <div className="flex items-center justify-between px-4 py-2.5 bg-[#F8F9FA] dark:bg-zinc-800/80 border border-[#CED4DA] dark:border-zinc-700 rounded-lg text-xs shadow-2xs">
                   <div className="flex items-center gap-2.5">
-                    <div className="flex items-center gap-1.5 font-bold text-[#714B67] dark:text-purple-300">
-                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#714B67] text-white text-[11px] font-bold shadow-2xs">
+                    <div className="flex items-center gap-1.5 font-bold text-[#006d32] dark:text-emerald-400">
+                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#006d32] text-white text-[11px] font-bold shadow-2xs">
                         1
                       </span>
                       <span>Step 1: Program Header Setup</span>
@@ -1110,7 +1098,7 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                       <span>Step 2: Staging &amp; Deliverables</span>
                     </div>
                   </div>
-                  <span className="font-mono text-[10.5px] font-bold px-2.5 py-1 rounded bg-[#F3E8EE] text-[#714B67] dark:bg-[#3E2938] dark:text-[#E8D7E3] border border-[#714B67]/25 tracking-wide">
+                  <span className="font-mono text-[10.5px] font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-[#006d32] dark:bg-emerald-950/60 dark:text-emerald-300 border border-[#006d32]/25 tracking-wide">
                     COMMERCIAL INTAKE
                   </span>
                 </div>
@@ -1255,7 +1243,8 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                     <button
                       type="submit"
                       disabled={isSubmitting || !marketingCustomer.trim() || !marketingProgramName.trim()}
-                      className="h-10 px-6 rounded-lg bg-[#017E84] hover:bg-[#00666A] active:bg-[#005256] text-white text-xs font-bold cursor-pointer transition-all shadow-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="h-10 px-6 rounded-xl text-white text-xs font-bold cursor-pointer transition-all shadow-[0_2px_10px_rgba(0,109,50,0.25)] hover:shadow-[0_4px_14px_rgba(0,109,50,0.35)] flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-98"
+                      style={{ background: "linear-gradient(135deg, #006d32 0%, #00d166 100%)" }}
                     >
                       {isSubmitting ? (
                         <>
@@ -1344,7 +1333,7 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                       value={programPlanName}
                       onChange={(e) => setProgramPlanName(e.target.value)}
                       placeholder="e.g. Back-to-School 2026-2027 Hardcover Line"
-                      className="w-full h-10 px-3.5 rounded-lg border border-[#CED4DA] dark:border-zinc-700/80 bg-white dark:bg-zinc-900/80 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 outline-none focus:border-[#714B67] focus:ring-2 focus:ring-[#714B67]/15 transition-all shadow-2xs"
+                      className="w-full h-10 px-3.5 rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-900/80 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 outline-none focus:border-[#006d32] focus:ring-2 focus:ring-[#006d32]/15 transition-all shadow-2xs"
                     />
                   </div>
 
@@ -1356,7 +1345,7 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                     <select
                       value={programPlanYear}
                       onChange={(e) => setProgramPlanYear(e.target.value)}
-                      className="w-full h-10 px-3 rounded-lg border border-[#CED4DA] dark:border-zinc-700/80 bg-white dark:bg-zinc-900/80 text-xs font-mono font-medium text-zinc-900 dark:text-zinc-100 outline-none focus:border-[#714B67] focus:ring-2 focus:ring-[#714B67]/15 cursor-pointer transition-all shadow-2xs"
+                      className="w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-900/80 text-xs font-mono font-medium text-zinc-900 dark:text-zinc-100 outline-none focus:border-[#006d32] focus:ring-2 focus:ring-[#006d32]/15 cursor-pointer transition-all shadow-2xs"
                     >
                       {byInfo.businessYearOptions.map((by) => (
                         <option key={by} value={by}>{by}</option>
@@ -1370,13 +1359,14 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                   <button
                     type="button"
                     onClick={onClose}
-                    className="h-9 px-4 rounded bg-white dark:bg-zinc-800 border border-[#CED4DA] dark:border-zinc-700 text-xs font-semibold text-[#64748B] hover:text-[#1E293B] hover:bg-[#F8F9FA] transition-colors cursor-pointer shadow-2xs"
+                    className="h-9 px-4 rounded-xl bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer shadow-2xs"
                   >
                     Discard
                   </button>
                   <button
                     type="submit"
-                    className="h-9 px-5 rounded bg-[#017E84] hover:bg-[#00666A] active:bg-[#005256] text-white text-xs font-bold cursor-pointer transition-all shadow-sm inline-flex items-center justify-center gap-1.5 select-none"
+                    className="h-9 px-5 rounded-xl text-white text-xs font-bold cursor-pointer transition-all shadow-[0_2px_10px_rgba(0,109,50,0.25)] hover:shadow-[0_4px_14px_rgba(0,109,50,0.35)] inline-flex items-center justify-center gap-1.5 select-none active:scale-98"
+                    style={{ background: "linear-gradient(135deg, #006d32 0%, #00d166 100%)" }}
                   >
                     <span>Initialize Program Plan</span>
                     <ArrowRight className="w-4 h-4" />

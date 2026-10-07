@@ -459,15 +459,24 @@ export const MarketingOverviewPage: React.FC<MarketingOverviewPageProps> = ({
               ))}
             </div>
             {/* Search */}
-            <div className="relative">
-              <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+            <div className="relative w-56 sm:w-64 group">
+              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#006d32] transition-colors pointer-events-none" />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="SR#, SKU, Customer…"
-                className="w-48 pl-8 pr-3 py-1.5 rounded-lg border border-[#CED4DA] dark:border-zinc-700 bg-neutral-50 dark:bg-zinc-900 text-xs text-neutral-800 dark:text-zinc-200 focus:outline-none focus:border-[#714B67]"
+                className="w-full h-9 pl-9 pr-8 rounded-xl bg-slate-50/50 hover:bg-slate-100/50 focus:bg-white text-xs font-medium text-slate-800 placeholder:text-slate-400 border border-slate-200/80 focus:border-[#006d32]/40 focus:outline-none focus:ring-4 focus:ring-[#006d32]/[0.08] shadow-2xs transition-all"
               />
+              {searchTerm && (
+                <button
+                  type="button"
+                  onClick={() => setSearchTerm("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-200/80 transition-colors cursor-pointer"
+                >
+                  ✕
+                </button>
+              )}
             </div>
           </div>
         </div>

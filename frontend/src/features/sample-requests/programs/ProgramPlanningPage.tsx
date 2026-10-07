@@ -2,40 +2,28 @@ import React, { useState, useMemo } from "react";
 import { UserProfile } from "@/features/auth";
 import { SampleRequestItem } from "../types";
 import { getRequestTrackType } from "../utils/trackTypes";
-import { StatusPill } from "@/components/ui/StatusPill";
 import { useNavigate } from "react-router-dom";
 import {
   FolderGit2,
   Plus,
   RefreshCw,
   Search,
-  ExternalLink,
-  Layers,
+  X,
   Building2,
   Calendar,
   Sparkles,
-  ArrowRight,
   Trash2,
-  Copy,
-  Check,
-  Package,
-  List as ListIcon,
-  LayoutGrid,
-  ChevronLeft,
-  ChevronRight,
-  Zap,
-  TrendingUp,
   Clock,
   Highlighter,
   CheckCircle2,
-  AlertCircle,
   Download,
   ClipboardCheck,
+  ChevronRight,
+  Layers,
 } from "lucide-react";
 import { parseSampRemark } from "./utils/programRemarkUtils";
 import { CopyBadge } from "@/components/ui/CopyBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { WorkflowTabStrip } from "@/components/erp/WorkflowTabStrip";
 import { PaginationBar } from "@/components/erp/PaginationBar";
 import { exportRecordsToCsv } from "@/lib/csvExport";
 
@@ -70,8 +58,6 @@ const PROGRAM_STAGE_TABS: { id: ProgramStageTab; label: string }[] = [
   { id: "production", label: "Production Handoff" },
 ];
 
-
-
 export const ProgramPlanningPage: React.FC<ProgramPlanningPageProps> = ({
   requests,
   isLoading,
@@ -86,14 +72,12 @@ export const ProgramPlanningPage: React.FC<ProgramPlanningPageProps> = ({
   onDeleteRequest,
   onRefresh,
 }) => {
-
   const navigate = useNavigate();
   const [filterTab, setFilterTab] = useState<ProgramStageTab>("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [customerFilter, setCustomerFilter] = useState("all");
   const [selectedPlantFilter, setSelectedPlantFilter] = useState<string>("all");
   const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set());
-  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   // Local Modal States
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
@@ -130,10 +114,9 @@ export const ProgramPlanningPage: React.FC<ProgramPlanningPageProps> = ({
     return Array.from(set).sort();
   }, [programRequests, uniqueCustomers]);
 
-  // Telemetry metrics
+  // Operational metrics
   const programStats = useMemo(() => {
     const totalPrograms = programRequests.length;
-    let stagingCount = 0;
     let awaitingReviewCount = 0;
     let reviewedCount = 0;
     let productionCount = 0;
@@ -174,16 +157,6 @@ export const ProgramPlanningPage: React.FC<ProgramPlanningPageProps> = ({
       production: programStats.productionCount,
     };
   }, [programStats]);
-
-  const workflowTabs = useMemo(
-    () =>
-      PROGRAM_STAGE_TABS.map((tab) => ({
-        id: tab.id,
-        label: tab.label,
-        count: stageCounts[tab.id],
-      })),
-    [stageCounts]
-  );
 
   // Filtered requests
   const filteredRequests = useMemo(() => {
@@ -235,8 +208,6 @@ export const ProgramPlanningPage: React.FC<ProgramPlanningPageProps> = ({
     });
   }, [programRequests, filterTab, customerFilter, selectedPlant, selectedPlantFilter, searchTerm]);
 
-
-
   // Paginated Slice
   const paginatedRequests = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
@@ -264,7 +235,6 @@ export const ProgramPlanningPage: React.FC<ProgramPlanningPageProps> = ({
     }
   };
 
-  // Helper to open inspector
   const handleOpenInspector = (req: SampleRequestItem) => {
     setInspectingProgram(req);
     onInspectRequest(req);
@@ -289,32 +259,47 @@ export const ProgramPlanningPage: React.FC<ProgramPlanningPageProps> = ({
     });
   };
 
+  const navTabs: { id: ProgramStageTab; label: string; count: number }[] = [
+    { id: "all", label: "All Programs", count: stageCounts.all },
+    { id: "awaiting_review", label: "Awaiting SAMP Review", count: stageCounts.awaiting_review },
+    { id: "reviewed", label: "Reviewed by SAMP", count: stageCounts.reviewed },
+    { id: "production", label: "Production Handoff", count: stageCounts.production },
+  ];
+
   return (
-    <div className="flex-1 flex flex-col min-h-0 bg-[#F8F9FA] dark:bg-[#0b0c10] select-text">
-      {/* ── 1. Compact Page Header (Exact Match to Feasibility Image 1) ── */}
-      <div className="bg-white dark:bg-[#12141d] border-b border-[#E2E8F0] dark:border-white/[0.08] px-6 py-3 shrink-0">
-        <div className="flex items-center justify-between gap-4">
-          {/* Title + badge */}
-          <div className="flex items-center gap-2.5 min-w-0">
-            <h1 className="text-sm font-bold text-neutral-900 dark:text-white truncate">
-              Seasonal Program Planning Workbench
+    <div className="flex-1 flex flex-col min-h-0 bg-[#f8f9ff] text-slate-800 select-text overflow-hidden">
+      {/* ── 1. Compact Editorial Header (Maximized Space for Requests) ── */}
+      <header className="bg-white px-6 py-3 shrink-0 border-b border-slate-200/60 shadow-[0_1px_4px_rgba(11,28,48,0.02)]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <h1 className="text-base sm:text-lg font-bold tracking-tight text-slate-900 font-display">
+              Seasonal Program Planning
             </h1>
-            <span className="shrink-0 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#714B67]/10 text-[#714B67] dark:bg-purple-950/40 dark:text-purple-300 border border-[#714B67]/20">
-              Marketing Desk
+            <span className="px-2 py-0.5 rounded-full text-[11px] font-bold font-mono bg-slate-100 text-slate-600">
+              {programStats.totalPrograms} Programs
             </span>
+            <span className="px-2 py-0.5 rounded-full text-[11px] font-bold font-mono bg-[#006d32]/10 text-[#006d32] border border-[#006d32]/20">
+              {programStats.totalSkus} Total SKUs
+            </span>
+            {programStats.awaitingReviewCount > 0 && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold font-mono bg-amber-50 text-amber-700 animate-pulse">
+                ⚡ {programStats.awaitingReviewCount} In SAMP Queue
+              </span>
+            )}
           </div>
 
-          {/* Action buttons */}
+          {/* Quick Actions */}
           <div className="flex items-center gap-2 shrink-0">
             {/* New Program Button */}
             <button
               type="button"
               onClick={() => setIsNewModalOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-[#017E84] hover:bg-[#00666A] text-white text-xs font-semibold shadow-xs transition active:scale-95 cursor-pointer"
-              title="Initialize New Seasonal Program with Single Year & Multi-Material Matrix"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold text-white shadow-[0_2px_10px_rgba(0,109,50,0.25)] hover:shadow-[0_4px_14px_rgba(0,109,50,0.35)] transition-all cursor-pointer active:scale-98"
+              style={{ background: "linear-gradient(135deg, #006d32 0%, #00d166 100%)" }}
+              title="Initialize New Seasonal Program with Matrix"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>New</span>
+              <span>New Program Planning</span>
             </button>
 
             {/* Refresh */}
@@ -322,10 +307,10 @@ export const ProgramPlanningPage: React.FC<ProgramPlanningPageProps> = ({
               type="button"
               onClick={onRefresh}
               disabled={isLoading}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-neutral-50 dark:hover:bg-zinc-700 text-xs font-semibold text-neutral-700 dark:text-zinc-200 shadow-2xs transition cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-xs font-semibold text-slate-700 transition cursor-pointer disabled:opacity-50"
               title="Refresh Program Records"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin text-[#017E84]" : ""}`} />
+              <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin text-[#006d32]" : "text-slate-500"}`} />
               <span className="hidden sm:inline">Refresh</span>
             </button>
 
@@ -334,160 +319,73 @@ export const ProgramPlanningPage: React.FC<ProgramPlanningPageProps> = ({
               type="button"
               onClick={handleExportCSV}
               disabled={filteredRequests.length === 0}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-neutral-50 dark:hover:bg-zinc-700 text-xs font-semibold text-neutral-700 dark:text-zinc-200 shadow-2xs transition cursor-pointer disabled:opacity-50"
-              title="Export CSV"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-xs font-semibold text-slate-700 transition cursor-pointer disabled:opacity-50"
+              title="Export To CSV"
             >
-              <Download className="w-3.5 h-3.5 text-neutral-500" />
+              <Download className="w-3.5 h-3.5 text-slate-500" />
               <span className="hidden sm:inline">Export</span>
             </button>
-
           </div>
         </div>
+      </header>
 
-        {/* ── 2. KPI Metric Ribbon (Exact 6 Cards Matching Feasibility Workbench Image 1) ── */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 mt-3 pt-3 border-t border-[#F1F5F9] dark:border-white/[0.05]">
-          {/* Card 1: Total Programs */}
-          <div
-            onClick={() => {
-              setFilterTab("all");
-              setCurrentPage(1);
-            }}
-            className={`p-2.5 rounded-lg border transition cursor-pointer ${
-              filterTab === "all"
-                ? "border-[#714B67] bg-[#714B67]/5 dark:bg-[#714B67]/20 shadow-2xs"
-                : "border-[#E2E8F0] dark:border-white/[0.06] bg-neutral-50/60 dark:bg-zinc-900/40 hover:border-neutral-300"
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-[10.5px] uppercase font-bold text-neutral-500 dark:text-zinc-400 font-mono tracking-wider">
-                TOTAL INTAKE
-              </span>
-              <ClipboardCheck className="w-3.5 h-3.5 text-neutral-400" />
-            </div>
-            <div className="text-xl font-bold font-mono text-neutral-900 dark:text-zinc-100 mt-0.5">
-              {isLoading ? "—" : programStats.totalPrograms}
-            </div>
-            <div className="text-[10px] text-neutral-400 font-mono">From Marketing</div>
-          </div>
-
-          {/* Card 2: Awaiting SAMP Review */}
-          <div
-            onClick={() => {
-              setFilterTab("awaiting_review");
-              setCurrentPage(1);
-            }}
-            className={`p-2.5 rounded-lg border transition cursor-pointer ${
-              filterTab === "awaiting_review"
-                ? "border-amber-400 bg-amber-500/10 dark:bg-amber-950/30 shadow-2xs"
-                : "border-[#E2E8F0] dark:border-white/[0.06] bg-neutral-50/60 dark:bg-zinc-900/40 hover:border-amber-300"
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-[10.5px] uppercase font-bold text-amber-700 dark:text-amber-300 font-mono tracking-wider">
-                NEEDS REVIEW
-              </span>
-              <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-            </div>
-            <div className="text-xl font-bold font-mono text-amber-900 dark:text-amber-200 mt-0.5">
-              {isLoading ? "—" : programStats.awaitingReviewCount}
-            </div>
-            <div className="text-[10px] text-amber-700/80 dark:text-amber-400/80 font-mono">
-              SAMP Team Queue
-            </div>
-          </div>
-
-          {/* Card 3: Reviewed by SAMP Team */}
-          <div
-            onClick={() => {
-              setFilterTab("reviewed");
-              setCurrentPage(1);
-            }}
-            className={`p-2.5 rounded-lg border transition cursor-pointer ${
-              filterTab === "reviewed"
-                ? "border-emerald-400 bg-emerald-500/10 dark:bg-emerald-950/30 shadow-2xs"
-                : "border-[#E2E8F0] dark:border-white/[0.06] bg-neutral-50/60 dark:bg-zinc-900/40 hover:border-emerald-300"
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-[10.5px] uppercase font-bold text-emerald-700 dark:text-emerald-300 font-mono tracking-wider">
-                REVIEWED (SAMP TEAM)
-              </span>
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-            </div>
-            <div className="text-xl font-bold font-mono text-emerald-900 dark:text-emerald-200 mt-0.5">
-              {isLoading ? "—" : programStats.reviewedCount}
-            </div>
-            <div className="text-[10px] text-emerald-700/80 dark:text-emerald-400/80 font-mono">
-              Matrix Verified &amp; Signed
-            </div>
-          </div>
-
-          {/* Card 5: Production Handoff */}
-          <div
-            onClick={() => {
-              setFilterTab("production");
-              setCurrentPage(1);
-            }}
-            className={`p-2.5 rounded-lg border transition cursor-pointer ${
-              filterTab === "production"
-                ? "border-purple-400 bg-purple-500/10 dark:bg-purple-950/30 shadow-2xs"
-                : "border-[#E2E8F0] dark:border-white/[0.06] bg-neutral-50/60 dark:bg-zinc-900/40 hover:border-purple-300"
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-[10.5px] uppercase font-bold text-purple-700 dark:text-purple-300 font-mono tracking-wider">
-                PRODUCTION
-              </span>
-              <Zap className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-            </div>
-            <div className="text-xl font-bold font-mono text-purple-900 dark:text-purple-200 mt-0.5">
-              {isLoading ? "—" : programStats.productionCount}
-            </div>
-            <div className="text-[10px] text-purple-700/80 dark:text-purple-400/80 font-mono">
-              Ready for Execution
-            </div>
-          </div>
-
-          {/* Card 6: Matrix SKUs */}
-          <div className="p-2.5 rounded-lg border border-[#E2E8F0] dark:border-white/[0.06] bg-neutral-50/60 dark:bg-zinc-900/40">
-            <div className="flex items-center justify-between">
-              <span className="text-[10.5px] uppercase font-bold text-neutral-500 dark:text-zinc-400 font-mono tracking-wider">
-                MATRIX SKUS
-              </span>
-              <Layers className="w-3.5 h-3.5 text-[#017E84]" />
-            </div>
-            <div className="text-xl font-bold font-mono text-[#017E84] dark:text-teal-400 mt-0.5">
-              {programStats.totalSkus}
-            </div>
-            <div className="text-[10px] text-neutral-400 font-mono">Planned Materials</div>
-          </div>
+      {/* ── 2. Floating Filter & Search Strip ── */}
+      <div className="px-6 py-2 bg-white/80 backdrop-blur-xs shrink-0 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/50">
+        {/* Soft Segmented Filter Pills */}
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 select-none">
+          {navTabs.map((t) => {
+            const isActive = filterTab === t.id;
+            return (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => {
+                  setFilterTab(t.id);
+                  setCurrentPage(1);
+                }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-150 cursor-pointer ${
+                  isActive
+                    ? "bg-[#006d32] text-white shadow-[0_2px_8px_rgba(0,109,50,0.25)]"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 bg-transparent"
+                }`}
+              >
+                <span>{t.label}</span>
+                <span
+                  className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full tabular-nums ${
+                    isActive ? "bg-white/25 text-white" : "bg-slate-200/70 text-slate-600"
+                  }`}
+                >
+                  {t.count}
+                </span>
+              </button>
+            );
+          })}
         </div>
-      </div>
 
-      {/* ── 3. Segmented Filter Pills Strip (Exact Match to Feasibility Workbench Image 1) ── */}
-      <div className="bg-white dark:bg-[#12141d] border-b border-[#E2E8F0] dark:border-white/[0.08] px-6 py-2.5 shrink-0 flex flex-wrap items-center justify-between gap-3">
-        {/* Left: Odoo Segmented Filter Pills */}
-        <WorkflowTabStrip
-          tabs={workflowTabs}
-          activeTab={filterTab}
-          onSelectTab={(id) => {
-            setFilterTab(id as ProgramStageTab);
-            setCurrentPage(1);
-          }}
-          compact
-        />
+        {/* Right Search, Customer, Plant Select */}
+        <div className="flex items-center gap-2 flex-1 sm:flex-initial justify-end">
+          {selectedIds.size > 0 && isAdmin && (
+            <button
+              type="button"
+              onClick={() => {
+                const target = programRequests.find((r) => selectedIds.has(r.id));
+                if (target) onDeleteRequest(target);
+              }}
+              className="h-9 px-3 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-xs cursor-pointer transition"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Delete ({selectedIds.size})</span>
+            </button>
+          )}
 
-        {/* Right: Customer & Plant Dropdown Selectors */}
-        <div className="flex items-center gap-2">
-          {/* Customer Filter */}
-          <div className="relative shrink-0">
+          {customerList.length > 0 && (
             <select
               value={customerFilter}
               onChange={(e) => {
                 setCustomerFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="h-8 pl-2.5 pr-7 rounded border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-medium text-neutral-700 dark:text-zinc-200 focus:outline-none focus:border-[#714B67] transition cursor-pointer appearance-none"
+              className="h-9 px-3 rounded-lg bg-slate-100/80 hover:bg-slate-200/60 text-xs font-medium text-slate-700 border border-slate-200/70 focus:outline-none focus:ring-2 focus:ring-[#006d32]/15 focus:border-[#006d32]/40 cursor-pointer transition"
             >
               <option value="all">All Customers</option>
               {customerList.map((c) => (
@@ -496,301 +394,275 @@ export const ProgramPlanningPage: React.FC<ProgramPlanningPageProps> = ({
                 </option>
               ))}
             </select>
-            <Filter className="w-3 h-3 text-neutral-400 absolute right-2 top-2.5 pointer-events-none" />
-          </div>
+          )}
 
-          {/* Plant Filter */}
-          <div className="relative shrink-0">
+          {uniquePlants.length > 0 && (
             <select
               value={selectedPlantFilter}
               onChange={(e) => {
                 setSelectedPlantFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="h-8 pl-2.5 pr-7 rounded border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-medium text-neutral-700 dark:text-zinc-200 focus:outline-none focus:border-[#714B67] transition cursor-pointer appearance-none font-mono"
+              className="h-9 px-3 rounded-lg bg-slate-100/80 hover:bg-slate-200/60 text-xs font-medium text-slate-700 border border-slate-200/70 focus:outline-none focus:ring-2 focus:ring-[#006d32]/15 focus:border-[#006d32]/40 cursor-pointer transition font-mono"
             >
               <option value="all">All Plants</option>
               {uniquePlants.map((p) => (
                 <option key={p} value={p}>
-                  {p}
+                  Plant {p}
                 </option>
               ))}
             </select>
-            <Filter className="w-3 h-3 text-neutral-400 absolute right-2 top-2.5 pointer-events-none" />
+          )}
+
+          <div className="relative w-60 sm:w-72 group">
+            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#006d32] transition-colors pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search code, customer, title..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-full h-9 pl-9 pr-8 rounded-xl bg-slate-50/50 hover:bg-slate-100/50 focus:bg-white text-xs font-medium text-slate-800 placeholder:text-slate-400 border border-slate-200/80 focus:border-[#006d32]/40 focus:outline-none focus:ring-4 focus:ring-[#006d32]/[0.08] shadow-2xs transition-all"
+            />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={() => setSearchTerm("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-200/80 transition-colors cursor-pointer"
+                title="Clear search"
+              >
+                ✕
+              </button>
+            )}
           </div>
         </div>
       </div>
 
-      {/* ── 4. Search Filter Input Strip (Exact Match to Image 1) ── */}
-      <div className="bg-white dark:bg-[#12141d] border-b border-[#E2E8F0] dark:border-white/[0.08] px-6 py-2 shrink-0">
-        <div className="relative max-w-sm">
-          <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-3 top-2.5 pointer-events-none" />
-          <input
-            type="text"
-            placeholder="Search SR, Code, Customer"
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="w-full h-8 pl-9 pr-7 rounded border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs text-neutral-900 dark:text-zinc-100 placeholder:text-neutral-400 focus:outline-none focus:border-[#714B67] transition"
-          />
-          {searchTerm && (
-            <button
-              type="button"
-              onClick={() => setSearchTerm("")}
-              className="absolute right-2.5 top-2 text-neutral-400 hover:text-neutral-700 dark:hover:text-zinc-200 text-xs font-bold"
-            >
-              ×
-            </button>
-          )}
-        </div>
-      </div>
+      {/* ── 3. Main Work Area (70%+ Screen Space Dedicated to Requests Table) ── */}
+      <div className="flex-1 min-h-0 p-4 md:p-5 flex flex-col">
+        <div className="flex-1 min-h-0 bg-white rounded-2xl shadow-[0_2px_12px_rgba(11,28,48,0.03)] border border-slate-100 overflow-hidden flex flex-col">
+          <div className="flex-1 min-h-0 overflow-auto">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead className="sticky top-0 z-10">
+                <tr className="bg-[#eff4ff] text-slate-600 font-mono text-[11px] uppercase tracking-wider select-none border-b border-slate-200/70">
+                  <th className="py-3 px-3 w-10 text-center">
+                    <input
+                      type="checkbox"
+                      checked={
+                        paginatedRequests.length > 0 &&
+                        paginatedRequests.every((r) => selectedIds.has(r.id))
+                      }
+                      onChange={handleToggleSelectAll}
+                      className="rounded text-[#006d32] focus:ring-[#006d32] cursor-pointer"
+                    />
+                  </th>
+                  <th className="py-3 px-4 font-semibold whitespace-nowrap">Program ID</th>
+                  <th className="py-3 px-4 font-semibold">Campaign Title & Product Scope</th>
+                  <th className="py-3 px-4 font-semibold whitespace-nowrap">Customer</th>
+                  <th className="py-3 px-4 font-semibold whitespace-nowrap">Plant</th>
+                  <th className="py-3 px-4 font-semibold text-center whitespace-nowrap">Year</th>
+                  <th className="py-3 px-4 font-semibold text-center whitespace-nowrap">Matrix SKUs</th>
+                  <th className="py-3 px-4 font-semibold whitespace-nowrap">SAMP Technical Review</th>
+                  <th className="py-3 px-4 font-semibold whitespace-nowrap">Target Date</th>
+                  <th className="py-3 px-4 font-semibold text-right pr-4 whitespace-nowrap">Commercial Action</th>
+                </tr>
+              </thead>
 
-      {/* ── 5. Full-Bleed Table View (Exact Match to Image 1) ── */}
-      <div className="flex-1 overflow-y-auto p-6">
-        {filteredRequests.length === 0 ? (
-          <EmptyState
-            icon={ClipboardCheck}
-            title="No Seasonal Programs Found"
-            description={
-              searchTerm || customerFilter !== "all" || filterTab !== "all"
-                ? "No seasonal programs match your active filter criteria. Try resetting your search or selecting another tab."
-                : "There are currently no seasonal program planning requests submitted by Marketing in this category."
-            }
-            onResetFilters={
-              searchTerm || customerFilter !== "all" || filterTab !== "all"
-                ? () => {
-                    setSearchTerm("");
-                    setCustomerFilter("all");
-                    setFilterTab("all");
-                  }
-                : undefined
-            }
-            action={
-              <button
-                type="button"
-                onClick={() => setIsNewModalOpen(true)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded bg-[#017E84] hover:bg-[#00666A] text-white text-xs font-semibold shadow-xs transition cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Create Program Request</span>
-              </button>
-            }
-          />
-        ) : (
-            <div className="bg-white dark:bg-[#12141d] rounded-lg border border-[#CED4DA] dark:border-white/[0.08] shadow-2xs overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse text-xs">
-                <thead>
-                    <tr className="bg-[#F8F9FA] dark:bg-zinc-900/80 border-b border-[#CED4DA] dark:border-white/[0.08] text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-500 dark:text-zinc-400 select-none">
-                      <th className="py-2.5 px-3 w-10 text-center">
-                        <input
-                          type="checkbox"
-                          checked={
-                            paginatedRequests.length > 0 &&
-                            paginatedRequests.every((r) => selectedIds.has(r.id))
-                          }
-                          onChange={handleToggleSelectAll}
-                          className="rounded border-[#CED4DA] dark:border-zinc-700 text-[#714B67] focus:ring-[#714B67] cursor-pointer"
-                        />
-                      </th>
-                      <th className="py-2.5 px-3 w-36">Program ID</th>
-                      <th className="py-2.5 px-3">Campaign Title & Product Scope</th>
-                      <th className="py-2.5 px-3 w-40">Customer</th>
-                      <th className="py-2.5 px-3 w-28">Plant</th>
-                      <th className="py-2.5 px-3 w-24 text-center">Program Year</th>
-                      <th className="py-2.5 px-3 w-28 text-center">Matrix SKUs</th>
-                      <th className="py-2.5 px-3 w-48">SAMP Technical Review</th>
-                      <th className="py-2.5 px-3 w-28">Target Date</th>
-                      <th className="py-2.5 px-3 w-32 text-right pr-4">Actions</th>
-                    </tr>
-                  </thead>
+              <tbody className="divide-y divide-slate-100">
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={10} className="py-16 text-center text-slate-400 font-mono">
+                      <RefreshCw className="w-5 h-5 animate-spin mx-auto text-[#006d32] mb-2" />
+                      <span>Loading seasonal program planning matrix...</span>
+                    </td>
+                  </tr>
+                ) : paginatedRequests.length === 0 ? (
+                  <tr>
+                    <td colSpan={10} className="py-16 text-center">
+                      <div className="max-w-sm mx-auto flex flex-col items-center">
+                        <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mb-3">
+                          <FolderGit2 className="w-6 h-6" />
+                        </div>
+                        <h3 className="text-sm font-bold text-slate-800">No Seasonal Programs Found</h3>
+                        <p className="text-xs text-slate-500 mt-1">
+                          {searchTerm || customerFilter !== "all" || filterTab !== "all" || selectedPlantFilter !== "all"
+                            ? "No programs match your search or active filter criteria."
+                            : "There are currently no seasonal program planning requests submitted."}
+                        </p>
+                        {(searchTerm || customerFilter !== "all" || filterTab !== "all" || selectedPlantFilter !== "all") && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSearchTerm("");
+                              setCustomerFilter("all");
+                              setSelectedPlantFilter("all");
+                              setFilterTab("all");
+                            }}
+                            className="mt-3 text-xs font-semibold text-[#006d32] hover:underline cursor-pointer"
+                          >
+                            Reset filters
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  paginatedRequests.map((row) => {
+                    const srCode = row.srNumber || `PG-${row.id}`;
+                    const materials = row.programMaterials || [];
+                    const skuCount = materials.length > 0 ? materials.length : 1;
+                    const isReviewed = (row.status || "").toLowerCase().includes("reviewed");
+                    const isSelected = selectedIds.has(row.id);
 
-                  <tbody className="divide-y divide-[#E9ECEF] dark:divide-white/[0.05]">
-                    {isLoading ? (
-                      <tr>
-                        <td colSpan={10} className="py-12 text-center text-neutral-400 font-mono">
-                          <RefreshCw className="w-5 h-5 animate-spin mx-auto text-[#017E84] mb-2" />
-                          <span>Loading seasonal program planning matrix...</span>
+                    // Compute flagged columns by Sampling
+                    let flaggedCount = 0;
+                    materials.forEach((m) => {
+                      const parsed = parseSampRemark(m.sampRemark);
+                      flaggedCount += parsed.highlightedCols.length;
+                    });
+
+                    return (
+                      <tr
+                        key={row.id}
+                        onClick={() => handleOpenInspector(row)}
+                        className={`hover:bg-slate-50/80 transition-colors cursor-pointer group ${
+                          isSelected ? "bg-emerald-50/40" : ""
+                        }`}
+                      >
+                        {/* Checkbox */}
+                        <td className="py-3 px-3 text-center" onClick={(e) => e.stopPropagation()}>
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={(e) => handleToggleSelectRow(row.id, e)}
+                            className="rounded text-[#006d32] focus:ring-[#006d32] cursor-pointer"
+                          />
                         </td>
-                      </tr>
-                    ) : paginatedRequests.length === 0 ? (
-                      <tr>
-                        <td colSpan={10} className="py-16 text-center text-neutral-400">
-                          <div className="flex flex-col items-center justify-center space-y-2">
-                            <FolderGit2 className="w-10 h-10 text-neutral-300 dark:text-zinc-600" />
-                            <span className="font-bold text-sm text-neutral-700 dark:text-zinc-300">
-                              No seasonal programs match your current filter
+
+                        {/* Program ID */}
+                        <td className="py-3 px-4 font-mono font-bold whitespace-nowrap">
+                          <CopyBadge text={srCode} />
+                        </td>
+
+                        {/* Title & Description */}
+                        <td className="py-3 px-4 max-w-sm">
+                          <div className="font-semibold text-slate-900 truncate">
+                            {row.programName || row.programCampaignTitle || "Seasonal Program"}
+                          </div>
+                          <div className="text-[11px] text-slate-500 truncate mt-0.5">
+                            {row.productDescription || "Multi-SKU scholastic program range"}
+                          </div>
+                        </td>
+
+                        {/* Customer */}
+                        <td className="py-3 px-4 font-semibold text-slate-900 whitespace-nowrap">
+                          {row.customer || "—"}
+                        </td>
+
+                        {/* Plant */}
+                        <td className="py-3 px-4 font-mono text-slate-600 whitespace-nowrap">
+                          <div className="flex items-center gap-1.5">
+                            <Building2 className="w-3.5 h-3.5 text-slate-400" />
+                            <span>Plant {row.targetPlant || "1505"}</span>
+                          </div>
+                        </td>
+
+                        {/* Program Year */}
+                        <td className="py-3 px-4 text-center font-mono font-bold whitespace-nowrap">
+                          <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[11px]">
+                            {row.programYear || "2026"}
+                          </span>
+                        </td>
+
+                        {/* Matrix SKUs */}
+                        <td className="py-3 px-4 text-center font-mono whitespace-nowrap">
+                          <span className="px-2 py-0.5 rounded-full bg-[#006d32]/10 text-[#006d32] font-bold text-[11px]">
+                            {skuCount} SKU{skuCount !== 1 ? "s" : ""}
+                          </span>
+                        </td>
+
+                        {/* SAMP Technical Review Status */}
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          {isReviewed ? (
+                            <div className="space-y-0.5">
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-emerald-50 text-emerald-700">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                <span>Reviewed by SAMP</span>
+                              </span>
+                              {flaggedCount > 0 && (
+                                <div className="text-[10px] text-amber-700 font-mono font-semibold flex items-center gap-1 pl-1">
+                                  <Highlighter className="w-3 h-3 text-amber-600" />
+                                  <span>{flaggedCount} column{flaggedCount !== 1 ? "s" : ""} flagged</span>
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-amber-50 text-amber-700">
+                              <Clock className="w-3.5 h-3.5 text-amber-500" />
+                              <span>Pending SAMP Review</span>
                             </span>
-                            <span className="text-xs text-neutral-500 max-w-sm">
-                              Try resetting the search facet or changing plant / stage filter, or click "+ New" to initialize a program request.
+                          )}
+                        </td>
+
+                        {/* Target Date */}
+                        <td className="py-3 px-4 font-mono text-slate-600 whitespace-nowrap">
+                          {row.sampleRequiredDate ? (
+                            <span className="flex items-center gap-1">
+                              <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                              <span>{row.sampleRequiredDate.slice(5)}</span>
                             </span>
+                          ) : (
+                            <span>Flexible</span>
+                          )}
+                        </td>
+
+                        {/* Actions */}
+                        <td className="py-3 px-4 text-right pr-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center justify-end gap-1.5">
                             <button
                               type="button"
-                              onClick={() => setIsNewModalOpen(true)}
-                              className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-[#017E84] text-white text-xs font-semibold shadow-xs"
+                              onClick={() => handleOpenInspector(row)}
+                              className="px-3 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium font-mono transition cursor-pointer"
+                              title="Inspect technical matrix & remarks"
                             >
-                              <Plus className="w-3.5 h-3.5" />
-                              <span>Create Program Request</span>
+                              Inspect
                             </button>
+
+                            {isAdmin && (
+                              <button
+                                type="button"
+                                onClick={(e) => onDeleteRequest(row, e)}
+                                className="p-1.5 text-slate-400 hover:text-rose-600 transition cursor-pointer rounded-lg hover:bg-rose-50"
+                                title="Delete record"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
-                    ) : (
-                      paginatedRequests.map((row) => {
-                        const srCode = row.srNumber || `PG-${row.id}`;
-                        const materials = row.programMaterials || [];
-                        const skuCount = materials.length > 0 ? materials.length : 1;
-                        const isReviewed = (row.status || "").toLowerCase().includes("reviewed");
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
 
-                        // Compute flagged columns by Sampling
-                        let flaggedCount = 0;
-                        materials.forEach((m) => {
-                          const parsed = parseSampRemark(m.sampRemark);
-                          flaggedCount += parsed.highlightedCols.length;
-                        });
-
-                        return (
-                          <tr
-                            key={row.id}
-                            onClick={() => handleOpenInspector(row)}
-                            className="hover:bg-neutral-50/80 dark:hover:bg-white/[0.03] cursor-pointer transition"
-                          >
-                            {/* Checkbox */}
-                            <td className="py-3 px-3 text-center" onClick={(e) => e.stopPropagation()}>
-                              <input
-                                type="checkbox"
-                                checked={selectedIds.has(row.id)}
-                                onChange={(e) => handleToggleSelectRow(row.id, e)}
-                                className="rounded border-[#CED4DA] dark:border-zinc-700 text-[#714B67] focus:ring-[#714B67] cursor-pointer"
-                              />
-                            </td>
-
-                            {/* Program ID */}
-                            <td className="py-3 px-3 font-mono font-bold whitespace-nowrap">
-                              <CopyBadge text={srCode} />
-                            </td>
-
-                            {/* Title & Description */}
-                            <td className="py-3 px-3">
-                              <div className="font-bold text-neutral-900 dark:text-zinc-100 line-clamp-1">
-                                {row.programName || row.programCampaignTitle || "Seasonal Program"}
-                              </div>
-                              <div className="text-[11px] text-neutral-500 dark:text-zinc-400 line-clamp-1 mt-0.5">
-                                {row.productDescription || "Multi-SKU scholastic program range"}
-                              </div>
-                            </td>
-
-                            {/* Customer */}
-                            <td className="py-3 px-3 text-neutral-700 dark:text-zinc-300 font-semibold truncate">
-                              {row.customer || "—"}
-                            </td>
-
-                            {/* Plant */}
-                            <td className="py-3 px-3 font-mono text-neutral-600 dark:text-zinc-400">
-                              <div className="flex items-center space-x-1">
-                                <Building2 className="w-3 h-3 text-neutral-400" />
-                                <span className="truncate">{row.targetPlant || "1505"}</span>
-                              </div>
-                            </td>
-
-                            {/* Program Year (Single Year) */}
-                            <td className="py-3 px-3 text-center font-mono font-bold text-zinc-700 dark:text-zinc-300">
-                              <span className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-[11px]">
-                                {row.programYear || "2026"}
-                              </span>
-                            </td>
-
-                            {/* Matrix SKUs */}
-                            <td className="py-3 px-3 text-center font-mono">
-                              <span className="bg-purple-50 dark:bg-purple-950/60 text-[#714B67] dark:text-purple-300 font-bold px-2 py-0.5 rounded text-[11px]">
-                                {skuCount} Line{skuCount !== 1 ? "s" : ""}
-                              </span>
-                            </td>
-
-                            {/* SAMP Technical Review Status */}
-                            <td className="py-3 px-3">
-                              {isReviewed ? (
-                                <div className="space-y-0.5">
-                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                                    <CheckCircle2 className="w-3 h-3" />
-                                    <span>Reviewed by SAMP</span>
-                                  </span>
-                                  {flaggedCount > 0 && (
-                                    <div className="text-[10px] text-amber-700 dark:text-amber-400 font-mono font-semibold flex items-center gap-1">
-                                      <Highlighter className="w-2.5 h-2.5" />
-                                      <span>{flaggedCount} column{flaggedCount !== 1 ? "s" : ""} flagged</span>
-                                    </div>
-                                  )}
-                                </div>
-                              ) : (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
-                                  <Clock className="w-3 h-3" />
-                                  <span>Pending SAMP Review</span>
-                                </span>
-                              )}
-                            </td>
-
-                            {/* Target Date */}
-                            <td className="py-3 px-3 font-mono text-neutral-600 dark:text-zinc-400">
-                              {row.sampleRequiredDate ? (
-                                <span className="flex items-center space-x-1">
-                                  <Calendar className="w-3 h-3 text-neutral-400" />
-                                  <span>{row.sampleRequiredDate.slice(5)}</span>
-                                </span>
-                              ) : (
-                                <span>—</span>
-                              )}
-                            </td>
-
-                            {/* Actions */}
-                            <td className="py-3 px-3 text-right pr-4" onClick={(e) => e.stopPropagation()}>
-                              <div className="flex items-center justify-end space-x-1.5">
-                                <button
-                                  type="button"
-                                  onClick={() => handleOpenInspector(row)}
-                                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#017E84] hover:bg-[#00666A] text-white text-[11px] font-bold shadow-xs transition cursor-pointer"
-                                  title="Inspect technical matrix & remarks"
-                                >
-                                  <Highlighter className="w-3 h-3" />
-                                  <span>Inspect</span>
-                                </button>
-
-                                {isAdmin && (
-                                  <button
-                                    type="button"
-                                    onClick={(e) => onDeleteRequest(row, e)}
-                                    className="p-1 text-rose-400 hover:text-rose-600 transition cursor-pointer"
-                                    title="Delete record"
-                                  >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                  </button>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })
-                    )}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Table Footer Pager */}
-              <PaginationBar
-                currentPage={currentPage}
-                totalPages={totalPages}
-                totalCount={filteredRequests.length}
-                pageSize={pageSize}
-                onPageChange={(p) => setCurrentPage(p)}
-                itemLabel="campaigns"
-              />
-            </div>
-          )}
+          {/* Table Footer Pager */}
+          <PaginationBar
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalCount={filteredRequests.length}
+            pageSize={pageSize}
+            onPageChange={(p) => setCurrentPage(p)}
+            itemLabel="campaigns"
+          />
         </div>
+      </div>
 
-      {/* ── 5. Modals & Dialogs (Lazy-loaded) ── */}
+      {/* ── 4. Modals & Dialogs (Lazy-loaded) ── */}
       <React.Suspense fallback={null}>
         <NewProgramPlanningModal
           isOpen={isNewModalOpen}
@@ -812,7 +684,6 @@ export const ProgramPlanningPage: React.FC<ProgramPlanningPageProps> = ({
         />
       </React.Suspense>
     </div>
-
   );
 };
 

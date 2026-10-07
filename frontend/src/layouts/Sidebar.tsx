@@ -1,23 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { UserProfile } from "@/features/auth";
+import { NAVIGATION_GROUPS, NavigationItem } from "./navigation";
 import {
-  NAVIGATION_GROUPS,
-  NavigationItem,
-} from "./navigation";
-import {
-  BarChart3,
-  Calculator,
-  CircleHelp,
-  ClipboardList,
-  Factory,
-  FlaskConical,
-  LayoutDashboard,
-  LogOut,
-  Palette,
-  Ruler,
-  Settings,
-  Users,
-  X,
+  X, LogOut,
+  LayoutDashboard, Megaphone, Palette, Layers, FlaskConical,
+  Calculator, Factory, BarChart3, Users, Settings, HelpCircle,
 } from "lucide-react";
 import logoImg from "@/assets/logo.png";
 import {
@@ -29,6 +16,63 @@ import {
 import { useBusinessYear } from "@/context/BusinessYearContext";
 import { getRequestTrackType } from "@/features/sample-requests/utils/trackTypes";
 
+const NAV_ICONS: Record<string, React.FC<{ style?: React.CSSProperties }>> = {
+  dashboard: LayoutDashboard,
+  marketing: Megaphone,
+  creative: Palette,
+  studio: Layers,
+  samp: FlaskConical,
+  costing: Calculator,
+  plant: Factory,
+  analytics: BarChart3,
+  members: Users,
+  settings: Settings,
+  help: HelpCircle,
+};
+
+// Inline-hover buttons (avoids Tailwind group/peer for active state conflicts)
+const NavButton: React.FC<{ active: boolean; onClick: () => void; "aria-current"?: "page"; children: React.ReactNode }> = ({ active, onClick, children, ...rest }) => {
+  const [hovered, setHovered] = React.useState(false);
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
+        height: 38, padding: "0 10px", borderRadius: 10, border: "none", cursor: "pointer", textAlign: "left",
+        transition: "background 0.13s, box-shadow 0.13s",
+        background: active ? "#fff" : hovered ? "rgba(0,0,0,0.04)" : "transparent",
+        boxShadow: active ? "0 1px 5px rgba(0,0,0,0.07), 0 0 0 1px rgba(0,0,0,0.05)" : "none",
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      {...rest}
+    >
+      {children}
+    </button>
+  );
+};
+
+const SubNavButton: React.FC<{ active: boolean; onClick: () => void; children: React.ReactNode }> = ({ active, onClick, children }) => {
+  const [hovered, setHovered] = React.useState(false);
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
+        height: 30, padding: "0 8px", borderRadius: 7, border: "none", cursor: "pointer", textAlign: "left",
+        transition: "background 0.12s",
+        background: active ? "rgba(0,209,102,0.1)" : hovered ? "rgba(0,0,0,0.03)" : "transparent",
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {children}
+    </button>
+  );
+};
+
 export interface SidebarProps {
   user?: UserProfile | null;
   onLogout?: () => void;
@@ -37,22 +81,6 @@ export interface SidebarProps {
   isMobileOpen?: boolean;
   onCloseMobile?: () => void;
 }
-
-const ACTIVE_ACCENT = "bg-[#714b67] dark:bg-purple-400";
-
-const NAV_ICONS = {
-  dashboard: LayoutDashboard,
-  marketing: ClipboardList,
-  creative: Palette,
-  studio: Ruler,
-  samp: FlaskConical,
-  costing: Calculator,
-  plant: Factory,
-  analytics: BarChart3,
-  members: Users,
-  settings: Settings,
-  help: CircleHelp,
-} as const;
 
 export const Sidebar: React.FC<SidebarProps> = ({
   user,
@@ -75,10 +103,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
     window.addEventListener("samp:requests-changed", handleRequestsChanged);
     window.addEventListener("focus", handleRequestsChanged);
 
-    // Heartbeat sync every 5 seconds to ensure DB consistency
+    // Heartbeat sync every 25 seconds to ensure DB consistency without blocking UI
     const timer = setInterval(() => {
       setReloadTrigger((prev) => prev + 1);
-    }, 5000);
+    }, 25000);
 
     return () => {
       window.removeEventListener("samp:requests-changed", handleRequestsChanged);
@@ -87,7 +115,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     };
   }, []);
 
-  // Sync live operational counts directly from database
+  // Sync live operational counts directly from database (cached, zero impact on route changes)
   useEffect(() => {
     let isMounted = true;
     Promise.all([
@@ -178,7 +206,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       });
     });
     return () => { isMounted = false; };
-  }, [selectedPath, selectedYear, reloadTrigger]);
+  }, [selectedYear, reloadTrigger]);
 
   // Escape to close mobile
   useEffect(() => {
@@ -223,153 +251,114 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const roleLabel = user?.sub_role || user?.role || "Global Admin";
 
   const renderNavContent = (isDrawer = false) => (
-    <div className="flex flex-col h-full select-none bg-white dark:bg-[#12141d] border-r border-[#e2e8f0] dark:border-white/[0.08]">
+    <div
+      className="flex flex-col h-full select-none"
+      style={{ background: "#f5f7fc", borderRight: "1px solid rgba(0,0,0,0.07)" }}
+    >
 
-      {/* ── Brand Header ─────────────────────────────── */}
-      <div className="flex items-center justify-between h-[60px] px-5 shrink-0 border-b border-[#e2e8f0] dark:border-white/[0.08] bg-zinc-50/50 dark:bg-white/[0.02]">
-        <div className="flex items-center gap-2.5">
-          <img
-            src={logoImg}
-            alt="Navneet"
-            className="h-9 w-auto max-w-[155px] object-contain object-left"
-          />
-        </div>
+      {/* ── Brand Header ── */}
+      <div
+        className="flex items-center justify-between shrink-0"
+        style={{ height: 56, padding: "0 18px", background: "#fff", borderBottom: "1px solid rgba(0,0,0,0.06)" }}
+      >
+        <img
+          src={logoImg}
+          alt="Logo"
+          style={{ height: 27, width: "auto", maxWidth: 140, objectFit: "contain", objectPosition: "left" }}
+        />
         {isDrawer && onCloseMobile && (
           <button
             type="button"
             onClick={onCloseMobile}
-            className="h-8 w-8 rounded-md flex items-center justify-center text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-white/[0.07] transition-colors cursor-pointer"
             aria-label="Close navigation"
+            style={{ width: 28, height: 28, borderRadius: 8, border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", background: "transparent", color: "#94a3b8" }}
+            className="hover:bg-slate-100 hover:text-slate-700 transition-colors"
           >
-            <X className="w-4 h-4" />
+            <X style={{ width: 14, height: 14 }} />
           </button>
         )}
       </div>
 
-      {/* ── Navigation Groups ─────────────────────────── */}
-      <div className="flex-1 overflow-y-auto py-3.5 space-y-5 px-3">
+      {/* ── Nav Scroll Area ── */}
+      <div
+        className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-200"
+        style={{ padding: "10px 8px" }}
+      >
         {NAVIGATION_GROUPS.map((group, gIdx) => (
-          <div key={group.groupTitle}>
-            {/* Inter-group divider */}
-            {gIdx > 0 && (
-              <div className="mx-2 mb-3 h-px bg-zinc-200/80 dark:bg-white/[0.06]" />
-            )}
+          <div key={group.groupTitle} style={{ marginBottom: gIdx < NAVIGATION_GROUPS.length - 1 ? 18 : 0 }}>
 
             {/* Group label */}
-            <div className="px-3 mb-1.5">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 font-mono">
+            <div style={{ padding: "0 8px", marginBottom: 5 }}>
+              <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "#94a3b8", fontFamily: "monospace" }}>
                 {group.groupTitle}
               </span>
             </div>
 
             {/* Nav items */}
-            <div className="space-y-1">
+            <div style={{ display: "flex", flexDirection: "column" as const, gap: 2 }}>
               {group.items.map((item) => {
                 const active = isItemActive(item);
-                const badgeValue =
-                  dynamicBadges[item.id] !== undefined
-                    ? String(dynamicBadges[item.id])
-                    : item.badge;
-
-                const Icon = NAV_ICONS[item.id as keyof typeof NAV_ICONS] || ClipboardList;
+                const Icon = NAV_ICONS[item.id];
+                const badgeValue = dynamicBadges[item.id] !== undefined ? String(dynamicBadges[item.id]) : item.badge;
+                const showBadge = badgeValue !== undefined && Number(badgeValue) > 0;
 
                 return (
-                  <div key={item.id} className="space-y-1">
-                    <button
-                      type="button"
-                      onClick={() => handleItemClick(item)}
-                      className={`group relative w-full flex items-center h-10 px-3 rounded-lg text-[13px] transition-colors duration-150 cursor-pointer text-left gap-3 focus-visible:outline-none ${
-                        active
-                          ? "bg-[#714b67]/10 dark:bg-[#714b67]/25 text-[#714b67] dark:text-purple-300 font-semibold shadow-2xs"
-                          : "text-zinc-700 hover:text-zinc-950 hover:bg-zinc-100/90 font-medium dark:text-zinc-300 dark:hover:text-white dark:hover:bg-white/[0.05]"
-                      }`}
-                      aria-current={active ? "page" : undefined}
-                    >
-                      {/* Active indicator bar */}
-                      <span
-                        className={`absolute left-0 inset-y-2 w-[3.5px] rounded-r-full transition-all duration-200 ${
-                          active ? `${ACTIVE_ACCENT} opacity-100` : "opacity-0"
-                        }`}
-                      />
-
-                      <Icon
-                        className={`w-4 h-4 shrink-0 transition-colors ${
-                          active ? "text-[#714b67] dark:text-purple-300" : "text-zinc-400 dark:text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-200"
-                        }`}
-                        strokeWidth={active ? 2.2 : 1.9}
-                      />
-
-                      {/* Title */}
-                      <span className="flex-1 truncate">{item.title}</span>
-
-                      {/* Badge */}
-                      {badgeValue !== undefined && Number(badgeValue) > 0 && (
-                        <span
-                          className={`shrink-0 text-[11px] font-mono font-bold px-2 py-0.5 rounded-full tabular-nums ${
-                            active
-                              ? "bg-[#714b67]/20 text-[#714b67] dark:bg-purple-500/25 dark:text-purple-200"
-                              : "bg-zinc-100 text-zinc-600 dark:bg-white/[0.08] dark:text-zinc-300"
-                          }`}
-                        >
+                  <div key={item.id}>
+                    <NavButton active={active} onClick={() => handleItemClick(item)} aria-current={active ? "page" : undefined}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 9, minWidth: 0, flex: 1, overflow: "hidden" }}>
+                        {Icon && (
+                          <Icon style={{ width: 15, height: 15, flexShrink: 0, color: active ? "#006d32" : "#94a3b8", transition: "color 0.15s" }} />
+                        )}
+                        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 13, fontWeight: active ? 600 : 500, color: active ? "#0f172a" : "#475569" }}>
+                          {item.title}
+                        </span>
+                      </div>
+                      {showBadge && (
+                        <span style={{ flexShrink: 0, fontSize: 10, fontWeight: 700, fontFamily: "monospace", padding: "1px 7px", borderRadius: 99, background: active ? "rgba(0,109,50,0.1)" : "rgba(0,0,0,0.06)", color: active ? "#006d32" : "#64748b" }}>
                           {badgeValue}
                         </span>
                       )}
-                    </button>
+                    </NavButton>
 
-                    {/* Interactive Sub-options when subItems are defined */}
-                    {active && item.subItems && item.subItems.length > 0 ? (
-                      <div className="pl-8 pr-2 py-1 space-y-1 animate-in fade-in duration-100">
+                    {/* Sub-items (when active) */}
+                    {active && item.subItems && item.subItems.length > 0 && (
+                      <div style={{ margin: "3px 0 4px 20px", paddingLeft: 12, borderLeft: "1.5px solid rgba(0,109,50,0.18)", display: "flex", flexDirection: "column" as const, gap: 1 }}>
                         {item.subItems.map((sub) => {
-                          const isSubActive =
-                            selectedPath === sub.path ||
-                            (sub.path !== item.path && selectedPath.startsWith(sub.path));
+                          const isSubActive = selectedPath === sub.path || (sub.path !== item.path && selectedPath.startsWith(sub.path));
                           const subBadge = sub.badgeKey ? dynamicBadges[sub.badgeKey] : undefined;
-
                           return (
-                            <button
+                            <SubNavButton
                               key={sub.id}
-                              type="button"
-                              onClick={() => {
-                                onSelectPath(sub.path);
-                                if (onCloseMobile) onCloseMobile();
-                              }}
-                              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition-colors cursor-pointer text-left ${
-                                isSubActive
-                                  ? "bg-[#714b67]/15 dark:bg-[#714b67]/30 text-[#714b67] dark:text-purple-300 font-semibold"
-                                  : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-zinc-100/70 dark:hover:bg-white/[0.04]"
-                              }`}
+                              active={isSubActive}
+                              onClick={() => { onSelectPath(sub.path); if (onCloseMobile) onCloseMobile(); }}
                             >
-                              <div className="flex items-center gap-2 truncate">
-                                <span
-                                  className={`w-1.5 h-1.5 rounded-full shrink-0 transition-colors ${
-                                    isSubActive ? "bg-[#714b67] dark:bg-purple-400" : "bg-zinc-300 dark:bg-zinc-600"
-                                  }`}
-                                />
-                                <span className="truncate">{sub.title}</span>
+                              <div style={{ display: "flex", alignItems: "center", gap: 7, minWidth: 0, flex: 1, overflow: "hidden" }}>
+                                <span style={{ width: 5, height: 5, borderRadius: "50%", flexShrink: 0, background: isSubActive ? "#00d166" : "#cbd5e1" }} />
+                                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 12, fontWeight: isSubActive ? 600 : 400, color: isSubActive ? "#006d32" : "#64748b" }}>
+                                  {sub.title}
+                                </span>
                               </div>
                               {subBadge !== undefined && Number(subBadge) > 0 && (
-                                <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-zinc-100 dark:bg-white/[0.08] text-zinc-600 dark:text-zinc-300">
+                                <span style={{ fontSize: 10, fontFamily: "monospace", fontWeight: 600, padding: "1px 6px", borderRadius: 99, background: "rgba(0,0,0,0.05)", color: "#64748b", flexShrink: 0 }}>
                                   {subBadge}
                                 </span>
                               )}
-                            </button>
+                            </SubNavButton>
                           );
                         })}
                       </div>
-                    ) : (
-                      active && item.subTeams && item.subTeams.length > 0 && (
-                        <div className="pl-9 pr-2 py-1 space-y-1 animate-in fade-in duration-100">
-                          {item.subTeams.map((sub, sIdx) => (
-                            <div
-                              key={sIdx}
-                              className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs text-zinc-500 dark:text-zinc-400 hover:text-[#714b67] dark:hover:text-purple-300 hover:bg-zinc-100/70 dark:hover:bg-white/[0.04] transition-colors cursor-pointer"
-                            >
-                              <span className="w-1.5 h-1.5 rounded-full bg-zinc-300 dark:bg-zinc-600 shrink-0" />
-                              <span className="truncate">{sub}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )
+                    )}
+
+                    {/* SubTeams (when active and no subItems) */}
+                    {active && !item.subItems && item.subTeams && item.subTeams.length > 0 && (
+                      <div style={{ margin: "3px 0 4px 20px", paddingLeft: 12, borderLeft: "1.5px solid rgba(0,109,50,0.18)", display: "flex", flexDirection: "column" as const, gap: 1 }}>
+                        {item.subTeams.map((sub, sIdx) => (
+                          <div key={sIdx} style={{ display: "flex", alignItems: "center", gap: 7, height: 30, padding: "0 8px", borderRadius: 7, cursor: "pointer" }} className="text-slate-500 hover:text-emerald-600 hover:bg-black/[0.03] transition-colors">
+                            <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#cbd5e1", flexShrink: 0 }} />
+                            <span style={{ fontSize: 12, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sub}</span>
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </div>
                 );
@@ -379,17 +368,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
         ))}
       </div>
 
-      {/* ── Bottom Operator Identity Card ───────────── */}
-      <div className="p-3.5 px-4 border-t border-[#e2e8f0] dark:border-white/[0.06] shrink-0 bg-zinc-50/50 dark:bg-white/[0.01]">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-[#714b67] text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs">
+      {/* ── Bottom User Card ── */}
+      <div style={{ padding: "10px", borderTop: "1px solid rgba(0,0,0,0.06)", background: "#fff", flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 9, padding: "7px 9px", borderRadius: 10, background: "#f8fafc" }}>
+          <div style={{ width: 32, height: 32, borderRadius: 9, flexShrink: 0, background: "linear-gradient(135deg,#006d32 0%,#00d166 100%)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 12, boxShadow: "0 2px 8px rgba(0,109,50,0.22)" }}>
             {initials}
           </div>
-          <div className="flex-1 min-w-0">
-            <span className="block text-[13px] font-semibold text-zinc-900 dark:text-zinc-100 truncate leading-tight">
-              {user?.name || "Parin D"}
-            </span>
-            <span className="block text-[11px] text-zinc-400 dark:text-zinc-500 truncate leading-tight font-mono mt-0.5">
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {user?.name || "User"}
+              </span>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#22c55e", flexShrink: 0 }} />
+            </div>
+            <span style={{ display: "block", fontSize: 10, color: "#94a3b8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontFamily: "monospace" }}>
               {roleLabel}
             </span>
           </div>
@@ -398,10 +390,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
               type="button"
               onClick={onLogout}
               title="Sign Out"
-              className="h-8 w-8 rounded-lg flex items-center justify-center text-zinc-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer shrink-0"
               aria-label="Sign out"
+              style={{ width: 28, height: 28, borderRadius: 8, border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", background: "transparent", flexShrink: 0 }}
+              className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut style={{ width: 14, height: 14 }} />
             </button>
           )}
         </div>
@@ -411,19 +404,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <>
-      {/* Desktop Sticky Sidebar (Width: 268px - Ergonomic, spacious & readable) */}
-      <aside className="hidden md:flex flex-col sticky top-0 h-screen shrink-0 z-30 w-[268px]">
+      {/* Desktop Sidebar */}
+      <aside className="hidden md:flex flex-col sticky top-0 h-screen shrink-0 z-30" style={{ width: 244 }}>
         {renderNavContent(false)}
       </aside>
 
-      {/* Mobile Off-Canvas Drawer */}
+      {/* Mobile Drawer */}
       {isMobileOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
-          <div
-            className="fixed inset-0 bg-black/50 backdrop-blur-xs"
-            onClick={onCloseMobile}
-          />
-          <aside className="fixed inset-y-0 left-0 z-50 w-[276px] shadow-2xl flex flex-col">
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={onCloseMobile} />
+          <aside className="fixed inset-y-0 left-0 z-50 flex flex-col shadow-2xl" style={{ width: 244 }}>
             {renderNavContent(true)}
           </aside>
         </div>

@@ -11,8 +11,6 @@ import {
   Moon,
   Calendar,
   Clock,
-  RefreshCw,
-  Search,
   X,
   ChevronDown,
   LogOut,
@@ -109,7 +107,6 @@ export const AppShell: React.FC<AppShellProps> = ({
   }, []);
 
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [globalToast, setGlobalToast] = useState<GlobalToast | null>(null);
 
   // Global Toast event listener
@@ -137,20 +134,6 @@ export const AppShell: React.FC<AppShellProps> = ({
     return () => clearTimeout(timer);
   }, [globalToast]);
 
-  useEffect(() => {
-    const handleRefreshComplete = () => setIsRefreshing(false);
-    window.addEventListener("app:refresh-complete", handleRefreshComplete);
-    return () => window.removeEventListener("app:refresh-complete", handleRefreshComplete);
-  }, []);
-
-  const handlePageRefresh = () => {
-    setIsRefreshing(true);
-    const refreshEvent = new Event("app:refresh-requested", { cancelable: true });
-    if (window.dispatchEvent(refreshEvent)) {
-      window.location.reload();
-    }
-  };
-
   // Live system date & time sync
   const [currentDateTime, setCurrentDateTime] = useState<Date>(() => new Date());
 
@@ -174,35 +157,6 @@ export const AppShell: React.FC<AppShellProps> = ({
     hour12: true,
   });
 
-  // Global Ctrl+K / Cmd+K listener
-  React.useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        handleGlobalSearchFocus();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [currentPath]);
-
-  const handleGlobalSearchFocus = () => {
-    const el = document.getElementById("global-search-input") as HTMLInputElement | null;
-    if (el) {
-      el.focus();
-      el.select();
-    } else {
-      onNavigate("/sample-requests");
-      setTimeout(() => {
-        const input = document.getElementById("global-search-input") as HTMLInputElement | null;
-        if (input) {
-          input.focus();
-          input.select();
-        }
-      }, 100);
-    }
-  };
-
   // User initials (up to 2 chars)
   const initials = (user?.name || "U")
     .split(" ")
@@ -215,7 +169,7 @@ export const AppShell: React.FC<AppShellProps> = ({
   const plantDisplayLabel = activePlantLabel;
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#f1f3f5] dark:bg-[#0c0d12] text-[#1e293b] dark:text-zinc-100 font-sans transition-colors duration-150 select-none">
+    <div className="flex h-screen w-screen overflow-hidden bg-[#f8f9ff] dark:bg-[#08090f] text-slate-900 dark:text-zinc-100 font-sans transition-colors duration-150 select-none">
       {/* Primary Navigation Sidebar */}
       <Sidebar
         user={user}
@@ -228,83 +182,55 @@ export const AppShell: React.FC<AppShellProps> = ({
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
-        {/* ========================================================================= */}
-        {/* CLEAN UTILITY TOP BAR (No Redundant Department Tabs)                      */}
-        {/* ========================================================================= */}
-        {/* ========================================================================= */}
-        {/* ODOO 19 ENTERPRISE UTILITY TOP BAR                                        */}
-        {/* ========================================================================= */}
-        <header className="h-10 bg-[#714B67] dark:bg-[#3E2938] text-white flex items-center justify-between px-3 sm:px-5 border-b border-[#5B3C53] dark:border-[#2A1B26] shrink-0 z-40 shadow-xs gap-3">
+        {/* THE LUMINOUS ENGINE — FROSTED UTILITY TOP BAR */}
+        <header className="h-14 bg-white/90 dark:bg-[#0c0e16]/90 backdrop-blur-xl text-slate-900 dark:text-white flex items-center justify-between px-4 sm:px-6 border-b border-slate-200/80 dark:border-white/[0.06] shrink-0 z-40 transition-colors gap-3">
           
           {/* Left: Mobile Menu Toggle & Current Workspace Breadcrumb */}
-          <div className="flex items-center gap-2.5 min-w-0">
+          <div className="flex items-center gap-3 min-w-0">
             <button
               type="button"
               onClick={() => setIsMobileNavOpen(true)}
-              className="md:hidden p-1 rounded hover:bg-white/10 text-white/80 transition focus:outline-none cursor-pointer"
+              className="md:hidden p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300 transition focus:outline-none cursor-pointer"
               aria-label="Open navigation menu"
             >
-              <Menu className="w-4 h-4" />
+              <Menu className="w-4.5 h-4.5" />
             </button>
 
             {/* Current Active Workspace Indicator */}
-            <div className="flex items-center text-xs font-semibold">
-              <span className="text-white/60 font-normal">Workspace</span>
-              <span className="mx-1.5 text-white/30">/</span>
-              <span className="text-white font-bold truncate">
+            <div className="flex items-center gap-2.5">
+              <span className="text-xs text-slate-400 dark:text-slate-500 font-medium hidden sm:inline">Workspace</span>
+              <span className="text-slate-300 dark:text-slate-600 text-xs hidden sm:inline">/</span>
+              <h1 className="text-sm sm:text-base font-bold font-display tracking-tight text-slate-900 dark:text-white truncate">
                 {activeTitle}
-              </span>
-              <span className="hidden sm:inline-block ml-2 text-[9px] bg-white/20 text-white px-1.5 py-0.2 rounded font-mono font-bold tracking-wider">
-                SMPS 19
+              </h1>
+              <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 text-[10px] font-semibold font-mono tracking-wide uppercase border border-emerald-200/60 dark:border-emerald-800/40">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Live
               </span>
             </div>
           </div>
 
-          {/* Center: Global Search Bar */}
-          <div className="flex-1 max-w-md mx-2 hidden sm:block">
-            <div
-              onClick={handleGlobalSearchFocus}
-              className="flex items-center bg-black/20 hover:bg-black/30 border border-white/15 focus-within:border-white focus-within:bg-black/35 rounded px-2.5 py-1 text-xs text-white/80 transition cursor-text"
-            >
-              <Search className="w-3.5 h-3.5 text-white/60 mr-2 shrink-0" />
-              <input
-                id="global-search-input"
-                type="text"
-                placeholder="Search requests, materials, customers... (Ctrl+K)"
-                className="bg-transparent border-none text-xs w-full focus:outline-none text-white placeholder:text-white/50"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    onNavigate("/sample-requests");
-                  }
-                }}
-              />
-              <kbd className="font-mono text-[9px] bg-white/20 px-1 py-0.5 rounded text-white shrink-0">
-                Ctrl+K
-              </kbd>
-            </div>
-          </div>
-
-          {/* Right: Multi-Plant Selector, Live Date/Time & BY, Theme Toggle, Profile */}
-          <div className="flex items-center gap-2 sm:gap-2.5">
+          {/* Right: Multi-Plant Selector, Live Date/Time, BY, Theme Toggle, Profile */}
+          <div className="flex items-center gap-2 sm:gap-3">
             {/* Multi-Plant Scope Selector */}
             <div className="relative" ref={plantDropdownRef}>
               <button
                 type="button"
                 onClick={() => setIsPlantDropdownOpen((prev) => !prev)}
-                className="flex items-center gap-1.5 bg-black/20 hover:bg-black/30 px-2.5 py-1 rounded border border-white/15 text-xs text-white cursor-pointer transition select-none"
+                className="flex items-center gap-1.5 bg-slate-100/90 dark:bg-white/[0.06] hover:bg-slate-200/70 dark:hover:bg-white/[0.1] px-3 py-1.5 rounded-full border border-slate-200/80 dark:border-white/10 text-xs text-slate-800 dark:text-slate-200 cursor-pointer transition select-none shadow-2xs"
                 title="Select Active Fulfillment Plant"
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                <span className="text-[10px] text-white/70 uppercase font-mono hidden md:inline">Plant:</span>
-                <span className="font-semibold text-xs truncate max-w-[130px] sm:max-w-none text-white">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                <span className="text-[10px] text-slate-400 dark:text-slate-400 uppercase font-mono hidden md:inline">Plant:</span>
+                <span className="font-semibold text-xs truncate max-w-[130px] sm:max-w-none">
                   {plantDisplayLabel}
                 </span>
-                <ChevronDown className="w-3 h-3 text-white/60 ml-0.5" />
+                <ChevronDown className="w-3 h-3 text-slate-400 ml-0.5" />
               </button>
 
               {isPlantDropdownOpen && (
-                <div className="absolute right-0 top-full mt-1.5 w-64 rounded-md bg-white dark:bg-[#141722] text-[#1e293b] dark:text-zinc-100 border border-[#ced4da] dark:border-white/15 shadow-2xl z-50 p-1 text-xs select-none animate-in fade-in duration-100">
-                  <div className="px-2 py-1.5 text-[10px] font-mono uppercase text-zinc-400 font-bold border-b border-zinc-100 dark:border-white/[0.06] mb-1">
+                <div className="absolute right-0 top-full mt-2 w-64 rounded-2xl bg-white dark:bg-[#121622] text-slate-800 dark:text-zinc-100 border border-slate-200 dark:border-white/10 shadow-2xl z-50 p-1.5 text-xs select-none animate-in fade-in duration-100">
+                  <div className="px-2.5 py-1.5 text-[10px] font-mono uppercase text-slate-400 font-bold border-b border-slate-100 dark:border-white/[0.06] mb-1">
                     Select Plant Scope
                   </div>
                   <div className="max-h-60 overflow-y-auto space-y-0.5">
@@ -313,10 +239,10 @@ export const AppShell: React.FC<AppShellProps> = ({
                         key={opt.code}
                         type="button"
                         onClick={() => handleSelectPlant(opt.code, opt.label)}
-                        className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-left transition cursor-pointer ${
+                        className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition cursor-pointer ${
                           selectedPlant === opt.code
-                            ? "bg-[#714b67]/10 dark:bg-[#714b67]/25 text-[#714b67] dark:text-purple-300 font-semibold"
-                            : "hover:bg-zinc-50 dark:hover:bg-white/[0.04] text-zinc-700 dark:text-zinc-300"
+                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold"
+                            : "hover:bg-slate-50 dark:hover:bg-white/[0.05] text-slate-700 dark:text-zinc-300 font-medium"
                         }`}
                       >
                         <span className="truncate">{opt.label}</span>
@@ -329,14 +255,14 @@ export const AppShell: React.FC<AppShellProps> = ({
             </div>
 
             {/* Live Clock & Date Badge */}
-            <div className="hidden lg:flex items-center gap-2 px-2.5 py-1 rounded bg-black/20 border border-white/15 text-xs text-white/90">
-              <div className="flex items-center gap-1.5 text-white/70">
-                <Calendar className="w-3 h-3 text-white/60" />
+            <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100/70 dark:bg-white/[0.04] border border-slate-200/60 dark:border-white/[0.06] text-xs text-slate-600 dark:text-slate-300">
+              <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
+                <Calendar className="w-3.5 h-3.5 text-slate-400" />
                 <span>{formattedDate}</span>
               </div>
-              <span className="text-white/30">|</span>
-              <div className="flex items-center gap-1.5 font-mono font-semibold text-white">
-                <Clock className="w-3 h-3 text-white/80" />
+              <span className="text-slate-300 dark:text-slate-700">|</span>
+              <div className="flex items-center gap-1.5 font-mono font-semibold text-slate-800 dark:text-slate-200">
+                <Clock className="w-3.5 h-3.5 text-slate-400" />
                 <span>{formattedTime}</span>
               </div>
             </div>
@@ -346,29 +272,29 @@ export const AppShell: React.FC<AppShellProps> = ({
               <button
                 type="button"
                 onClick={() => setIsYearDropdownOpen((prev) => !prev)}
-                className="flex items-center gap-1.5 bg-white/20 hover:bg-white/25 px-2.5 py-1 rounded border border-white/25 text-white font-mono text-xs font-semibold cursor-pointer select-none"
+                className="flex items-center gap-1.5 bg-slate-100/90 dark:bg-white/[0.06] hover:bg-slate-200/70 dark:hover:bg-white/[0.1] px-3 py-1.5 rounded-full border border-slate-200/80 dark:border-white/10 text-slate-800 dark:text-slate-200 font-mono text-xs font-semibold cursor-pointer select-none"
                 title="Business Year (October to September)"
               >
                 <span>{selectedYear === "ALL" ? "All Years" : `BY ${selectedYear}`}</span>
-                <ChevronDown className="w-3 h-3 text-white/70" />
+                <ChevronDown className="w-3 h-3 text-slate-400" />
               </button>
 
               {isYearDropdownOpen && (
-                <div className="absolute right-0 top-full mt-1.5 w-52 rounded-md bg-white dark:bg-[#141722] text-[#1e293b] dark:text-zinc-100 border border-[#ced4da] dark:border-white/15 shadow-2xl z-50 p-1 text-xs select-none animate-in fade-in duration-100 max-h-72 overflow-y-auto">
+                <div className="absolute right-0 top-full mt-2 w-56 rounded-2xl bg-white dark:bg-[#121622] text-slate-800 dark:text-zinc-100 border border-slate-200 dark:border-white/10 shadow-2xl z-50 p-1.5 text-xs select-none animate-in fade-in duration-100 max-h-72 overflow-y-auto">
                   <button
                     type="button"
                     onClick={() => {
                       setSelectedYear("ALL");
                       setIsYearDropdownOpen(false);
                     }}
-                    className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded font-mono transition cursor-pointer ${
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl font-mono transition cursor-pointer ${
                       selectedYear === "ALL"
-                        ? "bg-[#714b67]/10 dark:bg-[#714b67]/25 text-[#714b67] dark:text-purple-300 font-semibold"
-                        : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-white/[0.04]"
+                        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold"
+                        : "text-slate-600 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-white/[0.05]"
                     }`}
                   >
                     <span>All Business Years</span>
-                    <span className="text-[11px] text-zinc-400">{totalRecords.toLocaleString()}</span>
+                    <span className="text-[11px] text-slate-400">{totalRecords.toLocaleString()}</span>
                   </button>
 
                   {yearsList.map((y) => {
@@ -381,17 +307,17 @@ export const AppShell: React.FC<AppShellProps> = ({
                           setSelectedYear(y.year);
                           setIsYearDropdownOpen(false);
                         }}
-                        className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded font-mono transition cursor-pointer ${
+                        className={`w-full flex items-center justify-between px-3 py-2 rounded-xl font-mono transition cursor-pointer ${
                           isSelected
-                            ? "bg-[#714b67]/10 dark:bg-[#714b67]/25 text-[#714b67] dark:text-purple-300 font-semibold"
-                            : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-white/[0.04]"
+                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold"
+                            : "text-slate-600 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-white/[0.05]"
                         }`}
                       >
                         <span className="flex items-center gap-1.5">
                           <span>BY {y.year}</span>
-                          {y.is_current && <span className="text-[10px] text-emerald-600 font-sans">(Current)</span>}
+                          {y.is_current && <span className="text-[10px] text-emerald-600 font-sans font-bold">(Current)</span>}
                         </span>
-                        <span className="text-[11px] text-zinc-400 tabular-nums">{y.count.toLocaleString()}</span>
+                        <span className="text-[11px] text-slate-400 tabular-nums">{y.count.toLocaleString()}</span>
                       </button>
                     );
                   })}
@@ -399,27 +325,15 @@ export const AppShell: React.FC<AppShellProps> = ({
               )}
             </div>
 
-            {/* Refresh Action */}
-            <button
-              type="button"
-              onClick={handlePageRefresh}
-              title="Refresh Workspace"
-              className={`p-1.5 rounded hover:bg-white/10 text-white/80 hover:text-white transition cursor-pointer ${
-                isRefreshing ? "animate-spin text-white" : ""
-              }`}
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-            </button>
-
             {/* Theme Toggle */}
             <button
               type="button"
               onClick={toggleTheme}
               aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
               title="Toggle Theme"
-              className="p-1.5 rounded hover:bg-white/10 text-white/80 hover:text-white transition cursor-pointer"
+              className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300 transition cursor-pointer"
             >
-              {theme === "dark" ? <Sun className="w-3.5 h-3.5 text-amber-300" /> : <Moon className="w-3.5 h-3.5 text-white" />}
+              {theme === "dark" ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-600" />}
             </button>
 
             {/* User Profile Pill & Dropdown */}
@@ -427,21 +341,21 @@ export const AppShell: React.FC<AppShellProps> = ({
               <button
                 type="button"
                 onClick={() => setIsUserMenuOpen((prev) => !prev)}
-                className="flex items-center gap-2 pl-2 border-l border-white/20 cursor-pointer select-none group"
+                className="flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-white/10 cursor-pointer select-none group"
               >
-                <span className="w-6 h-6 rounded bg-white text-[#714B67] font-bold flex items-center justify-center text-[10px] shadow-xs">
+                <span className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#006d32] to-[#00d166] text-white font-bold flex items-center justify-center text-xs shadow-xs font-display">
                   {initials}
                 </span>
-                <span className="hidden xl:inline text-xs font-semibold text-white truncate max-w-[120px]">
+                <span className="hidden xl:inline text-xs font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[120px]">
                   {user?.name || "Admin"}
                 </span>
               </button>
 
               {isUserMenuOpen && (
-                <div className="absolute right-0 mt-1.5 w-48 rounded bg-white dark:bg-[#141722] text-[#1e293b] dark:text-zinc-100 border border-[#ced4da] dark:border-white/15 shadow-xl z-50 p-1 text-xs select-none animate-in fade-in duration-100">
-                  <div className="px-3 py-2 border-b border-zinc-100 dark:border-white/[0.06]">
-                    <p className="font-semibold text-zinc-900 dark:text-zinc-100 truncate">{user?.name}</p>
-                    <p className="text-[10px] text-zinc-400 font-mono">{user?.role || "Global Admin"}</p>
+                <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-white/95 dark:bg-[#121622]/95 backdrop-blur-xl text-slate-800 dark:text-zinc-100 border border-slate-200/80 dark:border-white/10 shadow-2xl z-50 p-1.5 text-xs select-none animate-in fade-in duration-100">
+                  <div className="px-3 py-2 border-b border-slate-100 dark:border-white/[0.06] mb-1">
+                    <p className="font-bold text-slate-900 dark:text-white truncate font-display">{user?.name}</p>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">{user?.role || "Global Admin"}</p>
                   </div>
                   <button
                     type="button"
@@ -449,9 +363,9 @@ export const AppShell: React.FC<AppShellProps> = ({
                       setIsUserMenuOpen(false);
                       onNavigate("/settings");
                     }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-white/[0.04] rounded transition text-left cursor-pointer"
+                    className="w-full flex items-center gap-2 px-3 py-2 text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-white/[0.05] rounded-xl transition text-left cursor-pointer font-medium"
                   >
-                    <Settings className="w-3.5 h-3.5 text-zinc-400" />
+                    <Settings className="w-3.5 h-3.5 text-slate-400" />
                     <span>Workspace Settings</span>
                   </button>
                   <button
@@ -460,7 +374,7 @@ export const AppShell: React.FC<AppShellProps> = ({
                       setIsUserMenuOpen(false);
                       onLogout();
                     }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded transition text-left cursor-pointer font-medium"
+                    className="w-full flex items-center gap-2 px-3 py-2 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl transition text-left cursor-pointer font-semibold"
                   >
                     <LogOut className="w-3.5 h-3.5" />
                     <span>Sign Out</span>
@@ -475,21 +389,21 @@ export const AppShell: React.FC<AppShellProps> = ({
         {/* Global Toast Alert */}
         {globalToast && (
           <div className="fixed bottom-5 right-5 z-50 max-w-sm w-[calc(100vw-2.5rem)] animate-in fade-in slide-in-from-bottom-3 duration-200">
-            <div className="bg-[#1e293b] text-white px-4 py-2.5 rounded shadow-xl border border-white/10 flex items-center gap-2.5 text-xs">
+            <div className="bg-slate-900/95 dark:bg-[#151926]/95 backdrop-blur-xl text-white px-4 py-3 rounded-2xl shadow-2xl border border-white/10 flex items-center gap-3 text-xs">
               <span
                 className={`w-2 h-2 rounded-full shrink-0 ${
                   globalToast.tone === "error"
-                    ? "bg-rose-500"
+                    ? "bg-rose-500 shadow-[0_0_8px_#f43f5e]"
                     : globalToast.tone === "info"
-                    ? "bg-blue-400"
-                    : "bg-[#017e84]"
+                    ? "bg-blue-400 shadow-[0_0_8px_#60a5fa]"
+                    : "bg-[#00d166] shadow-[0_0_8px_#00d166]"
                 }`}
               />
-              <span className="flex-1 leading-snug">{globalToast.message}</span>
+              <span className="flex-1 leading-snug font-medium">{globalToast.message}</span>
               <button
                 type="button"
                 onClick={() => setGlobalToast(null)}
-                className="text-zinc-400 hover:text-white p-0.5 cursor-pointer"
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/10 cursor-pointer transition"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
