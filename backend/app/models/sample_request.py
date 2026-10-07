@@ -74,6 +74,14 @@ class CreateSampleRequest(Base):
         order_by="ProductDetail.id",
     )
 
+    # Relationship to normalized request types & selection timestamps audit
+    request_type_audit = relationship(
+        "SampleRequestType",
+        back_populates="sample_request",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+
 
 class ProductCharacteristic(Base):
     """
@@ -113,8 +121,8 @@ class ProductDetail(Base):
     value = Column(Text, nullable=True)
     uom = Column(String(50), nullable=True)
 
-    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
+    created_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc), server_default=func.now(), onupdate=lambda: datetime.now(timezone.utc))
 
     sample_request = relationship("CreateSampleRequest", back_populates="product_details")
 
@@ -141,6 +149,44 @@ class DesignRequest(Base):
     product_description = Column(Text, nullable=False, default="Creative Design Brief")
     design_required_date = Column(String(50), nullable=True)
     created_by = Column(String(100), nullable=False, default="Marketing Specialist")
+    design_remarks = Column(Text, nullable=True)
+    reference_images = Column(JSONB, nullable=False, default=list, server_default="[]")
+    reference_links = Column(JSONB, nullable=False, default=list, server_default="[]")
+    creative_submissions = Column(JSONB, nullable=False, default=list, server_default="[]")
+    marketing_decision = Column(String(40), nullable=True)
+    remaining_design_count = Column(Integer, nullable=False, default=0, server_default="0")
 
     created_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc), server_default=func.now(), onupdate=lambda: datetime.now(timezone.utc))
+
+
+class SampleRequestType(Base):
+    """
+    Normalized scope selection flags and audit timestamps per sample request.
+    Table: sample_request_types
+    """
+
+    __tablename__ = "sample_request_types"
+
+    id = Column(Integer, primary_key=True, index=True)
+    sample_request_id = Column(
+        Integer,
+        ForeignKey("create_sample_requests.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+    design = Column(Boolean, nullable=False, default=False, server_default="false")
+    mockup = Column(Boolean, nullable=False, default=False, server_default="false")
+    sample = Column(Boolean, nullable=False, default=False, server_default="false")
+    costing = Column(Boolean, nullable=False, default=False, server_default="false")
+
+    design_selected_at = Column(DateTime(timezone=True), nullable=True)
+    mockup_selected_at = Column(DateTime(timezone=True), nullable=True)
+    sample_selected_at = Column(DateTime(timezone=True), nullable=True)
+    costing_selected_at = Column(DateTime(timezone=True), nullable=True)
+
+    created_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc), server_default=func.now(), onupdate=lambda: datetime.now(timezone.utc))
+
+    sample_request = relationship("CreateSampleRequest", back_populates="request_type_audit")

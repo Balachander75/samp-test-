@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { UserProfile } from "@/features/auth";
 import { SampleRequestItem } from "../types";
 import { getRequestTrackType } from "../utils/trackTypes";
-import { cleanFeasibilityDescription } from "../api";
+import { cleanFeasibilityDescription } from "@/infrastructure/api";
 import { formatOdooDate } from "../utils/dateUtils";
 import {
   Search,
@@ -30,6 +30,9 @@ import {
   ThumbsUp,
   Send,
 } from "lucide-react";
+import { CopyBadge } from "@/components/ui/CopyBadge";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { WorkflowTabStrip } from "@/components/erp/WorkflowTabStrip";
 
 export interface FeasibilityRequestsPageProps {
   requests: SampleRequestItem[];
@@ -65,73 +68,7 @@ export type MarketingFeasibilityTab =
   | "converted"
   | "rejected";
 
-export const FEASIBILITY_KANBAN_COLUMNS: {
-  id: string;
-  label: string;
-  bgTone: string;
-  borderTone: string;
-  accentTone: string;
-}[] = [
-  {
-    id: "unclaimed",
-    label: "Awaiting Claim",
-    bgTone: "bg-amber-50/40 dark:bg-amber-950/20",
-    borderTone: "border-amber-200/80 dark:border-amber-900/40",
-    accentTone: "text-amber-700 dark:text-amber-400",
-  },
-  {
-    id: "in_review",
-    label: "Under Review in Lab",
-    bgTone: "bg-sky-50/40 dark:bg-sky-950/20",
-    borderTone: "border-sky-200/80 dark:border-sky-900/40",
-    accentTone: "text-sky-700 dark:text-sky-400",
-  },
-  {
-    id: "awaiting_decision",
-    label: "Needs Marketing Sign-Off",
-    bgTone: "bg-purple-50/40 dark:bg-purple-950/20",
-    borderTone: "border-purple-200/80 dark:border-purple-900/40",
-    accentTone: "text-[#714B67] dark:text-purple-300",
-  },
-  {
-    id: "approved",
-    label: "Feasible (Approved)",
-    bgTone: "bg-emerald-50/40 dark:bg-emerald-950/20",
-    borderTone: "border-emerald-200/80 dark:border-emerald-900/40",
-    accentTone: "text-emerald-700 dark:text-emerald-400",
-  },
-  {
-    id: "converted",
-    label: "In Sampling Pipeline",
-    bgTone: "bg-teal-50/40 dark:bg-teal-950/20",
-    borderTone: "border-teal-200/80 dark:border-teal-900/40",
-    accentTone: "text-teal-700 dark:text-teal-400",
-  },
-  {
-    id: "rejected",
-    label: "Dropped / Closed",
-    bgTone: "bg-neutral-50 dark:bg-zinc-900/60",
-    borderTone: "border-neutral-200 dark:border-zinc-800",
-    accentTone: "text-neutral-700 dark:text-zinc-300",
-  },
-];
 
-export const getFeasibilityKanbanColumn = (r: SampleRequestItem): string => {
-  const hasVerdict = Boolean(r.samplingFeasibilityResponse);
-  const dec = (r.marketingDecision || "").toLowerCase();
-  const status = (r.status || "").toLowerCase();
-  const isConverted =
-    Boolean(r.convertedSrNumber || r.convertedSampleRequestId) ||
-    status.includes("sampling requested") ||
-    status.includes("converted to sampling");
-
-  if (isConverted) return "converted";
-  if (dec === "rejected" || status.includes("rejected") || status.includes("closed")) return "rejected";
-  if (dec === "accepted" || status.includes("approved")) return "approved";
-  if (hasVerdict && !r.marketingDecision) return "awaiting_decision";
-  if (r.takenBySamp && !hasVerdict) return "in_review";
-  return "unclaimed";
-};
 
 export const FeasibilityRequestsPage: React.FC<FeasibilityRequestsPageProps> = ({
   requests,
@@ -151,67 +88,10 @@ export const FeasibilityRequestsPage: React.FC<FeasibilityRequestsPageProps> = (
   onExportCSV,
   onUpdateStatus,
 }) => {
-  const [viewMode, setViewMode] = useState<"list" | "kanban">("list");
   const [filterTab, setFilterTab] = useState<MarketingFeasibilityTab>("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [customerFilter, setCustomerFilter] = useState("all");
   const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set());
-  const [copiedId, setCopiedId] = useState<string | null>(null);
-
-  // Drag & drop state for Kanban
-  const [draggedId, setDraggedId] = useState<string | number | null>(null);
-  const [dragOverCol, setDragOverCol] = useState<string | null>(null);
-
-  const handleDragStart = (e: React.DragEvent, id: string | number) => {
-    e.dataTransfer.setData("text/plain", String(id));
-    e.dataTransfer.effectAllowed = "move";
-    setDraggedId(id);
-  };
-
-  const handleDragEnd = () => {
-    setDraggedId(null);
-    setDragOverCol(null);
-  };
-
-  const handleColDragOver = (e: React.DragEvent, colId: string) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-    if (dragOverCol !== colId) {
-      setDragOverCol(colId);
-    }
-  };
-
-  const handleColDrop = async (e: React.DragEvent, targetColId: string) => {
-    e.preventDefault();
-    setDragOverCol(null);
-    setDraggedId(null);
-    const id = e.dataTransfer.getData("text/plain") || draggedId;
-    if (!id) return;
-
-    const req = requests.find((r) => String(r.id) === String(id));
-    if (!req) return;
-
-    const currentCol = getFeasibilityKanbanColumn(req);
-    if (currentCol === targetColId) return;
-
-    if (targetColId === "approved") {
-      await onMarketingApproveFeasibility(req.id, true, "Approved via Kanban drag");
-    } else if (targetColId === "rejected") {
-      await onMarketingApproveFeasibility(req.id, false, "Dropped via Kanban drag");
-    } else if (targetColId === "in_review" && onUpdateStatus) {
-      await onUpdateStatus(req.id, "In Progress");
-    } else if (targetColId === "unclaimed" && onUpdateStatus) {
-      await onUpdateStatus(req.id, "Draft");
-    }
-  };
-
-  // Copy feedback
-  const handleCopyCode = (code: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    navigator.clipboard.writeText(code);
-    setCopiedId(code);
-    setTimeout(() => setCopiedId(null), 1500);
-  };
 
   // Only consider feasibility requests
   const feasibilityRequests = useMemo(() => {
@@ -314,6 +194,21 @@ export const FeasibilityRequestsPage: React.FC<FeasibilityRequestsPageProps> = (
     };
   }, [feasibilityRequests, metrics]);
 
+  const feasibilityTabs = useMemo(
+    () => [
+      { id: "all", label: "All Feasibility", count: tabCounts.all },
+      { id: "awaiting_claim", label: "Awaiting Claim", count: tabCounts.awaiting_claim },
+      { id: "in_review", label: "Under Review", count: tabCounts.in_review },
+      { id: "awaiting_decision", label: "Needs Decision", count: tabCounts.awaiting_decision },
+      { id: "feasible", label: "Feasible", count: tabCounts.feasible },
+      { id: "conditional", label: "Conditional", count: tabCounts.conditional },
+      { id: "approved", label: "Approved", count: tabCounts.approved },
+      { id: "converted", label: "In Sampling", count: tabCounts.converted },
+      { id: "rejected", label: "Rejected", count: tabCounts.rejected },
+    ],
+    [tabCounts]
+  );
+
   // Filtered requests
   const filteredRequests = useMemo(() => {
     return feasibilityRequests.filter((r) => {
@@ -360,22 +255,7 @@ export const FeasibilityRequestsPage: React.FC<FeasibilityRequestsPageProps> = (
     });
   }, [feasibilityRequests, filterTab, customerFilter, searchTerm]);
 
-  // Full Pipeline Requests for Kanban (unconstrained by stage filter tab)
-  const kanbanRequests = useMemo(() => {
-    return feasibilityRequests.filter((r) => {
-      if (customerFilter !== "all" && r.customer !== customerFilter) return false;
-      if (searchTerm.trim()) {
-        const q = searchTerm.toLowerCase().trim();
-        const sr = (r.srNumber || "").toLowerCase();
-        const mat = (r.materialCode || "").toLowerCase();
-        const desc = (r.productDescription || r.feasibilityDescription || "").toLowerCase();
-        const cust = (r.customer || "").toLowerCase();
-        const samp = (r.takenBySamp || "").toLowerCase();
-        return sr.includes(q) || mat.includes(q) || desc.includes(q) || cust.includes(q) || samp.includes(q);
-      }
-      return true;
-    });
-  }, [feasibilityRequests, customerFilter, searchTerm]);
+
 
   // Row selection
   const handleToggleSelectRow = (id: string | number, e: React.MouseEvent) => {
@@ -448,35 +328,6 @@ export const FeasibilityRequestsPage: React.FC<FeasibilityRequestsPageProps> = (
               <span className="hidden sm:inline">Export</span>
             </button>
 
-            {/* View Mode Toggle */}
-            <div className="inline-flex rounded border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-800 p-0.5 shadow-2xs">
-              <button
-                type="button"
-                onClick={() => setViewMode("list")}
-                className={`px-2 py-1 rounded text-xs transition cursor-pointer flex items-center gap-1.5 ${
-                  viewMode === "list"
-                    ? "bg-[#714B67] text-white shadow-2xs font-bold"
-                    : "text-neutral-500 hover:text-neutral-800 dark:text-zinc-400"
-                }`}
-                title="Table View"
-              >
-                <ListIcon className="w-3.5 h-3.5" />
-                <span className="text-[11px] font-semibold">List</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode("kanban")}
-                className={`px-2 py-1 rounded text-xs transition cursor-pointer flex items-center gap-1.5 ${
-                  viewMode === "kanban"
-                    ? "bg-[#714B67] text-white shadow-2xs font-bold"
-                    : "text-neutral-500 hover:text-neutral-800 dark:text-zinc-400"
-                }`}
-                title="Kanban Pipeline Swimlanes"
-              >
-                <LayoutGrid className="w-3.5 h-3.5" />
-                <span className="text-[11px] font-semibold">Kanban</span>
-              </button>
-            </div>
           </div>
         </div>
 
@@ -614,44 +465,12 @@ export const FeasibilityRequestsPage: React.FC<FeasibilityRequestsPageProps> = (
       {/* ── Search & Filter Pill Control Strip (Exact Matching SAMP Workbench) ── */}
       <div className="bg-white dark:bg-[#12141d] border-b border-[#E2E8F0] dark:border-white/[0.08] px-6 py-2.5 shrink-0 flex flex-wrap items-center justify-between gap-3">
         {/* Left: Odoo Segmented Filter Pills */}
-        <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0 scrollbar-none text-xs">
-          {[
-            { id: "all", label: "All Feasibility", count: tabCounts.all },
-            { id: "awaiting_claim", label: "Awaiting Claim", count: tabCounts.awaiting_claim },
-            { id: "in_review", label: "Under Review", count: tabCounts.in_review },
-            { id: "awaiting_decision", label: "Needs Decision", count: tabCounts.awaiting_decision },
-            { id: "feasible", label: "Feasible", count: tabCounts.feasible },
-            { id: "conditional", label: "Conditional", count: tabCounts.conditional },
-            { id: "approved", label: "Approved", count: tabCounts.approved },
-            { id: "converted", label: "In Sampling", count: tabCounts.converted },
-            { id: "rejected", label: "Rejected", count: tabCounts.rejected },
-          ].map((tab) => {
-            const isActive = filterTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setFilterTab(tab.id as MarketingFeasibilityTab)}
-                className={`px-3 py-1.5 rounded font-mono text-xs font-semibold whitespace-nowrap transition cursor-pointer flex items-center gap-1.5 ${
-                  isActive
-                    ? "bg-[#714B67] text-white shadow-2xs"
-                    : "text-neutral-600 dark:text-zinc-400 hover:text-neutral-900 dark:hover:text-zinc-200 hover:bg-neutral-100 dark:hover:bg-white/[0.04]"
-                }`}
-              >
-                <span>{tab.label}</span>
-                <span
-                  className={`text-[10.5px] px-1.5 py-0.2 rounded-full font-mono ${
-                    isActive
-                      ? "bg-white/20 text-white"
-                      : "bg-neutral-200/70 dark:bg-zinc-800 text-neutral-600 dark:text-zinc-400"
-                  }`}
-                >
-                  {tab.count}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+        <WorkflowTabStrip
+          tabs={feasibilityTabs}
+          activeTab={filterTab}
+          onSelectTab={(id) => setFilterTab(id as MarketingFeasibilityTab)}
+          compact
+        />
 
         {/* Right: Search & Customer Filter */}
         <div className="flex items-center gap-2 flex-1 sm:flex-initial justify-end">
@@ -708,36 +527,26 @@ export const FeasibilityRequestsPage: React.FC<FeasibilityRequestsPageProps> = (
 
       {/* ── Main Work Area ── */}
       <div className="flex-1 overflow-y-auto p-6">
-        {viewMode === "list" && (
-          filteredRequests.length === 0 ? (
-            /* Exact Matching Empty State from Screenshot */
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="w-14 h-14 rounded-full bg-neutral-100 dark:bg-zinc-800/80 flex items-center justify-center text-neutral-400 mb-3 border border-neutral-200 dark:border-zinc-700">
-                <ClipboardCheck className="w-7 h-7" />
-              </div>
-              <h3 className="text-sm font-bold text-neutral-800 dark:text-zinc-200 mb-1">
-                No Feasibility Tasks Found
-              </h3>
-              <p className="text-xs text-neutral-500 dark:text-zinc-400 max-w-md mb-4 font-sans">
-                {searchTerm || customerFilter !== "all" || filterTab !== "all"
-                  ? "No feasibility requests match your active filter criteria. Try resetting your search or selecting another tab."
-                  : "There are currently no feasibility check requests submitted by Marketing in this category."}
-              </p>
-              {(searchTerm || customerFilter !== "all" || filterTab !== "all") && (
-                <button
-                  type="button"
-                  onClick={() => {
+        {filteredRequests.length === 0 ? (
+          <EmptyState
+            icon={ClipboardCheck}
+            title="No Feasibility Tasks Found"
+            description={
+              searchTerm || customerFilter !== "all" || filterTab !== "all"
+                ? "No feasibility requests match your active filter criteria. Try resetting your search or selecting another tab."
+                : "There are currently no feasibility check requests submitted by Marketing in this category."
+            }
+            onResetFilters={
+              searchTerm || customerFilter !== "all" || filterTab !== "all"
+                ? () => {
                     setSearchTerm("");
                     setCustomerFilter("all");
                     setFilterTab("all");
-                  }}
-                  className="px-3.5 py-1.5 rounded bg-neutral-100 hover:bg-neutral-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-xs font-semibold text-neutral-700 dark:text-zinc-200 font-mono transition cursor-pointer"
-                >
-                  Reset All Filters
-                </button>
-              )}
-            </div>
-          ) : (
+                  }
+                : undefined
+            }
+          />
+        ) : (
             /* ── Table View ── */
           <div className="bg-white dark:bg-[#12141d] rounded-lg border border-[#CED4DA] dark:border-white/[0.08] shadow-2xs overflow-hidden">
             <div className="overflow-x-auto">
@@ -793,26 +602,10 @@ export const FeasibilityRequestsPage: React.FC<FeasibilityRequestsPageProps> = (
                         </td>
 
                         {/* Request Code & SR Number */}
-                        <td className="py-3 px-4 font-mono font-bold text-neutral-900 dark:text-zinc-100 whitespace-nowrap">
-                          <div className="flex items-center gap-2">
-                            <span className="text-[#714B67] dark:text-purple-300 hover:underline">
-                              {req.materialCode || req.srNumber}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={(e) => handleCopyCode(req.materialCode || req.srNumber, e)}
-                              className="opacity-0 group-hover:opacity-100 p-1 text-neutral-400 hover:text-neutral-700 transition cursor-pointer"
-                              title="Copy Code"
-                            >
-                              {copiedId === (req.materialCode || req.srNumber) ? (
-                                <Check className="w-3 h-3 text-emerald-600" />
-                              ) : (
-                                <Copy className="w-3 h-3" />
-                              )}
-                            </button>
-                          </div>
+                        <td className="py-3 px-4 font-mono font-bold whitespace-nowrap">
+                          <CopyBadge text={req.materialCode || req.srNumber} />
                           {req.srNumber && req.materialCode && req.srNumber !== req.materialCode && (
-                            <div className="text-[10.5px] font-normal text-neutral-400 font-mono">
+                            <div className="text-[10.5px] font-normal text-neutral-400 font-mono mt-0.5">
                               {req.srNumber}
                             </div>
                           )}
@@ -951,200 +744,6 @@ export const FeasibilityRequestsPage: React.FC<FeasibilityRequestsPageProps> = (
                   })}
                 </tbody>
               </table>
-            </div>
-          </div>
-        )
-      )}
-
-      {viewMode === "kanban" && (
-        /* ── Kanban Pipeline Swimlanes View ── */
-          <div className="p-4 md:p-6 overflow-x-auto min-h-[500px]">
-            <div className="flex space-x-4 min-w-max items-start">
-              {FEASIBILITY_KANBAN_COLUMNS.map((col) => {
-                const itemsInCol = kanbanRequests.filter(
-                  (r) => getFeasibilityKanbanColumn(r) === col.id
-                );
-
-                return (
-                  <div
-                    key={col.id}
-                    onDragOver={(e) => handleColDragOver(e, col.id)}
-                    onDragLeave={() => setDragOverCol((prev) => (prev === col.id ? null : prev))}
-                    onDrop={(e) => handleColDrop(e, col.id)}
-                    className={`w-76 rounded-lg border transition-all ${
-                      dragOverCol === col.id
-                        ? "border-[#714B67] bg-purple-50/70 dark:bg-purple-950/40 ring-2 ring-[#714B67]/40 ring-offset-1"
-                        : `${col.borderTone} ${col.bgTone}`
-                    } p-3 flex flex-col space-y-2.5 shadow-2xs`}
-                  >
-                    {/* Column Header */}
-                    <div className="flex items-center justify-between pb-2 border-b border-[#D8DADD] dark:border-white/[0.08]">
-                      <span className={`font-bold text-xs ${col.accentTone}`}>
-                        {col.label}
-                      </span>
-                      <span className="bg-white dark:bg-zinc-800 text-neutral-700 dark:text-zinc-300 border border-neutral-200 dark:border-zinc-700 font-mono font-bold px-2 py-0.5 rounded-full text-[10px]">
-                        {itemsInCol.length}
-                      </span>
-                    </div>
-
-                    {/* Cards Container */}
-                    <div className="space-y-2.5 overflow-y-auto max-h-[620px] pr-0.5">
-                      {itemsInCol.length === 0 ? (
-                        <div className="p-6 text-center text-[11px] text-neutral-400 font-mono">
-                          No requests in this stage
-                        </div>
-                      ) : (
-                        itemsInCol.map((req) => {
-                          const cleanDesc = cleanFeasibilityDescription(
-                            req.feasibilityDescription || req.productDescription
-                          );
-                          const category =
-                            req.customFeasibilityType ||
-                            (req.feasibilityType
-                              ? req.feasibilityType.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
-                              : "New Category");
-                          const code = req.materialCode || req.srNumber || `FC-${req.id}`;
-                          const isAwaitingDecision =
-                            req.samplingFeasibilityResponse && !req.marketingDecision;
-
-                          return (
-                            <div
-                              key={req.id}
-                              draggable={true}
-                              onDragStart={(e) => handleDragStart(e, req.id)}
-                              onDragEnd={handleDragEnd}
-                              onClick={() => onInspectRequest(req)}
-                              className={`bg-white dark:bg-[#161822] p-3 rounded-lg border border-[#CED4DA] dark:border-white/[0.08] shadow-2xs hover:border-[#714B67] dark:hover:border-purple-400 hover:shadow-xs cursor-grab active:cursor-grabbing transition group ${
-                                draggedId === req.id ? "opacity-40 scale-95 border-dashed border-[#714B67]" : ""
-                              }`}
-                            >
-                              <div className="flex justify-between items-center text-[10px] font-mono">
-                                <span className="font-bold text-[#714B67] dark:text-purple-300">
-                                  {code}
-                                </span>
-                                <span className="px-1.5 py-0.2 rounded font-bold bg-[#714B67]/10 text-[#714B67] dark:bg-purple-950/40 dark:text-purple-300 border border-[#714B67]/20">
-                                  {category}
-                                </span>
-                              </div>
-
-                              <div className="font-bold text-neutral-900 dark:text-zinc-100 text-xs mt-1.5 line-clamp-1">
-                                {req.customer || "General Customer"}
-                              </div>
-
-                              <p className="text-[11px] text-neutral-500 dark:text-zinc-400 mt-1 line-clamp-2 leading-relaxed">
-                                {cleanDesc || "Technical feasibility evaluation requested by Marketing."}
-                              </p>
-
-                              {/* Facility & SLA */}
-                              <div className="text-[10px] text-neutral-400 dark:text-zinc-500 mt-2 flex items-center justify-between font-mono">
-                                <div className="flex items-center gap-1 truncate max-w-[140px]">
-                                  <Building2 className="w-3 h-3 shrink-0" />
-                                  <span className="truncate">{req.targetPlant || "All Plants"}</span>
-                                </div>
-                                <span>
-                                  SLA: {req.sampleRequiredDate ? formatOdooDate(req.sampleRequiredDate) : "Flexible"}
-                                </span>
-                              </div>
-
-                              {/* Card Footer with Verdict & Quick Actions */}
-                              <div className="mt-2.5 pt-2 border-t border-neutral-100 dark:border-white/[0.06] flex items-center justify-between text-[10px]">
-                                <div>
-                                  {req.samplingFeasibilityResponse === "Yes" ? (
-                                    <span className="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/50 dark:text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-800">
-                                      ✓ Feasible
-                                    </span>
-                                  ) : req.samplingFeasibilityResponse === "Maybe" ? (
-                                    <span className="text-[10px] font-mono font-bold text-amber-700 bg-amber-50 dark:bg-amber-950/50 dark:text-amber-300 px-2 py-0.5 rounded-full border border-amber-300 dark:border-amber-800">
-                                      Conditional
-                                    </span>
-                                  ) : req.samplingFeasibilityResponse === "No" ? (
-                                    <span className="text-[10px] font-mono font-bold text-rose-700 bg-rose-50 dark:bg-rose-950/50 dark:text-rose-300 px-2 py-0.5 rounded-full border border-rose-300 dark:border-rose-800">
-                                      Rejected
-                                    </span>
-                                  ) : req.takenBySamp ? (
-                                    <span className="text-[10px] font-mono text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/40 px-1.5 py-0.5 rounded border border-sky-200 dark:border-sky-800">
-                                      In Lab ({req.takenBySamp})
-                                    </span>
-                                  ) : (
-                                    <span className="text-[10px] font-mono text-neutral-400">
-                                      Awaiting Claim
-                                    </span>
-                                  )}
-                                </div>
-
-                                {/* Quick Actions */}
-                                <div onClick={(e) => e.stopPropagation()} className="flex items-center gap-1.5">
-                                  {req.convertedSrNumber ? (
-                                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-purple-100 text-[#714B67] border border-purple-200">
-                                      {req.convertedSrNumber}
-                                    </span>
-                                  ) : isAwaitingDecision ? (
-                                    <div className="flex items-center gap-1">
-                                      <button
-                                        type="button"
-                                        onClick={() => onMarketingApproveFeasibility(req.id, true)}
-                                        className="px-2 py-0.5 rounded bg-[#017E84] hover:bg-[#00666A] text-white text-[10px] font-bold font-mono transition cursor-pointer"
-                                        title="Accept & approve for sampling"
-                                      >
-                                        ✓ Accept
-                                      </button>
-                                      <button
-                                        type="button"
-                                        onClick={() => onMarketingApproveFeasibility(req.id, false)}
-                                        className="px-2 py-0.5 rounded border border-rose-300 text-rose-600 hover:bg-rose-50 text-[10px] font-mono transition cursor-pointer"
-                                        title="Drop / Reject request"
-                                      >
-                                        ✕ Drop
-                                      </button>
-                                    </div>
-                                  ) : (
-                                    <div className="flex items-center gap-1">
-                                      <select
-                                        value={col.id}
-                                        onChange={async (e) => {
-                                          const next = e.target.value;
-                                          if (next === col.id) return;
-                                          if (next === "approved") {
-                                            await onMarketingApproveFeasibility(req.id, true, "Approved via Kanban");
-                                          } else if (next === "rejected") {
-                                            await onMarketingApproveFeasibility(req.id, false, "Dropped via Kanban");
-                                          } else if (next === "in_review" && onUpdateStatus) {
-                                            await onUpdateStatus(req.id, "In Progress");
-                                          } else if (next === "unclaimed" && onUpdateStatus) {
-                                            await onUpdateStatus(req.id, "Draft");
-                                          }
-                                        }}
-                                        className="text-[9px] font-mono font-bold bg-neutral-50 hover:bg-neutral-100 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-neutral-600 dark:text-zinc-300 border border-neutral-200 dark:border-zinc-700 rounded px-1 py-0.5 cursor-pointer outline-none"
-                                        title="Move to stage"
-                                      >
-                                        <option value="unclaimed">Unclaimed</option>
-                                        <option value="in_review">In Lab</option>
-                                        <option value="awaiting_decision">Sign-Off</option>
-                                        <option value="approved">Approved</option>
-                                        <option value="rejected">Dropped</option>
-                                      </select>
-                                      <button
-                                        type="button"
-                                        onClick={() => onInspectRequest(req)}
-                                        className="px-2 py-0.5 rounded border border-[#CED4DA] dark:border-zinc-700 hover:border-[#714B67] text-neutral-700 dark:text-zinc-300 hover:text-[#714B67] text-[10px] font-semibold transition cursor-pointer flex items-center gap-0.5"
-                                        title="Inspect details"
-                                      >
-                                        <ExternalLink className="w-2.5 h-2.5" />
-                                      </button>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-
-                            </div>
-                          );
-                        })
-                      )}
-                    </div>
-
-                  </div>
-                );
-              })}
             </div>
           </div>
         )}

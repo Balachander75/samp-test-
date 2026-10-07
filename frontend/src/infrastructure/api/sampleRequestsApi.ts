@@ -38,6 +38,21 @@ export function mapDesignRequest(item: Record<string, unknown>): DesignRequest {
     referenceImage: typeof item.reference_image === "string" ? item.reference_image : typeof item.referenceImage === "string" ? item.referenceImage : null,
     productDescription: String(item.product_description || item.productDescription || "Creative Design Brief"),
     designRequiredDate: typeof item.design_required_date === "string" ? item.design_required_date : typeof item.designRequiredDate === "string" ? item.designRequiredDate : null,
+    designRemarks: typeof item.design_remarks === "string" ? item.design_remarks : typeof item.designRemarks === "string" ? item.designRemarks : null,
+    referenceImages: Array.isArray(item.reference_images) ? item.reference_images as string[] : Array.isArray(item.referenceImages) ? item.referenceImages as string[] : [],
+    referenceLinks: Array.isArray(item.reference_links) ? item.reference_links as string[] : Array.isArray(item.referenceLinks) ? item.referenceLinks as string[] : [],
+    creativeSubmissions: (Array.isArray(item.creative_submissions) ? item.creative_submissions : Array.isArray(item.creativeSubmissions) ? item.creativeSubmissions : []).map((batch: any) => ({
+      submittedAt: String(batch.submitted_at || batch.submittedAt || ""),
+      designFileUrl: String(batch.design_file_url || batch.designFileUrl || ""),
+      rows: (Array.isArray(batch.rows) ? batch.rows : []).map((row: any) => ({
+        designNumber: String(row.design_number || row.designNumber || ""),
+        description: String(row.description || ""),
+        stockNumber: String(row.stock_number || row.stockNumber || ""),
+        remarks: String(row.remarks || ""),
+      })),
+    })),
+    marketingDecision: (item.marketing_decision || item.marketingDecision || null) as DesignRequest["marketingDecision"],
+    remainingDesignCount: Number(item.remaining_design_count ?? item.remainingDesignCount ?? 0),
     status: String(item.status || "Draft (Pre-SMT)"),
     createdBy: String(item.created_by || item.createdBy || "Marketing Specialist"),
     updatedBy: String(item.updated_by || item.updatedBy || ""),
@@ -71,6 +86,13 @@ export function mapDesignRequestToSampleRequest(item: DesignRequest): SampleRequ
     trend: item.trend,
     targetAudience: item.targetAudience,
     referenceImage: item.referenceImage,
+    designRemarks: item.designRemarks,
+    referenceImages: item.referenceImages,
+    referenceLinks: item.referenceLinks,
+    creativeSubmissions: item.creativeSubmissions,
+    marketingDesignDecision: item.marketingDecision,
+    remainingDesignCount: item.remainingDesignCount,
+    designRequestStatus: item.status,
     createdAt: item.createdAt,
     requestTypes: ["design"],
     creationMode: "marketing_request",
@@ -142,6 +164,55 @@ export async function deleteDesignRequestApi(id: number): Promise<boolean> {
     console.error(`Error deleting design request ${id}:`, err);
     return false;
   }
+}
+
+export async function createDesignBriefFromSampleApi(sampleRequestId: string | number, brief: {
+  productDescription: string;
+  numberOfDesigns: number;
+  designRequiredDate: string;
+  trend: string;
+  targetAudience: string;
+  designRemarks: string;
+  referenceImages: string[];
+  referenceLinks: string[];
+}): Promise<DesignRequest> {
+  const data = await apiFetch<{ data: Record<string, unknown> }>(`/api/v1/sample-requests/${sampleRequestId}/design-brief`, {
+    method: "POST",
+    jsonBody: {
+      product_description: brief.productDescription,
+      number_of_designs: brief.numberOfDesigns,
+      design_required_date: brief.designRequiredDate,
+      trend: brief.trend,
+      target_audience: brief.targetAudience,
+      design_remarks: brief.designRemarks,
+      reference_images: brief.referenceImages,
+      reference_links: brief.referenceLinks,
+      reference_image: brief.referenceImages[0] || brief.referenceLinks[0] || null,
+    },
+  });
+  return mapDesignRequest(data.data);
+}
+
+export async function submitCreativeDesignOutputApi(id: number, payload: {
+  designFileUrl: string;
+  rows: Array<{ description: string; stockNumber: string; remarks: string }>;
+}): Promise<DesignRequest> {
+  const data = await apiFetch<Record<string, unknown>>(`/api/v1/design-requests/${id}/creative-output`, {
+    method: "PUT",
+    jsonBody: {
+      design_file_url: payload.designFileUrl,
+      rows: payload.rows.map((row) => ({ description: row.description, stock_number: row.stockNumber, remarks: row.remarks })),
+    },
+  });
+  return mapDesignRequest(data);
+}
+
+export async function recordMarketingDesignDecisionApi(id: number, decision: "accept" | "request_remaining"): Promise<DesignRequest> {
+  const data = await apiFetch<Record<string, unknown>>(`/api/v1/design-requests/${id}/marketing-decision`, {
+    method: "POST",
+    jsonBody: { decision },
+  });
+  return mapDesignRequest(data);
 }
 
 export function mapSampleRequest(item: ApiSampleRequest, fallbackDate = ""): SampleRequestItem {
@@ -230,20 +301,34 @@ export async function fetchAllMarketingRequestsApi(year?: string): Promise<Sampl
       fetchProgramRequestsApi().catch(() => []),
     ]);
 
-    const mappedDesignRequests = designRequests
-      .map(mapDesignRequestToSampleRequest)
-      .filter(
-        (dr) =>
-          !sampleRequests.some(
-            (sr) =>
-              (dr.materialCode && sr.materialCode && dr.materialCode === sr.materialCode) ||
-              (dr.customer && sr.customer === dr.customer && dr.productDescription === sr.productDescription)
-          )
-      );
+    const mappedDesignRequests = designRequests.map(mapDesignRequestToSampleRequest);
+    const mergedSamples = sampleRequests.map((sample) => {
+      const design = mappedDesignRequests.find((item) => item.srNumber === sample.srNumber);
+      return design ? {
+        ...sample,
+        designRequestId: design.designRequestId,
+        designRequestStatus: design.designRequestStatus,
+        numberOfDesigns: design.numberOfDesigns,
+        trend: design.trend,
+        targetAudience: design.targetAudience,
+        referenceImage: design.referenceImage,
+        designRemarks: design.designRemarks,
+        referenceImages: design.referenceImages,
+        referenceLinks: design.referenceLinks,
+        creativeSubmissions: design.creativeSubmissions,
+        marketingDesignDecision: design.marketingDesignDecision,
+        remainingDesignCount: design.remainingDesignCount,
+      } : sample;
+    });
+    const mappedDesignOnly = mappedDesignRequests.filter((design) =>
+      !sampleRequests.some((sample) => sample.srNumber === design.srNumber ||
+        (design.materialCode && sample.materialCode === design.materialCode) ||
+        (design.customer && sample.customer === design.customer && design.productDescription === sample.productDescription))
+    );
 
     let allItems = [
-      ...sampleRequests,
-      ...mappedDesignRequests,
+      ...mergedSamples,
+      ...mappedDesignOnly,
       ...feasibilityRequests,
       ...programRequests,
     ];
@@ -462,11 +547,12 @@ export async function deleteAnyRequestApi(
 ): Promise<boolean> {
   const idStr = String(request.id || "");
   const track = getRequestTrackType(request as any);
+  const srNumber = (request as any).srNumber;
 
   let success = false;
-  if (track === "program_planning" || idStr.startsWith("program-")) {
+  if (idStr.startsWith("program-")) {
     success = await deleteProgramRequestApi(idStr);
-  } else if (track === "feasibility_check" || idStr.startsWith("feasibility-")) {
+  } else if (idStr.startsWith("feasibility-")) {
     success = await deleteFeasibilityRequestApi(idStr);
   } else if (idStr.startsWith("design-") || (request as any).requestKind === "design") {
     const rawId = idStr.replace(/^design-/, "");
@@ -475,8 +561,29 @@ export async function deleteAnyRequestApi(
       await deleteDesignRequestApi(numId).catch(() => false);
     }
     success = await deleteSampleRequestApi(request.id);
+  } else if (track === "feasibility_check") {
+    // Try feasibility table first, fallback to sample requests table
+    success = await deleteFeasibilityRequestApi(idStr);
+    if (!success) {
+      success = await deleteSampleRequestApi(request.id);
+    }
+    if (!success && srNumber) {
+      success = await deleteSampleRequestApi(srNumber);
+    }
+  } else if (track === "program_planning") {
+    // Try program table first, fallback to sample requests table
+    success = await deleteProgramRequestApi(idStr);
+    if (!success) {
+      success = await deleteSampleRequestApi(request.id);
+    }
+    if (!success && srNumber) {
+      success = await deleteSampleRequestApi(srNumber);
+    }
   } else {
     success = await deleteSampleRequestApi(request.id);
+    if (!success && srNumber) {
+      success = await deleteSampleRequestApi(srNumber);
+    }
   }
 
   if (success && typeof window !== "undefined") {

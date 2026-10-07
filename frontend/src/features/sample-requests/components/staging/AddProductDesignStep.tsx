@@ -32,6 +32,7 @@ export interface AddProductDesignStepProps {
   linkInput: string;
   mediaTab: "files" | "links";
   modalError: string | null;
+  isSubmitting?: boolean;
   onSetDesignDesc: (val: string) => void;
   onSetDesignCount: (val: number | "") => void;
   onSetDesignDueDate: (val: string) => void;
@@ -64,6 +65,7 @@ export const AddProductDesignStep: React.FC<AddProductDesignStepProps> = ({
   linkInput,
   mediaTab,
   modalError,
+  isSubmitting = false,
   onSetDesignDesc,
   onSetDesignCount,
   onSetDesignDueDate,
@@ -497,12 +499,18 @@ export const AddProductDesignStep: React.FC<AddProductDesignStepProps> = ({
 
           <button
             type="submit"
-            className="inline-flex h-8 items-center gap-1.5 rounded bg-[#017E84] hover:bg-[#00666A] active:bg-[#005256] px-4 text-xs font-bold text-white shadow-xs transition-colors cursor-pointer"
+            disabled={isSubmitting}
+            className="inline-flex h-8 items-center gap-1.5 rounded bg-[#017E84] hover:bg-[#00666A] active:bg-[#005256] px-4 text-xs font-bold text-white shadow-xs transition-colors cursor-pointer disabled:cursor-wait disabled:opacity-60"
           >
             {selectedScopes.includes("mockup") ? (
               <>
                 <span>Next: Choose Product</span>
                 <ChevronRight className="w-3.5 h-3.5 stroke-[2.5]" />
+              </>
+            ) : selectedScopes.length === 1 && selectedScopes[0] === "design" ? (
+              <>
+                <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                <span>{isSubmitting ? "Staging to Draft…" : "Create Design Request"}</span>
               </>
             ) : (
               <>

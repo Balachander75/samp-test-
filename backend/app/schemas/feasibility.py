@@ -42,7 +42,7 @@ class FeasibilityRequestCreate(BaseModel):
 
 
 class FeasibilitySampVerdictPayload(BaseModel):
-    """Payload for SAMP Lab technical sign-off."""
+    """Payload for SAMP Team technical sign-off."""
 
     response: Literal["Yes", "No", "Maybe"]
     remark: Optional[str] = None
@@ -103,7 +103,7 @@ class FeasibilityRequestOut(BaseModel):
     request_raised_at: datetime
     updated_at: Optional[datetime] = None
 
-    # SAMP Lab response fields
+    # SAMP Team response fields
     taken_by_samp: Optional[str] = None
     taken_at_samp: Optional[datetime] = None
     sampling_feasibility_response: Optional[str] = None

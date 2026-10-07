@@ -30,12 +30,21 @@ import {
   CheckCircle2,
   AlertCircle,
   Download,
-  Filter,
   ClipboardCheck,
-  UserCheck,
 } from "lucide-react";
-import { NewProgramPlanningModal } from "./components/NewProgramPlanningModal";
-import { ProgramPlanningInspectorModal, parseSampRemark } from "./components/ProgramPlanningInspectorModal";
+import { parseSampRemark } from "./utils/programRemarkUtils";
+import { CopyBadge } from "@/components/ui/CopyBadge";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { WorkflowTabStrip } from "@/components/erp/WorkflowTabStrip";
+import { PaginationBar } from "@/components/erp/PaginationBar";
+import { exportRecordsToCsv } from "@/lib/csvExport";
+
+const NewProgramPlanningModal = React.lazy(() =>
+  import("./components/NewProgramPlanningModal").then((m) => ({ default: m.NewProgramPlanningModal }))
+);
+const ProgramPlanningInspectorModal = React.lazy(() =>
+  import("./components/ProgramPlanningInspectorModal").then((m) => ({ default: m.ProgramPlanningInspectorModal }))
+);
 
 export interface ProgramPlanningPageProps {
   requests: SampleRequestItem[];
@@ -61,55 +70,7 @@ const PROGRAM_STAGE_TABS: { id: ProgramStageTab; label: string }[] = [
   { id: "production", label: "Production Handoff" },
 ];
 
-export const PROGRAM_KANBAN_COLUMNS: {
-  id: string;
-  label: string;
-  bgTone: string;
-  borderTone: string;
-  accentTone: string;
-}[] = [
-  {
-    id: "awaiting_review",
-    label: "1. Awaiting SAMP Review",
-    bgTone: "bg-amber-50/40 dark:bg-amber-950/20",
-    borderTone: "border-amber-200/80 dark:border-amber-900/40",
-    accentTone: "text-amber-700 dark:text-amber-400",
-  },
-  {
-    id: "reviewed",
-    label: "2. Reviewed by SAMP Lab",
-    bgTone: "bg-[#714B67]/5 dark:bg-[#714B67]/15",
-    borderTone: "border-[#714B67]/30 dark:border-[#714B67]/30",
-    accentTone: "text-[#714B67] dark:text-purple-300",
-  },
-  {
-    id: "production",
-    label: "3. Plant Production Handoff",
-    bgTone: "bg-emerald-50/40 dark:bg-emerald-950/20",
-    borderTone: "border-emerald-200/80 dark:border-emerald-900/40",
-    accentTone: "text-emerald-700 dark:text-emerald-400",
-  },
-];
 
-export const getProgramKanbanColumn = (r: SampleRequestItem): string => {
-  const status = (r.status || "").toLowerCase();
-  if (
-    status.includes("prod") ||
-    status.includes("handoff") ||
-    status.includes("deal") ||
-    status.includes("execution")
-  ) {
-    return "production";
-  }
-  if (
-    status.includes("reviewed") ||
-    status.includes("samp reviewed") ||
-    status.includes("approved")
-  ) {
-    return "reviewed";
-  }
-  return "awaiting_review";
-};
 
 export const ProgramPlanningPage: React.FC<ProgramPlanningPageProps> = ({
   requests,
@@ -127,7 +88,6 @@ export const ProgramPlanningPage: React.FC<ProgramPlanningPageProps> = ({
 }) => {
 
   const navigate = useNavigate();
-  const [viewMode, setViewMode] = useState<"list" | "kanban">("list");
   const [filterTab, setFilterTab] = useState<ProgramStageTab>("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [customerFilter, setCustomerFilter] = useState("all");
@@ -142,14 +102,6 @@ export const ProgramPlanningPage: React.FC<ProgramPlanningPageProps> = ({
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 30;
-
-  // Copy feedback
-  const handleCopyCode = (code: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    navigator.clipboard.writeText(code);
-    setCopiedId(code);
-    setTimeout(() => setCopiedId(null), 1200);
-  };
 
   // Only consider program planning requests
   const programRequests = useMemo(() => {
@@ -223,6 +175,16 @@ export const ProgramPlanningPage: React.FC<ProgramPlanningPageProps> = ({
     };
   }, [programStats]);
 
+  const workflowTabs = useMemo(
+    () =>
+      PROGRAM_STAGE_TABS.map((tab) => ({
+        id: tab.id,
+        label: tab.label,
+        count: stageCounts[tab.id],
+      })),
+    [stageCounts]
+  );
+
   // Filtered requests
   const filteredRequests = useMemo(() => {
     return programRequests.filter((r) => {
@@ -273,32 +235,7 @@ export const ProgramPlanningPage: React.FC<ProgramPlanningPageProps> = ({
     });
   }, [programRequests, filterTab, customerFilter, selectedPlant, selectedPlantFilter, searchTerm]);
 
-  // Full Pipeline Requests for Kanban (unconstrained by stage filter tab)
-  const kanbanRequests = useMemo(() => {
-    return programRequests.filter((r) => {
-      if (selectedPlant !== "ALL") {
-        const p = (r.targetPlant || "").toLowerCase();
-        if (!p.includes(selectedPlant.toLowerCase())) return false;
-      }
-      if (selectedPlantFilter !== "all") {
-        const p = (r.targetPlant || "").toLowerCase();
-        if (!p.includes(selectedPlantFilter.toLowerCase())) return false;
-      }
-      if (customerFilter !== "all" && r.customer !== customerFilter) {
-        return false;
-      }
-      if (searchTerm.trim()) {
-        const q = searchTerm.toLowerCase().trim();
-        const sr = (r.srNumber || "").toLowerCase();
-        const prog = (r.programName || "").toLowerCase();
-        const desc = (r.productDescription || "").toLowerCase();
-        const cust = (r.customer || "").toLowerCase();
-        const yr = (r.programYear || "").toLowerCase();
-        return sr.includes(q) || prog.includes(q) || desc.includes(q) || cust.includes(q) || yr.includes(q);
-      }
-      return true;
-    });
-  }, [programRequests, customerFilter, selectedPlant, selectedPlantFilter, searchTerm]);
+
 
   // Paginated Slice
   const paginatedRequests = useMemo(() => {
@@ -336,24 +273,20 @@ export const ProgramPlanningPage: React.FC<ProgramPlanningPageProps> = ({
   // Export CSV
   const handleExportCSV = () => {
     if (filteredRequests.length === 0) return;
-    const headers = ["Program ID", "Customer", "Program Title", "Year", "Plant", "Status", "Total SKUs"];
-    const rows = filteredRequests.map((r) => [
-      r.srNumber || `PG-${r.id}`,
-      `"${(r.customer || "").replace(/"/g, '""')}"`,
-      `"${(r.programName || r.productDescription || "").replace(/"/g, '""')}"`,
-      r.programYear || "2026",
-      r.targetPlant || "",
-      r.status || "Program Planning",
-      r.programMaterials?.length || 1,
-    ]);
-    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `program_planning_${new Date().toISOString().slice(0, 10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const dateStr = new Date().toISOString().slice(0, 10);
+    exportRecordsToCsv({
+      filename: `program_planning_${dateStr}.csv`,
+      columns: [
+        { header: "Program ID", accessor: (r) => r.srNumber || `PG-${r.id}` },
+        { header: "Customer", accessor: (r) => r.customer },
+        { header: "Program Title", accessor: (r) => r.programName || r.productDescription },
+        { header: "Year", accessor: (r) => r.programYear || "2026" },
+        { header: "Plant", accessor: (r) => r.targetPlant },
+        { header: "Status", accessor: (r) => r.status || "Program Planning" },
+        { header: "Total SKUs", accessor: (r) => r.programMaterials?.length || 1 },
+      ],
+      data: filteredRequests,
+    });
   };
 
   return (
@@ -408,40 +341,11 @@ export const ProgramPlanningPage: React.FC<ProgramPlanningPageProps> = ({
               <span className="hidden sm:inline">Export</span>
             </button>
 
-            {/* View Mode Toggle */}
-            <div className="inline-flex rounded border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-800 p-0.5 shadow-2xs">
-              <button
-                type="button"
-                onClick={() => setViewMode("list")}
-                className={`px-2 py-1 rounded text-xs transition cursor-pointer flex items-center gap-1.5 ${
-                  viewMode === "list"
-                    ? "bg-[#714B67] text-white shadow-2xs font-bold"
-                    : "text-neutral-500 hover:text-neutral-800 dark:text-zinc-400"
-                }`}
-                title="Table View"
-              >
-                <ListIcon className="w-3.5 h-3.5" />
-                <span className="text-[11px] font-semibold">List</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode("kanban")}
-                className={`px-2 py-1 rounded text-xs transition cursor-pointer flex items-center gap-1.5 ${
-                  viewMode === "kanban"
-                    ? "bg-[#714B67] text-white shadow-2xs font-bold"
-                    : "text-neutral-500 hover:text-neutral-800 dark:text-zinc-400"
-                }`}
-                title="Kanban Pipeline Swimlanes"
-              >
-                <LayoutGrid className="w-3.5 h-3.5" />
-                <span className="text-[11px] font-semibold">Kanban</span>
-              </button>
-            </div>
           </div>
         </div>
 
         {/* ── 2. KPI Metric Ribbon (Exact 6 Cards Matching Feasibility Workbench Image 1) ── */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 mt-3 pt-3 border-t border-[#F1F5F9] dark:border-white/[0.05]">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 mt-3 pt-3 border-t border-[#F1F5F9] dark:border-white/[0.05]">
           {/* Card 1: Total Programs */}
           <div
             onClick={() => {
@@ -488,37 +392,11 @@ export const ProgramPlanningPage: React.FC<ProgramPlanningPageProps> = ({
               {isLoading ? "—" : programStats.awaitingReviewCount}
             </div>
             <div className="text-[10px] text-amber-700/80 dark:text-amber-400/80 font-mono">
-              SAMP Lab Queue
+              SAMP Team Queue
             </div>
           </div>
 
-          {/* Card 3: Under Review in Lab */}
-          <div
-            onClick={() => {
-              setFilterTab("reviewed");
-              setCurrentPage(1);
-            }}
-            className={`p-2.5 rounded-lg border transition cursor-pointer ${
-              filterTab === "reviewed"
-                ? "border-sky-400 bg-sky-500/10 dark:bg-sky-950/30 shadow-2xs"
-                : "border-[#E2E8F0] dark:border-white/[0.06] bg-neutral-50/60 dark:bg-zinc-900/40 hover:border-sky-300"
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-[10.5px] uppercase font-bold text-sky-700 dark:text-sky-300 font-mono tracking-wider">
-                UNDER REVIEW
-              </span>
-              <UserCheck className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
-            </div>
-            <div className="text-xl font-bold font-mono text-sky-900 dark:text-sky-200 mt-0.5">
-              {isLoading ? "—" : programStats.reviewedCount}
-            </div>
-            <div className="text-[10px] text-sky-700/80 dark:text-sky-400/80 font-mono">
-              Claimed in Lab
-            </div>
-          </div>
-
-          {/* Card 4: Reviewed by SAMP */}
+          {/* Card 3: Reviewed by SAMP Team */}
           <div
             onClick={() => {
               setFilterTab("reviewed");
@@ -532,7 +410,7 @@ export const ProgramPlanningPage: React.FC<ProgramPlanningPageProps> = ({
           >
             <div className="flex items-center justify-between">
               <span className="text-[10.5px] uppercase font-bold text-emerald-700 dark:text-emerald-300 font-mono tracking-wider">
-                REVIEWED (SAMP)
+                REVIEWED (SAMP TEAM)
               </span>
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
             </div>
@@ -540,7 +418,7 @@ export const ProgramPlanningPage: React.FC<ProgramPlanningPageProps> = ({
               {isLoading ? "—" : programStats.reviewedCount}
             </div>
             <div className="text-[10px] text-emerald-700/80 dark:text-emerald-400/80 font-mono">
-              Matrix Verified
+              Matrix Verified &amp; Signed
             </div>
           </div>
 
@@ -589,38 +467,15 @@ export const ProgramPlanningPage: React.FC<ProgramPlanningPageProps> = ({
       {/* ── 3. Segmented Filter Pills Strip (Exact Match to Feasibility Workbench Image 1) ── */}
       <div className="bg-white dark:bg-[#12141d] border-b border-[#E2E8F0] dark:border-white/[0.08] px-6 py-2.5 shrink-0 flex flex-wrap items-center justify-between gap-3">
         {/* Left: Odoo Segmented Filter Pills */}
-        <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0 scrollbar-none text-xs">
-          {PROGRAM_STAGE_TABS.map((tab) => {
-            const isActive = filterTab === tab.id;
-            const count = stageCounts[tab.id];
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => {
-                  setFilterTab(tab.id);
-                  setCurrentPage(1);
-                }}
-                className={`px-3 py-1.5 rounded font-mono text-xs font-semibold whitespace-nowrap transition cursor-pointer flex items-center gap-1.5 ${
-                  isActive
-                    ? "bg-[#714B67] text-white shadow-2xs"
-                    : "text-neutral-600 dark:text-zinc-400 hover:text-neutral-900 dark:hover:text-zinc-200 hover:bg-neutral-100 dark:hover:bg-white/[0.04]"
-                }`}
-              >
-                <span>{tab.label}</span>
-                <span
-                  className={`text-[10.5px] px-1.5 py-0.2 rounded-full font-mono ${
-                    isActive
-                      ? "bg-white/20 text-white"
-                      : "bg-neutral-200/70 dark:bg-zinc-800 text-neutral-600 dark:text-zinc-400"
-                  }`}
-                >
-                  {count}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+        <WorkflowTabStrip
+          tabs={workflowTabs}
+          activeTab={filterTab}
+          onSelectTab={(id) => {
+            setFilterTab(id as ProgramStageTab);
+            setCurrentPage(1);
+          }}
+          compact
+        />
 
         {/* Right: Customer & Plant Dropdown Selectors */}
         <div className="flex items-center gap-2">
@@ -692,32 +547,38 @@ export const ProgramPlanningPage: React.FC<ProgramPlanningPageProps> = ({
         </div>
       </div>
 
-      {/* ── 5. Full-Bleed Table or Kanban View (Exact Match to Image 1) ── */}
+      {/* ── 5. Full-Bleed Table View (Exact Match to Image 1) ── */}
       <div className="flex-1 overflow-y-auto p-6">
-        {viewMode === "list" ? (
-          filteredRequests.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="w-14 h-14 rounded-full bg-neutral-100 dark:bg-zinc-800/80 flex items-center justify-center text-neutral-400 mb-3 border border-neutral-200 dark:border-zinc-700">
-                <ClipboardCheck className="w-7 h-7" />
-              </div>
-              <h3 className="text-sm font-bold text-neutral-800 dark:text-zinc-200 mb-1">
-                No Seasonal Programs Found
-              </h3>
-              <p className="text-xs text-neutral-500 dark:text-zinc-400 max-w-md mb-4 font-sans">
-                {searchTerm || customerFilter !== "all" || filterTab !== "all"
-                  ? "No seasonal programs match your active filter criteria. Try resetting your search or selecting another tab."
-                  : "There are currently no seasonal program planning requests submitted by Marketing in this category."}
-              </p>
+        {filteredRequests.length === 0 ? (
+          <EmptyState
+            icon={ClipboardCheck}
+            title="No Seasonal Programs Found"
+            description={
+              searchTerm || customerFilter !== "all" || filterTab !== "all"
+                ? "No seasonal programs match your active filter criteria. Try resetting your search or selecting another tab."
+                : "There are currently no seasonal program planning requests submitted by Marketing in this category."
+            }
+            onResetFilters={
+              searchTerm || customerFilter !== "all" || filterTab !== "all"
+                ? () => {
+                    setSearchTerm("");
+                    setCustomerFilter("all");
+                    setFilterTab("all");
+                  }
+                : undefined
+            }
+            action={
               <button
                 type="button"
                 onClick={() => setIsNewModalOpen(true)}
-                className="mt-1 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded bg-[#017E84] hover:bg-[#00666A] text-white text-xs font-semibold shadow-xs transition cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded bg-[#017E84] hover:bg-[#00666A] text-white text-xs font-semibold shadow-xs transition cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Create Program Request</span>
               </button>
-            </div>
-          ) : (
+            }
+          />
+        ) : (
             <div className="bg-white dark:bg-[#12141d] rounded-lg border border-[#CED4DA] dark:border-white/[0.08] shadow-2xs overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse text-xs">
@@ -807,22 +668,8 @@ export const ProgramPlanningPage: React.FC<ProgramPlanningPageProps> = ({
                             </td>
 
                             {/* Program ID */}
-                            <td className="py-3 px-3 font-mono font-bold text-[#714B67] dark:text-purple-300">
-                              <div className="flex items-center space-x-1.5">
-                                <span>{srCode}</span>
-                                <button
-                                  type="button"
-                                  onClick={(e) => handleCopyCode(srCode, e)}
-                                  className="p-0.5 text-neutral-400 hover:text-neutral-700 dark:hover:text-zinc-200 cursor-pointer"
-                                  title="Copy code"
-                                >
-                                  {copiedId === srCode ? (
-                                    <Check className="w-3 h-3 text-emerald-600" />
-                                  ) : (
-                                    <Copy className="w-3 h-3" />
-                                  )}
-                                </button>
-                              </div>
+                            <td className="py-3 px-3 font-mono font-bold whitespace-nowrap">
+                              <CopyBadge text={srCode} />
                             </td>
 
                             {/* Title & Description */}
@@ -931,198 +778,39 @@ export const ProgramPlanningPage: React.FC<ProgramPlanningPageProps> = ({
               </div>
 
               {/* Table Footer Pager */}
-              <div className="p-3 border-t border-[#E9ECEF] dark:border-white/[0.08] bg-[#FBFBFC] dark:bg-[#141722] flex items-center justify-between text-xs text-neutral-500 dark:text-zinc-400">
-                <div>
-                  Showing {filteredRequests.length === 0 ? 0 : (currentPage - 1) * pageSize + 1} to{" "}
-                  {Math.min(currentPage * pageSize, filteredRequests.length)} of {filteredRequests.length} campaigns
-                </div>
-
-                <div className="flex items-center space-x-1 font-mono">
-                  <button
-                    type="button"
-                    disabled={currentPage <= 1}
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    className="px-2 py-0.5 rounded border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-800 disabled:opacity-40 cursor-pointer"
-                  >
-                    Prev
-                  </button>
-                  <span className="px-2 font-medium">
-                    {currentPage} / {totalPages}
-                  </span>
-                  <button
-                    type="button"
-                    disabled={currentPage >= totalPages}
-                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                    className="px-2 py-0.5 rounded border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-800 disabled:opacity-40 cursor-pointer"
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
-            </div>
-          )
-        ) : (
-            /* ── Kanban Pipeline Swimlanes View ── */
-            <div className="p-4 md:p-6 overflow-x-auto min-h-[500px]">
-              <div className="flex space-x-4 min-w-max items-start">
-                {PROGRAM_KANBAN_COLUMNS.map((col) => {
-                  const itemsInCol = kanbanRequests.filter(
-                    (r) => getProgramKanbanColumn(r) === col.id
-                  );
-
-                  return (
-                    <div
-                      key={col.id}
-                      className={`w-80 rounded-lg border ${col.borderTone} ${col.bgTone} p-3 flex flex-col space-y-2.5 shadow-2xs`}
-                    >
-                      {/* Column Header */}
-                      <div className="flex items-center justify-between pb-2 border-b border-[#D8DADD] dark:border-white/[0.08]">
-                        <span className={`font-bold text-xs ${col.accentTone}`}>
-                          {col.label}
-                        </span>
-                        <span className="bg-white dark:bg-zinc-800 text-neutral-700 dark:text-zinc-300 border border-neutral-200 dark:border-zinc-700 font-mono font-bold px-2 py-0.5 rounded-full text-[10px]">
-                          {itemsInCol.length}
-                        </span>
-                      </div>
-
-                      {/* Cards Container */}
-                      <div className="space-y-2.5 overflow-y-auto max-h-[620px] pr-0.5">
-                        {itemsInCol.length === 0 ? (
-                          <div className="p-6 text-center text-[11px] text-neutral-400 font-mono">
-                            No campaigns in this stage
-                          </div>
-                        ) : (
-                          itemsInCol.map((r) => {
-                            const srCode = r.srNumber || `PG-${r.id}`;
-                            const skus = r.programMaterials || [];
-                            const isReviewed = (r.status || "").toLowerCase().includes("reviewed");
-                            const hasRecentLine = skus.some((m) => {
-                              if (!m.createdAt) return false;
-                              const diffHours =
-                                (Date.now() - new Date(m.createdAt).getTime()) / (1000 * 60 * 60);
-                              return diffHours < 24;
-                            });
-                            const flaggedItemsCount = skus.filter(
-                              (m) => Boolean(m.sampRemark) || Boolean((m as any).highlighted)
-                            ).length;
-
-                            return (
-                              <div
-                                key={r.id}
-                                onClick={() => handleOpenInspector(r)}
-                                className="bg-white dark:bg-[#161822] p-3.5 rounded-lg border border-[#CED4DA] dark:border-white/[0.08] shadow-2xs hover:border-[#714B67] dark:hover:border-purple-400 hover:shadow-xs cursor-pointer transition group"
-                              >
-                                <div className="flex justify-between items-center text-[10px] font-mono">
-                                  <div className="flex items-center space-x-1.5">
-                                    <span className="font-bold text-[#714B67] dark:text-purple-300">
-                                      {srCode}
-                                    </span>
-                                    <span className="bg-neutral-100 dark:bg-zinc-800 text-neutral-600 dark:text-zinc-300 px-1.5 py-0.2 rounded font-bold">
-                                      {r.programYear || "2026"}
-                                    </span>
-                                  </div>
-                                  <span className="bg-purple-50 dark:bg-purple-950/50 text-[#714B67] dark:text-purple-300 px-1.5 py-0.2 rounded font-bold font-mono">
-                                    {skus.length || 1} SKU Range
-                                  </span>
-                                </div>
-
-                                <div className="font-bold text-neutral-900 dark:text-zinc-100 text-xs mt-1.5 line-clamp-1">
-                                  {r.programName || r.programCampaignTitle || "Seasonal Program"}
-                                </div>
-
-                                <p className="text-[11px] text-neutral-500 dark:text-zinc-400 mt-1 line-clamp-2 leading-relaxed">
-                                  {r.productDescription ||
-                                    "Multi-SKU range planning for seasonal scholastic collections."}
-                                </p>
-
-                                <div className="text-[11px] text-neutral-500 dark:text-zinc-400 mt-2 flex items-center space-x-1.5 truncate">
-                                  <strong className="text-neutral-700 dark:text-zinc-200">
-                                    {r.customer || "General Customer"}
-                                  </strong>
-                                  <span>•</span>
-                                  <span className="flex items-center gap-1 font-mono text-[10px]">
-                                    <Building2 className="w-3 h-3 text-neutral-400" />
-                                    Plant {r.targetPlant || "All"}
-                                  </span>
-                                </div>
-
-                                {/* Indicator Badges: Recent Additions & Technical Remarks */}
-                                <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                                  {hasRecentLine && (
-                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-300/60 shadow-2xs animate-pulse">
-                                      <Sparkles className="w-2.5 h-2.5 text-amber-600 dark:text-amber-400" />
-                                      <span>✨ New Line</span>
-                                    </span>
-                                  )}
-                                  {flaggedItemsCount > 0 && (
-                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-purple-50 dark:bg-purple-950/40 text-[#714B67] dark:text-purple-300 border border-[#714B67]/30">
-                                      <Highlighter className="w-2.5 h-2.5" />
-                                      <span>{flaggedItemsCount} Remarks</span>
-                                    </span>
-                                  )}
-                                </div>
-
-                                {/* Card Footer with Status & Inspect Button */}
-                                <div className="mt-3 pt-2.5 border-t border-neutral-100 dark:border-white/[0.06] flex items-center justify-between text-[10px]">
-                                  <div>
-                                    {isReviewed ? (
-                                      <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                                        ✓ Reviewed
-                                      </span>
-                                    ) : (
-                                      <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
-                                        Pending SAMP
-                                      </span>
-                                    )}
-                                  </div>
-
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleOpenInspector(r);
-                                    }}
-                                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#017E84] hover:bg-[#00666A] text-white text-[10px] font-bold shadow-2xs transition active:scale-95 cursor-pointer"
-                                  >
-                                    <Highlighter className="w-3 h-3" />
-                                    <span>Inspect Matrix</span>
-                                  </button>
-                                </div>
-
-                              </div>
-                            );
-                          })
-                        )}
-                      </div>
-
-                    </div>
-                  );
-                })}
-              </div>
+              <PaginationBar
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalCount={filteredRequests.length}
+                pageSize={pageSize}
+                onPageChange={(p) => setCurrentPage(p)}
+                itemLabel="campaigns"
+              />
             </div>
           )}
         </div>
 
-      {/* ── 5. New Program Planning Modal (Prompting for Single Year, Customer, Title & Plant) ── */}
-      <NewProgramPlanningModal
-        isOpen={isNewModalOpen}
-        onClose={() => setIsNewModalOpen(false)}
-        onProceed={(params) => {
-          setIsNewModalOpen(false);
-          navigate("/sample-requests/program-planning", { state: params });
-        }}
-      />
+      {/* ── 5. Modals & Dialogs (Lazy-loaded) ── */}
+      <React.Suspense fallback={null}>
+        <NewProgramPlanningModal
+          isOpen={isNewModalOpen}
+          onClose={() => setIsNewModalOpen(false)}
+          onProceed={(params) => {
+            setIsNewModalOpen(false);
+            navigate("/sample-requests/program-planning", { state: params });
+          }}
+        />
 
-      {/* ── 6. Marketing Inspection Modal (Review Matrix with Highlights & Remarks) ── */}
-      <ProgramPlanningInspectorModal
-        request={inspectingProgram}
-        isOpen={Boolean(inspectingProgram)}
-        onClose={() => setInspectingProgram(null)}
-        onRefresh={onRefresh}
-        mode="marketing"
-        userRole="Marketing Specialist"
-        currentUser={user}
-      />
+        <ProgramPlanningInspectorModal
+          request={inspectingProgram}
+          isOpen={Boolean(inspectingProgram)}
+          onClose={() => setInspectingProgram(null)}
+          onRefresh={onRefresh}
+          mode="marketing"
+          userRole="Marketing Specialist"
+          currentUser={user}
+        />
+      </React.Suspense>
     </div>
 
   );

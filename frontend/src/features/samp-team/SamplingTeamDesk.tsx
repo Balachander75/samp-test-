@@ -3,10 +3,14 @@ import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { UserProfile } from "@/features/auth";
 import { useBusinessYear } from "@/context/BusinessYearContext";
 import { SampleRequestItem } from "@/features/sample-requests/types";
-import { fetchAllMarketingRequestsApi } from "@/features/sample-requests/api";
+import { fetchAllMarketingRequestsApi } from "@/infrastructure/api";
 import { SampFeasibilityReviewPage } from "./feasibility/SampFeasibilityReviewPage";
 import { SamplingProgramPlanningView } from "./programs/SamplingProgramPlanningView";
-import { ProgramPlanningInspectorModal } from "@/features/sample-requests/programs/components/ProgramPlanningInspectorModal";
+const ProgramPlanningInspectorModal = React.lazy(() =>
+  import("@/features/sample-requests/programs/components/ProgramPlanningInspectorModal").then((m) => ({
+    default: m.ProgramPlanningInspectorModal,
+  }))
+);
 import { formatOdooDate } from "@/features/sample-requests/utils/dateUtils";
 import {
   FlaskConical,
@@ -246,7 +250,7 @@ export const SamplingTeamDesk: React.FC<SamplingTeamDeskProps> = ({ user }) => {
               <div className="flex items-center gap-2 mb-0.5">
                 <Beaker className="w-4 h-4 text-[#017E84]" />
                 <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#017E84]">
-                  SAMP Lab — Technical Evaluation Workbench
+                  SAMP Team — Technical Evaluation Workbench
                 </span>
                 <span className="px-1.5 py-0.2 text-[10px] font-mono font-bold rounded bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-300/40">Live</span>
               </div>
@@ -576,15 +580,17 @@ export const SamplingTeamDesk: React.FC<SamplingTeamDeskProps> = ({ user }) => {
       )}
 
       {/* Sampling Team Program Planning Review Matrix Inspector Modal */}
-      <ProgramPlanningInspectorModal
-        request={selectedProgramForReview}
-        isOpen={Boolean(selectedProgramForReview)}
-        onClose={() => setSelectedProgramForReview(null)}
-        onRefresh={loadRequests}
-        mode="sampling"
-        userRole={user?.role || "Sampling Specialist"}
-        currentUser={user}
-      />
+      <React.Suspense fallback={null}>
+        <ProgramPlanningInspectorModal
+          request={selectedProgramForReview}
+          isOpen={Boolean(selectedProgramForReview)}
+          onClose={() => setSelectedProgramForReview(null)}
+          onRefresh={loadRequests}
+          mode="sampling"
+          userRole={user?.role || "Sampling Specialist"}
+          currentUser={user}
+        />
+      </React.Suspense>
     </div>
   );
 

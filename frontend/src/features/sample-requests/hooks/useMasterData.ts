@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchCustomersApi, fetchPlantsApi } from "../api";
+import { fetchCustomersApi, fetchPlantsApi } from "@/infrastructure/api";
 import { CustomerItem, PlantItem } from "../types";
 
 interface MasterDataState {

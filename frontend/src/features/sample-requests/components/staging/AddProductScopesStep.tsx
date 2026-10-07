@@ -9,7 +9,6 @@ import {
   Layers3,
   Calculator,
   Search,
-  Sparkles,
 } from "lucide-react";
 import { DeliverableScopeId, DELIVERABLES } from "../../types/staging";
 
@@ -36,26 +35,21 @@ export const AddProductScopesStep: React.FC<AddProductScopesStepProps> = ({
   onProceed,
 }) => {
   return (
-    <div className="relative flex w-full max-w-2xl flex-col overflow-hidden rounded border border-[#CED4DA] dark:border-white/[0.08] bg-white dark:bg-[#12141d] shadow-2xl animate-smooth-modal">
+    <div className="relative flex max-h-[calc(100dvh-2rem)] w-full max-w-3xl flex-col overflow-hidden rounded border border-[#CED4DA] dark:border-white/[0.08] bg-white dark:bg-[#12141d] shadow-2xl animate-smooth-modal">
       {/* Odoo 19 Modal Header */}
-      <div className="flex items-center justify-between px-6 py-3.5 bg-[#714B67] text-white shrink-0 border-b border-[#5B3C53]">
-        <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded bg-white/15 flex items-center justify-center text-white shrink-0">
-            <Sparkles className="w-4 h-4 stroke-[2.2]" />
+      <div className="flex shrink-0 items-center justify-between gap-4 border-b border-[#5B3C53] bg-[#714B67] px-6 py-4 text-white sm:px-7">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <h3 className="text-sm font-bold text-white tracking-tight sm:text-base">
+              Add Staged Product Deliverables
+            </h3>
+            <span className="shrink-0 rounded bg-white/20 px-2 py-0.5 text-[10px] font-mono font-bold text-white tracking-wider uppercase">
+              STEP 1 OF 2
+            </span>
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-sm font-bold text-white tracking-tight">
-                Add Staged Product Deliverables
-              </h3>
-              <span className="px-2 py-0.5 rounded text-[9.5px] font-mono font-bold bg-white/20 text-white tracking-wider uppercase">
-                STEP 1 OF 2
-              </span>
-            </div>
-            <p className="text-[11px] text-white/80 mt-0.5">
-              Select one or multiple commercial deliverables for this item
-            </p>
-          </div>
+          <p className="mt-1 text-xs text-white/85">
+            Select one or multiple commercial deliverables for this item
+          </p>
         </div>
 
         <button
@@ -68,13 +62,13 @@ export const AddProductScopesStep: React.FC<AddProductScopesStepProps> = ({
         </button>
       </div>
 
-      <form onSubmit={onProceed} className="flex flex-col">
-        <div className="p-5 sm:p-6 space-y-4">
-          <div className="text-xs font-semibold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
+      <form onSubmit={onProceed} className="flex min-h-0 flex-col">
+        <div className="min-h-0 space-y-5 overflow-y-auto p-5 sm:p-7">
+          <div className="text-[13px] font-semibold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
             Commercial Scope Selection
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
             {DELIVERABLES.map((item) => {
               const isSelected = selectedScopes.includes(item.id);
               const disabled = isScopeDisabled(item.id);
@@ -87,7 +81,7 @@ export const AddProductScopesStep: React.FC<AddProductScopesStepProps> = ({
                   onClick={() => onToggleScope(item.id)}
                   disabled={disabled}
                   aria-pressed={isSelected}
-                  className={`group flex min-h-[104px] w-full items-start gap-3 rounded border p-3.5 text-left transition-all cursor-pointer ${
+                  className={`group flex min-h-[116px] w-full items-start gap-4 rounded border p-4 text-left transition-all cursor-pointer ${
                     disabled
                       ? "cursor-not-allowed border-[#CED4DA] bg-zinc-50 opacity-40 dark:border-zinc-800 dark:bg-white/[0.02]"
                       : isSelected
@@ -96,7 +90,7 @@ export const AddProductScopesStep: React.FC<AddProductScopesStepProps> = ({
                   }`}
                 >
                   <span
-                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded border transition-colors ${
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded border transition-colors ${
                       isSelected
                         ? "border-[#714B67]/20 bg-[#F3E8EE] text-[#714B67] dark:bg-[#50384A] dark:text-purple-100"
                         : disabled
@@ -109,20 +103,20 @@ export const AddProductScopesStep: React.FC<AddProductScopesStepProps> = ({
 
                   <span className="min-w-0 flex-1 pt-0.5">
                     <div className="flex items-center gap-1.5">
-                      <span className="block text-xs font-bold text-zinc-900 dark:text-zinc-100">
+                      <span className="block text-sm font-bold text-zinc-900 dark:text-zinc-100">
                         {item.label}
                       </span>
                       <span className={`px-1.5 py-0.2 rounded text-[9.5px] font-mono font-bold border ${tagColor}`}>
                         {item.id.toUpperCase()}
                       </span>
                     </div>
-                    <span className="mt-1 block text-[11px] leading-relaxed text-[#64748B] dark:text-zinc-400">
+                    <span className="mt-1.5 block text-xs leading-relaxed text-[#64748B] dark:text-zinc-400">
                       {description}
                     </span>
                   </span>
 
                   <span
-                    className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition-colors ${
+                    className={`mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full border transition-colors ${
                       isSelected
                         ? "border-[#714B67] bg-[#714B67] text-white"
                         : "border-zinc-300 bg-white text-transparent dark:border-zinc-600 dark:bg-[#171923]"
@@ -137,11 +131,11 @@ export const AddProductScopesStep: React.FC<AddProductScopesStepProps> = ({
         </div>
 
         {/* Footer Controls */}
-        <div className="flex shrink-0 items-center justify-between gap-3 border-t border-[#CED4DA] dark:border-zinc-700 bg-[#F8F9FA] dark:bg-[#171923] px-6 py-3">
+        <div className="flex shrink-0 items-center justify-between gap-3 border-t border-[#CED4DA] bg-[#F8F9FA] px-6 py-4 dark:border-zinc-700 dark:bg-[#171923] sm:px-7">
           <button
             type="button"
             onClick={onClose}
-            className="h-8 rounded border border-[#CED4DA] bg-white px-3.5 text-xs font-semibold text-zinc-700 hover:bg-[#F8F9FA] transition-colors cursor-pointer dark:border-zinc-700 dark:bg-[#12141d] dark:text-zinc-300 dark:hover:bg-zinc-800"
+            className="h-9 rounded border border-[#CED4DA] bg-white px-4 text-[13px] font-semibold text-zinc-700 hover:bg-[#F8F9FA] transition-colors cursor-pointer dark:border-zinc-700 dark:bg-[#12141d] dark:text-zinc-300 dark:hover:bg-zinc-800"
           >
             Cancel
           </button>
@@ -149,7 +143,7 @@ export const AddProductScopesStep: React.FC<AddProductScopesStepProps> = ({
           <button
             type="submit"
             disabled={selectedScopes.length === 0}
-            className="inline-flex h-8 items-center gap-1.5 rounded bg-[#017E84] hover:bg-[#00666A] active:bg-[#005256] px-4 text-xs font-bold text-white shadow-xs transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex h-9 items-center gap-1.5 rounded bg-[#017E84] hover:bg-[#00666A] active:bg-[#005256] px-4 text-[13px] font-bold text-white shadow-xs transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
           >
             {selectedScopes.includes("design") ? (
               <>

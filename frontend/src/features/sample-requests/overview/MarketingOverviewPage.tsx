@@ -307,7 +307,7 @@ export const MarketingOverviewPage: React.FC<MarketingOverviewPageProps> = ({
                 Technical Feasibility Checks
               </h3>
               <p className="text-[11px] text-neutral-500 dark:text-zinc-400 mt-0.5 leading-relaxed">
-                Custom categories, unusual GSM, specialty binding. Track SAMP Lab sign-offs and finalize commercial approval.
+                Custom categories, unusual GSM, specialty binding. Track SAMP Team sign-offs and finalize commercial approval.
               </p>
             </div>
             <div className="shrink-0 flex items-center gap-2 pl-4">

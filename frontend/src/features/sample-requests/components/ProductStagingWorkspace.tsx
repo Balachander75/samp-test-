@@ -7,7 +7,8 @@ import {
   searchProductsByBindingApi,
   fetchBindingHierarchyApi,
   updateSampleRequestApi,
-} from "../api";
+  createDesignBriefFromSampleApi,
+} from "@/infrastructure/api";
 import { ProductSearchResult, BindingHierarchyResponse } from "../types";
 import { useMasterData } from "../hooks/useMasterData";
 import { getNextWorkingDate } from "@/lib/holidayUtils";
@@ -49,6 +50,7 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
       targetPlant?: string;
       parentRequestId?: string | number;
       parentSrNumber?: string;
+      openedFromDraft?: boolean;
     } | null;
 
     if (state?.customer || state?.programName) {
@@ -60,6 +62,7 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
         targetPlant: state.targetPlant || "",
         parentRequestId: state.parentRequestId,
         parentSrNumber: state.parentSrNumber || "",
+        openedFromDraft: Boolean(state.openedFromDraft),
       };
     }
 
@@ -75,6 +78,7 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
           targetPlant: parsed.targetPlant || "",
           parentRequestId: parsed.parentRequestId,
           parentSrNumber: parsed.parentSrNumber || "",
+          openedFromDraft: Boolean(parsed.openedFromDraft),
         };
       }
     } catch {
@@ -89,6 +93,7 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
       targetPlant: "",
       parentRequestId: undefined,
       parentSrNumber: "",
+      openedFromDraft: false,
     };
   });
 
@@ -117,11 +122,12 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
     "scopes" | "design_brief" | "sampling_config" | "product_search"
   >("scopes");
   const [selectedScopes, setSelectedScopes] = useState<DeliverableScopeId[]>([]);
+  const [scopeTimestamps, setScopeTimestamps] = useState<Record<string, string>>({});
 
   // Design Fields
   const [designDesc, setDesignDesc] = useState("");
   const [designCount, setDesignCount] = useState<number | "">("");
-  const [designDueDate, setDesignDueDate] = useState(() => getNextWorkingDate(new Date(), 7));
+  const [designDueDate, setDesignDueDate] = useState("");
   const [designTrend, setDesignTrend] = useState("");
   const [designAudience, setDesignAudience] = useState("");
   const [designRemarks, setDesignRemarks] = useState("");
@@ -243,13 +249,10 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
     setModalError(null);
   };
 
-  // Open modal starting in Step 1 (Deliverables Selection)
-  const handleOpenAddProduct = () => {
-    setAddModalStep("scopes");
-    setSelectedScopes([]);
+  const resetDesignState = () => {
     setDesignDesc("");
     setDesignCount("");
-    setDesignDueDate(getNextWorkingDate(new Date(), 7));
+    setDesignDueDate("");
     setDesignTrend("");
     setDesignAudience("");
     setDesignRemarks("");
@@ -258,6 +261,14 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
     setLinkInput("");
     setMediaTab("files");
     setModalError(null);
+  };
+
+  // Open modal starting in Step 1 (Deliverables Selection)
+  const handleOpenAddProduct = () => {
+    setAddModalStep("scopes");
+    setSelectedScopes([]);
+    setScopeTimestamps({});
+    resetDesignState();
     resetSamplingState();
     setIsAddModalOpen(true);
   };
@@ -331,10 +342,14 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
     }
     const requestSequence = ++bindingSearchSequenceRef.current;
     setIsSearchingBinding(true);
-    searchProductsByBindingApi(selectedBinding1, selectedBinding2)
+    // The sampling prototype list is filtered by Binding 1. Binding 2 can
+    // still describe the requested variant, but must not hide matching products.
+    const binding2Filter = addModalStep === "sampling_config" ? undefined : selectedBinding2;
+    const resultLimit = addModalStep === "sampling_config" ? undefined : 100;
+    searchProductsByBindingApi(selectedBinding1, binding2Filter, undefined, undefined, undefined, resultLimit)
       .then((res) => {
         if (bindingSearchSequenceRef.current === requestSequence) {
-          setBindingSearchResults(res.slice(0, 50));
+          setBindingSearchResults(res);
         }
       })
       .catch((err) => console.error("Search binding error:", err))
@@ -469,27 +484,25 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
     setWebLinks((prev) => prev.filter((_, i) => i !== idx));
   };
 
-  const isScopeDisabled = (scopeId: DeliverableScopeId): boolean => {
-    if (selectedScopes.includes(scopeId)) return false;
-    if (selectedScopes.length === 0) return false;
-
-    // Design and Mockup are the only deliverables that may be combined.
-    const isDesignMockupPair =
-      (scopeId === "design" || scopeId === "mockup") &&
-      selectedScopes.every((scope) => scope === "design" || scope === "mockup");
-    return !isDesignMockupPair;
+  const isScopeDisabled = (_scopeId: DeliverableScopeId): boolean => {
+    // Up to all four scopes (Design, Mockup, Sample, Costing) may be selected
+    return false;
   };
 
   const handleToggleScope = (scopeId: DeliverableScopeId) => {
     setSelectedScopes((prev) => {
       if (prev.includes(scopeId)) {
+        setScopeTimestamps((st) => {
+          const next = { ...st };
+          delete next[scopeId];
+          return next;
+        });
         return prev.filter((s) => s !== scopeId);
       }
-      if (
-        prev.length > 0 &&
-        !((scopeId === "design" || scopeId === "mockup") &&
-          prev.every((scope) => scope === "design" || scope === "mockup"))
-      ) return prev;
+      setScopeTimestamps((st) => ({
+        ...st,
+        [scopeId]: new Date().toISOString(),
+      }));
       const pipelineOrder: DeliverableScopeId[] = ["design", "mockup", "sample", "costing"];
       const next = [...prev, scopeId];
       return pipelineOrder.filter((id) => next.includes(id));
@@ -504,7 +517,8 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
       return;
     }
 
-    if (selectedScopes.includes("design")) {
+    // Selecting ONLY Design branches to design-only flow instead of product lookup
+    if (selectedScopes.length === 1 && selectedScopes[0] === "design") {
       setAddModalStep("design_brief");
       setModalError(null);
       return;
@@ -520,7 +534,7 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
   };
 
   // Step 2: Submit Design Brief and Stage Product
-  const handleStageDesignBrief = (e: React.FormEvent) => {
+  const handleStageDesignBrief = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!designDesc.trim()) {
@@ -534,8 +548,8 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
       return;
     }
     if (!designDueDate.trim()) {
-      setModalError("Design required date is mandatory.");
-      showToast("Design required date is mandatory.", "error");
+      setModalError("Design required date is mandatory. Please select a date.");
+      showToast("Please select the design required date.", "error");
       return;
     }
 
@@ -560,23 +574,55 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
       materialCode: generatedMaterialCode,
       productDescription: designDesc.trim(),
       scopes: [...selectedScopes],
+      requestTypeTimestamps: { ...scopeTimestamps },
+      creationMode: "material_code",
       stagedDate: formattedDate,
       timestamp: formattedTime,
+      isDraftSaved: false,
       designMetadata: {
         numberOfDesigns: Number(designCount) || 1,
         designRequiredDate: designDueDate.trim(),
         trend: designTrend.trim(),
         targetAudience: designAudience.trim(),
         remarks: designRemarks.trim(),
-        images: uploadedImages,
-        webLinks: webLinks,
+        images: [...uploadedImages],
+        webLinks: [...webLinks],
         referenceImage: uploadedImages[0]?.url || webLinks[0] || "",
       },
     };
 
-    setStagedProducts((prev) => [...prev, nextItem]);
+    const nextProducts = [...stagedProducts, nextItem];
+    setStagedProducts(nextProducts);
+    sessionStorage.setItem("samp_active_staged_products", JSON.stringify(nextProducts));
     setIsAddModalOpen(false);
-    showToast(`Added "${nextItem.productDescription}" to batch.`);
+    resetDesignState();
+    showToast(`Added "${nextItem.productDescription}" to Product Staging.`);
+
+    // Persist staged product directly into Draft in the background
+    autoSaveStagedProductsToDraft(nextProducts, programContext, user)
+      .then((res) => {
+        if (res.success) {
+          nextItem.isDraftSaved = true;
+          if (res.requestId && !programContext.parentRequestId) {
+            setProgramContext((prev) => ({
+              ...prev,
+              parentRequestId: res.requestId,
+              parentSrNumber: res.srNumber || prev.parentSrNumber,
+            }));
+            const cached = sessionStorage.getItem("samp_active_program_form");
+            if (cached) {
+              const parsed = JSON.parse(cached);
+              parsed.parentRequestId = res.requestId;
+              if (res.srNumber) parsed.parentSrNumber = res.srNumber;
+              sessionStorage.setItem("samp_active_program_form", JSON.stringify(parsed));
+            }
+          }
+          showToast(`✓ Staged product saved to Draft (${res.srNumber || programContext.parentSrNumber || "Draft queue"}).`);
+        }
+      })
+      .catch((err) => {
+        console.error("Auto-save staged product to draft error:", err);
+      });
   };
 
   // Stage the selected catalog product for Mockup or Costing (with the design brief when paired).
@@ -610,6 +656,12 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
       materialCode,
       productDescription,
       scopes: [...selectedScopes],
+      requestTypeTimestamps: { ...scopeTimestamps },
+      creationMode: "material_code",
+      sourceSampleRequestId: selectedDbSample.id,
+      sourceSampleCode: selectedDbSample.material_code,
+      customBinding1: selectedDbSample.binding_type_1 || selectedBinding1 || undefined,
+      customBinding2: selectedDbSample.binding_type_2 || selectedBinding2 || undefined,
       stagedDate: now.toISOString().split("T")[0],
       timestamp: now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       ...(selectedScopes.includes("design") && {
@@ -634,10 +686,22 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
       },
     };
 
-    setStagedProducts((prev) => [...prev, nextItem]);
+    const nextProducts = [...stagedProducts, nextItem];
+    setStagedProducts(nextProducts);
+    sessionStorage.setItem("samp_active_staged_products", JSON.stringify(nextProducts));
     setIsAddModalOpen(false);
     resetSamplingState();
-    showToast(`Added "${nextItem.productDescription}" to batch.`);
+    showToast(`Added "${nextItem.productDescription}" to Product Staging.`);
+
+    // Persist staged product directly into Draft
+    autoSaveStagedProductsToDraft(nextProducts, programContext, user)
+      .then((res) => {
+        if (res.success) {
+          nextItem.isDraftSaved = true;
+          showToast(`✓ Staged product saved to Draft (${res.srNumber || programContext.parentSrNumber || "Draft queue"}).`);
+        }
+      })
+      .catch((err) => console.error("Auto-save draft error:", err));
   };
 
   // Step 3: Submit Sampling Configuration and Stage Product
@@ -673,13 +737,21 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
     const formattedDate = now.toISOString().split("T")[0];
     const formattedTime = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
+    const isCustom = !selectedDbSample || samplingSearchMode === "binding";
     const nextItem: StagedProductItem = {
       id: `staged-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-      materialCode: matCode,
+      materialCode: isCustom && !selectedDbSample ? "" : matCode,
       productDescription: desc,
       scopes: [...selectedScopes],
+      requestTypeTimestamps: { ...scopeTimestamps },
+      creationMode: isCustom ? "binding" : "material_code",
+      sourceSampleRequestId: selectedDbSample?.id,
+      sourceSampleCode: selectedDbSample?.material_code,
+      customBinding1: selectedBinding1 || selectedDbSample?.binding_type_1,
+      customBinding2: selectedBinding2 || selectedDbSample?.binding_type_2,
       stagedDate: formattedDate,
       timestamp: formattedTime,
+      isDraftSaved: false,
       samplingMetadata: {
         sampleType,
         partialRequirements: partialRequirements.trim() || undefined,
@@ -694,12 +766,24 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
       },
     };
 
-    setStagedProducts((prev) => [...prev, nextItem]);
+    const nextProducts = [...stagedProducts, nextItem];
+    setStagedProducts(nextProducts);
+    sessionStorage.setItem("samp_active_staged_products", JSON.stringify(nextProducts));
     setIsAddModalOpen(false);
     resetSamplingState();
     showToast(
-      `Added Sampling (${sampleType === "full" ? "Full Sample" : "Partial Sample"}): "${nextItem.productDescription}" to batch.`
+      `Added Sampling (${sampleType === "full" ? "Full Sample" : "Partial Sample"}): "${nextItem.productDescription}" to Product Staging.`
     );
+
+    // Persist staged product directly into Draft
+    autoSaveStagedProductsToDraft(nextProducts, programContext, user)
+      .then((res) => {
+        if (res.success) {
+          nextItem.isDraftSaved = true;
+          showToast(`✓ Staged product saved to Draft (${res.srNumber || programContext.parentSrNumber || "Draft queue"}).`);
+        }
+      })
+      .catch((err) => console.error("Auto-save draft error:", err));
   };
 
   const handleRemoveStagedItem = (id: string) => {
@@ -782,8 +866,8 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
   // Submit all staged products into Sample Requests & Design pipelines
   const handleSubmitBatch = async () => {
     if (stagedProducts.length === 0) return;
-    if (!programContext.customer || !programContext.targetPlant) {
-      showToast("Customer and manufacturing plant are required.", "error");
+    if (!programContext.customer) {
+      showToast("A customer is required before saving products.", "error");
       return;
     }
     setIsSubmittingAll(true);
@@ -792,6 +876,8 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
     try {
       sessionStorage.removeItem("samp_active_program_form");
       sessionStorage.removeItem("samp_active_staged_products");
+      sessionStorage.removeItem("samp_active_staged_items");
+      setStagedProducts([]);
 
       const res = await autoSaveStagedProductsToDraft(stagedProducts, programContext, user);
       if (res.success) {
@@ -814,6 +900,7 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
 
   // Explicitly release the staged draft request to active PMT or Creative workflow
   const handleReleaseRequest = async () => {
+    if (!programContext.openedFromDraft) return;
     if (!programContext.customer && !programContext.parentRequestId) {
       showToast("Customer account is required.", "error");
       return;
@@ -961,6 +1048,7 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
                 linkInput={linkInput}
                 mediaTab={mediaTab}
                 modalError={modalError}
+                isSubmitting={isSubmittingAll}
                 onSetDesignDesc={setDesignDesc}
                 onSetDesignCount={setDesignCount}
                 onSetDesignDueDate={setDesignDueDate}
@@ -998,7 +1086,6 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
                 selectedBinding2={selectedBinding2}
                 bindingSearchResults={bindingSearchResults}
                 isSearchingBinding={isSearchingBinding}
-                samplingDescription={samplingDescription}
                 isSubmittingAll={isSubmittingAll}
                 onSetModalError={setModalError}
                 onSetSampleType={setSampleType}
@@ -1025,7 +1112,6 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
                     setSamplingDescription(`${selectedBinding1} Notebook (${b2})`);
                   }
                 }}
-                onSetSamplingDescription={setSamplingDescription}
                 onBackToScopes={() => {
                   setAddModalStep("scopes");
                   setModalError(null);
@@ -1080,7 +1166,6 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
       {/* 4. Inspect Specification Modal Drawer */}
       <StagedProductDrawer
         inspectingProduct={inspectingProduct}
-        targetPlant={programContext.targetPlant}
         programYear={programContext.programYear}
         onClose={() => setInspectingProduct(null)}
         onRemoveProduct={(id) => {

@@ -11,25 +11,42 @@ import {
   updateSampleRequestApi,
   deleteAnyRequestApi,
   batchDeleteAnyRequestsApi,
-} from "./api";
+} from "@/infrastructure/api";
 import {
   getRequestTrackType,
   getRequestTrackBadge,
   getStageIdForRequest,
   isOpenFeasibilityReview,
+  isDesignRequest,
 } from "./utils/trackTypes";
 import { useBusinessYear } from "@/context/BusinessYearContext";
-import { SampleRequestInspector } from "./components/SampleRequestInspector";
-import { FeasibilityInspectorModal } from "./components/FeasibilityInspectorModal";
-import { NewSampleRequestModal } from "./components/NewSampleRequestModal";
+import { exportRecordsToCsv } from "@/lib/csvExport";
 
 // Modular Sub-Desks
 import { MarketingOverviewPage } from "./overview/MarketingOverviewPage";
 import { SamplingRequestsPage } from "./sampling/SamplingRequestsPage";
 import { FeasibilityRequestsPage } from "./feasibility/FeasibilityRequestsPage";
 import { ProgramPlanningPage } from "./programs/ProgramPlanningPage";
-import { NewProgramPlanningModal } from "./programs/components/NewProgramPlanningModal";
-import { ProgramPlanningInspectorModal } from "./programs/components/ProgramPlanningInspectorModal";
+
+// Code-split heavy modal sheets & dialogs for fast initial load
+const SampleRequestInspector = React.lazy(() =>
+  import("./components/SampleRequestInspector").then((m) => ({ default: m.SampleRequestInspector }))
+);
+const DesignRequestInspectorModal = React.lazy(() =>
+  import("./components/DesignRequestInspectorModal").then((m) => ({ default: m.DesignRequestInspectorModal }))
+);
+const FeasibilityInspectorModal = React.lazy(() =>
+  import("./components/FeasibilityInspectorModal").then((m) => ({ default: m.FeasibilityInspectorModal }))
+);
+const NewSampleRequestModal = React.lazy(() =>
+  import("./components/NewSampleRequestModal").then((m) => ({ default: m.NewSampleRequestModal }))
+);
+const NewProgramPlanningModal = React.lazy(() =>
+  import("./programs/components/NewProgramPlanningModal").then((m) => ({ default: m.NewProgramPlanningModal }))
+);
+const ProgramPlanningInspectorModal = React.lazy(() =>
+  import("./programs/components/ProgramPlanningInspectorModal").then((m) => ({ default: m.ProgramPlanningInspectorModal }))
+);
 
 // Re-export for any external consumers
 export {
@@ -84,6 +101,8 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
   // Inspector & Modal State
   const [selectedRequest, setSelectedRequest] = useState<SampleRequestItem | null>(null);
   const [isInspectorOpen, setIsInspectorOpen] = useState(false);
+  const [isDesignReviewOpen, setIsDesignReviewOpen] = useState(false);
+  const [isDesignRequestInspectorOpen, setIsDesignRequestInspectorOpen] = useState(false);
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
   const [isNewProgramModalOpen, setIsNewProgramModalOpen] = useState(false);
   const [modalInitialTrack, setModalInitialTrack] = useState<
@@ -182,6 +201,10 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
       return;
     }
     setSelectedRequest(req);
+    if (isDesignRequest(req)) {
+      setIsDesignRequestInspectorOpen(true);
+      return;
+    }
     setIsInspectorOpen(true);
   };
 
@@ -306,7 +329,7 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
     }
   };
 
-  // Direct Status Update Handler (for Kanban drag & drop and quick move)
+  // Direct Status Update Handler (for quick status change)
   const handleUpdateStatus = async (reqId: string | number, newStatus: string) => {
     setRequests((prev) =>
       prev.map((r) =>
@@ -423,13 +446,8 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
       }
     }
 
-    const yr = new Date().getFullYear() % 100;
-    const nextIndex = requests.length + 1;
-    const nextSrNum = `SR-${yr}-${String(nextIndex).padStart(3, "0")}`;
     const payload: any = {
       ...newForm,
-      srNumber: nextSrNum,
-      sr_number: nextSrNum,
       createdAt: new Date().toISOString(),
     };
 
@@ -441,7 +459,7 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
         showToast("The sample request could not be saved to the backend.");
         return false;
       }
-      showToast(`Sample Request ${nextSrNum} registered successfully!`);
+      showToast(`Sample Request ${created.srNumber} registered successfully!`);
       return created;
     } catch (err) {
       console.error("Error creating request:", err);
@@ -480,40 +498,23 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
   // Export CSV
   const handleExportCSV = () => {
     if (requests.length === 0) return;
-    const headers = [
-      "Sample Code",
-      "Material Code",
-      "Product Description",
-      "Customer",
-      "Plant / Queue",
-      "Request Date",
-      "Required Date",
-      "Status",
-      "Feasibility (Plant)",
-      "Feasibility (SAMP)",
-    ];
-    const rows = requests.map((r) => [
-      `"${r.srNumber}"`,
-      `"${r.materialCode}"`,
-      `"${(r.productDescription || "").replace(/"/g, '""')}"`,
-      `"${(r.customer || "").replace(/"/g, '""')}"`,
-      `"${r.targetPlant || ""}"`,
-      `"${r.dateRequestCreated || ""}"`,
-      `"${r.sampleRequiredDate || ""}"`,
-      `"${r.status || ""}"`,
-      `"${r.plantFeasibilityResponse || "Pending"}"`,
-      `"${r.samplingFeasibilityResponse || "Pending"}"`,
-    ]);
-
-    const csvContent = [headers.join(","), ...rows.map((row) => row.join(","))].join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", `sample_requests_${new Date().toISOString().split("T")[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const dateStr = new Date().toISOString().split("T")[0];
+    exportRecordsToCsv({
+      filename: `sample_requests_${dateStr}.csv`,
+      columns: [
+        { header: "Sample Code", accessor: (r) => r.srNumber },
+        { header: "Material Code", accessor: (r) => r.materialCode },
+        { header: "Product Description", accessor: (r) => r.productDescription },
+        { header: "Customer", accessor: (r) => r.customer },
+        { header: "Plant / Queue", accessor: (r) => r.targetPlant },
+        { header: "Request Date", accessor: (r) => r.dateRequestCreated },
+        { header: "Required Date", accessor: (r) => r.sampleRequiredDate },
+        { header: "Status", accessor: (r) => r.status },
+        { header: "Feasibility (Plant)", accessor: (r) => r.plantFeasibilityResponse || "Pending" },
+        { header: "Feasibility (SAMP)", accessor: (r) => r.samplingFeasibilityResponse || "Pending" },
+      ],
+      data: requests,
+    });
     showToast(`Exported ${requests.length} records to CSV`);
   };
 
@@ -558,6 +559,7 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
           onRefresh={loadRequests}
           onExportCSV={handleExportCSV}
           onUpdateStatus={handleUpdateStatus}
+          showToast={showToast}
         />
       )}
 
@@ -599,64 +601,77 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
         />
       )}
 
-      {/* Master Detail Inspector Drawer */}
-      {selectedRequest && getRequestTrackType(selectedRequest) === "feasibility_check" ? (
-        <FeasibilityInspectorModal
-          request={selectedRequest}
-          isOpen={isInspectorOpen}
-          onClose={() => setIsInspectorOpen(false)}
-          onMarketingApprove={handleMarketingApproveFeasibility}
-          onDeleteRequest={(req) => handleDeleteRequest(req)}
-          user={user}
-          isAdmin={isAdmin}
-          sourceDesk="marketing"
-        />
-      ) : selectedRequest && getRequestTrackType(selectedRequest) === "program_planning" ? (
-        <ProgramPlanningInspectorModal
-          request={selectedRequest}
-          isOpen={isInspectorOpen}
-          onClose={() => setIsInspectorOpen(false)}
-          onRefresh={loadRequests}
-          mode="marketing"
-          userRole="Marketing Specialist"
-          currentUser={user}
+      {/* Master Detail Inspector Drawer & Dialog Modals */}
+      <React.Suspense fallback={null}>
+        {selectedRequest && isDesignRequest(selectedRequest) ? (
+          <DesignRequestInspectorModal
+            request={selectedRequest}
+            isOpen={isDesignRequestInspectorOpen || isDesignReviewOpen}
+            onClose={() => {
+              setIsDesignRequestInspectorOpen(false);
+              setIsDesignReviewOpen(false);
+            }}
+            onRefresh={loadRequests}
+            mode="marketing"
+            showToast={showToast}
+          />
+        ) : selectedRequest && getRequestTrackType(selectedRequest) === "feasibility_check" ? (
+          <FeasibilityInspectorModal
+            request={selectedRequest}
+            isOpen={isInspectorOpen}
+            onClose={() => setIsInspectorOpen(false)}
+            onMarketingApprove={handleMarketingApproveFeasibility}
+            onDeleteRequest={(req) => handleDeleteRequest(req)}
+            user={user}
+            isAdmin={isAdmin}
+            sourceDesk="marketing"
+          />
+        ) : selectedRequest && getRequestTrackType(selectedRequest) === "program_planning" ? (
+          <ProgramPlanningInspectorModal
+            request={selectedRequest}
+            isOpen={isInspectorOpen}
+            onClose={() => setIsInspectorOpen(false)}
+            onRefresh={loadRequests}
+            mode="marketing"
+            userRole="Marketing Specialist"
+            currentUser={user}
+          />
+        ) : (
+          <SampleRequestInspector
+            request={selectedRequest}
+            isOpen={isInspectorOpen}
+            onClose={() => setIsInspectorOpen(false)}
+            onMarketingApprove={handleMarketingApproveFeasibility}
+            onMaterialsUpdated={handleMaterialsUpdated}
+            onDeleteRequest={(req) => handleDeleteRequest(req)}
+            onReleaseDraft={handleReleaseDraft}
+            isAdmin={isAdmin}
+          />
+        )}
+
+        {/* New Sample Request Modal */}
+        <NewSampleRequestModal
+          isOpen={isNewModalOpen}
+          onClose={() => {
+            setIsNewModalOpen(false);
+            setModalInitialTrack("feasibility_check");
+          }}
+          onSubmit={handleCreateRequest}
+          initialTrack={modalInitialTrack}
+          lockTrack={activeView !== "overview"}
+          requestCreatedBy={user?.name || user?.userid}
         />
 
-      ) : (
-        <SampleRequestInspector
-          request={selectedRequest}
-          isOpen={isInspectorOpen}
-          onClose={() => setIsInspectorOpen(false)}
-          onMarketingApprove={handleMarketingApproveFeasibility}
-          onMaterialsUpdated={handleMaterialsUpdated}
-          onDeleteRequest={(req) => handleDeleteRequest(req)}
-          onReleaseDraft={handleReleaseDraft}
-          isAdmin={isAdmin}
+        {/* New Seasonal Program Planning Modal */}
+        <NewProgramPlanningModal
+          isOpen={isNewProgramModalOpen}
+          onClose={() => setIsNewProgramModalOpen(false)}
+          onProceed={(params) => {
+            setIsNewProgramModalOpen(false);
+            navigate("/sample-requests/program-planning", { state: params });
+          }}
         />
-      )}
-
-      {/* New Sample Request Modal */}
-      <NewSampleRequestModal
-        isOpen={isNewModalOpen}
-        onClose={() => {
-          setIsNewModalOpen(false);
-          setModalInitialTrack("feasibility_check");
-        }}
-        onSubmit={handleCreateRequest}
-        initialTrack={modalInitialTrack}
-        lockTrack={activeView !== "overview"}
-        requestCreatedBy={user?.name || user?.userid}
-      />
-
-      {/* New Seasonal Program Planning Modal */}
-      <NewProgramPlanningModal
-        isOpen={isNewProgramModalOpen}
-        onClose={() => setIsNewProgramModalOpen(false)}
-        onProceed={(params) => {
-          setIsNewProgramModalOpen(false);
-          navigate("/sample-requests/program-planning", { state: params });
-        }}
-      />
+      </React.Suspense>
     </div>
   );
 };

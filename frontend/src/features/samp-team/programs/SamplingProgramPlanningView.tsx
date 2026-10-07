@@ -21,11 +21,15 @@ import {
   Download,
   List as ListIcon,
   LayoutGrid,
-  Filter,
   Package,
 } from "lucide-react";
 import { isMaterialAddedRecently } from "@/features/sample-requests/programs/components/ProgramChatterFeed";
-import { parseSampRemark } from "@/features/sample-requests/programs/components/ProgramPlanningInspectorModal";
+import { parseSampRemark } from "@/features/sample-requests/programs/utils/programRemarkUtils";
+import { CopyBadge } from "@/components/ui/CopyBadge";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { WorkflowTabStrip } from "@/components/erp/WorkflowTabStrip";
+import { PaginationBar } from "@/components/erp/PaginationBar";
+import { exportRecordsToCsv } from "@/lib/csvExport";
 
 export interface SamplingProgramPlanningViewProps {
   requests: SampleRequestItem[];
@@ -41,22 +45,7 @@ export interface SamplingProgramPlanningViewProps {
 
 export type SampProgramTab = "all" | "pending_review" | "reviewed";
 
-export const SAMP_PROGRAM_KANBAN_COLUMNS = [
-  {
-    id: "pending_review",
-    label: "1. Awaiting Technical Review",
-    bgTone: "bg-amber-50/40 dark:bg-amber-950/20",
-    borderTone: "border-amber-200/80 dark:border-amber-900/40",
-    accentTone: "text-amber-700 dark:text-amber-400",
-  },
-  {
-    id: "reviewed",
-    label: "2. Reviewed by SAMP Lab",
-    bgTone: "bg-[#017E84]/5 dark:bg-[#017E84]/15",
-    borderTone: "border-[#017E84]/30 dark:border-[#017E84]/30",
-    accentTone: "text-[#017E84] dark:text-[#2dd4bf]",
-  },
-];
+
 
 export const SamplingProgramPlanningView: React.FC<SamplingProgramPlanningViewProps> = ({
   requests,
@@ -69,21 +58,12 @@ export const SamplingProgramPlanningView: React.FC<SamplingProgramPlanningViewPr
   onRefresh,
   showToast,
 }) => {
-  const [viewMode, setViewMode] = useState<"list" | "kanban">("list");
   const [filterTab, setFilterTab] = useState<SampProgramTab>("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [plantFilter, setPlantFilter] = useState("all");
   const [customerFilter, setCustomerFilter] = useState("all");
-  const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const PAGE_SIZE = 15;
-
-  const handleCopy = (code: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    navigator.clipboard.writeText(code);
-    setCopiedCode(code);
-    setTimeout(() => setCopiedCode(null), 1200);
-  };
 
   // Only consider program planning requests
   const programRequests = useMemo(() => {
@@ -173,54 +153,41 @@ export const SamplingProgramPlanningView: React.FC<SamplingProgramPlanningViewPr
     });
   }, [programRequests, filterTab, plantFilter, customerFilter, searchTerm]);
 
-  // Pagination
   const totalPages = Math.max(1, Math.ceil(filteredRequests.length / PAGE_SIZE));
   const paginatedRequests = useMemo(() => {
     const start = (currentPage - 1) * PAGE_SIZE;
     return filteredRequests.slice(start, start + PAGE_SIZE);
   }, [filteredRequests, currentPage]);
 
+  const sampTabs = useMemo(
+    () => [
+      { id: "all", label: "All Programs", count: tabCounts.all },
+      { id: "pending_review", label: "Pending SAMP Review", count: tabCounts.pending_review },
+      { id: "reviewed", label: "Reviewed / Verified", count: tabCounts.reviewed },
+    ],
+    [tabCounts]
+  );
+
   // Export CSV
   const handleExportCSV = () => {
-    const headers = [
-      "Program Code",
-      "SR Number",
-      "Campaign Title",
-      "Customer",
-      "Target Plant",
-      "Program Year",
-      "Status",
-      "Materials Count",
-      "Created By",
-      "Created Date",
-    ];
-
-    const rows = filteredRequests.map((r) => [
-      r.materialCode || "",
-      r.srNumber || "",
-      `"${(r.programName || r.productDescription || "").replace(/"/g, '""')}"`,
-      `"${(r.customer || "").replace(/"/g, '""')}"`,
-      r.targetPlant || "",
-      r.programYear || "2026",
-      r.status || "Pending SAMP Review",
-      (r.programMaterials || []).length,
-      r.createdBy || "Marketing",
-      r.dateRequestCreated || r.createdAt || "",
-    ]);
-
-    const csvContent =
-      "data:text/csv;charset=utf-8," +
-      [headers.join(","), ...rows.map((row) => row.join(","))].join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute(
-      "download",
-      `SAMP_Program_Planning_Review_${new Date().toISOString().split("T")[0]}.csv`
-    );
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const dateStr = new Date().toISOString().split("T")[0];
+    exportRecordsToCsv({
+      filename: `SAMP_Program_Planning_Review_${dateStr}.csv`,
+      columns: [
+        { header: "Program Code", accessor: (r) => r.materialCode || "" },
+        { header: "SR Number", accessor: (r) => r.srNumber || "" },
+        { header: "Campaign Title", accessor: (r) => r.programName || r.productDescription || "" },
+        { header: "Customer", accessor: (r) => r.customer || "" },
+        { header: "Target Plant", accessor: (r) => r.targetPlant || "" },
+        { header: "Program Year", accessor: (r) => r.programYear || "2026" },
+        { header: "Status", accessor: (r) => r.status || "Pending SAMP Review" },
+        { header: "Materials Count", accessor: (r) => (r.programMaterials || []).length },
+        { header: "Created By", accessor: (r) => r.createdBy || "Marketing" },
+        { header: "Created Date", accessor: (r) => r.dateRequestCreated || r.createdAt || "" },
+      ],
+      data: filteredRequests,
+    });
+    showToast(`Exported ${filteredRequests.length} program planning records to CSV`);
   };
 
   return (
@@ -234,7 +201,7 @@ export const SamplingProgramPlanningView: React.FC<SamplingProgramPlanningViewPr
               Seasonal Program Planning Review Workbench
             </h1>
             <span className="shrink-0 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#017E84]/10 text-[#017E84] dark:bg-teal-950/40 dark:text-teal-300 border border-[#017E84]/20">
-              SAMP Lab
+              SAMP Team
             </span>
           </div>
 
@@ -264,35 +231,6 @@ export const SamplingProgramPlanningView: React.FC<SamplingProgramPlanningViewPr
               <span className="hidden sm:inline">Export</span>
             </button>
 
-            {/* View Mode Toggle */}
-            <div className="inline-flex rounded border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-800 p-0.5 shadow-2xs">
-              <button
-                type="button"
-                onClick={() => setViewMode("list")}
-                className={`px-2 py-1 rounded text-xs transition cursor-pointer flex items-center gap-1.5 ${
-                  viewMode === "list"
-                    ? "bg-[#714B67] text-white shadow-2xs font-bold"
-                    : "text-neutral-500 hover:text-neutral-800 dark:text-zinc-400"
-                }`}
-                title="Table View"
-              >
-                <ListIcon className="w-3.5 h-3.5" />
-                <span className="text-[11px] font-semibold">List</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode("kanban")}
-                className={`px-2 py-1 rounded text-xs transition cursor-pointer flex items-center gap-1.5 ${
-                  viewMode === "kanban"
-                    ? "bg-[#714B67] text-white shadow-2xs font-bold"
-                    : "text-neutral-500 hover:text-neutral-800 dark:text-zinc-400"
-                }`}
-                title="Kanban Pipeline Swimlanes"
-              >
-                <LayoutGrid className="w-3.5 h-3.5" />
-                <span className="text-[11px] font-semibold">Kanban</span>
-              </button>
-            </div>
           </div>
         </div>
 
@@ -336,7 +274,7 @@ export const SamplingProgramPlanningView: React.FC<SamplingProgramPlanningViewPr
           >
             <div className="flex items-center justify-between">
               <span className="text-[10.5px] uppercase font-bold text-amber-700 dark:text-amber-300 font-mono tracking-wider">
-                Needs Lab Review
+                Needs SAMP Review
               </span>
               <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
             </div>
@@ -396,41 +334,15 @@ export const SamplingProgramPlanningView: React.FC<SamplingProgramPlanningViewPr
       <div className="bg-white dark:bg-[#12141d] border-b border-[#E2E8F0] dark:border-white/[0.08] px-6 py-2 shrink-0">
         <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
           {/* Tabs */}
-          <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5">
-            {[
-              { id: "all" as const, label: "All Programs", count: tabCounts.all },
-              { id: "pending_review" as const, label: "Pending SAMP Review", count: tabCounts.pending_review },
-              { id: "reviewed" as const, label: "Reviewed / Verified", count: tabCounts.reviewed },
-            ].map((tab) => {
-              const active = filterTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => {
-                    setFilterTab(tab.id);
-                    setCurrentPage(1);
-                  }}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
-                    active
-                      ? "bg-[#714B67] text-white shadow-xs"
-                      : "text-neutral-600 dark:text-zinc-400 hover:bg-neutral-100 dark:hover:bg-zinc-800"
-                  }`}
-                >
-                  <span>{tab.label}</span>
-                  <span
-                    className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
-                      active
-                        ? "bg-white/20 text-white"
-                        : "bg-neutral-200 dark:bg-zinc-700 text-neutral-700 dark:text-zinc-300"
-                    }`}
-                  >
-                    {tab.count}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+          <WorkflowTabStrip
+            tabs={sampTabs}
+            activeTab={filterTab}
+            onSelectTab={(id) => {
+              setFilterTab(id as SampProgramTab);
+              setCurrentPage(1);
+            }}
+            compact
+          />
 
           {/* Search + Dropdown Filters */}
           <div className="flex items-center gap-2">
@@ -501,20 +413,21 @@ export const SamplingProgramPlanningView: React.FC<SamplingProgramPlanningViewPr
         </div>
       </div>
 
-      {/* ── 4. Main Data Table or Kanban View ── */}
+      {/* ── 4. Main Data Table ── */}
       <div className="flex-1 overflow-y-auto">
-        {viewMode === "list" ? (
-          <div className="min-w-full inline-block align-middle">
+        <div className="min-w-full inline-block align-middle">
             {filteredRequests.length === 0 ? (
-              <div className="py-16 text-center">
-                <FolderGit2 className="w-12 h-12 text-neutral-300 dark:text-zinc-600 mx-auto mb-3" />
-                <h3 className="text-sm font-bold text-neutral-700 dark:text-zinc-300">
-                  No seasonal programs match your current filter
-                </h3>
-                <p className="text-xs text-neutral-400 dark:text-zinc-500 mt-1">
-                  Try resetting the search facet or changing plant / stage filter.
-                </p>
-              </div>
+              <EmptyState
+                icon={FolderGit2}
+                title="No seasonal programs match your current filter"
+                description="Try resetting the search facet or changing plant / stage filter."
+                onResetFilters={() => {
+                  setFilterTab("all");
+                  setPlantFilter("all");
+                  setCustomerFilter("all");
+                  setSearchTerm("");
+                }}
+              />
             ) : (
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
@@ -563,22 +476,8 @@ export const SamplingProgramPlanningView: React.FC<SamplingProgramPlanningViewPr
                         </td>
 
                         {/* 2. Code */}
-                        <td className="py-3 px-4 font-mono font-bold text-xs text-[#017E84] dark:text-[#2dd4bf]">
-                          <div className="flex items-center gap-1.5">
-                            <span>{req.materialCode || req.srNumber}</span>
-                            <button
-                              type="button"
-                              onClick={(e) => handleCopy(req.materialCode || req.srNumber, e)}
-                              className="text-neutral-400 hover:text-neutral-700 dark:hover:text-zinc-200 cursor-pointer"
-                              title="Copy code"
-                            >
-                              {copiedCode === (req.materialCode || req.srNumber) ? (
-                                <Check className="w-3 h-3 text-emerald-600 stroke-[3]" />
-                              ) : (
-                                <Copy className="w-3 h-3" />
-                              )}
-                            </button>
-                          </div>
+                        <td className="py-3 px-4 font-mono font-bold text-xs whitespace-nowrap">
+                          <CopyBadge text={req.materialCode || req.srNumber} />
                         </td>
 
                         {/* 3. Title */}
@@ -672,94 +571,17 @@ export const SamplingProgramPlanningView: React.FC<SamplingProgramPlanningViewPr
               </table>
             )}
           </div>
-        ) : (
-          /* Kanban Swimlanes Mode */
-          <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-            {SAMP_PROGRAM_KANBAN_COLUMNS.map((col) => {
-              const colRequests = filteredRequests.filter((r) => {
-                const st = (r.status || "").toLowerCase();
-                const isRev = st.includes("reviewed") || st.includes("approved");
-                return col.id === "reviewed" ? isRev : !isRev;
-              });
-
-              return (
-                <div
-                  key={col.id}
-                  className={`rounded-xl border ${col.borderTone} ${col.bgTone} p-4 flex flex-col min-h-[500px]`}
-                >
-                  <div className="flex items-center justify-between pb-3 border-b border-black/5 dark:border-white/5 mb-3">
-                    <span className={`text-xs font-bold font-mono uppercase tracking-wider ${col.accentTone}`}>
-                      {col.label}
-                    </span>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-white dark:bg-zinc-800 text-neutral-700 dark:text-zinc-300 border border-neutral-200 dark:border-zinc-700">
-                      {colRequests.length}
-                    </span>
-                  </div>
-
-                  <div className="space-y-3 flex-1 overflow-y-auto">
-                    {colRequests.map((req) => (
-                      <div
-                        key={req.id}
-                        onClick={() => onInspectRequest(req)}
-                        className="p-3.5 rounded-lg bg-white dark:bg-[#12141d] border border-neutral-200 dark:border-zinc-800 shadow-2xs hover:shadow-xs transition cursor-pointer group"
-                      >
-                        <div className="flex items-center justify-between text-[11px] font-mono text-[#017E84] font-bold mb-1">
-                          <span>{req.materialCode || req.srNumber}</span>
-                          <span className="text-neutral-500 font-normal">{req.programYear || "2026"}</span>
-                        </div>
-                        <h4 className="text-xs font-bold text-neutral-900 dark:text-zinc-100 group-hover:text-[#714B67] transition">
-                          {req.programName || req.productDescription || "Seasonal Program"}
-                        </h4>
-                        <div className="mt-2 flex items-center justify-between text-[10.5px] text-neutral-500">
-                          <span className="flex items-center gap-1">
-                            <Building2 className="w-3 h-3 text-neutral-400" />
-                            {req.customer}
-                          </span>
-                          <span className="font-mono font-semibold">
-                            {(req.programMaterials || []).length} SKUs
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+        </div>
 
       {/* ── 5. Sticky Bottom Pagination (Matched to Feasibility Workbench) ── */}
-      {viewMode === "list" && filteredRequests.length > 0 && (
-        <div className="bg-white dark:bg-[#12141d] border-t border-[#E2E8F0] dark:border-white/[0.08] px-6 py-2.5 flex items-center justify-between text-xs text-neutral-500 dark:text-zinc-400 shrink-0">
-          <div>
-            Showing <strong className="text-neutral-900 dark:text-zinc-200">{paginatedRequests.length}</strong> of{" "}
-            <strong className="text-neutral-900 dark:text-zinc-200">{filteredRequests.length}</strong> campaigns
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              disabled={currentPage <= 1}
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              className="px-2.5 py-1 rounded border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-neutral-50 disabled:opacity-40 disabled:pointer-events-none transition cursor-pointer text-xs"
-            >
-              Prev
-            </button>
-            <span className="font-mono text-xs">
-              {currentPage} / {totalPages}
-            </span>
-            <button
-              type="button"
-              disabled={currentPage >= totalPages}
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              className="px-2.5 py-1 rounded border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-neutral-50 disabled:opacity-40 disabled:pointer-events-none transition cursor-pointer text-xs"
-            >
-              Next
-            </button>
-          </div>
-        </div>
-      )}
+      <PaginationBar
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalCount={filteredRequests.length}
+        pageSize={PAGE_SIZE}
+        onPageChange={(p) => setCurrentPage(p)}
+        itemLabel="campaigns"
+      />
     </div>
   );
 };

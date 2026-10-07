@@ -51,6 +51,23 @@ export function getRequestTrackType(r: Partial<SampleRequestItem>): RequestTrack
   return "marketing_request";
 }
 
+export function isDesignRequest(r?: Partial<SampleRequestItem> | null): boolean {
+  if (!r) return false;
+  if (r.designRequestId && Number(r.designRequestId) > 0) return true;
+  if (r.requestKind === "design") return true;
+  const idStr = String(r.id || "");
+  if (idStr.startsWith("design-")) return true;
+  const scopes = r.requestTypes || [];
+  if (scopes.includes("design") && !scopes.includes("sample")) return true;
+  const mat = String(r.materialCode || "").toLowerCase();
+  const sr = String(r.srNumber || "").toLowerCase();
+  if (mat.startsWith("dsg-") || sr.startsWith("dsg-")) return true;
+  if (Boolean(r.numberOfDesigns) || Boolean(r.designsCustomerCreative)) {
+    if (!scopes.includes("sample") && !r.productType) return true;
+  }
+  return false;
+}
+
 export function getRequestTrackBadge(r: Partial<SampleRequestItem>): {
   label: string;
   bg: string;
@@ -58,6 +75,16 @@ export function getRequestTrackBadge(r: Partial<SampleRequestItem>): {
   border: string;
   className: string;
 } {
+  if (isDesignRequest(r)) {
+    return {
+      label: "Design Request",
+      bg: "bg-[#714B67]/10 dark:bg-[#714B67]/25",
+      text: "text-[#714B67] dark:text-[#d5bdd0]",
+      border: "border-[#714B67]/30 dark:border-[#714B67]/50",
+      className:
+        "bg-[#714B67]/10 dark:bg-[#714B67]/25 text-[#714B67] dark:text-[#d5bdd0] border border-[#714B67]/30 dark:border-[#714B67]/50",
+    };
+  }
   const track = getRequestTrackType(r);
   if (track === "feasibility_check") {
     return {

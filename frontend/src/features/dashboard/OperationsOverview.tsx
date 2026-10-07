@@ -5,7 +5,7 @@ import {
   fetchCreativeBriefsApi,
   fetchStudioDielinesApi,
   fetchCostingEstimationsApi,
-} from "@/features/sample-requests/api";
+} from "@/infrastructure/api";
 import { SampleRequestItem } from "@/features/sample-requests/types";
 import { useBusinessYear } from "@/context/BusinessYearContext";
 import { MetricRibbon, MetricTileItem } from "@/components/erp/MetricRibbon";
@@ -165,7 +165,7 @@ export const OperationsOverview: React.FC = () => {
         id: "in_lab",
         label: "Prototyping & CAD",
         value: telemetry.inFabrication,
-        deltaText: "Active in SAMP lab & Studio",
+        deltaText: "Active in SAMP Team & Studio",
         deltaTone: "positive",
         onClick: () => navigate("/samp-team-work"),
       },

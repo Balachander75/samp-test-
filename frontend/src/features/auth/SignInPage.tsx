@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { User, Lock, Eye, EyeOff, Sun, Moon, AlertCircle, ArrowRight, Loader2, X } from "lucide-react";
 import { AuthResponse } from "./types";
-import { API_BASE_URL } from "@/lib/api";
+import { API_BASE_URL } from "@/infrastructure/api/client";
 import { persistAuthSession } from "@/lib/session";
 import { useTheme } from "@/context/ThemeContext";
 import logoImg from "@/assets/logo.png";

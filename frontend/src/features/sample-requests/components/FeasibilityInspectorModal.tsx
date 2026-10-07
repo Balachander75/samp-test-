@@ -8,8 +8,16 @@ import {
   convertFeasibilityToSamplingApi,
   cleanFeasibilityDescription,
   addFeasibilityNoteApi,
-} from "../api";
-import { ExternalLink } from "lucide-react";
+} from "@/infrastructure/api";
+import {
+  ExternalLink,
+  CheckCircle2,
+  AlertTriangle,
+  XCircle,
+  ArrowRight,
+  Sparkles,
+  FileText,
+} from "lucide-react";
 
 // Modular Sub-Components
 import {
@@ -120,64 +128,74 @@ export const FeasibilityInspectorModal: React.FC<FeasibilityInspectorModalProps>
       ...(Array.isArray(activeRequest.referenceImageNames)
         ? activeRequest.referenceImageNames
         : []),
-      ...(Array.isArray((activeRequest as any).reference_image_names)
-        ? (activeRequest as any).reference_image_names
+      ...(Array.isArray((activeRequest as any).image_names)
+        ? (activeRequest as any).image_names
         : []),
     ];
 
-    const canonicalDesc =
-      (activeRequest as any).descriptionNotes ||
-      activeRequest.feasibilityDescription ||
-      activeRequest.productDescription ||
-      "";
-
     return parseFeasibilityDetails(
-      canonicalDesc,
+      activeRequest.productDescription,
       rawImages,
       rawLinks,
-      activeRequest.productImagePath,
+      null,
       rawImageNames
     );
-  }, [
-    activeRequest?.productDescription,
-    activeRequest?.feasibilityDescription,
-    (activeRequest as any)?.descriptionNotes,
-    (activeRequest as any)?.description_notes,
-    activeRequest?.referenceImages,
-    (activeRequest as any)?.reference_images,
-    activeRequest?.referenceLinks,
-    (activeRequest as any)?.reference_links,
-    (activeRequest as any)?.webLinks,
-    activeRequest?.productImagePath,
-  ]);
+  }, [activeRequest]);
 
+  // Previewable image assets
   const previewableImages = useMemo(() => {
-    return feasibilityDetails.referenceImages.filter((img) => Boolean(img.url));
-  }, [feasibilityDetails.referenceImages]);
+    const list: { id: string; url: string; name: string }[] = [];
+    (feasibilityDetails.referenceImages || []).forEach((img, idx) => {
+      const url = typeof img === "string" ? img : img.url;
+      const name = typeof img === "string" ? `Attachment ${idx + 1}` : img.name || `Attachment ${idx + 1}`;
+      if (url) {
+        list.push({ id: `parsed-${idx}`, url, name });
+      }
+    });
 
-  // Clean description display
-  const displayDescription = useMemo(() => {
-    if (!activeRequest) return "";
-    return cleanFeasibilityDescription(feasibilityDetails.requirements);
-  }, [activeRequest, feasibilityDetails.requirements]);
-
-  const displayRemark = feasibilityDetails.marketingRemarks || activeRequest?.marketingRemarks || "";
-
-  // Classification display title
-  const classificationLabel = useMemo(() => {
-    if (!activeRequest) return "New Category";
-    const custom = activeRequest.customFeasibilityType;
-    if (custom) return custom;
-    const ft = activeRequest.feasibilityType;
-    if (ft) {
-      return ft.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+    if (activeRequest?.productImagePath) {
+      const isAlreadyIncluded = list.some((item) => item.url === activeRequest.productImagePath);
+      if (!isAlreadyIncluded) {
+        list.unshift({
+          id: "primary-photo",
+          url: activeRequest.productImagePath,
+          name: "Primary Product Photo",
+        });
+      }
     }
-    return feasibilityDetails.category || "New Category";
-  }, [activeRequest?.feasibilityType, activeRequest?.customFeasibilityType, feasibilityDetails.category]);
+    return list;
+  }, [feasibilityDetails.referenceImages, activeRequest?.productImagePath]);
 
+  const classificationLabel = useMemo(() => {
+    return (
+      feasibilityDetails.category ||
+      activeRequest?.productTypeNavneet ||
+      activeRequest?.productType ||
+      "New Category"
+    );
+  }, [feasibilityDetails.category, activeRequest]);
+
+  // Clean description and remarks
+  const displayDescription = useMemo(() => {
+    return cleanFeasibilityDescription(
+      feasibilityDetails.requirements || activeRequest?.productDescription || ""
+    );
+  }, [feasibilityDetails.requirements, activeRequest?.productDescription]);
+
+  const displayRemark = useMemo(() => {
+    const raw =
+      feasibilityDetails.marketingRemarks ||
+      (activeRequest as any)?.marketingRemarks ||
+      (activeRequest as any)?.remarks ||
+      "";
+    return typeof raw === "string" ? raw.trim() : "";
+  }, [feasibilityDetails.marketingRemarks, activeRequest]);
+
+  // Actions
   const handleCopyCode = () => {
-    if (!activeRequest?.srNumber) return;
-    navigator.clipboard.writeText(activeRequest.srNumber);
+    const code = activeRequest?.srNumber || activeRequest?.materialCode || `FS-${activeRequest?.id}`;
+    if (!code) return;
+    navigator.clipboard.writeText(code);
     setCopiedCode(true);
     setTimeout(() => setCopiedCode(false), 2000);
   };
@@ -187,13 +205,8 @@ export const FeasibilityInspectorModal: React.FC<FeasibilityInspectorModalProps>
     if (!activeRequest?.id || isClaiming || !canEvaluateTechnical) return;
     setIsClaiming(true);
     try {
-      const claimer = user?.name || user?.userid || "SAMP Engineer";
       const updated = await claimFeasibilityTaskApi(activeRequest.id);
-      setLocalOverride({
-        ...updated,
-        takenBySamp: updated.takenBySamp || claimer,
-        takenAtSamp: updated.takenAtSamp || new Date().toISOString(),
-      });
+      setLocalOverride(updated);
       window.dispatchEvent(new CustomEvent("samp:requests-changed"));
     } catch (err) {
       console.error("Failed to claim feasibility task:", err);
@@ -202,41 +215,24 @@ export const FeasibilityInspectorModal: React.FC<FeasibilityInspectorModalProps>
     }
   };
 
-  // SAMP Submit Technical Verdict
+  // SAMP Technical Verdict Submission
   const handleSubmitSampVerdict = async () => {
     if (!activeRequest?.id || isSubmittingSampVerdict || !canEvaluateTechnical) return;
-
-    if (!activeRequest.takenBySamp) {
-      setSampVerdictError("Task must be claimed before submitting a technical verdict.");
-      return;
-    }
-
     if ((sampVerdictChoice === "No" || sampVerdictChoice === "Maybe") && !sampVerdictRemark.trim()) {
-      setSampVerdictError(`Technical explanation is compulsory when choosing '${sampVerdictChoice}'.`);
+      setSampVerdictError(`A detailed technical explanation is required when selecting "${sampVerdictChoice}".`);
       return;
     }
-
-    setIsSubmittingSampVerdict(true);
     setSampVerdictError(null);
+    setIsSubmittingSampVerdict(true);
     try {
-      const engineerName = user?.name || user?.userid || "SAMP Team";
-      await recordFeasibilitySampVerdictApi(activeRequest.id, {
+      const updated = await recordFeasibilitySampVerdictApi(activeRequest.id, {
         response: sampVerdictChoice,
         remark: sampVerdictRemark.trim() || undefined,
       });
-
-      const updated = {
-        ...activeRequest,
-        samplingFeasibilityResponse: sampVerdictChoice,
-        samplingFeasibilityApprovedBy: engineerName,
-        samplingFeasibilityApprovedDate: new Date().toISOString(),
-        samplingFeasibilityRemark: sampVerdictRemark.trim() || "Technical specifications verified feasible.",
-        status: "SAMP Evaluated",
-      };
       setLocalOverride(updated);
       window.dispatchEvent(new CustomEvent("samp:requests-changed"));
-      setActiveTab("review");
     } catch (err: any) {
+      console.error("Failed to submit SAMP verdict:", err);
       setSampVerdictError(err.message || "Failed to submit technical verdict.");
     } finally {
       setIsSubmittingSampVerdict(false);
@@ -318,7 +314,7 @@ export const FeasibilityInspectorModal: React.FC<FeasibilityInspectorModalProps>
       return url;
     }
     const cleanPath = url.replace(/^\/+/, "");
-    return `http://localhost:8001/${cleanPath}`;
+    return `http://127.0.0.1:8001/${cleanPath}`;
   };
 
   const movePreview = (direction: -1 | 1) => {
@@ -338,7 +334,7 @@ export const FeasibilityInspectorModal: React.FC<FeasibilityInspectorModalProps>
       <div
         role="dialog"
         aria-modal="true"
-        className="relative w-full max-w-[96vw] xl:max-w-7xl h-[92vh] max-h-[92vh] flex flex-col bg-[#F1F3F5] dark:bg-[#12141a] border border-[#D8DADD] dark:border-white/10 rounded-sm shadow-2xl overflow-hidden select-text text-xs"
+        className="relative w-full max-w-[96vw] xl:max-w-7xl h-[92vh] max-h-[92vh] flex flex-col bg-[#F8F9FA] dark:bg-[#12141a] border border-zinc-300 dark:border-white/10 rounded-lg shadow-2xl overflow-hidden select-text text-xs"
         onClick={(e) => e.stopPropagation()}
       >
         {/* 1. TOP CONTROL PANEL */}
@@ -353,8 +349,8 @@ export const FeasibilityInspectorModal: React.FC<FeasibilityInspectorModalProps>
         {/* 2. MAIN WORKSPACE VIEWPORT (SPLIT: FORM SHEET + CHATTER) */}
         <div className="flex-1 flex overflow-hidden">
           {/* LEFT: FORM SHEET (DOCUMENT BODY) */}
-          <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 bg-[#F1F3F5] dark:bg-[#12141a]">
-            <div className="o_form_sheet max-w-4xl mx-auto rounded-sm bg-white dark:bg-[#1a1c24] border border-[#D8DADD] dark:border-white/10 shadow-sm overflow-hidden">
+          <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 bg-[#F8F9FA] dark:bg-[#12141a]">
+            <div className="o_form_sheet max-w-4xl mx-auto rounded-lg bg-white dark:bg-[#1a1c24] border border-zinc-200 dark:border-white/10 shadow-sm overflow-hidden">
               <FeasibilitySheetHeader
                 activeRequest={activeRequest}
                 classificationLabel={classificationLabel}
@@ -372,15 +368,15 @@ export const FeasibilityInspectorModal: React.FC<FeasibilityInspectorModalProps>
               />
 
               {/* Notebook Tab Strip */}
-              <div className="px-6 pb-6 pt-2">
-                <div className="border-b border-[#D8DADD] dark:border-white/10 flex items-center space-x-6 text-xs font-semibold overflow-x-auto">
+              <div className="px-6 pb-6 pt-3">
+                <div className="border-b border-zinc-200 dark:border-white/10 flex items-center space-x-6 text-xs font-semibold overflow-x-auto">
                   <button
                     type="button"
                     onClick={() => setActiveTab("specs")}
                     className={`pb-2.5 border-b-2 transition cursor-pointer select-none flex items-center gap-1.5 whitespace-nowrap ${
                       activeTab === "specs"
                         ? "border-[#714B67] text-[#714B67] dark:text-purple-300 font-bold"
-                        : "border-transparent text-neutral-500 hover:text-neutral-800 dark:hover:text-zinc-200"
+                        : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
                     }`}
                   >
                     <span>1. Scope &amp; Specifications</span>
@@ -397,7 +393,7 @@ export const FeasibilityInspectorModal: React.FC<FeasibilityInspectorModalProps>
                     className={`pb-2.5 border-b-2 transition cursor-pointer select-none flex items-center gap-1.5 whitespace-nowrap ${
                       activeTab === "review"
                         ? "border-[#714B67] text-[#714B67] dark:text-purple-300 font-bold"
-                        : "border-transparent text-neutral-500 hover:text-neutral-800 dark:hover:text-zinc-200"
+                        : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
                     }`}
                   >
                     <span>2. SAMP Technical Review</span>
@@ -426,7 +422,7 @@ export const FeasibilityInspectorModal: React.FC<FeasibilityInspectorModalProps>
                     className={`pb-2.5 border-b-2 transition cursor-pointer select-none flex items-center gap-1.5 whitespace-nowrap ${
                       activeTab === "decision"
                         ? "border-[#714B67] text-[#714B67] dark:text-purple-300 font-bold"
-                        : "border-transparent text-neutral-500 hover:text-neutral-800 dark:hover:text-zinc-200"
+                        : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
                     }`}
                   >
                     <span>3. Commercial Decision &amp; Sampling</span>
@@ -454,30 +450,33 @@ export const FeasibilityInspectorModal: React.FC<FeasibilityInspectorModalProps>
 
                 {/* Tab 1: Scope & Specifications */}
                 {activeTab === "specs" && (
-                  <div className="py-4 space-y-5">
+                  <div className="py-4 space-y-4">
+                    {/* Primary Technical Description */}
                     <div>
-                      <div className="text-[11px] font-bold uppercase tracking-wider text-neutral-500 dark:text-zinc-400 mb-2 font-mono">
+                      <div className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5 font-mono">
                         Technical Description &amp; Product Scope
                       </div>
-                      <div className="p-3.5 rounded border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs text-neutral-900 dark:text-zinc-100 leading-relaxed font-sans whitespace-pre-wrap">
-                        {displayDescription || "No technical description specified for this feasibility check."}
+                      <div className="p-3.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-900/50 text-xs text-zinc-900 dark:text-zinc-100 leading-relaxed font-sans whitespace-pre-wrap">
+                        {displayDescription || "No technical description specified."}
                       </div>
                     </div>
 
+                    {/* Marketing Directives & Commercial Notes (Render ONLY if filled!) */}
                     {displayRemark && (
                       <div>
-                        <div className="text-[11px] font-bold uppercase tracking-wider text-neutral-500 dark:text-zinc-400 mb-1.5 font-mono">
+                        <div className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5 font-mono">
                           Marketing Directives &amp; Commercial Notes
                         </div>
-                        <div className="p-3 rounded border border-amber-200 dark:border-amber-900/40 bg-amber-50/30 dark:bg-amber-950/10 text-xs text-amber-900 dark:text-amber-200 italic font-sans leading-relaxed">
+                        <div className="p-3 rounded-lg border border-amber-200 dark:border-amber-900/40 bg-amber-50/30 dark:bg-amber-950/10 text-xs text-amber-950 dark:text-amber-200 italic font-sans leading-relaxed">
                           "{displayRemark}"
                         </div>
                       </div>
                     )}
 
+                    {/* Benchmark URLs & Links (Render ONLY if filled!) */}
                     {feasibilityDetails.referenceLinks.length > 0 && (
                       <div>
-                        <div className="text-[11px] font-bold uppercase tracking-wider text-neutral-500 dark:text-zinc-400 mb-2 font-mono">
+                        <div className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5 font-mono">
                           Client Reference URLs &amp; Benchmark Links ({feasibilityDetails.referenceLinks.length})
                         </div>
                         <div className="flex flex-wrap gap-2">
@@ -487,9 +486,9 @@ export const FeasibilityInspectorModal: React.FC<FeasibilityInspectorModalProps>
                               href={url.startsWith("http") ? url : `https://${url}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:border-[#714B67] hover:text-[#714B67] text-xs font-mono text-neutral-700 dark:text-zinc-300 transition shadow-2xs group"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:border-[#714B67] hover:text-[#714B67] text-xs font-mono text-zinc-700 dark:text-zinc-300 transition shadow-2xs group"
                             >
-                              <ExternalLink className="w-3.5 h-3.5 text-neutral-400 group-hover:text-[#714B67]" />
+                              <ExternalLink className="w-3.5 h-3.5 text-zinc-400 group-hover:text-[#714B67]" />
                               <span className="truncate max-w-xs">{url.replace(/^https?:\/\//, "")}</span>
                             </a>
                           ))}
@@ -497,9 +496,10 @@ export const FeasibilityInspectorModal: React.FC<FeasibilityInspectorModalProps>
                       </div>
                     )}
 
+                    {/* Attached Reference Images (Render ONLY if filled!) */}
                     {previewableImages.length > 0 && (
                       <div>
-                        <div className="text-[11px] font-bold uppercase tracking-wider text-neutral-500 dark:text-zinc-400 mb-2 font-mono">
+                        <div className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-2 font-mono">
                           Attached Reference Images ({previewableImages.length})
                         </div>
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -507,9 +507,9 @@ export const FeasibilityInspectorModal: React.FC<FeasibilityInspectorModalProps>
                             <div
                               key={img.id}
                               onClick={() => img.url && setSelectedPreviewImage(img.url)}
-                              className="group relative rounded border border-[#CED4DA] dark:border-zinc-700 bg-neutral-50 dark:bg-zinc-900 overflow-hidden cursor-pointer hover:border-[#714B67] transition shadow-2xs"
+                              className="group relative rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 overflow-hidden cursor-pointer hover:border-[#714B67] transition shadow-2xs"
                             >
-                              <div className="aspect-[4/3] w-full bg-neutral-100 dark:bg-zinc-800 overflow-hidden relative">
+                              <div className="aspect-[4/3] w-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden relative">
                                 <img
                                   src={imageSourceFor(img.url)}
                                   alt={img.name}
@@ -521,12 +521,74 @@ export const FeasibilityInspectorModal: React.FC<FeasibilityInspectorModalProps>
                                   </span>
                                 </div>
                               </div>
-                              <div className="p-1.5 flex items-center justify-between text-[10px] text-neutral-600 dark:text-zinc-400">
+                              <div className="p-1.5 flex items-center justify-between text-[10px] text-zinc-600 dark:text-zinc-400">
                                 <span className="truncate">{img.name}</span>
-                                <span className="font-mono text-neutral-400">#{idx + 1}</span>
+                                <span className="font-mono text-zinc-400">#{idx + 1}</span>
                               </div>
                             </div>
                           ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ── In-Context SAMP Team Technical Verdict Spotlight (Immediately visible to Marketing) ── */}
+                    {activeRequest.samplingFeasibilityResponse && (
+                      <div className="p-4 rounded-lg border border-teal-200 dark:border-teal-900/60 bg-teal-50/20 dark:bg-teal-950/20 space-y-2.5 mt-2">
+                        <div className="flex items-center justify-between flex-wrap gap-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-zinc-700 dark:text-zinc-300 font-sans">
+                              SAMP Team Response:
+                            </span>
+                            <span
+                              className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-xs font-bold font-mono border ${
+                                activeRequest.samplingFeasibilityResponse === "Yes"
+                                  ? "bg-emerald-50 text-emerald-800 border-emerald-300 dark:bg-emerald-950/50 dark:text-emerald-300"
+                                  : activeRequest.samplingFeasibilityResponse === "No"
+                                  ? "bg-rose-50 text-rose-800 border-rose-300 dark:bg-rose-950/50 dark:text-rose-300"
+                                  : "bg-amber-50 text-amber-800 border-amber-300 dark:bg-amber-950/50 dark:text-amber-300"
+                              }`}
+                            >
+                              {activeRequest.samplingFeasibilityResponse === "Yes" && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
+                              {activeRequest.samplingFeasibilityResponse === "No" && <XCircle className="w-3.5 h-3.5 text-rose-600" />}
+                              {activeRequest.samplingFeasibilityResponse === "Maybe" && <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />}
+                              <span>
+                                {activeRequest.samplingFeasibilityResponse === "Yes" && "Feasible (Full Scope)"}
+                                {activeRequest.samplingFeasibilityResponse === "No" && "Not Feasible"}
+                                {activeRequest.samplingFeasibilityResponse === "Maybe" && "Conditional"}
+                              </span>
+                            </span>
+                          </div>
+                          <span className="text-[11px] font-mono text-zinc-500">
+                            Evaluated by: <span className="font-semibold text-zinc-800 dark:text-zinc-200">{activeRequest.samplingFeasibilityApprovedBy || "SAMP Team"}</span>
+                          </span>
+                        </div>
+
+                        {activeRequest.samplingFeasibilityRemark && (
+                          <p className="text-xs text-zinc-800 dark:text-zinc-200 bg-white dark:bg-zinc-900 p-2.5 rounded border border-zinc-200 dark:border-zinc-800 leading-relaxed font-sans">
+                            {activeRequest.samplingFeasibilityRemark}
+                          </p>
+                        )}
+
+                        <div className="flex items-center justify-between pt-1 text-xs">
+                          <button
+                            type="button"
+                            onClick={() => setActiveTab("review")}
+                            className="text-[#017E84] hover:underline font-semibold text-xs flex items-center gap-1 cursor-pointer"
+                          >
+                            <span>View Full Technical Sign-Off</span>
+                            <ArrowRight className="w-3 h-3" />
+                          </button>
+
+                          {canMakeCommercialDecision && !activeRequest.marketingDecision && (
+                            <button
+                              type="button"
+                              onClick={() => setActiveTab("decision")}
+                              className="px-3 py-1 rounded bg-[#714B67] hover:bg-[#5B3C53] text-white text-xs font-semibold flex items-center gap-1 cursor-pointer transition shadow-2xs"
+                            >
+                              <span>Take Commercial Decision</span>
+                              <ArrowRight className="w-3 h-3" />
+                            </button>
+                          )}
                         </div>
                       </div>
                     )}
@@ -573,7 +635,7 @@ export const FeasibilityInspectorModal: React.FC<FeasibilityInspectorModalProps>
             </div>
           </div>
 
-          {/* RIGHT: AUTHENTIC ODOO CHATTER AUDIT LOG PANEL */}
+          {/* RIGHT: CHATTER AUDIT LOG PANEL */}
           <FeasibilityChatterFeed
             activeRequest={activeRequest}
             classificationLabel={classificationLabel}

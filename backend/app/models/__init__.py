@@ -11,6 +11,7 @@ from app.models.sample_request import (
     DesignRequest,
     ProductCharacteristic,
     ProductDetail,
+    SampleRequestType,
 )
 
 __all__ = [
@@ -26,6 +27,7 @@ __all__ = [
     "ProgramActivityLog",
     "ProgramMaterialSpecification",
     "ProgramRequest",
+    "SampleRequestType",
     "User",
 ]
 

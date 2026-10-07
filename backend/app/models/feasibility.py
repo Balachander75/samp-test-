@@ -85,7 +85,7 @@ class FeasibilityActivityLog(Base):
     )
     actor_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     actor_name = Column(String(255), nullable=False)
-    actor_department = Column(String(100), nullable=False)  # "Marketing", "SAMP Lab", "System"
+    actor_department = Column(String(100), nullable=False)  # "Marketing", "SAMP Team", "System"
     action = Column(String(64), nullable=False)  # "CREATED", "VIEWED", "SAMP_EVALUATED", "MARKETING_DECIDED"
     payload = Column(JSON, nullable=False, default=dict, server_default="{}")
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())

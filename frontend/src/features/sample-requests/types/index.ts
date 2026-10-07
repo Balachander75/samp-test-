@@ -1,3 +1,5 @@
+import type { CreativeDesignSubmission } from "@/features/creative/types";
+
 export type SampleStatus =
   | "Draft (Pre-SMT)"
   | "Creative"
@@ -53,6 +55,11 @@ export interface SampleRequestItem {
   requestTypes?: RequestType[];
   requestKind?: "sample" | "design" | "feasibility" | "program";
   designRequestId?: number;
+  designRequestStatus?: string;
+  designRemarks?: string | null;
+  creativeSubmissions?: CreativeDesignSubmission[];
+  marketingDesignDecision?: "awaiting_marketing_review" | "remaining_requested" | "accepted" | null;
+  remainingDesignCount?: number;
   numberOfDesigns?: number;
   trend?: string | null;
   targetAudience?: string | null;
@@ -208,53 +215,14 @@ export type RequestType = "design" | "mockup" | "sample" | "costing";
 
 export type RequestTypeSelectedAt = Partial<Record<RequestType, string | null>>;
 
-export interface BindingHierarchyResponse {
-  binding1_options: string[];
-  binding2_options?: string[];
-  hierarchy: Record<string, string[]>;
-}
-
-export interface ProductSearchResult {
-  id: number;
-  sr_number: string;
-  material_code: string;
-  product_description: string;
-  customer?: string;
-  target_plant?: string;
-  binding_type_1?: string;
-  binding_type_2?: string;
-  source_sample_code?: string;
-  c1_caliper_weight?: string;
-  c2_material_type?: string;
-  c2_cover_finish?: string;
-  details_count?: number;
-}
-
-export interface PlantItem {
-  id: number;
-  code: string;
-  name: string;
-  location?: string;
-  isActive: boolean;
-  createdBy: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreatePlantForm {
-  code: string;
-  name: string;
-  location?: string;
-  isActive?: boolean;
-}
-
-export interface CustomerItem {
-  id: number;
-  name: string;
-  country?: string | null;
-  createdAt?: string;
-  updatedAt?: string;
-}
+// Re-export Master and Catalog domain types (see src/types/master.ts)
+export type {
+  PlantItem,
+  CreatePlantForm,
+  CustomerItem,
+  BindingHierarchyResponse,
+  ProductSearchResult,
+} from "@/types/master";
 
 export interface StagedProductItem {
   id: string; // unique client id
@@ -328,98 +296,20 @@ export interface BatchCreateSampleRequestResponse {
   requests: SampleRequestItem[];
 }
 
-export interface DesignRequest {
-  id: number;
-  srNumber?: string;
-  requestCode?: string;
-  customerName: string;
-  programName: string;
-  programYear: string;
-  targetPlant?: string;
-  numberOfDesigns: number;
-  trend?: string | null;
-  targetAudience?: string | null;
-  referenceImage?: string | null;
-  productDescription: string;
-  designRequiredDate?: string | null;
-  status: SampleStatus | string;
-  createdBy: string;
-  updatedBy: string;
-  createdAt: string;
-  updatedAt: string;
-}
+// Re-export Creative domain types (see features/creative/types.ts)
+export type {
+  DesignRequest,
+  CreativeDesignOutputRow,
+  CreativeDesignSubmission,
+  DesignRequestForm,
+  CreativeBriefItem,
+} from "@/features/creative/types";
 
-export interface DesignRequestForm {
-  customerName: string;
-  programName: string;
-  programYear: string;
-  numberOfDesigns: string;
-  trend: string;
-  targetAudience: string;
-  referenceImage: string;
-  productDescription: string;
-  designRequiredDate: string;
-}
+// Re-export Studio domain types (see features/studio/types.ts)
+export type { DielineItem } from "@/features/studio/types";
 
-export interface DielineItem {
-  id: string;
-  dielineCode: string;
-  srNumber: string;
-  boxFormat: "Rigid Box" | "Folding Carton" | "Flute Corrugated" | "Blister / Sleeve";
-  title: string;
-  client: string;
-  dimensions: string; // L x W x H mm
-  substrate: string;
-  caliperMicrons: number;
-  machineCompatibility: string;
-  status: "CAD Intake" | "Dieline Construction" | "3D Simulation" | "Plotter Sample Tested" | "Laser Die Cleared";
-  dueDate: string;
-  targetPlant: string;
-  fluteGrade?: string;
-  grainDirection: "Parallel to Spine" | "Perpendicular to Crease";
-  fileFormats: string[];
-}
-
-export interface CreativeBriefItem {
-  id: string;
-  artCode: string;
-  srNumber: string;
-  title: string;
-  brand: string;
-  category: "Notebook Covers" | "Rigid Packaging" | "Tin / Metal Containers" | "Stationery Packs";
-  variantsCount: number;
-  designer: string;
-  colorSpecs: string;
-  proofVersion: string;
-  proofStatus: "Brief Intake" | "In Concept" | "Client Review" | "Revisions Requested" | "Prepress Approved";
-  dueDate: string;
-  dimensions: string;
-  finishingNotes: string;
-  cmykCheckPassed: boolean;
-  resolutionDpi: number;
-  bleedMm: number;
-  clientFeedback?: string;
-  accentColor: string;
-}
-
-export interface CostingItem {
-  id: string;
-  costingCode: string;
-  srNumber: string;
-  customer: string;
-  productTitle: string;
-  targetVolume: number; // in pcs
-  substrateUnitCost: number; // INR
-  conversionUnitCost: number; // INR
-  netUnitCost: number; // substrate + conversion
-  marginPct: number; // e.g. 24.5%
-  quotedUnitPrice: number; // calculated from margin
-  totalProjectValue: number; // targetVolume * quotedUnitPrice
-  status: "Spec Review" | "Substrate Pricing" | "Margin Review" | "Quote Released" | "Won Deal";
-  dueDate: string;
-  targetPlant: string;
-  substrateSpec: string;
-}
+// Re-export Costing domain types (see features/costing/types.ts)
+export type { CostingItem } from "@/features/costing/types";
 
 export interface ProgramMaterialItem {
   id?: number | string;

@@ -1,10 +1,9 @@
 import React from "react";
 import { X, Copy, Trash2, ExternalLink } from "lucide-react";
-import { StagedProductItem, DELIVERABLES, cleanPlantName } from "../../types/staging";
+import { StagedProductItem, DELIVERABLES } from "../../types/staging";
 
 export interface StagedProductDrawerProps {
   inspectingProduct: StagedProductItem | null;
-  targetPlant: string;
   programYear: string;
   onClose: () => void;
   onRemoveProduct: (id: string) => void;
@@ -13,7 +12,6 @@ export interface StagedProductDrawerProps {
 
 export const StagedProductDrawer: React.FC<StagedProductDrawerProps> = ({
   inspectingProduct,
-  targetPlant,
   programYear,
   onClose,
   onRemoveProduct,
@@ -59,8 +57,6 @@ export const StagedProductDrawer: React.FC<StagedProductDrawerProps> = ({
                 <span>
                   Staged: {inspectingProduct.stagedDate || "2026-10-01"} {inspectingProduct.timestamp}
                 </span>
-                <span>•</span>
-                <span>Plant: {cleanPlantName(targetPlant)}</span>
                 <span>•</span>
                 <span>Season: {programYear}</span>
               </div>

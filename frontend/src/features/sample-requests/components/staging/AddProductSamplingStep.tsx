@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { X, AlertCircle, Check, Hash, BookOpen, Search, Plus, Layers3, ArrowLeft } from "lucide-react";
 import { ProductSearchResult, BindingHierarchyResponse } from "../../types";
 
@@ -16,7 +16,6 @@ export interface AddProductSamplingStepProps {
   selectedBinding2: string;
   bindingSearchResults: ProductSearchResult[];
   isSearchingBinding: boolean;
-  samplingDescription: string;
   isSubmittingAll: boolean;
   onSetModalError: (val: string | null) => void;
   onSetSampleType: (val: "full" | "partial") => void;
@@ -26,11 +25,129 @@ export interface AddProductSamplingStepProps {
   onSelectDbSample: (item: ProductSearchResult) => void;
   onSelectBinding1: (b1: string) => void;
   onSelectBinding2: (b2: string) => void;
-  onSetSamplingDescription: (val: string) => void;
   onBackToScopes: () => void;
   onClose: () => void;
   onSubmit: (e: React.FormEvent) => void;
 }
+
+const BINDING_RESULT_ROW_HEIGHT = 60;
+const BINDING_RESULT_VIEWPORT_HEIGHT = 240;
+
+const BindingProductResults: React.FC<{
+  items: ProductSearchResult[];
+  selectedItem: ProductSearchResult | null;
+  onSelect: (item: ProductSearchResult) => void;
+}> = ({ items, selectedItem, onSelect }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [scrollTop, setScrollTop] = useState(0);
+  const [activeIndex, setActiveIndex] = useState(-1);
+
+  useEffect(() => {
+    setScrollTop(0);
+    setActiveIndex(-1);
+    if (containerRef.current) containerRef.current.scrollTop = 0;
+  }, [items]);
+
+  const moveActiveIndex = (nextIndex: number) => {
+    const boundedIndex = Math.max(0, Math.min(items.length - 1, nextIndex));
+    setActiveIndex(boundedIndex);
+    if (containerRef.current) {
+      containerRef.current.scrollTop = boundedIndex * BINDING_RESULT_ROW_HEIGHT;
+    }
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!items.length) return;
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      moveActiveIndex(activeIndex < 0 ? 0 : activeIndex + 1);
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      moveActiveIndex(activeIndex < 0 ? items.length - 1 : activeIndex - 1);
+    } else if (event.key === "Home") {
+      event.preventDefault();
+      moveActiveIndex(0);
+    } else if (event.key === "End") {
+      event.preventDefault();
+      moveActiveIndex(items.length - 1);
+    } else if ((event.key === "Enter" || event.key === " ") && activeIndex >= 0) {
+      event.preventDefault();
+      onSelect(items[activeIndex]);
+    }
+  };
+
+  const firstVisible = Math.max(0, Math.floor(scrollTop / BINDING_RESULT_ROW_HEIGHT) - 3);
+  const lastVisible = Math.min(
+    items.length,
+    Math.ceil((scrollTop + BINDING_RESULT_VIEWPORT_HEIGHT) / BINDING_RESULT_ROW_HEIGHT) + 3
+  );
+  const visibleItems = items.slice(firstVisible, lastVisible);
+
+  return (
+    <div
+      ref={containerRef}
+      role="listbox"
+      tabIndex={0}
+      aria-label="Products matching Binding 1"
+      aria-activedescendant={activeIndex >= 0 ? `binding-product-${activeIndex}` : undefined}
+      onScroll={(event) => setScrollTop(event.currentTarget.scrollTop)}
+      onKeyDown={handleKeyDown}
+      className="h-60 overflow-y-auto divide-y divide-[#E2E8F0] dark:divide-zinc-800 bg-[#F8F9FA]/40 dark:bg-zinc-900/40"
+    >
+      <div role="presentation" aria-hidden="true" style={{ height: firstVisible * BINDING_RESULT_ROW_HEIGHT }} />
+      {visibleItems.map((item, offset) => {
+        const index = firstVisible + offset;
+        const isSelected = selectedItem?.id === item.id;
+        return (
+          <div
+            key={item.id}
+            id={`binding-product-${index}`}
+            role="option"
+            aria-selected={isSelected}
+            title={item.product_description}
+            onClick={() => {
+              setActiveIndex(index);
+              onSelect(item);
+            }}
+            className={`h-[60px] px-3 text-left transition-colors flex items-center justify-between gap-3 cursor-pointer ${
+              isSelected
+                ? "bg-[#F3E8EE] dark:bg-[#3E2938]/60 text-zinc-900 dark:text-zinc-100"
+                : "hover:bg-white dark:hover:bg-zinc-800 text-zinc-900 dark:text-zinc-100"
+            } ${activeIndex === index ? "ring-1 ring-inset ring-[#714B67]/40" : ""}`}
+          >
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-[10.5px] font-bold px-1.5 py-0.5 rounded bg-white dark:bg-zinc-800 text-[#714B67] border border-[#714B67]/20 shrink-0">
+                  {item.material_code || "—"}
+                </span>
+                <span className="text-xs font-bold truncate">{item.product_description}</span>
+              </div>
+              <div className="flex items-center gap-2 mt-0.5 text-[10.5px] text-[#64748B] dark:text-zinc-400 truncate">
+                <span className="truncate">{item.customer || "Navneet Standard"}</span>
+                {item.sr_number && <span className="shrink-0">· Ref: {item.sr_number}</span>}
+              </div>
+            </div>
+            <span
+              aria-hidden="true"
+              className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
+                isSelected
+                  ? "border-[#714B67] bg-[#714B67] text-white"
+                  : "border-zinc-300 dark:border-zinc-600"
+              }`}
+            >
+              {isSelected && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+            </span>
+          </div>
+        );
+      })}
+      <div
+        role="presentation"
+        aria-hidden="true"
+        style={{ height: Math.max(0, (items.length - lastVisible) * BINDING_RESULT_ROW_HEIGHT) }}
+      />
+    </div>
+  );
+};
 
 export const AddProductSamplingStep: React.FC<AddProductSamplingStepProps> = ({
   modalError,
@@ -46,7 +163,6 @@ export const AddProductSamplingStep: React.FC<AddProductSamplingStepProps> = ({
   selectedBinding2,
   bindingSearchResults,
   isSearchingBinding,
-  samplingDescription,
   isSubmittingAll,
   onSetModalError,
   onSetSampleType,
@@ -56,13 +172,12 @@ export const AddProductSamplingStep: React.FC<AddProductSamplingStepProps> = ({
   onSelectDbSample,
   onSelectBinding1,
   onSelectBinding2,
-  onSetSamplingDescription,
   onBackToScopes,
   onClose,
   onSubmit,
 }) => {
   return (
-    <div className="relative w-full max-w-2xl bg-white dark:bg-[#12141d] border border-[#CED4DA] dark:border-white/[0.08] rounded shadow-2xl overflow-hidden animate-smooth-modal max-h-[90vh] flex flex-col">
+    <div className="relative w-full max-w-3xl bg-white dark:bg-[#12141d] border border-[#CED4DA] dark:border-white/[0.08] rounded shadow-2xl overflow-hidden animate-smooth-modal max-h-[92vh] flex flex-col">
       {/* Odoo 19 Modal Header */}
       <div className="flex items-center justify-between px-6 py-3.5 bg-[#714B67] text-white shrink-0 border-b border-[#5B3C53]">
         <div className="flex items-center gap-2.5">
@@ -113,7 +228,7 @@ export const AddProductSamplingStep: React.FC<AddProductSamplingStepProps> = ({
 
       {/* Form Body */}
       <form onSubmit={onSubmit} className="flex-1 flex flex-col min-h-0 overflow-hidden">
-        <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-4 text-xs">
+        <div className="flex-1 overflow-y-auto p-5 sm:p-7 space-y-5 text-xs">
           {/* Scope Selection: Full Sample vs Partial Sample */}
           <div className="space-y-1.5">
             <label className="block text-[11px] font-bold uppercase tracking-wider text-[#64748B] dark:text-zinc-400 font-sans">
@@ -283,7 +398,6 @@ export const AddProductSamplingStep: React.FC<AddProductSamplingStepProps> = ({
                             </div>
                             <div className="flex items-center gap-2 mt-0.5 text-[10.5px] text-[#64748B]">
                               <span>{item.customer || "Navneet Standard"}</span>
-                              {item.target_plant && <span>• Plant: {item.target_plant}</span>}
                               {item.sr_number && <span>• Ref: {item.sr_number}</span>}
                             </div>
                           </div>
@@ -359,21 +473,24 @@ export const AddProductSamplingStep: React.FC<AddProductSamplingStepProps> = ({
                     </select>
                   </div>
                 </div>
+                <p className="text-[10.5px] text-[#64748B] dark:text-zinc-400">
+                  Matching products are filtered by Binding 1. Binding 2 specifies the requested variant.
+                </p>
 
                 {/* Products with that specific binding */}
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-[11px] font-bold text-zinc-700 dark:text-zinc-300">
-                      Products with this Binding ({bindingSearchResults.length})
+                      Products matching Binding 1 ({bindingSearchResults.length})
                     </span>
                     {selectedBinding1 && (
                       <span className="text-[10.5px] text-[#714B67] font-mono font-semibold">
-                        {selectedBinding1} {selectedBinding2 ? `/ ${selectedBinding2}` : ""}
+                        Binding 1: {selectedBinding1}
                       </span>
                     )}
                   </div>
 
-                  <div className="border border-[#CED4DA] dark:border-zinc-700 rounded max-h-48 overflow-y-auto divide-y divide-[#E2E8F0] dark:divide-zinc-800 bg-[#F8F9FA]/40 dark:bg-zinc-900/40">
+                  <div className="border border-[#CED4DA] dark:border-zinc-700 rounded overflow-hidden bg-[#F8F9FA]/40 dark:bg-zinc-900/40">
                     {!selectedBinding1 ? (
                       <div className="py-6 text-center text-xs text-zinc-400">
                         Select Binding 1 to view matching products
@@ -384,69 +501,19 @@ export const AddProductSamplingStep: React.FC<AddProductSamplingStepProps> = ({
                       </div>
                     ) : bindingSearchResults.length === 0 ? (
                       <div className="py-6 text-center text-xs text-zinc-400">
-                        No matching products found. You can proceed with this binding directly.
+                        No saved products use this Binding 1. You can still stage a new product with it.
                       </div>
                     ) : (
-                      bindingSearchResults.map((item) => {
-                        const isSelected = selectedDbSample?.id === item.id;
-                        return (
-                          <div
-                            key={item.id}
-                            onClick={() => onSelectDbSample(item)}
-                            className={`p-2.5 transition-colors cursor-pointer flex items-center justify-between gap-3 text-left ${
-                              isSelected
-                                ? "bg-[#F3E8EE] dark:bg-[#3E2938]/60 border-l-3 border-[#714B67]"
-                                : "hover:bg-white dark:hover:bg-zinc-800"
-                            }`}
-                          >
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-center gap-2">
-                                <span className="font-mono text-[10.5px] font-bold px-1.5 py-0.2 rounded bg-white dark:bg-zinc-800 text-[#714B67] border border-[#714B67]/20">
-                                  {item.material_code || "—"}
-                                </span>
-                                <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 truncate">
-                                  {item.product_description}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-2 mt-0.5 text-[10.5px] text-[#64748B]">
-                                <span>{item.customer || "Navneet Standard"}</span>
-                                {item.target_plant && <span>• Plant: {item.target_plant}</span>}
-                                {item.sr_number && <span>• Ref: {item.sr_number}</span>}
-                              </div>
-                            </div>
-
-                            <div
-                              className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
-                                isSelected
-                                  ? "border-[#714B67] bg-[#714B67] text-white"
-                                  : "border-zinc-300 dark:border-zinc-600"
-                              }`}
-                            >
-                              {isSelected && <Check className="w-2.5 h-2.5 stroke-[3]" />}
-                            </div>
-                          </div>
-                        );
-                      })
+                      <BindingProductResults
+                        items={bindingSearchResults}
+                        selectedItem={selectedDbSample}
+                        onSelect={onSelectDbSample}
+                      />
                     )}
                   </div>
                 </div>
               </div>
             )}
-          </div>
-
-          {/* Product Title */}
-          <div className="space-y-1 pt-1">
-            <label className="block text-[11px] font-bold uppercase tracking-wider text-[#64748B] dark:text-zinc-400 font-sans">
-              Product Nomenclature &amp; Specifications <span className="text-rose-500">*</span>
-            </label>
-            <input
-              type="text"
-              required
-              value={samplingDescription}
-              onChange={(e) => onSetSamplingDescription(e.target.value)}
-              placeholder="e.g. A4 Hardbound 192 Pages Single Line Notebook..."
-              className="w-full h-9 px-3 rounded border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-semibold text-zinc-900 dark:text-zinc-100 outline-none focus:border-[#714B67] focus:ring-1 focus:ring-[#714B67]"
-            />
           </div>
         </div>
 

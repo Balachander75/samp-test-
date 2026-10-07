@@ -14,6 +14,7 @@ const OperationsOverview = lazy(() => import("@/features/dashboard/OperationsOve
 const SampleRequestsDesk = lazy(() => import("@/features/sample-requests/SampleRequestsDesk"));
 const ProgramPlanningWorkspace = lazy(() => import("@/features/sample-requests/components/ProgramPlanningWorkspace"));
 const ProductStagingWorkspace = lazy(() => import("@/features/sample-requests/components/ProductStagingWorkspace"));
+const DraftWorkspacePage = lazy(() => import("@/features/sample-requests/components/DraftWorkspacePage"));
 const SamplingTeamDesk = lazy(() => import("@/features/samp-team/SamplingTeamDesk"));
 const CreativeWorkDesk = lazy(() => import("@/features/creative/CreativeWorkDesk"));
 const StudioWorkDesk = lazy(() => import("@/features/studio/StudioWorkDesk"));
@@ -78,6 +79,11 @@ function ActiveModuleView({
           location.pathname === "/sample-requests/add-product"
         ) {
           return <ProductStagingWorkspace user={user} />;
+        }
+
+        // Draft Workspace (Draft Review, Cloning & Release to Creative)
+        if (location.pathname === "/sample-requests/draft-workspace") {
+          return <DraftWorkspacePage user={user} />;
         }
 
         // SAMP Team Work Desk (Sampling Lab)
@@ -306,6 +312,47 @@ function AppRoutes() {
     setCurrentUser(null);
   };
 
+  const protectedElement = currentUser ? (
+    <AppShellRouteWrapper user={currentUser} onLogout={handleLogout} />
+  ) : (
+    <Navigate to="/signin" replace />
+  );
+
+  const AUTH_ROUTES = [
+    "/dashboard",
+    "/sample-requests",
+    "/sample-requests/sampling",
+    "/sample-requests/feasibility",
+    "/sample-requests/programs",
+    "/sample-requests/program-planning",
+    "/sample-requests/product-staging",
+    "/sample-requests/add-product",
+    "/sample-requests/draft-workspace",
+    "/creative-work",
+    "/creative-work/*",
+    "/creative/*",
+    "/artwork",
+    "/studio-work",
+    "/studio-work/*",
+    "/studio/*",
+    "/cad",
+    "/prepress",
+    "/samp-team-work",
+    "/samp-team-work/*",
+    "/sampling",
+    "/prototypes",
+    "/costing-team",
+    "/costing-team/*",
+    "/costing",
+    "/costing-work",
+    "/bom",
+    "/plant",
+    "/analytics",
+    "/members",
+    "/settings",
+    "/help",
+  ];
+
   return (
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Routes>
@@ -319,248 +366,11 @@ function AppRoutes() {
             )
           }
         />
-        <Route
-          path="/dashboard"
-          element={
-            currentUser ? (
-              <AppShellRouteWrapper user={currentUser} onLogout={handleLogout} />
-            ) : (
-              <Navigate to="/signin" replace />
-            )
-          }
-        />
-        <Route
-          path="/sample-requests"
-          element={
-            currentUser ? (
-              <AppShellRouteWrapper user={currentUser} onLogout={handleLogout} />
-            ) : (
-              <Navigate to="/signin" replace />
-            )
-          }
-        />
-        <Route
-          path="/sample-requests/sampling"
-          element={
-            currentUser ? (
-              <AppShellRouteWrapper user={currentUser} onLogout={handleLogout} />
-            ) : (
-              <Navigate to="/signin" replace />
-            )
-          }
-        />
-        <Route
-          path="/sample-requests/feasibility"
-          element={
-            currentUser ? (
-              <AppShellRouteWrapper user={currentUser} onLogout={handleLogout} />
-            ) : (
-              <Navigate to="/signin" replace />
-            )
-          }
-        />
-        <Route
-          path="/sample-requests/programs"
-          element={
-            currentUser ? (
-              <AppShellRouteWrapper user={currentUser} onLogout={handleLogout} />
-            ) : (
-              <Navigate to="/signin" replace />
-            )
-          }
-        />
-        <Route
-          path="/sample-requests/program-planning"
-          element={
-            currentUser ? (
-              <AppShellRouteWrapper user={currentUser} onLogout={handleLogout} />
-            ) : (
-              <Navigate to="/signin" replace />
-            )
-          }
-        />
-        <Route
-          path="/sample-requests/product-staging"
-          element={
-            currentUser ? (
-              <AppShellRouteWrapper user={currentUser} onLogout={handleLogout} />
-            ) : (
-              <Navigate to="/signin" replace />
-            )
-          }
-        />
-        <Route
-          path="/sample-requests/add-product"
-          element={
-            currentUser ? (
-              <AppShellRouteWrapper user={currentUser} onLogout={handleLogout} />
-            ) : (
-              <Navigate to="/signin" replace />
-            )
-          }
-        />
-        <Route
-          path="/creative-work"
-          element={
-            currentUser ? (
-              <AppShellRouteWrapper user={currentUser} onLogout={handleLogout} />
-            ) : (
-              <Navigate to="/signin" replace />
-            )
-          }
-        />
-        <Route
-          path="/creative-work/*"
-          element={
-            currentUser ? (
-              <AppShellRouteWrapper user={currentUser} onLogout={handleLogout} />
-            ) : (
-              <Navigate to="/signin" replace />
-            )
-          }
-        />
-        <Route
-          path="/creative/*"
-          element={
-            currentUser ? (
-              <AppShellRouteWrapper user={currentUser} onLogout={handleLogout} />
-            ) : (
-              <Navigate to="/signin" replace />
-            )
-          }
-        />
-        <Route
-          path="/studio-work"
-          element={
-            currentUser ? (
-              <AppShellRouteWrapper user={currentUser} onLogout={handleLogout} />
-            ) : (
-              <Navigate to="/signin" replace />
-            )
-          }
-        />
-        <Route
-          path="/studio-work/*"
-          element={
-            currentUser ? (
-              <AppShellRouteWrapper user={currentUser} onLogout={handleLogout} />
-            ) : (
-              <Navigate to="/signin" replace />
-            )
-          }
-        />
-        <Route
-          path="/studio/*"
-          element={
-            currentUser ? (
-              <AppShellRouteWrapper user={currentUser} onLogout={handleLogout} />
-            ) : (
-              <Navigate to="/signin" replace />
-            )
-          }
-        />
-        <Route
-          path="/samp-team-work"
-          element={
-            currentUser ? (
-              <AppShellRouteWrapper user={currentUser} onLogout={handleLogout} />
-            ) : (
-              <Navigate to="/signin" replace />
-            )
-          }
-        />
-        <Route
-          path="/samp-team-work/feasibility"
-          element={
-            currentUser ? (
-              <AppShellRouteWrapper user={currentUser} onLogout={handleLogout} />
-            ) : (
-              <Navigate to="/signin" replace />
-            )
-          }
-        />
-        <Route
-          path="/samp-team-work/sampling"
-          element={
-            currentUser ? (
-              <AppShellRouteWrapper user={currentUser} onLogout={handleLogout} />
-            ) : (
-              <Navigate to="/signin" replace />
-            )
-          }
-        />
-        <Route
-          path="/samp-team-work/programs"
-          element={
-            currentUser ? (
-              <AppShellRouteWrapper user={currentUser} onLogout={handleLogout} />
-            ) : (
-              <Navigate to="/signin" replace />
-            )
-          }
-        />
-        <Route
-          path="/costing-team"
-          element={
-            currentUser ? (
-              <AppShellRouteWrapper user={currentUser} onLogout={handleLogout} />
-            ) : (
-              <Navigate to="/signin" replace />
-            )
-          }
-        />
-        <Route
-          path="/plant"
-          element={
-            currentUser ? (
-              <AppShellRouteWrapper user={currentUser} onLogout={handleLogout} />
-            ) : (
-              <Navigate to="/signin" replace />
-            )
-          }
-        />
         <Route path="/plant-execution" element={<Navigate to="/plant" replace />} />
         <Route path="/plant-work" element={<Navigate to="/plant" replace />} />
-        <Route
-          path="/analytics"
-          element={
-            currentUser ? (
-              <AppShellRouteWrapper user={currentUser} onLogout={handleLogout} />
-            ) : (
-              <Navigate to="/signin" replace />
-            )
-          }
-        />
-        <Route
-          path="/members"
-          element={
-            currentUser ? (
-              <AppShellRouteWrapper user={currentUser} onLogout={handleLogout} />
-            ) : (
-              <Navigate to="/signin" replace />
-            )
-          }
-        />
-        <Route
-          path="/settings"
-          element={
-            currentUser ? (
-              <AppShellRouteWrapper user={currentUser} onLogout={handleLogout} />
-            ) : (
-              <Navigate to="/signin" replace />
-            )
-          }
-        />
-        <Route
-          path="/help"
-          element={
-            currentUser ? (
-              <AppShellRouteWrapper user={currentUser} onLogout={handleLogout} />
-            ) : (
-              <Navigate to="/signin" replace />
-            )
-          }
-        />
+        {AUTH_ROUTES.map((path) => (
+          <Route key={path} path={path} element={protectedElement} />
+        ))}
         <Route path="*" element={<Navigate to={currentUser ? "/dashboard" : "/signin"} replace />} />
       </Routes>
     </BrowserRouter>

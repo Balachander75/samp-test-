@@ -452,7 +452,8 @@ export async function searchProductsByBindingApi(
   b2?: string,
   c1Caliper?: string,
   c2Material?: string,
-  c2Finish?: string
+  c2Finish?: string,
+  limit?: number
 ): Promise<ProductSearchResult[]> {
   try {
     if (!b1 || !b1.trim()) return [];
@@ -461,6 +462,7 @@ export async function searchProductsByBindingApi(
     if (c1Caliper && c1Caliper.trim()) endpoint += `&c1_caliper=${encodeURIComponent(c1Caliper.trim())}`;
     if (c2Material && c2Material.trim()) endpoint += `&c2_material=${encodeURIComponent(c2Material.trim())}`;
     if (c2Finish && c2Finish.trim()) endpoint += `&c2_finish=${encodeURIComponent(c2Finish.trim())}`;
+    if (limit != null) endpoint += `&limit=${Math.max(1, Math.floor(limit))}`;
 
     const results = await apiFetch<ProductSearchResult[]>(endpoint);
     return results || [];

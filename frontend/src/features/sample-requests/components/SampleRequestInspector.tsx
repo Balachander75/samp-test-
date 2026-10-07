@@ -12,7 +12,7 @@ import {
   recordFeasibilityViewedApi,
   convertFeasibilityToSamplingApi,
   cleanFeasibilityDescription,
-} from "../api";
+} from "@/infrastructure/api";
 import { FeasibilityActivityTimeline } from "./FeasibilityActivityTimeline";
 import { useFeasibilityImageSources } from "../hooks/useFeasibilityImageSources";
 import { formatOdooLogDate, formatOdooDate } from "../utils/dateUtils";

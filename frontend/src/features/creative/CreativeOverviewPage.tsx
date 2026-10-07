@@ -393,7 +393,7 @@ export const CreativeOverviewPage: React.FC<CreativeOverviewPageProps> = ({
                     </td>
                     <td className="py-2.5 px-3 text-right">
                       <span className="text-[11px] font-mono text-[#017E84] hover:underline font-semibold">
-                        Inspect
+                        Open
                       </span>
                     </td>
                   </tr>

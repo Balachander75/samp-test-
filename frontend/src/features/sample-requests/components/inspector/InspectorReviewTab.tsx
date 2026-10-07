@@ -105,7 +105,7 @@ export const InspectorReviewTab: React.FC<InspectorReviewTabProps> = ({
                 </span>
               </div>
               <p className="text-xs text-amber-800/90 dark:text-amber-300/80 leading-relaxed font-sans">
-                Marketing has logged this request. A SAMP Lab engineer must claim this task from the SAMP Desk
+                Marketing has logged this request. A SAMP Team engineer must claim this task from the SAMP Desk
                 and determine whether the product is technically feasible before you can accept or reject.
               </p>
               <div className="text-[11px] font-mono text-neutral-500 pt-1">

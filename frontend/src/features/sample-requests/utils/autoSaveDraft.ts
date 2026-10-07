@@ -3,9 +3,9 @@ import {
   createSampleRequestApi,
   createDesignRequestApi,
   updateSampleRequestApi,
-} from "../api";
+} from "@/infrastructure/api";
 import { CreateSampleRequestForm } from "../types";
-import { API_BASE_URL, createApiHeaders } from "@/lib/api";
+import { API_BASE_URL, createApiHeaders } from "@/infrastructure/api/client";
 import { UserProfile } from "@/features/auth";
 import { getBusinessYearForDate } from "@/lib/businessYear";
 
@@ -68,12 +68,45 @@ export async function autoSaveStagedProductsToDraft(
       items: items.map((prod) => ({
         product_description: prod.productDescription,
         material_code: prod.materialCode,
+        source_sample_request_id:
+          prod.sourceSampleRequestId ||
+          prod.catalogMetadata?.sourceProductId ||
+          prod.samplingMetadata?.sourceSampleId ||
+          null,
+        source_sample_code:
+          prod.sourceSampleCode ||
+          prod.samplingMetadata?.sourceSrNumber ||
+          prod.samplingMetadata?.selectedMaterialCode ||
+          prod.catalogMetadata?.sourceMaterialCode ||
+          null,
+        creation_mode:
+          prod.creationMode ||
+          (prod.samplingMetadata?.searchMode === "binding" ? "binding" : "material_code"),
         request_types: prod.scopes,
+        request_type_timestamps: prod.requestTypeTimestamps || null,
+        custom_binding_1:
+          prod.customBinding1 ||
+          prod.samplingMetadata?.bindingType1 ||
+          prod.catalogMetadata?.bindingType1 ||
+          null,
+        custom_binding_2:
+          prod.customBinding2 ||
+          prod.samplingMetadata?.bindingType2 ||
+          prod.catalogMetadata?.bindingType2 ||
+          null,
+        custom_details: prod.customDetails || null,
         mockup_required: prod.scopes.includes("mockup") ? "Yes" : null,
         status: "Draft (Pre-SMT)",
-        creation_mode: "marketing_request",
+        target_plant: prod.plant || targetPlant,
+        unit_pc_pack: prod.unitPcPack || null,
+        qty_for_sampling: prod.qtyForSampling || null,
+        qty_design_costing: prod.qtyDesignCosting || null,
+        customer_product_code: prod.customerProductCode || null,
+        barcode: prod.barcode || null,
+        brand_name: prod.brandName || null,
+        product_type: prod.productType || (prod.samplingMetadata ? (prod.samplingMetadata.sampleType === "full" ? "Full Sample" : "Partial Sample") : null),
         number_of_designs: prod.designMetadata?.numberOfDesigns || 1,
-        sample_required_date: prod.designMetadata?.designRequiredDate || null,
+        sample_required_date: prod.sampleRequiredDate || prod.designMetadata?.designRequiredDate || null,
         target_artwork_date_creative: prod.designMetadata?.designRequiredDate || null,
         trend: prod.designMetadata?.trend || null,
         target_audience: prod.designMetadata?.targetAudience || null,
@@ -85,16 +118,6 @@ export async function autoSaveStagedProductsToDraft(
           (prod.samplingMetadata?.partialRequirements
             ? `[Partial Scope]: ${prod.samplingMetadata.partialRequirements}`
             : null),
-        product_type: prod.samplingMetadata ? (prod.samplingMetadata.sampleType === "full" ? "Full Sample" : "Partial Sample") : null,
-        source_sample_code:
-          prod.samplingMetadata?.sourceSrNumber ||
-          prod.samplingMetadata?.selectedMaterialCode ||
-          prod.catalogMetadata?.sourceMaterialCode ||
-          null,
-        custom_binding_1:
-          prod.samplingMetadata?.bindingType1 || prod.catalogMetadata?.bindingType1 || null,
-        custom_binding_2:
-          prod.samplingMetadata?.bindingType2 || prod.catalogMetadata?.bindingType2 || null,
       })),
       };
 
@@ -136,24 +159,6 @@ export async function autoSaveStagedProductsToDraft(
   let firstSavedSr: string | undefined = programContext?.parentSrNumber;
 
   for (const [index, prod] of items.entries()) {
-    if (prod.designMetadata) {
-      try {
-        await createDesignRequestApi({
-          customerName: customer,
-          programName: programName,
-          programYear: programYear,
-          numberOfDesigns: String(prod.designMetadata.numberOfDesigns || 1),
-          trend: prod.designMetadata.trend || "",
-          targetAudience: prod.designMetadata.targetAudience || "",
-          referenceImage: prod.designMetadata.referenceImage || "",
-          productDescription: prod.productDescription,
-          designRequiredDate: prod.designMetadata.designRequiredDate,
-        });
-      } catch (err) {
-        console.warn("Design request auto-save error:", err);
-      }
-    }
-
     const payload: CreateSampleRequestForm = {
       customer,
       programName,
@@ -186,21 +191,28 @@ export async function autoSaveStagedProductsToDraft(
     };
 
     try {
-      if (index === 0 && programContext?.parentRequestId) {
+      if (prod.savedRequestId) {
+        await updateSampleRequestApi(prod.savedRequestId, payload);
+      } else if (index === 0 && programContext?.parentRequestId) {
         const updated = await updateSampleRequestApi(programContext.parentRequestId, payload);
         if (!updated) throw new Error("The sampling request could not be updated with the first product.");
+        prod.savedRequestId = programContext.parentRequestId;
+        prod.savedSrNumber = programContext.parentSrNumber;
       } else {
         const created = await createSampleRequestApi(payload);
         if (!created) throw new Error("A staged product could not be saved.");
+        prod.savedRequestId = created.id;
+        prod.savedSrNumber = created.srNumber;
         if (index === 0) {
           firstSavedId = created.id;
           firstSavedSr = created.srNumber;
         }
       }
+      prod.isDraftSaved = true;
       savedCount++;
     } catch (err) {
       console.error("Individual draft auto-save error:", err);
-      if (index === 0 && programContext?.parentRequestId) {
+      if (index === 0 && programContext?.parentRequestId && !prod.savedRequestId) {
         return { success: false, count: 0, customer, programName };
       }
     }

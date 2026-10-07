@@ -84,7 +84,7 @@ export function mapProgramRequestToSampleRequest(record: ProgramRequestRecord): 
     programName: record.programCampaignTitle,
     programCampaignTitle: record.programCampaignTitle,
     programMaterials: record.materials,
-    activities: record.activities || [],
+    activities: (record.activities || []) as any,
     status: record.status,
     createdBy: record.createdBy || "Marketing Team",
     dateRequestCreated: createdDate,

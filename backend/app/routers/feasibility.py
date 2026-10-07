@@ -17,12 +17,17 @@ from app.schemas.feasibility import (
     FeasibilitySampVerdictPayload,
 )
 from app.services.feasibility_service import FeasibilityService
+from app.services.sample_request_service import SampleRequestService
 
 router = APIRouter(prefix="/api/v1/feasibility-requests", tags=["Feasibility Requests"])
 
 
 def get_feasibility_service(db: Session = Depends(get_db)) -> FeasibilityService:
     return FeasibilityService(db, api_prefix=router.prefix)
+
+
+def get_sample_request_service(db: Session = Depends(get_db)) -> SampleRequestService:
+    return SampleRequestService(db)
 
 
 def require_department(current_user, department: str):
@@ -110,7 +115,7 @@ def create_feasibility_request(
 @router.put(
     "/{request_id}/samp-verdict",
     response_model=FeasibilityRequestOut,
-    summary="SAMP Lab Technical Sign-off / Verdict",
+    summary="SAMP Team Technical Sign-off / Verdict",
 )
 def record_samp_verdict(
     request_id: int,
@@ -140,7 +145,7 @@ def record_marketing_decision(
 @router.post(
     "/{request_id}/claim",
     response_model=FeasibilityRequestOut,
-    summary="SAMP Lab Member Claims/Takes Feasibility Task",
+    summary="SAMP Team Member Claims/Takes Feasibility Task",
 )
 def claim_feasibility_task(
     request_id: int,
@@ -219,9 +224,12 @@ def update_feasibility_request(
 def delete_feasibility_request(
     request_id: int,
     service: FeasibilityService = Depends(get_feasibility_service),
+    sample_service: SampleRequestService = Depends(get_sample_request_service),
     current_user=Depends(get_optional_current_user),
 ):
     deleted = service.delete(request_id)
+    if not deleted:
+        deleted = sample_service.delete(request_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Feasibility request was not found")
     return None

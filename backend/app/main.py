@@ -7,14 +7,16 @@ Startup sequence:
 3. Register all routers
 """
 import logging
+import re
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
 from app.config import settings
-from app.database import engine, Base
+from app.database import engine, Base, ensure_design_workflow_columns
 from app.routers import auth, feasibility, master, program_requests, sample_requests
 
 logger = logging.getLogger("uvicorn.error")
@@ -29,6 +31,7 @@ async def lifespan(app: FastAPI):
     """Run startup tasks before serving requests."""
     # Auto-create any new DB tables (idempotent, safe to run on every restart)
     Base.metadata.create_all(bind=engine)
+    ensure_design_workflow_columns()
     logger.info("[Startup] ✓ Database tables verified / created.")
     yield
 
@@ -59,8 +62,23 @@ app = FastAPI(
 async def generic_exception_handler(request: Request, exc: Exception):
     """Catch-all handler so unhandled errors always return structured JSON without leaking traces."""
     logger.error("Unhandled Exception on %s %s: %s", request.method, request.url.path, exc, exc_info=True)
+    origin = request.headers.get("origin")
+    cors_headers = {}
+    if origin and (
+        origin in settings.CORS_ORIGINS
+        or re.fullmatch(r"https?://(localhost|127\.0\.0\.1)(:\d+)?", origin)
+    ):
+        # Unhandled exceptions are converted by Starlette's outer server-error
+        # middleware, outside CORSMiddleware. Preserve CORS so clients can read
+        # the structured 500 response instead of reporting a misleading fetch error.
+        cors_headers = {
+            "Access-Control-Allow-Origin": origin,
+            "Access-Control-Allow-Credentials": "true",
+            "Vary": "Origin",
+        }
     return JSONResponse(
         status_code=500,
+        headers=cors_headers,
         content={
             "success": False,
             "error": {
@@ -83,6 +101,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 
 # ---------------------------------------------------------------------------

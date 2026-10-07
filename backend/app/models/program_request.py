@@ -52,7 +52,7 @@ class ProgramMaterialSpecification(Base):
     """
     Individual row in the Material Specification Matrix for a Program Planning request.
     All fields are optional, allowing operators to enter any subset of fields.
-    Includes `samp_remark` for SAMP lab team to add/update remarks in view mode.
+    Includes `samp_remark` for SAMP team to add/update remarks in view mode.
     """
 
     __tablename__ = "program_material_specifications"
@@ -97,7 +97,7 @@ class ProgramActivityLog(Base):
     )
     actor_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     actor_name = Column(String(255), nullable=False)
-    actor_department = Column(String(100), nullable=False)  # "Marketing", "SAMP Lab", "System"
+    actor_department = Column(String(100), nullable=False)  # "Marketing", "SAMP Team", "System"
     action = Column(String(64), nullable=False)  # "CREATED", "NOTE_POSTED", "STATUS_UPDATED", "MATERIAL_ADDED", "MATERIAL_DELETED", "SAMP_REMARK_UPDATED"
     payload = Column(JSON, nullable=False, default=dict, server_default="{}")
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { X, ArrowRight, FolderGit2, Calendar, Check } from "lucide-react";
+import { X, ArrowRight, FolderGit2, Calendar, Check, Sparkles } from "lucide-react";
 import { useMasterData } from "../../hooks/useMasterData";
 import { CustomerCombobox } from "@/components/erp";
 
@@ -79,20 +79,25 @@ export const NewProgramPlanningModal: React.FC<NewProgramPlanningModalProps> = (
         onClick={onClose}
       />
 
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative w-full max-w-lg bg-white dark:bg-[#12141d] border border-zinc-200 dark:border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-smooth-modal flex flex-col">
+      <div className="flex min-h-full items-center justify-center p-4 sm:p-6">
+        <div className="relative w-full max-w-2xl bg-white dark:bg-[#12141d] border border-zinc-200 dark:border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-smooth-modal flex flex-col">
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-200 dark:border-white/[0.08] bg-zinc-50/70 dark:bg-[#161822] shrink-0">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#017E84]/10 text-[#017E84] dark:bg-[#017E84]/20 dark:text-[#2dd4bf] flex items-center justify-center border border-[#017E84]/20 shadow-2xs shrink-0">
+          <div className="flex items-center justify-between px-7 py-5 border-b border-zinc-200 dark:border-white/[0.08] bg-zinc-50/80 dark:bg-[#161822] shrink-0">
+            <div className="flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#017E84]/15 to-[#714B67]/15 text-[#017E84] dark:text-[#2dd4bf] flex items-center justify-center border border-[#017E84]/25 shadow-xs shrink-0">
                 <FolderGit2 className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-zinc-950 dark:text-zinc-50 tracking-tight">
-                  New Seasonal Program Planning
-                </h3>
-                <p className="text-[11px] text-zinc-500 font-mono mt-0.5">
-                  Define campaign master parameters and launch material matrix
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-bold text-zinc-950 dark:text-zinc-50 tracking-tight">
+                    New Seasonal Program Planning
+                  </h3>
+                  <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-teal-50 dark:bg-teal-950/50 text-[#017E84] dark:text-teal-300 border border-teal-200 dark:border-teal-800">
+                    <Sparkles className="w-3 h-3" /> Step 1 of 2
+                  </span>
+                </div>
+                <p className="text-xs text-zinc-500 font-medium mt-0.5">
+                  Define campaign master parameters and launch the material allocation matrix
                 </p>
               </div>
             </div>
@@ -107,16 +112,17 @@ export const NewProgramPlanningModal: React.FC<NewProgramPlanningModalProps> = (
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs">
+          <form onSubmit={handleSubmit} className="p-7 space-y-5 text-sm">
             {error && (
-              <div className="p-3 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-rose-700 dark:text-rose-300 font-medium text-xs">
-                {error}
+              <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-rose-700 dark:text-rose-300 font-semibold text-xs flex items-center gap-2">
+                <span>⚠️</span>
+                <span>{error}</span>
               </div>
             )}
 
-            {/* 1. Customer Name */}
-            <div>
-              <label className="block text-[10.5px] font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 mb-1.5 font-mono">
+            {/* 1. Customer Account */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 font-mono">
                 Customer Account <span className="text-rose-500">*</span>
               </label>
               <CustomerCombobox
@@ -126,11 +132,14 @@ export const NewProgramPlanningModal: React.FC<NewProgramPlanningModalProps> = (
                 disabled={isMasterDataLoading || customers.length === 0}
                 className="w-full"
               />
+              <p className="text-[11px] text-zinc-400">
+                Select the customer account associated with this seasonal program line.
+              </p>
             </div>
 
             {/* 2. Program Campaign Title */}
-            <div>
-              <label className="block text-[10.5px] font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 mb-1.5 font-mono">
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 font-mono">
                 Program Campaign Title <span className="text-rose-500">*</span>
               </label>
               <input
@@ -138,25 +147,25 @@ export const NewProgramPlanningModal: React.FC<NewProgramPlanningModalProps> = (
                 required
                 value={programName}
                 onChange={(e) => setProgramName(e.target.value)}
-                placeholder="e.g. Back to school, Hardcover Notebooks Line, Corporate Diaries"
-                className="w-full h-10 px-3.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900/80 text-xs font-semibold text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 outline-none focus:border-[#017E84] focus:ring-2 focus:ring-[#017E84]/15 transition-all shadow-2xs"
+                placeholder="e.g. Back to School 2026, Hardcover Notebooks Line, Corporate Diaries"
+                className="w-full h-11 px-4 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900/80 text-sm font-semibold text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 outline-none focus:border-[#017E84] focus:ring-2 focus:ring-[#017E84]/20 transition-all shadow-xs"
               />
             </div>
 
             {/* 3. Program Year (Only current year + next 2 years) */}
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="text-[10.5px] font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 font-mono flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5 text-zinc-400" />
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 font-mono flex items-center gap-1.5">
+                  <Calendar className="w-4 h-4 text-zinc-400" />
                   <span>Program Year</span>
                   <span className="text-rose-500">*</span>
                 </label>
-                <span className="text-[10px] text-zinc-400 font-mono font-bold uppercase tracking-wider">
+                <span className="text-[10.5px] text-zinc-500 font-mono font-bold uppercase tracking-wider">
                   Active cycle + 2 year horizon
                 </span>
               </div>
 
-              <div className="grid grid-cols-3 gap-2.5">
+              <div className="grid grid-cols-3 gap-3">
                 {yearOptions.map((yr) => {
                   const isSelected = programYear === yr;
                   return (
@@ -164,13 +173,13 @@ export const NewProgramPlanningModal: React.FC<NewProgramPlanningModalProps> = (
                       key={yr}
                       type="button"
                       onClick={() => setProgramYear(yr)}
-                      className={`h-11 px-3 rounded-xl border text-sm font-bold font-mono transition-all flex items-center justify-center gap-1.5 cursor-pointer select-none ${
+                      className={`h-12 px-4 rounded-xl border text-sm font-bold font-mono transition-all flex items-center justify-center gap-2 cursor-pointer select-none ${
                         isSelected
-                          ? "border-[#017E84] bg-[#017E84]/10 dark:bg-[#017E84]/20 text-[#017E84] dark:text-[#2dd4bf] shadow-xs ring-2 ring-[#017E84]/20"
+                          ? "border-[#017E84] bg-teal-50 dark:bg-teal-950/40 text-[#017E84] dark:text-[#2dd4bf] shadow-xs ring-2 ring-[#017E84]/25"
                           : "border-zinc-200 dark:border-zinc-700 bg-zinc-50/70 dark:bg-zinc-900/60 text-zinc-700 dark:text-zinc-300 hover:border-zinc-300 hover:bg-white dark:hover:bg-zinc-800"
                       }`}
                     >
-                      {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                      {isSelected && <Check className="w-4 h-4 stroke-[3]" />}
                       <span>{yr}</span>
                     </button>
                   );
@@ -179,18 +188,18 @@ export const NewProgramPlanningModal: React.FC<NewProgramPlanningModalProps> = (
             </div>
 
             {/* Footer Buttons */}
-            <div className="flex items-center justify-between pt-4 border-t border-zinc-200 dark:border-white/[0.08]">
+            <div className="flex items-center justify-between pt-5 border-t border-zinc-200 dark:border-white/[0.08]">
               <button
                 type="button"
                 onClick={onClose}
-                className="h-9.5 px-4 rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
+                className="h-10 px-5 rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
               >
                 Cancel
               </button>
 
               <button
                 type="submit"
-                className="h-9.5 px-5 rounded-lg bg-[#017E84] hover:bg-[#00666A] active:bg-[#005256] text-white text-xs font-bold transition-all shadow-xs hover:shadow-sm flex items-center gap-2 cursor-pointer tracking-tight active:scale-95"
+                className="h-10 px-6 rounded-xl bg-[#017E84] hover:bg-[#00666A] active:bg-[#005256] text-white text-xs font-bold transition-all shadow-xs hover:shadow-sm flex items-center gap-2 cursor-pointer tracking-tight active:scale-95"
               >
                 <span>Proceed to Material Matrix</span>
                 <ArrowRight className="w-4 h-4 stroke-[2.5]" />

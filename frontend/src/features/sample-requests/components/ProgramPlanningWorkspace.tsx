@@ -19,7 +19,7 @@ import {
   Info,
 } from "lucide-react";
 import { UserProfile } from "@/features/auth";
-import { createProgramRequestApi, createSampleRequestApi } from "../api";
+import { createProgramRequestApi, createSampleRequestApi } from "@/infrastructure/api";
 import { CreateProgramRequestPayload } from "../types";
 import { useMasterData } from "../hooks/useMasterData";
 import { CustomerCombobox } from "@/components/erp";

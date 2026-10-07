@@ -5,7 +5,6 @@ import {
   Trash2,
   Building2,
   Calendar,
-  Factory,
   Package,
   Palette,
   Box,
@@ -15,7 +14,7 @@ import {
   BookmarkCheck,
   Send,
 } from "lucide-react";
-import { StagedProductItem, cleanPlantName } from "../../types/staging";
+import { StagedProductItem } from "../../types/staging";
 
 export interface StagingWorkspaceHeaderProps {
   programContext: {
@@ -23,9 +22,9 @@ export interface StagingWorkspaceHeaderProps {
     programName: string;
     programYear: string;
     year: string;
-    targetPlant: string;
     parentRequestId?: string | number;
     parentSrNumber?: string;
+    openedFromDraft?: boolean;
   };
   stagedProducts: StagedProductItem[];
   isSubmittingAll: boolean;
@@ -99,13 +98,12 @@ export const StagingWorkspaceHeader: React.FC<StagingWorkspaceHeaderProps> = ({
 
         {/* Right: Odoo Pipeline Stage Status Bar */}
         <div className="flex items-center border border-[#CED4DA] dark:border-zinc-700 rounded overflow-hidden text-[10.5px] font-semibold bg-[#F8F9FA] dark:bg-zinc-900/60 divide-x divide-[#CED4DA] dark:divide-zinc-700 select-none">
-          <div className="px-2.5 py-1 text-zinc-400 dark:text-zinc-500">1. Draft (Pre-PMT)</div>
+          <div className="px-2.5 py-1 text-zinc-400 dark:text-zinc-500">1. Draft</div>
           <div className="px-3 py-1 bg-[#714B67] text-white font-bold flex items-center gap-1.5 shadow-2xs">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
             <span>2. Product Staging</span>
           </div>
-          <div className="px-2.5 py-1 text-zinc-400 dark:text-zinc-500">3. Sampling Review</div>
-          <div className="px-2.5 py-1 text-zinc-400 dark:text-zinc-500">4. Released</div>
+          <div className="px-2.5 py-1 text-zinc-400 dark:text-zinc-500">3. Sampling</div>
         </div>
       </div>
 
@@ -135,7 +133,7 @@ export const StagingWorkspaceHeader: React.FC<StagingWorkspaceHeaderProps> = ({
             </button>
           )}
 
-          {(stagedProducts.length > 0 || programContext.parentRequestId) && (
+          {programContext.openedFromDraft && (stagedProducts.length > 0 || programContext.parentRequestId) && (
             <button
               type="button"
               onClick={onReleaseRequest || onSubmitAll}
@@ -177,14 +175,6 @@ export const StagingWorkspaceHeader: React.FC<StagingWorkspaceHeaderProps> = ({
               </span>
             </div>
           )}
-
-          <div className="flex items-center gap-1 font-medium bg-neutral-50 dark:bg-zinc-800/60 px-2 py-0.5 rounded border border-neutral-200 dark:border-zinc-700">
-            <Factory className="w-3 h-3 text-[#714B67]" />
-            <span className="text-zinc-400 text-[10.5px]">Plant:</span>
-            <span className="font-bold text-zinc-900 dark:text-zinc-100">
-              {cleanPlantName(programContext.targetPlant) || "Khaniwade"}
-            </span>
-          </div>
 
           <div className="flex items-center gap-1 font-medium bg-neutral-50 dark:bg-zinc-800/60 px-2 py-0.5 rounded border border-neutral-200 dark:border-zinc-700">
             <Calendar className="w-3 h-3 text-[#714B67]" />

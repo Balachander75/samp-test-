@@ -145,7 +145,7 @@ export const ProgramChatterFeed: React.FC<ProgramChatterFeedProps> = ({
         events.push({
           id: act.id,
           actorName: act.actorName || "Team Member",
-          actorDepartment: act.actorDepartment || (isSamplingMode ? "SAMP Lab" : "Marketing"),
+          actorDepartment: act.actorDepartment || (isSamplingMode ? "SAMP Team" : "Marketing"),
           action: act.action,
           title: "Internal Note Logged",
           body: payload.note || "",
@@ -194,8 +194,8 @@ export const ProgramChatterFeed: React.FC<ProgramChatterFeedProps> = ({
       } else if (act.action === "SAMP_REMARK_UPDATED" || act.action === "SAMP_REMARKS_UPDATED") {
         events.push({
           id: act.id,
-          actorName: act.actorName || "SAMP Lab Specialist",
-          actorDepartment: act.actorDepartment || "SAMP Lab",
+          actorName: act.actorName || "SAMP Specialist",
+          actorDepartment: act.actorDepartment || "SAMP Team",
           action: act.action,
           title: "Technical Review Remarks Recorded",
           body:

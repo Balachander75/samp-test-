@@ -3,7 +3,8 @@ Sample Request Repository.
 Handles all database operations for the `create_sample_requests` entity.
 """
 from typing import Optional, List, Dict, Any, Tuple
-from sqlalchemy.orm import Session, aliased
+import re
+from sqlalchemy.orm import Session, aliased, selectinload
 from sqlalchemy import func, or_, and_
 from app.repositories.base import BaseRepository
 from app.models.sample_request import CreateSampleRequest, ProductDetail
@@ -15,10 +16,28 @@ class SampleRequestRepository(BaseRepository[CreateSampleRequest]):
     def __init__(self, db: Session):
         super().__init__(CreateSampleRequest, db)
 
+    @staticmethod
+    def _eager_options():
+        """Eagerly load relationships in batch to completely eliminate N+1 round trips."""
+        return (
+            selectinload(CreateSampleRequest.request_type_audit),
+            selectinload(CreateSampleRequest.product_details),
+        )
+
+    def get_by_id(self, id: Any) -> Optional[CreateSampleRequest]:
+        """Fetch request by primary key with eager-loaded relationships."""
+        return (
+            self.db.query(CreateSampleRequest)
+            .options(*self._eager_options())
+            .filter(CreateSampleRequest.id == id)
+            .first()
+        )
+
     def get_by_sr_number(self, sr_number: str) -> Optional[CreateSampleRequest]:
         """Fetch request by SR number."""
         return (
             self.db.query(CreateSampleRequest)
+            .options(*self._eager_options())
             .filter(CreateSampleRequest.sr_number == sr_number)
             .first()
         )
@@ -32,7 +51,7 @@ class SampleRequestRepository(BaseRepository[CreateSampleRequest]):
         limit: Optional[int] = None,
     ) -> List[CreateSampleRequest]:
         """Query sample requests with optional business year, customer, and status filters."""
-        query = self.db.query(CreateSampleRequest)
+        query = self.db.query(CreateSampleRequest).options(*self._eager_options())
 
         if year and year.strip().upper() != "ALL":
             clean_year = year.strip()
@@ -75,7 +94,7 @@ class SampleRequestRepository(BaseRepository[CreateSampleRequest]):
 
     def search_materials(self, code: Optional[str] = None, limit: int = 50) -> List[CreateSampleRequest]:
         """Search products by material code or description."""
-        query = self.db.query(CreateSampleRequest)
+        query = self.db.query(CreateSampleRequest).options(*self._eager_options())
         if code and code.strip():
             c = f"%{code.strip()}%"
             query = query.filter(
@@ -91,37 +110,55 @@ class SampleRequestRepository(BaseRepository[CreateSampleRequest]):
         self,
         binding1: str,
         binding2: Optional[str] = None,
-        limit: int = 50,
+        limit: Optional[int] = None,
     ) -> List[CreateSampleRequest]:
         """Find saved products whose EAV binding characteristics match the filters."""
+        def normalized_sql(column):
+            return func.regexp_replace(
+                func.lower(func.coalesce(column, "")),
+                "[^a-z0-9]+",
+                "",
+                "g",
+            )
+
+        def normalized_value(value: str) -> str:
+            return re.sub(r"[^a-z0-9]+", "", str(value or "").casefold())
+
+        normalized_binding1 = normalized_value(binding1)
+        if not normalized_binding1:
+            return []
+
         binding1_detail = aliased(ProductDetail)
-        binding1_name = func.upper(
-            func.replace(func.replace(func.replace(binding1_detail.characteristic_name, " ", ""), "_", ""), "-", "")
+        binding1_name = normalized_sql(binding1_detail.characteristic_name)
+        binding1_detail_match = and_(
+            binding1_name.in_(("bindingtype1", "binding1")),
+            normalized_sql(binding1_detail.value) == normalized_binding1,
         )
+        # Existing catalog records predate the normalized ProductDetail binding
+        # rows. Their binding is often present in the product description instead.
+        legacy_description_match = normalized_sql(
+            CreateSampleRequest.product_description
+        ).like(f"%{normalized_binding1}%")
         query = (
             self.db.query(CreateSampleRequest)
-            .join(binding1_detail, binding1_detail.sample_request_id == CreateSampleRequest.id)
-            .filter(binding1_name.in_(("BINDINGTYPE1", "BINDING1")))
-            .filter(func.lower(func.trim(binding1_detail.value)) == binding1.strip().lower())
+            .outerjoin(binding1_detail, binding1_detail.sample_request_id == CreateSampleRequest.id)
+            .filter(or_(binding1_detail_match, legacy_description_match))
         )
 
         if binding2 and binding2.strip():
+            normalized_binding2 = normalized_value(binding2)
             binding2_detail = aliased(ProductDetail)
-            binding2_name = func.upper(
-                func.replace(func.replace(func.replace(binding2_detail.characteristic_name, " ", ""), "_", ""), "-", "")
-            )
+            binding2_name = normalized_sql(binding2_detail.characteristic_name)
             query = (
                 query.join(binding2_detail, binding2_detail.sample_request_id == CreateSampleRequest.id)
-                .filter(binding2_name.in_(("BINDINGTYPE2", "BINDING2")))
-                .filter(func.lower(func.trim(binding2_detail.value)) == binding2.strip().lower())
+                .filter(binding2_name.in_(("bindingtype2", "binding2")))
+                .filter(normalized_sql(binding2_detail.value) == normalized_binding2)
             )
 
-        return (
-            query.distinct()
-            .order_by(CreateSampleRequest.id.desc())
-            .limit(max(1, min(limit, 100)))
-            .all()
-        )
+        query = query.distinct().order_by(CreateSampleRequest.id.desc())
+        if limit is not None:
+            query = query.limit(max(1, min(limit, 1000)))
+        return query.all()
 
     def batch_update_status(self, ids: List[int], status: str) -> int:
         """Batch update status on multiple requests in a single transaction."""

@@ -147,7 +147,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       const programCount = programRequests.length;
       const totalMarketingCount = samplingCount + pendingFeasCount + programCount;
 
-      // SAMP Lab workload breakdown:
+      // SAMP Team workload breakdown:
       const sampFeasPending = feasRequests.filter((r) => !r.samplingFeasibilityResponse).length;
       const sampTotalActive = inSampling + sampFeasPending + programCount;
 

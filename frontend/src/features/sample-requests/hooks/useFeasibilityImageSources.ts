@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchFeasibilityImageObjectUrl } from "../api";
+import { fetchFeasibilityImageObjectUrl } from "@/infrastructure/api";
 
 const isProtectedFeasibilityImage = (url: string) =>
   url.startsWith("/api/v1/feasibility-requests/") && url.includes("/images/");

@@ -105,6 +105,12 @@ class DesignRequestRepository(BaseRepository[DesignRequest]):
             "product_description": data.get("product_description", "Creative Design Brief"),
             "design_required_date": data.get("design_required_date"),
             "created_by": data.get("created_by") or "Marketing Specialist",
+            "design_remarks": data.get("design_remarks"),
+            "reference_images": data.get("reference_images") or [],
+            "reference_links": data.get("reference_links") or [],
+            "creative_submissions": data.get("creative_submissions") or [],
+            "marketing_decision": data.get("marketing_decision"),
+            "remaining_design_count": data.get("remaining_design_count") or 0,
             "created_at": now_iso,
             "updated_at": now_iso,
         }
@@ -128,6 +134,12 @@ class DesignRequestRepository(BaseRepository[DesignRequest]):
                 product_description=record_dict["product_description"],
                 design_required_date=record_dict["design_required_date"],
                 created_by=record_dict["created_by"],
+                design_remarks=record_dict["design_remarks"],
+                reference_images=record_dict["reference_images"],
+                reference_links=record_dict["reference_links"],
+                creative_submissions=record_dict["creative_submissions"],
+                marketing_decision=record_dict["marketing_decision"],
+                remaining_design_count=record_dict["remaining_design_count"],
             )
             self.db.add(db_item)
             self.db.commit()
@@ -257,6 +269,12 @@ class DesignRequestRepository(BaseRepository[DesignRequest]):
             "product_description": item.product_description,
             "design_required_date": item.design_required_date,
             "created_by": item.created_by,
+            "design_remarks": item.design_remarks,
+            "reference_images": item.reference_images or [],
+            "reference_links": item.reference_links or [],
+            "creative_submissions": item.creative_submissions or [],
+            "marketing_decision": item.marketing_decision,
+            "remaining_design_count": item.remaining_design_count or 0,
             "created_at": item.created_at.isoformat() if item.created_at else None,
             "updated_at": item.updated_at.isoformat() if item.updated_at else None,
         }

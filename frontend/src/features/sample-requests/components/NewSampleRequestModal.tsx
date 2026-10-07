@@ -17,8 +17,11 @@ import {
   ExternalLink,
   Plus,
   Trash2,
-  UploadCloud,
   FolderGit2,
+  Building2,
+  FileText,
+  Loader2,
+  UploadCloud,
 } from "lucide-react";
 import { CustomerCombobox, OperationalDatePicker } from "@/components/erp";
 import { isDateRestricted } from "@/lib/holidayUtils";
@@ -218,6 +221,8 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
       fetchProgramRequestsApi()
         .then((items) => setAvailablePrograms(items || []))
         .catch((err) => console.error("Could not fetch seasonal programs for picker:", err));
+      // Preload ProductStagingWorkspace module in the background for zero-delay transition
+      import("@/features/sample-requests/components/ProductStagingWorkspace").catch(() => {});
     }
   }, [isOpen]);
 
@@ -418,6 +423,7 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
       const saved = await onSubmit(payload);
       if (!saved || typeof saved !== "object") {
         setError("The sampling request could not be saved. Please check the details and try again.");
+        setIsSubmitting(false);
         return;
       }
       const stagingContext = {
@@ -431,11 +437,18 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
       };
       sessionStorage.setItem("samp_active_program_form", JSON.stringify(stagingContext));
       sessionStorage.removeItem("samp_active_staged_products");
-      onClose();
-      navigate("/sample-requests/product-staging", { state: stagingContext });
+
+      // Seamlessly navigate to Product Staging first
+      // This prevents the underlying table page from flashing before the workspace mounts
+      navigate("/sample-requests/product-staging", { state: stagingContext, replace: true });
+
+      // Clean up modal state smoothly after the route transition has been dispatched
+      setTimeout(() => {
+        onClose();
+        setIsSubmitting(false);
+      }, 100);
     } catch (err) {
       setError(err instanceof Error ? err.message : "The sampling request could not be saved.");
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -1080,32 +1093,37 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
             {/* TAB 2: STANDARD SAMPLING FORM (Commercial Sample Request Step 1 Intake) */}
             {selectedTrack === "marketing_request" && (
               <form onSubmit={handleSubmitSampling} className="space-y-4">
-                {/* Odoo Step Flow Indicator */}
-                <div className="flex items-center justify-between px-4 py-2.5 bg-[#F8F9FA] dark:bg-zinc-800/70 border border-[#CED4DA] dark:border-zinc-700 rounded text-xs">
-                  <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#714B67] text-white text-[11px] font-bold">
-                      1
-                    </span>
-                    <span className="font-semibold text-zinc-900 dark:text-zinc-100">
-                      Step 1: Program Header Setup
-                    </span>
-                    <ArrowRight className="w-3 h-3 text-zinc-400" />
-                    <span className="text-zinc-500 dark:text-zinc-400">
-                      Step 2: Staging &amp; Deliverables
-                    </span>
+                {/* Step Flow Indicator */}
+                <div className="flex items-center justify-between px-4 py-2.5 bg-[#F8F9FA] dark:bg-zinc-800/80 border border-[#CED4DA] dark:border-zinc-700 rounded-lg text-xs shadow-2xs">
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex items-center gap-1.5 font-bold text-[#714B67] dark:text-purple-300">
+                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#714B67] text-white text-[11px] font-bold shadow-2xs">
+                        1
+                      </span>
+                      <span>Step 1: Program Header Setup</span>
+                    </div>
+                    <ArrowRight className="w-3.5 h-3.5 text-zinc-400" />
+                    <div className="flex items-center gap-1.5 text-zinc-500 dark:text-zinc-400 font-medium">
+                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 text-[11px] font-bold">
+                        2
+                      </span>
+                      <span>Step 2: Staging &amp; Deliverables</span>
+                    </div>
                   </div>
-                  <span className="font-mono text-[10.5px] font-bold px-2 py-0.5 rounded bg-[#F3E8EE] text-[#714B67] dark:bg-[#3E2938] dark:text-[#E8D7E3] border border-[#714B67]/25">
+                  <span className="font-mono text-[10.5px] font-bold px-2.5 py-1 rounded bg-[#F3E8EE] text-[#714B67] dark:bg-[#3E2938] dark:text-[#E8D7E3] border border-[#714B67]/25 tracking-wide">
                     COMMERCIAL INTAKE
                   </span>
                 </div>
 
                 {/* Form Sheet Content */}
-                <div className="bg-white dark:bg-[#1a1c24] border border-[#CED4DA] dark:border-white/[0.08] rounded p-5 space-y-4 shadow-2xs">
+                <div className="bg-white dark:bg-[#161822] border border-[#CED4DA] dark:border-white/[0.08] rounded-xl p-6 space-y-5 shadow-2xs">
                   {/* Row 1: Customer Account & Program Name */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div>
-                      <label className="block text-[11px] font-bold uppercase tracking-wider text-[#64748B] dark:text-zinc-400 mb-1.5 font-sans">
-                        Customer Account <span className="text-rose-500">*</span>
+                      <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 mb-2 font-sans">
+                        <Building2 className="w-3.5 h-3.5 text-[#714B67] dark:text-purple-400" />
+                        <span>Customer Account</span>
+                        <span className="text-rose-500">*</span>
                       </label>
                       <CustomerCombobox
                         customers={customers}
@@ -1118,12 +1136,14 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                     </div>
 
                     <div>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <label className="block text-[11px] font-bold uppercase tracking-wider text-[#64748B] dark:text-zinc-400 font-sans">
-                          Program Name <span className="text-rose-500">*</span>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 font-sans">
+                          <FileText className="w-3.5 h-3.5 text-[#714B67] dark:text-purple-400" />
+                          <span>Program Name</span>
+                          <span className="text-rose-500">*</span>
                         </label>
                         {matchingPrograms.length > 0 && (
-                          <span className="text-[10px] font-mono text-[#017E84] dark:text-[#2dd4bf] font-bold">
+                          <span className="text-[10.5px] font-mono text-[#017E84] dark:text-[#2dd4bf] font-bold">
                             {matchingPrograms.length} open program{matchingPrograms.length !== 1 ? "s" : ""} found
                           </span>
                         )}
@@ -1132,10 +1152,10 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                         type="text"
                         required
                         list="open-programs-datalist"
-                        placeholder="e.g. Back to school, Hardcover Notebooks..."
+                        placeholder="e.g. Back to School 2026, Hardcover Diaries..."
                         value={marketingProgramName}
                         onChange={(e) => setMarketingProgramName(e.target.value)}
-                        className="w-full h-10 px-3.5 rounded border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-semibold text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 outline-none focus:border-[#714B67] focus:ring-1 focus:ring-[#714B67] transition-all"
+                        className="w-full h-10 px-3.5 rounded-lg border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-semibold text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 outline-none focus:border-[#714B67] focus:ring-2 focus:ring-[#714B67]/20 transition-all shadow-2xs"
                       />
 
                       <datalist id="open-programs-datalist">
@@ -1148,10 +1168,10 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
 
                       {/* Open Seasonal Program Picker Pills */}
                       {matchingPrograms.length > 0 && (
-                        <div className="mt-1.5 flex flex-wrap items-center gap-1.5 animate-smooth-toast">
+                        <div className="mt-2 flex flex-wrap items-center gap-1.5 animate-smooth-toast">
                           <span className="text-[10.5px] font-mono text-zinc-500 dark:text-zinc-400 font-semibold flex items-center gap-1">
                             <FolderGit2 className="w-3 h-3 text-[#714B67] dark:text-purple-400" />
-                            Open:
+                            Open Programs:
                           </span>
                           {matchingPrograms.map((prog) => {
                             const progTitle = prog.programName || prog.programCampaignTitle || "";
@@ -1167,7 +1187,7 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                                     setMarketingProgramYear(prog.programYear);
                                   }
                                 }}
-                                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10.5px] font-mono transition cursor-pointer ${
+                                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded text-[10.5px] font-mono transition cursor-pointer ${
                                   isCurrent
                                     ? "bg-[#714B67] text-white font-bold shadow-2xs"
                                     : "bg-[#F3E8EE] dark:bg-[#3E2938]/60 text-[#714B67] dark:text-purple-300 border border-purple-200 dark:border-purple-800/60 hover:bg-purple-100 dark:hover:bg-purple-950/60"
@@ -1184,91 +1204,68 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                     </div>
                   </div>
 
-                  {/* Row 2: Program Year Horizon & Target Fulfillment Plant */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-                    <div>
-                      <label className="block text-[11px] font-bold uppercase tracking-wider text-[#64748B] dark:text-zinc-400 mb-1.5 font-sans">
-                        Program Year Horizon <span className="text-rose-500">*</span>
-                      </label>
-                      <div className="grid grid-cols-3 gap-2">
-                        {byInfo.seasonYearOptions.map((year) => {
-                          const isSelected = marketingProgramYear === year;
-                          return (
-                            <button
-                              key={year}
-                              type="button"
-                              onClick={() => setMarketingProgramYear(year)}
-                              className={`h-10 px-2.5 rounded border text-xs font-semibold transition-all flex items-center justify-between cursor-pointer select-none ${
-                                isSelected
-                                  ? "border-[#714B67] bg-[#714B67]/10 dark:bg-[#714B67]/20 text-[#714B67] dark:text-[#E8D7E3] font-bold ring-1 ring-[#714B67]/30"
-                                  : "border-[#CED4DA] dark:border-zinc-800 bg-[#F8F9FA] dark:bg-zinc-900/60 text-zinc-700 dark:text-zinc-300 hover:border-zinc-400 hover:bg-white"
-                              }`}
-                            >
-                              <span className="font-mono text-xs">{year}</span>
-                              {isSelected && <Check className="w-3 h-3 text-[#714B67] dark:text-[#E8D7E3] stroke-[2.5]" />}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] font-bold uppercase tracking-wider text-[#64748B] dark:text-zinc-400 mb-1.5 font-sans">
-                        Target Fulfillment Plant <span className="text-rose-500">*</span>
-                      </label>
-                      <select
-                        value={marketingTargetPlant}
-                        onChange={(e) => setMarketingTargetPlant(e.target.value)}
-                        className="w-full h-10 px-3 rounded border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-semibold text-zinc-900 dark:text-zinc-100 outline-none focus:border-[#714B67] focus:ring-1 focus:ring-[#714B67] transition-all cursor-pointer"
-                      >
-                        {plants.length > 0 ? (
-                          plants.map((plant) => (
-                            <option key={plant.id} value={plant.name}>
-                              {plant.name}
-                            </option>
-                          ))
-                        ) : (
-                          <>
-                            <option value="Navneet - Khaniwade">Navneet - Khaniwade</option>
-                            <option value="Navneet - Dantali">Navneet - Dantali</option>
-                            <option value="Navneet - Silvassa">Navneet - Silvassa</option>
-                          </>
-                        )}
-                      </select>
+                  {/* Program Year */}
+                  <div className="pt-1">
+                    <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 mb-2 font-sans">
+                      <Calendar className="w-3.5 h-3.5 text-[#714B67] dark:text-purple-400" />
+                      <span>Program Year</span>
+                      <span className="text-rose-500">*</span>
+                    </label>
+                    <div className="grid grid-cols-3 gap-3">
+                      {byInfo.seasonYearOptions.map((year) => {
+                        const isSelected = marketingProgramYear === year;
+                        return (
+                          <button
+                            key={year}
+                            type="button"
+                            onClick={() => setMarketingProgramYear(year)}
+                            className={`h-11 px-4 rounded-lg border text-xs font-semibold transition-all flex items-center justify-between cursor-pointer select-none ${
+                              isSelected
+                                ? "border-[#714B67] bg-[#714B67]/10 dark:bg-[#714B67]/20 text-[#714B67] dark:text-[#E8D7E3] font-bold ring-2 ring-[#714B67]/25 shadow-2xs"
+                                : "border-[#CED4DA] dark:border-zinc-800 bg-[#F8F9FA] dark:bg-zinc-900/60 text-zinc-700 dark:text-zinc-300 hover:border-zinc-400 hover:bg-white"
+                            }`}
+                          >
+                            <span className="font-mono text-xs">{year}</span>
+                            {isSelected && <CheckCircle2 className="w-4 h-4 text-[#714B67] dark:text-[#E8D7E3]" />}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
 
                   {/* Informational Guidance Callout */}
-                  <div className="flex items-start gap-2.5 p-3 rounded bg-[#017E84]/5 dark:bg-[#017E84]/10 border border-[#017E84]/20 text-xs text-zinc-700 dark:text-zinc-300">
-                    <Package className="w-4 h-4 text-[#017E84] shrink-0 mt-0.5" />
+                  <div className="flex items-start gap-3 p-3.5 rounded-lg bg-[#017E84]/5 dark:bg-[#017E84]/15 border border-[#017E84]/20 text-xs text-zinc-700 dark:text-zinc-300">
+                    <Sparkles className="w-4 h-4 text-[#017E84] shrink-0 mt-0.5" />
                     <div className="text-[11.5px] leading-relaxed">
-                      <span className="font-semibold text-[#017E84] dark:text-teal-400">Next in Product Staging:</span>{" "}
-                      Attach multiple products, define artwork briefs or physical sample specifications, and assign commercial deliverables across <strong className="text-zinc-900 dark:text-zinc-100">Design</strong>, <strong className="text-zinc-900 dark:text-zinc-100">Mockup</strong>, <strong className="text-zinc-900 dark:text-zinc-100">Sampling</strong>, and <strong className="text-zinc-900 dark:text-zinc-100">Costing</strong>.
+                      <strong className="text-[#017E84] dark:text-teal-400">Next Step: Product Staging Workspace</strong> — You will configure deliverable scopes (Design, Mockup, Sampling, Costing) and add individual products with specifications.
                     </div>
                   </div>
                 </div>
 
                 {/* Footer Action Bar */}
-                <div className="flex items-center justify-between pt-1">
+                <div className="flex items-center justify-between pt-2">
                   <button
                     type="button"
                     onClick={onClose}
-                    className="h-9 px-4 rounded bg-white dark:bg-zinc-800 border border-[#CED4DA] dark:border-zinc-700 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 hover:bg-[#F8F9FA] transition-colors cursor-pointer"
+                    className="h-10 px-5 rounded-lg bg-white dark:bg-zinc-800 border border-[#CED4DA] dark:border-zinc-700 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 hover:bg-[#F8F9FA] transition-colors cursor-pointer shadow-2xs"
                   >
                     Discard
                   </button>
                   <div className="flex items-center gap-3">
                     <button
                       type="submit"
-                      disabled={isSubmitting}
-                      className="h-9 px-5 rounded bg-[#017E84] hover:bg-[#00666A] active:bg-[#005256] text-white text-xs font-bold cursor-pointer transition-all shadow-xs flex items-center gap-2 disabled:opacity-60 disabled:cursor-wait"
+                      disabled={isSubmitting || !marketingCustomer.trim() || !marketingProgramName.trim()}
+                      className="h-10 px-6 rounded-lg bg-[#017E84] hover:bg-[#00666A] active:bg-[#005256] text-white text-xs font-bold cursor-pointer transition-all shadow-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isSubmitting ? (
-                        <span>Initializing Staging...</span>
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin text-white" />
+                          <span>Opening Product Staging...</span>
+                        </>
                       ) : (
                         <>
                           <CheckCircle2 className="w-4 h-4" />
-                          <span>Create &amp; Add Products</span>
+                          <span>Create &amp; Add Product</span>
                           <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
                         </>
                       )}

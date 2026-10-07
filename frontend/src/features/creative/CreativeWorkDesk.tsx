@@ -1,16 +1,26 @@
 import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { UserProfile } from "@/features/auth";
-import { fetchCreativeBriefsApi, updateCreativeBriefApi } from "@/infrastructure/api/downstreamApi";
+import { fetchCreativeBriefsApi } from "@/infrastructure/api/downstreamApi";
 import { fetchAllMarketingRequestsApi } from "@/infrastructure/api/sampleRequestsApi";
 import { useBusinessYear } from "@/context/BusinessYearContext";
 import { CreativeBriefItem, SampleRequestItem } from "@/features/sample-requests/types";
 import { CreativeOverviewPage } from "./CreativeOverviewPage";
 import { CreativeDesignPage } from "./CreativeDesignPage";
 import { CreativeSamplingMockupPage } from "./CreativeSamplingMockupPage";
-import { CreativeInspectorModal } from "./CreativeInspectorModal";
-import { SampleRequestInspector } from "@/features/sample-requests/components/SampleRequestInspector";
+import { getRequestTrackType, isDesignRequest } from "@/features/sample-requests/utils/trackTypes";
 import { Palette, Box, Sparkles, LayoutDashboard, Layers } from "lucide-react";
+
+const SampleRequestInspector = React.lazy(() =>
+  import("@/features/sample-requests/components/SampleRequestInspector").then((m) => ({
+    default: m.SampleRequestInspector,
+  }))
+);
+const DesignRequestInspectorModal = React.lazy(() =>
+  import("@/features/sample-requests/components/DesignRequestInspectorModal").then((m) => ({
+    default: m.DesignRequestInspectorModal,
+  }))
+);
 
 export interface CreativeWorkDeskProps {
   user?: UserProfile | null;
@@ -62,10 +72,9 @@ export const CreativeWorkDesk: React.FC<CreativeWorkDeskProps> = ({ user }) => {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Inspector states
-  const [selectedBrief, setSelectedBrief] = useState<CreativeBriefItem | null>(null);
-  const [isBriefInspectorOpen, setIsBriefInspectorOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<SampleRequestItem | null>(null);
   const [isRequestInspectorOpen, setIsRequestInspectorOpen] = useState(false);
+  const [isDesignInspectorOpen, setIsDesignInspectorOpen] = useState(false);
 
   const showToast = useCallback((msg: string) => {
     setToastMessage(msg);
@@ -106,9 +115,14 @@ export const CreativeWorkDesk: React.FC<CreativeWorkDeskProps> = ({ user }) => {
   // Design scoped requests
   const designRequests = useMemo(() => {
     return allRequests.filter((r) => {
+      const srCode = String(r.srNumber || "").toUpperCase();
+      const materialCode = String(r.materialCode || "").toUpperCase();
+      if (getRequestTrackType(r) === "program_planning" || r.requestKind === "program" || srCode.startsWith("PG-") || materialCode.startsWith("PG-")) return false;
       const scopes = r.requestTypes || [];
       const s = String(r.status || "").toLowerCase();
       const code = String(r.materialCode || "");
+      const designState = String(r.designRequestStatus || r.status || "").toLowerCase();
+      if (r.marketingDesignDecision === "awaiting_marketing_review" || r.marketingDesignDecision === "accepted" || designState.includes("approved / closed")) return false;
       return (
         scopes.includes("design") ||
         s.includes("creative") ||
@@ -132,37 +146,38 @@ export const CreativeWorkDesk: React.FC<CreativeWorkDeskProps> = ({ user }) => {
   const designCount = briefs.length + designRequests.length;
   const samplingMockupCount = samplingMockupRequests.length;
 
-  const handleUpdateCurrentBriefStatus = async (
-    newStatus: CreativeBriefItem["proofStatus"],
-    notes?: string
-  ) => {
-    if (!selectedBrief) return;
-    try {
-      await updateCreativeBriefApi(selectedBrief.id, { proofStatus: newStatus, clientFeedback: notes });
-      setBriefs((prev) =>
-        prev.map((b) => (b.id === selectedBrief.id ? { ...b, proofStatus: newStatus } : b))
-      );
-      showToast(`✓ Proof status updated to "${newStatus}"!`);
-      setIsBriefInspectorOpen(false);
-    } catch {
-      showToast("Error updating proof status");
-    }
+  // Handlers for Inspect
+  const handleInspectDesignRequest = (req: SampleRequestItem) => {
+    setSelectedRequest(req);
+    setIsDesignInspectorOpen(true);
   };
 
-  const handleUpdateDesignStatus = async (
-    id: string,
-    newStatus: CreativeBriefItem["proofStatus"],
-    notes?: string
-  ) => {
-    try {
-      await updateCreativeBriefApi(id, { proofStatus: newStatus, clientFeedback: notes });
-      setBriefs((prev) =>
-        prev.map((b) => (b.id === id ? { ...b, proofStatus: newStatus } : b))
-      );
-      showToast(`✓ Proof status updated to "${newStatus}"!`);
-    } catch {
-      showToast("Error updating proof status");
-    }
+  const handleInspectBrief = (brief: CreativeBriefItem) => {
+    const adapted: SampleRequestItem = {
+      id: brief.id,
+      srNumber: brief.srNumber || brief.artCode,
+      productDescription: brief.title,
+      customer: brief.brand,
+      programName: brief.title,
+      programYear: "2026-27",
+      year: "2026-27",
+      dateRequestCreated: new Date().toISOString().split("T")[0],
+      createdBy: brief.designer,
+      targetPlant: "",
+      createdAt: new Date().toISOString(),
+      sampleRequiredDate: brief.dueDate,
+      status: brief.proofStatus,
+      materialCode: brief.artCode,
+      requestTypes: ["design"],
+      requestKind: "design",
+      numberOfDesigns: brief.variantsCount,
+      designRemarks: `${brief.dimensions ? `Dimensions: ${brief.dimensions}\n` : ""}${brief.finishingNotes ? `Finishing: ${brief.finishingNotes}\n` : ""}${brief.colorSpecs ? `Specs: ${brief.colorSpecs}` : ""}`,
+      targetAudience: brief.category,
+      trend: brief.colorSpecs,
+      designRequestStatus: brief.proofStatus,
+    };
+    setSelectedRequest(adapted);
+    setIsDesignInspectorOpen(true);
   };
 
   return (
@@ -256,13 +271,14 @@ export const CreativeWorkDesk: React.FC<CreativeWorkDeskProps> = ({ user }) => {
           selectedYear={selectedYear}
           selectedPlant={selectedPlant}
           onNavigateToTab={(tab) => handleSelectTab(tab)}
-          onInspectBrief={(brief) => {
-            setSelectedBrief(brief);
-            setIsBriefInspectorOpen(true);
-          }}
+          onInspectBrief={handleInspectBrief}
           onInspectRequest={(req) => {
-            setSelectedRequest(req);
-            setIsRequestInspectorOpen(true);
+            if (isDesignRequest(req) || req.designRequestId) {
+              handleInspectDesignRequest(req);
+            } else {
+              setSelectedRequest(req);
+              setIsRequestInspectorOpen(true);
+            }
           }}
         />
       )}
@@ -272,15 +288,8 @@ export const CreativeWorkDesk: React.FC<CreativeWorkDeskProps> = ({ user }) => {
           briefs={briefs}
           designRequests={designRequests}
           selectedYear={selectedYear}
-          onInspectBrief={(brief) => {
-            setSelectedBrief(brief);
-            setIsBriefInspectorOpen(true);
-          }}
-          onInspectRequest={(req: SampleRequestItem) => {
-            setSelectedRequest(req);
-            setIsBriefInspectorOpen(true);
-          }}
-          onUpdateStatus={handleUpdateDesignStatus}
+          onInspectBrief={handleInspectBrief}
+          onInspectRequest={handleInspectDesignRequest}
         />
       )}
 
@@ -296,23 +305,27 @@ export const CreativeWorkDesk: React.FC<CreativeWorkDeskProps> = ({ user }) => {
         />
       )}
 
-      {/* Brief Inspector Modal */}
-      <CreativeInspectorModal
-        isOpen={isBriefInspectorOpen}
-        onClose={() => setIsBriefInspectorOpen(false)}
-        brief={selectedBrief}
-        request={selectedRequest}
-        onUpdateStatus={handleUpdateCurrentBriefStatus}
-      />
+      {/* Modals & Inspectors */}
+      <React.Suspense fallback={null}>
+        {selectedRequest && isRequestInspectorOpen && (
+          <SampleRequestInspector
+            request={selectedRequest}
+            isOpen={isRequestInspectorOpen}
+            onClose={() => setIsRequestInspectorOpen(false)}
+          />
+        )}
 
-      {/* Sample Request Inspector Modal for Sampling & Mockup requests */}
-      {selectedRequest && isRequestInspectorOpen && (
-        <SampleRequestInspector
-          request={selectedRequest}
-          isOpen={isRequestInspectorOpen}
-          onClose={() => setIsRequestInspectorOpen(false)}
-        />
-      )}
+        {selectedRequest && isDesignInspectorOpen && (
+          <DesignRequestInspectorModal
+            request={selectedRequest}
+            isOpen={isDesignInspectorOpen}
+            onClose={() => setIsDesignInspectorOpen(false)}
+            onRefresh={loadData}
+            mode="creative"
+            showToast={showToast}
+          />
+        )}
+      </React.Suspense>
     </div>
   );
 };

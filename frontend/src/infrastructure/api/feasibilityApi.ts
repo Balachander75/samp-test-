@@ -128,7 +128,7 @@ export function mapFeasibilityRequestToSampleRequest(item: FeasibilityRequestRec
     convertedSrNumber: item.convertedSrNumber,
     convertedAt: item.convertedAt,
     convertedBy: item.convertedBy,
-    activities: item.activities || [],
+    activities: (item.activities || []) as any,
   };
 }
 

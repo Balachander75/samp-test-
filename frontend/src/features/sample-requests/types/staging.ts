@@ -19,6 +19,32 @@ export interface StagedProductItem {
   scopes: DeliverableScopeId[];
   timestamp: string;
   stagedDate?: string;
+  creationMode?: "material_code" | "binding" | "custom";
+  savedRequestId?: string | number;
+  savedSrNumber?: string;
+  isDraftSaved?: boolean;
+  sourceSampleRequestId?: number;
+  sourceSampleCode?: string;
+  customBinding1?: string;
+  customBinding2?: string;
+  customDetails?: Array<{
+    class_name?: string;
+    className?: string;
+    characteristic_name?: string;
+    characteristicName?: string;
+    value: string | null;
+    uom?: string | null;
+  }>;
+  requestTypeTimestamps?: Record<string, string | null>;
+  plant?: string;
+  unitPcPack?: string;
+  qtyForSampling?: string;
+  qtyDesignCosting?: string;
+  customerProductCode?: string;
+  barcode?: string;
+  brandName?: string;
+  productType?: string;
+  sampleRequiredDate?: string;
   designMetadata?: {
     numberOfDesigns: number;
     designRequiredDate: string;
