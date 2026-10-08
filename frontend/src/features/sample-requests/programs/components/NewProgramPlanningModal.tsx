@@ -125,7 +125,7 @@ export const NewProgramPlanningModal: React.FC<NewProgramPlanningModalProps> = (
                 customers={customers}
                 value={customer}
                 onChange={setCustomer}
-                disabled={isMasterDataLoading || customers.length === 0}
+                placeholder="Select or enter customer account..."
                 className="w-full"
               />
               <p className="text-[11px] text-slate-400">

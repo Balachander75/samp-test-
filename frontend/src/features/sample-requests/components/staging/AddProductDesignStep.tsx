@@ -10,6 +10,7 @@ import {
   Plus,
   AlertCircle,
   ChevronRight,
+  Check,
 } from "lucide-react";
 import { OperationalDatePicker } from "@/components/erp";
 import { DeliverableScopeId } from "../../types/staging";
@@ -21,6 +22,7 @@ export interface AddProductDesignStepProps {
     programYear: string;
   };
   selectedScopes: DeliverableScopeId[];
+  isEditing?: boolean;
   designDesc: string;
   designCount: number | "";
   designDueDate: string;
@@ -54,6 +56,7 @@ export interface AddProductDesignStepProps {
 export const AddProductDesignStep: React.FC<AddProductDesignStepProps> = ({
   programContext,
   selectedScopes,
+  isEditing = false,
   designDesc,
   designCount,
   designDueDate,
@@ -97,14 +100,16 @@ export const AddProductDesignStep: React.FC<AddProductDesignStepProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight font-display">
-                Creative Design Brief
+                {isEditing ? "Edit Creative Design Brief" : "Creative Design Brief"}
               </h3>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#006d32]/10 text-[#006d32] dark:text-emerald-400 border border-[#006d32]/20 tracking-wider uppercase">
-                DESIGN SPEC
+                {isEditing ? "EDIT SPEC" : "DESIGN SPEC"}
               </span>
             </div>
             <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
-              Add product specifications, creative direction, target due date, and reference artwork
+              {isEditing
+                ? "Modify product specifications, creative direction, target due date, and reference artwork"
+                : "Add product specifications, creative direction, target due date, and reference artwork"}
             </p>
           </div>
         </div>
@@ -507,6 +512,11 @@ export const AddProductDesignStep: React.FC<AddProductDesignStepProps> = ({
               <>
                 <span>Next: Choose Product</span>
                 <ChevronRight className="w-3.5 h-3.5 stroke-[2.5]" />
+              </>
+            ) : isEditing ? (
+              <>
+                <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                <span>Save Changes</span>
               </>
             ) : selectedScopes.length === 1 && selectedScopes[0] === "design" ? (
               <>

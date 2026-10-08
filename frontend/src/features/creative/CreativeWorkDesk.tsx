@@ -126,6 +126,9 @@ export const CreativeWorkDesk: React.FC<CreativeWorkDeskProps> = ({ user }) => {
       if (getRequestTrackType(r) === "program_planning" || r.requestKind === "program" || srCode.startsWith("PG-") || materialCode.startsWith("PG-")) return false;
       const scopes = r.requestTypes || [];
       const s = String(r.status || "").toLowerCase();
+      // Exclude unreleased drafts - only show once released to Creative
+      if (s.includes("draft") || s.includes("smt") || s.includes("pending allocation")) return false;
+
       const code = String(r.materialCode || "");
       const designState = String(r.designRequestStatus || r.status || "").toLowerCase();
       if (r.marketingDesignDecision === "awaiting_marketing_review" || r.marketingDesignDecision === "accepted" || designState.includes("approved / closed")) return false;
@@ -153,6 +156,10 @@ export const CreativeWorkDesk: React.FC<CreativeWorkDeskProps> = ({ user }) => {
       ) {
         return false;
       }
+      const s = String(r.status || "").toLowerCase();
+      // Exclude unreleased drafts
+      if (s.includes("draft") || s.includes("smt") || s.includes("pending allocation")) return false;
+
       const scopes = r.requestTypes || [];
       const hasMockup = scopes.includes("mockup") || r.mockupRequired === "Yes";
       const hasSample = scopes.includes("sample");
@@ -202,7 +209,7 @@ export const CreativeWorkDesk: React.FC<CreativeWorkDeskProps> = ({ user }) => {
     <div className="flex-1 flex flex-col h-full bg-white text-slate-800 overflow-hidden select-none relative">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="absolute top-4 right-6 z-50 bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 text-[12px] font-semibold px-4 py-2 rounded-xl shadow-xl border border-slate-700/50 flex items-center gap-2 animate-in fade-in duration-200">
+        <div className="fixed bottom-6 right-6 z-[100] bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 text-[12px] font-semibold px-4 py-2.5 rounded-xl shadow-2xl border border-slate-700/50 flex items-center gap-2.5 animate-in fade-in slide-in-from-bottom-3 duration-200">
           <span>{toastMessage}</span>
         </div>
       )}

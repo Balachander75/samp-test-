@@ -193,7 +193,7 @@ export const SamplingRequestsPage: React.FC<SamplingRequestsPageProps> = ({
   // Stage counts
   const stageCounts = useMemo(() => {
     const counts: Record<SamplingFilterTab, number> = {
-      all: samplingRequests.length,
+      all: 0,
       draft: 0,
       creative: 0,
       studio: 0,
@@ -209,6 +209,10 @@ export const SamplingRequestsPage: React.FC<SamplingRequestsPageProps> = ({
       if (counts[stage] !== undefined) {
         counts[stage]++;
       }
+      // "all" tab represents active / released requests
+      if (stage !== "draft") {
+        counts.all++;
+      }
     });
 
     return counts;
@@ -220,6 +224,9 @@ export const SamplingRequestsPage: React.FC<SamplingRequestsPageProps> = ({
       if (selectedStageTab !== "all") {
         const itemStage = getStageIdForRequest(r);
         if (itemStage !== selectedStageTab) return false;
+      } else {
+        // Exclude drafts from active requests view
+        if (getStageIdForRequest(r) === "draft") return false;
       }
 
       if (selectedYear !== "ALL") {
@@ -329,7 +336,7 @@ export const SamplingRequestsPage: React.FC<SamplingRequestsPageProps> = ({
   );
 
   const stageTabs: { id: SamplingFilterTab; label: string; count: number }[] = [
-    { id: "all", label: "All Sampling", count: stageCounts.all },
+    { id: "all", label: "Active Requests", count: stageCounts.all },
     { id: "draft", label: "Pre-PMT Drafts", count: stageCounts.draft },
     { id: "creative", label: "Creative & Design", count: stageCounts.creative },
     { id: "studio", label: "Studio CAD", count: stageCounts.studio },

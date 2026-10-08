@@ -171,6 +171,7 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
   const [isSubmittingAll, setIsSubmittingAll] = useState(false);
   const [isReleasing, setIsReleasing] = useState(false);
   const [inspectingProduct, setInspectingProduct] = useState<StagedProductItem | null>(null);
+  const [editingProduct, setEditingProduct] = useState<StagedProductItem | null>(null);
 
   // Auto-save refs to guarantee zero data loss if user navigates away or switches tabs
   const hasAutoSavedRef = useRef(false);
@@ -265,11 +266,65 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
 
   // Open modal starting in Step 1 (Deliverables Selection)
   const handleOpenAddProduct = () => {
+    setEditingProduct(null);
     setAddModalStep("scopes");
     setSelectedScopes([]);
     setScopeTimestamps({});
     resetDesignState();
     resetSamplingState();
+    setIsAddModalOpen(true);
+  };
+
+  // Edit existing staged product specification
+  const handleEditProduct = (item: StagedProductItem) => {
+    setEditingProduct(item);
+    setSelectedScopes([...item.scopes]);
+    const cleanedTimestamps: Record<string, string> = {};
+    if (item.requestTypeTimestamps) {
+      Object.entries(item.requestTypeTimestamps).forEach(([k, v]) => {
+        if (v) cleanedTimestamps[k] = v;
+      });
+    }
+    setScopeTimestamps(cleanedTimestamps);
+    setModalError(null);
+
+    if (item.designMetadata) {
+      setDesignDesc(item.productDescription);
+      setDesignCount(item.designMetadata.numberOfDesigns);
+      setDesignDueDate(item.designMetadata.designRequiredDate);
+      setDesignTrend(item.designMetadata.trend || "");
+      setDesignAudience(item.designMetadata.targetAudience || "");
+      setDesignRemarks(item.designMetadata.remarks || "");
+      setUploadedImages(item.designMetadata.images || []);
+      setWebLinks(item.designMetadata.webLinks || []);
+    } else {
+      setDesignDesc(item.productDescription);
+    }
+
+    if (item.samplingMetadata) {
+      setSamplingDescription(item.productDescription);
+      setSampleType(item.samplingMetadata.sampleType || "full");
+      setPartialRequirements(item.samplingMetadata.partialRequirements || "");
+      setSelectedBinding1(item.samplingMetadata.bindingType1 || item.customBinding1 || "");
+      setSelectedBinding2(item.samplingMetadata.bindingType2 || item.customBinding2 || "");
+    }
+
+    if (item.catalogMetadata) {
+      setCatalogProductDescription(item.productDescription);
+      setSelectedBinding1(item.catalogMetadata.bindingType1 || item.customBinding1 || "");
+      setSelectedBinding2(item.catalogMetadata.bindingType2 || item.customBinding2 || "");
+    }
+
+    if (item.scopes.includes("design") && item.scopes.length === 1) {
+      setAddModalStep("design_brief");
+    } else if (item.scopes.includes("sample")) {
+      setAddModalStep("sampling_config");
+    } else if (item.scopes.includes("mockup") || item.scopes.includes("costing")) {
+      setAddModalStep("product_search");
+    } else {
+      setAddModalStep("scopes");
+    }
+
     setIsAddModalOpen(true);
   };
 
@@ -569,34 +624,59 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
     const formattedDate = now.toISOString().split("T")[0];
     const formattedTime = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
-    const nextItem: StagedProductItem = {
-      id: `staged-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-      materialCode: generatedMaterialCode,
-      productDescription: designDesc.trim(),
-      scopes: [...selectedScopes],
-      requestTypeTimestamps: { ...scopeTimestamps },
-      creationMode: "material_code",
-      stagedDate: formattedDate,
-      timestamp: formattedTime,
-      isDraftSaved: false,
-      designMetadata: {
-        numberOfDesigns: Number(designCount) || 1,
-        designRequiredDate: designDueDate.trim(),
-        trend: designTrend.trim(),
-        targetAudience: designAudience.trim(),
-        remarks: designRemarks.trim(),
-        images: [...uploadedImages],
-        webLinks: [...webLinks],
-        referenceImage: uploadedImages[0]?.url || webLinks[0] || "",
-      },
-    };
+    let nextItem: StagedProductItem;
+    let nextProducts: StagedProductItem[];
 
-    const nextProducts = [...stagedProducts, nextItem];
+    if (editingProduct) {
+      nextItem = {
+        ...editingProduct,
+        productDescription: designDesc.trim(),
+        scopes: [...selectedScopes],
+        requestTypeTimestamps: { ...scopeTimestamps },
+        designMetadata: {
+          numberOfDesigns: Number(designCount) || 1,
+          designRequiredDate: designDueDate.trim(),
+          trend: designTrend.trim(),
+          targetAudience: designAudience.trim(),
+          remarks: designRemarks.trim(),
+          images: [...uploadedImages],
+          webLinks: [...webLinks],
+          referenceImage: uploadedImages[0]?.url || webLinks[0] || "",
+        },
+      };
+      nextProducts = stagedProducts.map((p) => (p.id === editingProduct.id ? nextItem : p));
+      setEditingProduct(null);
+      showToast(`Updated "${nextItem.productDescription}".`);
+    } else {
+      nextItem = {
+        id: `staged-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        materialCode: generatedMaterialCode,
+        productDescription: designDesc.trim(),
+        scopes: [...selectedScopes],
+        requestTypeTimestamps: { ...scopeTimestamps },
+        creationMode: "material_code",
+        stagedDate: formattedDate,
+        timestamp: formattedTime,
+        isDraftSaved: false,
+        designMetadata: {
+          numberOfDesigns: Number(designCount) || 1,
+          designRequiredDate: designDueDate.trim(),
+          trend: designTrend.trim(),
+          targetAudience: designAudience.trim(),
+          remarks: designRemarks.trim(),
+          images: [...uploadedImages],
+          webLinks: [...webLinks],
+          referenceImage: uploadedImages[0]?.url || webLinks[0] || "",
+        },
+      };
+      nextProducts = [...stagedProducts, nextItem];
+      showToast(`Added "${nextItem.productDescription}" to Product Staging.`);
+    }
+
     setStagedProducts(nextProducts);
     sessionStorage.setItem("samp_active_staged_products", JSON.stringify(nextProducts));
     setIsAddModalOpen(false);
     resetDesignState();
-    showToast(`Added "${nextItem.productDescription}" to Product Staging.`);
 
     // Persist staged product directly into Draft in the background
     autoSaveStagedProductsToDraft(nextProducts, programContext, user)
@@ -651,47 +731,74 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
         ? "MUP"
         : "CST";
     const materialCode = `${materialPrefix}-${plantCode}-${Math.floor(1000 + Math.random() * 9000)}`;
-    const nextItem: StagedProductItem = {
-      id: `staged-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-      materialCode,
-      productDescription,
-      scopes: [...selectedScopes],
-      requestTypeTimestamps: { ...scopeTimestamps },
-      creationMode: "material_code",
-      sourceSampleRequestId: selectedDbSample.id,
-      sourceSampleCode: selectedDbSample.material_code,
-      customBinding1: selectedDbSample.binding_type_1 || selectedBinding1 || undefined,
-      customBinding2: selectedDbSample.binding_type_2 || selectedBinding2 || undefined,
-      stagedDate: now.toISOString().split("T")[0],
-      timestamp: now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      ...(selectedScopes.includes("design") && {
-        designMetadata: {
-          numberOfDesigns: Number(designCount) || 1,
-          designRequiredDate: designDueDate.trim(),
-          trend: designTrend.trim(),
-          targetAudience: designAudience.trim(),
-          remarks: designRemarks.trim(),
-          images: uploadedImages,
-          webLinks,
-          referenceImage: uploadedImages[0]?.url || webLinks[0] || "",
-        },
-      }),
-      catalogMetadata: {
-        sourceProductId: selectedDbSample.id,
-        sourceRequestNumber: selectedDbSample.sr_number,
-        sourceMaterialCode: selectedDbSample.material_code,
-        sourceDescription: selectedDbSample.product_description,
-        bindingType1: selectedDbSample.binding_type_1 || selectedBinding1 || undefined,
-        bindingType2: selectedDbSample.binding_type_2 || selectedBinding2 || undefined,
-      },
-    };
+    let nextItem: StagedProductItem;
+    let nextProducts: StagedProductItem[];
 
-    const nextProducts = [...stagedProducts, nextItem];
+    if (editingProduct) {
+      nextItem = {
+        ...editingProduct,
+        productDescription,
+        scopes: [...selectedScopes],
+        requestTypeTimestamps: { ...scopeTimestamps },
+        sourceSampleRequestId: selectedDbSample.id,
+        sourceSampleCode: selectedDbSample.material_code,
+        customBinding1: selectedDbSample.binding_type_1 || selectedBinding1 || undefined,
+        customBinding2: selectedDbSample.binding_type_2 || selectedBinding2 || undefined,
+        catalogMetadata: {
+          sourceProductId: selectedDbSample.id,
+          sourceRequestNumber: selectedDbSample.sr_number,
+          sourceMaterialCode: selectedDbSample.material_code,
+          sourceDescription: selectedDbSample.product_description,
+          bindingType1: selectedDbSample.binding_type_1 || selectedBinding1 || undefined,
+          bindingType2: selectedDbSample.binding_type_2 || selectedBinding2 || undefined,
+        },
+      };
+      nextProducts = stagedProducts.map((p) => (p.id === editingProduct.id ? nextItem : p));
+      setEditingProduct(null);
+      showToast(`Updated "${nextItem.productDescription}".`);
+    } else {
+      nextItem = {
+        id: `staged-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        materialCode,
+        productDescription,
+        scopes: [...selectedScopes],
+        requestTypeTimestamps: { ...scopeTimestamps },
+        creationMode: "material_code",
+        sourceSampleRequestId: selectedDbSample.id,
+        sourceSampleCode: selectedDbSample.material_code,
+        customBinding1: selectedDbSample.binding_type_1 || selectedBinding1 || undefined,
+        customBinding2: selectedDbSample.binding_type_2 || selectedBinding2 || undefined,
+        stagedDate: now.toISOString().split("T")[0],
+        timestamp: now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        ...(selectedScopes.includes("design") && {
+          designMetadata: {
+            numberOfDesigns: Number(designCount) || 1,
+            designRequiredDate: designDueDate.trim(),
+            trend: designTrend.trim(),
+            targetAudience: designAudience.trim(),
+            remarks: designRemarks.trim(),
+            images: uploadedImages,
+            webLinks,
+            referenceImage: uploadedImages[0]?.url || webLinks[0] || "",
+          },
+        }),
+        catalogMetadata: {
+          sourceProductId: selectedDbSample.id,
+          sourceRequestNumber: selectedDbSample.sr_number,
+          sourceMaterialCode: selectedDbSample.material_code,
+          sourceDescription: selectedDbSample.product_description,
+          bindingType1: selectedDbSample.binding_type_1 || selectedBinding1 || undefined,
+          bindingType2: selectedDbSample.binding_type_2 || selectedBinding2 || undefined,
+        },
+      };
+      nextProducts = [...stagedProducts, nextItem];
+      showToast(`Added "${nextItem.productDescription}" to Product Staging.`);
+    }
+
     setStagedProducts(nextProducts);
     sessionStorage.setItem("samp_active_staged_products", JSON.stringify(nextProducts));
     setIsAddModalOpen(false);
     resetSamplingState();
-    showToast(`Added "${nextItem.productDescription}" to Product Staging.`);
 
     // Persist staged product directly into Draft
     autoSaveStagedProductsToDraft(nextProducts, programContext, user)
@@ -736,44 +843,75 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
     const now = new Date();
     const formattedDate = now.toISOString().split("T")[0];
     const formattedTime = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    const isCustom = samplingSearchMode === "binding";
 
-    const isCustom = !selectedDbSample || samplingSearchMode === "binding";
-    const nextItem: StagedProductItem = {
-      id: `staged-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-      materialCode: isCustom && !selectedDbSample ? "" : matCode,
-      productDescription: desc,
-      scopes: [...selectedScopes],
-      requestTypeTimestamps: { ...scopeTimestamps },
-      creationMode: isCustom ? "binding" : "material_code",
-      sourceSampleRequestId: selectedDbSample?.id,
-      sourceSampleCode: selectedDbSample?.material_code,
-      customBinding1: selectedBinding1 || selectedDbSample?.binding_type_1,
-      customBinding2: selectedBinding2 || selectedDbSample?.binding_type_2,
-      stagedDate: formattedDate,
-      timestamp: formattedTime,
-      isDraftSaved: false,
-      samplingMetadata: {
-        sampleType,
-        partialRequirements: partialRequirements.trim() || undefined,
-        searchMode: samplingSearchMode,
-        sourceSampleId: selectedDbSample?.id,
-        sourceSrNumber: selectedDbSample?.sr_number,
-        selectedMaterialCode: selectedDbSample?.material_code,
-        bindingType1: selectedBinding1 || selectedDbSample?.binding_type_1,
-        bindingType2: selectedBinding2 || selectedDbSample?.binding_type_2,
-        customerReference: selectedDbSample?.customer,
-        targetPlant: selectedDbSample?.target_plant,
-      },
-    };
+    let nextItem: StagedProductItem;
+    let nextProducts: StagedProductItem[];
 
-    const nextProducts = [...stagedProducts, nextItem];
+    if (editingProduct) {
+      nextItem = {
+        ...editingProduct,
+        productDescription: desc,
+        scopes: [...selectedScopes],
+        requestTypeTimestamps: { ...scopeTimestamps },
+        sourceSampleRequestId: selectedDbSample?.id || editingProduct.sourceSampleRequestId,
+        sourceSampleCode: selectedDbSample?.material_code || editingProduct.sourceSampleCode,
+        customBinding1: selectedBinding1 || selectedDbSample?.binding_type_1 || editingProduct.customBinding1,
+        customBinding2: selectedBinding2 || selectedDbSample?.binding_type_2 || editingProduct.customBinding2,
+        samplingMetadata: {
+          sampleType,
+          partialRequirements: partialRequirements.trim() || undefined,
+          searchMode: samplingSearchMode,
+          sourceSampleId: selectedDbSample?.id || editingProduct.samplingMetadata?.sourceSampleId,
+          sourceSrNumber: selectedDbSample?.sr_number || editingProduct.samplingMetadata?.sourceSrNumber,
+          selectedMaterialCode: selectedDbSample?.material_code || editingProduct.samplingMetadata?.selectedMaterialCode,
+          bindingType1: selectedBinding1 || selectedDbSample?.binding_type_1 || editingProduct.samplingMetadata?.bindingType1,
+          bindingType2: selectedBinding2 || selectedDbSample?.binding_type_2 || editingProduct.samplingMetadata?.bindingType2,
+          customerReference: selectedDbSample?.customer || editingProduct.samplingMetadata?.customerReference,
+          targetPlant: selectedDbSample?.target_plant || editingProduct.samplingMetadata?.targetPlant,
+        },
+      };
+      nextProducts = stagedProducts.map((p) => (p.id === editingProduct.id ? nextItem : p));
+      setEditingProduct(null);
+      showToast(`Updated "${nextItem.productDescription}".`);
+    } else {
+      nextItem = {
+        id: `staged-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        materialCode: isCustom && !selectedDbSample ? "" : matCode,
+        productDescription: desc,
+        scopes: [...selectedScopes],
+        requestTypeTimestamps: { ...scopeTimestamps },
+        creationMode: isCustom ? "binding" : "material_code",
+        sourceSampleRequestId: selectedDbSample?.id,
+        sourceSampleCode: selectedDbSample?.material_code,
+        customBinding1: selectedBinding1 || selectedDbSample?.binding_type_1,
+        customBinding2: selectedBinding2 || selectedDbSample?.binding_type_2,
+        stagedDate: formattedDate,
+        timestamp: formattedTime,
+        isDraftSaved: false,
+        samplingMetadata: {
+          sampleType,
+          partialRequirements: partialRequirements.trim() || undefined,
+          searchMode: samplingSearchMode,
+          sourceSampleId: selectedDbSample?.id,
+          sourceSrNumber: selectedDbSample?.sr_number,
+          selectedMaterialCode: selectedDbSample?.material_code,
+          bindingType1: selectedBinding1 || selectedDbSample?.binding_type_1,
+          bindingType2: selectedBinding2 || selectedDbSample?.binding_type_2,
+          customerReference: selectedDbSample?.customer,
+          targetPlant: selectedDbSample?.target_plant,
+        },
+      };
+      nextProducts = [...stagedProducts, nextItem];
+      showToast(
+        `Added Sampling (${sampleType === "full" ? "Full Sample" : "Partial Sample"}): "${nextItem.productDescription}" to Product Staging.`
+      );
+    }
+
     setStagedProducts(nextProducts);
     sessionStorage.setItem("samp_active_staged_products", JSON.stringify(nextProducts));
     setIsAddModalOpen(false);
     resetSamplingState();
-    showToast(
-      `Added Sampling (${sampleType === "full" ? "Full Sample" : "Partial Sample"}): "${nextItem.productDescription}" to Product Staging.`
-    );
 
     // Persist staged product directly into Draft
     autoSaveStagedProductsToDraft(nextProducts, programContext, user)
@@ -963,33 +1101,6 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
       {/* Main Container */}
       <div className="mx-auto w-full max-w-[1680px] flex-1 space-y-4 px-4 py-4 sm:px-6 lg:px-8">
 
-        {/* Toast Notification Banner */}
-        {toastMsg && (
-          <div
-            className={`px-4 py-3 rounded-lg border text-xs font-medium flex items-center justify-between animate-smooth-toast ${
-              toastMsg.tone === "success"
-                ? "border-emerald-200 dark:border-emerald-900/60 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300"
-                : "border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300"
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              {toastMsg.tone === "success" ? (
-                <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
-              ) : (
-                <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
-              )}
-              <span>{toastMsg.text}</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => setToastMsg(null)}
-              className="p-1 hover:opacity-75 transition-opacity cursor-pointer"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        )}
-
         {/* 1. Master Workspace Header (Navigation, Program Context & Action Ribbon) */}
         <StagingWorkspaceHeader
           programContext={programContext}
@@ -1009,6 +1120,7 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
           stagedProducts={stagedProducts}
           onOpenAddModal={handleOpenAddProduct}
           onInspectProduct={(prod) => setInspectingProduct(prod)}
+          onEditProduct={handleEditProduct}
           onDuplicateProduct={handleDuplicateStagedItem}
           onRemoveProduct={handleRemoveStagedItem}
         />
@@ -1037,6 +1149,7 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
               <AddProductDesignStep
                 programContext={programContext}
                 selectedScopes={selectedScopes}
+                isEditing={Boolean(editingProduct)}
                 designDesc={designDesc}
                 designCount={designCount}
                 designDueDate={designDueDate}
@@ -1176,7 +1289,45 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
           setInspectingProduct(null);
           handleDuplicateStagedItem(item);
         }}
+        onEditProduct={(item) => {
+          setInspectingProduct(null);
+          handleEditProduct(item);
+        }}
       />
+
+      {/* 5. Floating Bottom Popup Toast Notification */}
+      {toastMsg && (
+        <div
+          role="status"
+          aria-live="polite"
+          className={`fixed bottom-6 right-6 z-[100] max-w-md px-4 py-3 rounded-2xl shadow-2xl border text-xs font-semibold flex items-center justify-between gap-3 transition-all duration-200 ${
+            toastMsg.tone === "success"
+              ? "border-emerald-200 dark:border-emerald-900/60 bg-white dark:bg-[#161822] text-emerald-800 dark:text-emerald-300 shadow-[0_8px_30px_rgba(0,109,50,0.15)]"
+              : "border-rose-200 dark:border-rose-900/60 bg-white dark:bg-[#161822] text-rose-800 dark:text-rose-300 shadow-[0_8px_30px_rgba(225,29,72,0.15)]"
+          }`}
+        >
+          <div className="flex items-center gap-2.5 min-w-0">
+            {toastMsg.tone === "success" ? (
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-400">
+                <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
+              </span>
+            ) : (
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-xl bg-rose-100 dark:bg-rose-950/70 text-rose-600 dark:text-rose-400">
+                <AlertCircle className="w-4 h-4 stroke-[2.5]" />
+              </span>
+            )}
+            <span className="truncate leading-snug">{toastMsg.text}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setToastMsg(null)}
+            className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors cursor-pointer rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 shrink-0"
+            aria-label="Close notification"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
     </div>
   );
 };

@@ -683,7 +683,6 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                           customers={customers}
                           value={customer}
                           onChange={setCustomer}
-                          disabled={isMasterDataLoading || customers.length === 0}
                           className="w-full"
                         />
                       </div>
@@ -1060,8 +1059,7 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                         customers={customers}
                         value={marketingCustomer}
                         onChange={setMarketingCustomer}
-                        disabled={isMasterDataLoading || customers.length === 0}
-                        placeholder="Select target customer account..."
+                        placeholder="Select or enter customer account..."
                         className="w-full"
                       />
                     </div>
@@ -1228,7 +1226,7 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                         customers={customers}
                         value={customer}
                         onChange={setCustomer}
-                        disabled={isMasterDataLoading || customers.length === 0}
+                        placeholder="Select or enter customer account..."
                         className="w-full"
                       />
                     </div>

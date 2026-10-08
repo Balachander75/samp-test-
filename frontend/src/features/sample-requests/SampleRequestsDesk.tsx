@@ -523,9 +523,13 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
 
   return (
     <div className="flex-1 flex flex-col h-full bg-[#fafafa] dark:bg-[#08090d] overflow-hidden select-none relative">
-      {/* Toast Notification */}
+      {/* Toast Notification Popup */}
       {toastMessage && (
-        <div className="absolute top-4 right-6 z-50 bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 text-[12px] font-semibold px-4 py-2 rounded-lg shadow-xl border border-zinc-700/50 flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-6 right-6 z-[100] max-w-md bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 text-[12px] font-semibold px-4 py-3 rounded-2xl shadow-2xl border border-zinc-700/50 dark:border-zinc-300 flex items-center gap-2.5 animate-in fade-in slide-in-from-bottom-3 duration-200"
+        >
           <span>{toastMessage}</span>
         </div>
       )}
