@@ -1,4 +1,5 @@
 import React from "react";
+import { createPortal } from "react-dom";
 import { X, Copy, Trash2, ExternalLink, Pencil } from "lucide-react";
 import { StagedProductItem, DELIVERABLES } from "../../types/staging";
 
@@ -21,9 +22,9 @@ export const StagedProductDrawer: React.FC<StagedProductDrawerProps> = ({
 }) => {
   if (!inspectingProduct) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
-      <div className="fixed inset-0 bg-black/60 transition-opacity" onClick={onClose} />
+  return createPortal(
+    <div className="fixed inset-0 z-[100] overflow-y-auto" role="dialog" aria-modal="true">
+      <div className="fixed inset-0 bg-slate-950/70 transition-opacity" onClick={onClose} />
 
       <div className="flex min-h-full items-center justify-center p-3 sm:p-5">
         <div className="relative w-full max-w-3xl bg-white dark:bg-[#161822] border border-slate-200/80 dark:border-white/[0.08] rounded-2xl shadow-2xl overflow-hidden animate-smooth-modal flex flex-col max-h-[90vh]">
@@ -308,6 +309,22 @@ export const StagedProductDrawer: React.FC<StagedProductDrawerProps> = ({
             </button>
 
             <div className="flex items-center gap-2">
+              {onEditProduct && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const toEdit = inspectingProduct;
+                    onClose();
+                    onEditProduct(toEdit);
+                  }}
+                  className="h-8 px-3.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-900/60 text-xs font-semibold cursor-pointer transition-colors flex items-center gap-1.5 border border-blue-200/80 dark:border-blue-800/40"
+                  title="Edit this staged specification"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                  <span>Edit</span>
+                </button>
+              )}
+
               <button
                 type="button"
                 onClick={() => {
@@ -333,6 +350,7 @@ export const StagedProductDrawer: React.FC<StagedProductDrawerProps> = ({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
