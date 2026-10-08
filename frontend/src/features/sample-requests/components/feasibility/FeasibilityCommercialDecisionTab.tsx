@@ -35,7 +35,7 @@ export const FeasibilityCommercialDecisionTab: React.FC<FeasibilityCommercialDec
               Technical Review Must Be Completed First
             </h3>
             <p className="text-xs text-slate-400 dark:text-zinc-400 max-w-md mx-auto mt-1 leading-relaxed">
-              Commercial sign-off unlocks as soon as the SAMP Lab records their technical verdict (Yes / Conditional / No).
+              Commercial sign-off unlocks as soon as the SAMP Team records their technical verdict (Yes / Conditional / No).
             </p>
           </div>
         </div>
@@ -75,8 +75,8 @@ export const FeasibilityCommercialDecisionTab: React.FC<FeasibilityCommercialDec
                   </span>
                 </div>
                 {activeRequest.marketingDecisionRemark && (
-                  <div className="p-3.5 rounded-xl bg-white dark:bg-zinc-800/80 border border-slate-100 dark:border-white/5 text-slate-800 dark:text-zinc-200 italic font-sans leading-relaxed">
-                    "{activeRequest.marketingDecisionRemark}"
+                  <div className="p-3.5 rounded-xl bg-white dark:bg-zinc-800/80 border border-slate-100 dark:border-white/5 text-slate-800 dark:text-zinc-200 font-sans leading-relaxed">
+                    {activeRequest.marketingDecisionRemark}
                   </div>
                 )}
               </div>
@@ -88,8 +88,8 @@ export const FeasibilityCommercialDecisionTab: React.FC<FeasibilityCommercialDec
                     {activeRequest.samplingFeasibilityResponse}
                   </span>
                   {activeRequest.samplingFeasibilityRemark && (
-                    <span className="italic ml-1 text-slate-500">
-                      ("{activeRequest.samplingFeasibilityRemark}")
+                    <span className="ml-1.5 text-slate-500">
+                      — {activeRequest.samplingFeasibilityRemark}
                     </span>
                   )}
                 </div>

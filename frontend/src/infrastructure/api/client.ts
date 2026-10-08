@@ -41,12 +41,52 @@ export function getApiErrorMessage(error: any, fallback: string): string {
   return fallback;
 }
 
+let activeRefreshPromise: Promise<string | null> | null = null;
+
+async function refreshAccessToken(): Promise<string | null> {
+  const refreshToken = typeof window !== "undefined" ? localStorage.getItem("auth_refresh_token") || sessionStorage.getItem("auth_refresh_token") : null;
+  if (!refreshToken) return null;
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
+    if (!res.ok) {
+      // Refresh token expired or revoked
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("auth_token");
+        localStorage.removeItem("auth_refresh_token");
+        sessionStorage.removeItem("auth_token");
+        sessionStorage.removeItem("auth_refresh_token");
+      }
+      return null;
+    }
+    const data = await res.json();
+    const newAccessToken = data.access_token;
+    const newRefreshToken = data.refresh_token || refreshToken;
+    if (newAccessToken && typeof window !== "undefined") {
+      if (localStorage.getItem("auth_token")) {
+        localStorage.setItem("auth_token", newAccessToken);
+        if (newRefreshToken) localStorage.setItem("auth_refresh_token", newRefreshToken);
+      } else {
+        sessionStorage.setItem("auth_token", newAccessToken);
+        if (newRefreshToken) sessionStorage.setItem("auth_refresh_token", newRefreshToken);
+      }
+    }
+    return newAccessToken;
+  } catch {
+    return null;
+  }
+}
+
 /**
- * Typed HTTP request wrapper with standardized JSON error unwrapping.
+ * Typed HTTP request wrapper with standardized JSON error unwrapping and automatic 401 token refresh.
  */
 export async function apiFetch<T>(
   endpoint: string,
-  options: RequestInit & { jsonBody?: unknown } = {}
+  options: RequestInit & { jsonBody?: unknown; _retry?: boolean } = {}
 ): Promise<T> {
   const url = endpoint.startsWith("http") ? endpoint : `${API_BASE_URL}${endpoint}`;
   const headers = createApiHeaders({
@@ -66,7 +106,37 @@ export async function apiFetch<T>(
     config.body = JSON.stringify(options.jsonBody);
   }
 
-  const response = await fetch(url, config);
+  let response = await fetch(url, config);
+
+  // Automatic 401 Token Refresh & Request Retry
+  if (response.status === 401 && !options._retry && !endpoint.includes("/api/auth/")) {
+    if (!activeRefreshPromise) {
+      activeRefreshPromise = refreshAccessToken().finally(() => {
+        activeRefreshPromise = null;
+      });
+    }
+
+    const newAccessToken = await activeRefreshPromise;
+    if (newAccessToken) {
+      const retryHeaders = createApiHeaders({
+        json: Boolean(options.jsonBody),
+        accept: true,
+        token: newAccessToken,
+      });
+      const retryConfig: RequestInit = {
+        ...options,
+        _retry: true,
+        headers: {
+          ...retryHeaders,
+          ...(options.headers || {}),
+        },
+      } as any;
+      if (options.jsonBody !== undefined) {
+        retryConfig.body = JSON.stringify(options.jsonBody);
+      }
+      response = await fetch(url, retryConfig);
+    }
+  }
 
   if (!response.ok) {
     let errorJson: any = null;

@@ -100,7 +100,7 @@ export function parseFeasibilityDetails(
   productImagePath?: string | null,
   existingImageNames?: string[]
 ): ParsedFeasibilityDetails {
-  let category = "Custom Specification";
+  let category = "";
   let text = (description || "").trim();
   let marketingRemarks: string | null = null;
   const links: string[] = existingLinks ? [...existingLinks.filter(Boolean)] : [];

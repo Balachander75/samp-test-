@@ -6,6 +6,8 @@ import {
   ProgramActivityItem,
   CreateProgramRequestPayload,
   AddProgramMaterialPayload,
+  ProgramReviewPayload,
+  ProgramSeenPayload,
 } from "@/features/sample-requests/types";
 import { getBusinessYearForDate } from "@/lib/businessYear";
 
@@ -52,6 +54,18 @@ export function mapProgramResponse(item: Record<string, unknown>): ProgramReques
     programYear: String(item.program_year || "2026-2027"),
     status: String(item.status || "Pending SAMP Review"),
     createdBy: typeof item.created_by === "string" ? item.created_by : null,
+    samplingSeenAt: typeof item.sampling_seen_at === "string" ? item.sampling_seen_at : null,
+    samplingSeenBy: typeof item.sampling_seen_by === "string" ? item.sampling_seen_by : null,
+    samplingVerdict: typeof item.sampling_verdict === "string" ? item.sampling_verdict : null,
+    samplingRemark: typeof item.sampling_remark === "string" ? item.sampling_remark : null,
+    samplingSignedAt: typeof item.sampling_signed_at === "string" ? item.sampling_signed_at : null,
+    samplingSignedBy: typeof item.sampling_signed_by === "string" ? item.sampling_signed_by : null,
+    plantSeenAt: typeof item.plant_seen_at === "string" ? item.plant_seen_at : null,
+    plantSeenBy: typeof item.plant_seen_by === "string" ? item.plant_seen_by : null,
+    plantVerdict: typeof item.plant_verdict === "string" ? item.plant_verdict : null,
+    plantRemark: typeof item.plant_remark === "string" ? item.plant_remark : null,
+    plantSignedAt: typeof item.plant_signed_at === "string" ? item.plant_signed_at : null,
+    plantSignedBy: typeof item.plant_signed_by === "string" ? item.plant_signed_by : null,
     createdAt: String(item.created_at || ""),
     updatedAt: String(item.updated_at || ""),
     materials: rawMaterials.map((m: any) => mapProgramMaterial(m)),
@@ -87,12 +101,30 @@ export function mapProgramRequestToSampleRequest(record: ProgramRequestRecord): 
     activities: (record.activities || []) as any,
     status: record.status,
     createdBy: record.createdBy || "Marketing Team",
+    samplingSeenAt: record.samplingSeenAt,
+    samplingSeenBy: record.samplingSeenBy,
+    samplingVerdict: record.samplingVerdict,
+    samplingRemark: record.samplingRemark,
+    samplingSignedAt: record.samplingSignedAt,
+    samplingSignedBy: record.samplingSignedBy,
+    plantSeenAt: record.plantSeenAt,
+    plantSeenBy: record.plantSeenBy,
+    plantVerdict: record.plantVerdict,
+    plantRemark: record.plantRemark,
+    plantSignedAt: record.plantSignedAt,
+    plantSignedBy: record.plantSignedBy,
+    samplingFeasibilityResponse: record.samplingVerdict ? (record.samplingVerdict.toLowerCase().includes("feasible") ? "Yes" : record.samplingVerdict.toLowerCase().includes("not") ? "No" : "Maybe") : null,
+    samplingFeasibilityRemark: record.samplingRemark,
+    samplingFeasibilityApprovedBy: record.samplingSignedBy,
+    samplingFeasibilityApprovedDate: record.samplingSignedAt,
+    plantFeasibilityResponse: record.plantVerdict ? (record.plantVerdict.toLowerCase().includes("feasible") || record.plantVerdict.toLowerCase().includes("confirmed") ? "Yes" : record.plantVerdict.toLowerCase().includes("not") ? "No" : "Maybe") : null,
+    plantFeasibilityRemark: record.plantRemark,
     dateRequestCreated: createdDate,
     createdAt: record.createdAt,
     updatedAt: record.updatedAt,
     creationMode: "program_planning",
     requestKind: "program",
-    requestTypes: ["sample", "costing", "design"] as any,
+    requestTypes: [],
   };
 }
 
@@ -235,3 +267,40 @@ export async function updateProgramRequestStatusApi(
   }
   return mapProgramResponse(data);
 }
+
+export async function submitProgramReviewApi(
+  requestId: number | string,
+  payload: ProgramReviewPayload
+): Promise<ProgramRequestRecord> {
+  const cleanId = String(requestId).replace(/^program-/, "");
+  const data = await apiFetch<Record<string, unknown>>(
+    `/api/v1/program-requests/${cleanId}/review`,
+    {
+      method: "POST",
+      jsonBody: payload,
+    }
+  );
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("samp:requests-changed"));
+  }
+  return mapProgramResponse(data);
+}
+
+export async function markProgramSeenApi(
+  requestId: number | string,
+  payload: ProgramSeenPayload
+): Promise<ProgramRequestRecord> {
+  const cleanId = String(requestId).replace(/^program-/, "");
+  const data = await apiFetch<Record<string, unknown>>(
+    `/api/v1/program-requests/${cleanId}/seen`,
+    {
+      method: "POST",
+      jsonBody: payload,
+    }
+  );
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("samp:requests-changed"));
+  }
+  return mapProgramResponse(data);
+}
+

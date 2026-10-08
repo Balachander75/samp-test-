@@ -172,10 +172,25 @@ class FeasibilityService:
         self.db.add(req)
         self.db.flush()
 
-        existing_count = self.db.query(FeasibilityRequest).count()
         yr_suffix = datetime.now(timezone.utc).year % 100
-        req.request_code = f"FS-{existing_count:04d}"
-        req.sr_number = f"SR-{yr_suffix:02d}-FS-{existing_count:03d}"
+        seq = req.id
+        while True:
+            candidate_code = f"FS-{seq:04d}"
+            candidate_sr = f"SR-{yr_suffix:02d}-FS-{seq:04d}"
+            collision = (
+                self.db.query(FeasibilityRequest)
+                .filter(
+                    (FeasibilityRequest.request_code == candidate_code)
+                    | (FeasibilityRequest.sr_number == candidate_sr)
+                )
+                .filter(FeasibilityRequest.id != req.id)
+                .first()
+            )
+            if not collision:
+                req.request_code = candidate_code
+                req.sr_number = candidate_sr
+                break
+            seq += 1
 
         # Decode reference images
         if payload.reference_images:

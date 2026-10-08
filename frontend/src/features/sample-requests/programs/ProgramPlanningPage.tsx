@@ -104,15 +104,23 @@ export const ProgramPlanningPage: React.FC<ProgramPlanningPageProps> = ({
     });
   }, [requests]);
 
-  // Derived Customers List
+  // Derived Customers List strictly from program planning requests
   const customerList = useMemo(() => {
-    if (uniqueCustomers && uniqueCustomers.length > 0) return uniqueCustomers;
     const set = new Set<string>();
     programRequests.forEach((r) => {
       if (r.customer && r.customer.trim()) set.add(r.customer.trim());
     });
     return Array.from(set).sort();
-  }, [programRequests, uniqueCustomers]);
+  }, [programRequests]);
+
+  // Derived Plants List strictly from program planning requests
+  const plantList = useMemo(() => {
+    const set = new Set<string>();
+    programRequests.forEach((r) => {
+      if (r.targetPlant && r.targetPlant.trim()) set.add(r.targetPlant.trim());
+    });
+    return Array.from(set).sort();
+  }, [programRequests]);
 
   // Operational metrics
   const programStats = useMemo(() => {
@@ -267,7 +275,7 @@ export const ProgramPlanningPage: React.FC<ProgramPlanningPageProps> = ({
   ];
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 bg-[#f8f9ff] text-slate-800 select-text overflow-hidden">
+    <div className="flex-1 flex flex-col min-h-0 bg-white text-slate-800 select-text overflow-hidden">
       {/* ── 1. Compact Editorial Header (Maximized Space for Requests) ── */}
       <header className="bg-white px-6 py-3 shrink-0 border-b border-slate-200/60 shadow-[0_1px_4px_rgba(11,28,48,0.02)]">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -396,7 +404,7 @@ export const ProgramPlanningPage: React.FC<ProgramPlanningPageProps> = ({
             </select>
           )}
 
-          {uniquePlants.length > 0 && (
+          {plantList.length > 0 && (
             <select
               value={selectedPlantFilter}
               onChange={(e) => {
@@ -406,7 +414,7 @@ export const ProgramPlanningPage: React.FC<ProgramPlanningPageProps> = ({
               className="h-9 px-3 rounded-lg bg-slate-100/80 hover:bg-slate-200/60 text-xs font-medium text-slate-700 border border-slate-200/70 focus:outline-none focus:ring-2 focus:ring-[#006d32]/15 focus:border-[#006d32]/40 cursor-pointer transition font-mono"
             >
               <option value="all">All Plants</option>
-              {uniquePlants.map((p) => (
+              {plantList.map((p) => (
                 <option key={p} value={p}>
                   Plant {p}
                 </option>
@@ -440,35 +448,33 @@ export const ProgramPlanningPage: React.FC<ProgramPlanningPageProps> = ({
         </div>
       </div>
 
-      {/* ── 3. Main Work Area (70%+ Screen Space Dedicated to Requests Table) ── */}
-      <div className="flex-1 min-h-0 p-4 md:p-5 flex flex-col">
-        <div className="flex-1 min-h-0 bg-white rounded-2xl shadow-[0_2px_12px_rgba(11,28,48,0.03)] border border-slate-100 overflow-hidden flex flex-col">
-          <div className="flex-1 min-h-0 overflow-auto">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead className="sticky top-0 z-10">
-                <tr className="bg-[#eff4ff] text-slate-600 font-mono text-[11px] uppercase tracking-wider select-none border-b border-slate-200/70">
-                  <th className="py-3 px-3 w-10 text-center">
-                    <input
-                      type="checkbox"
-                      checked={
-                        paginatedRequests.length > 0 &&
-                        paginatedRequests.every((r) => selectedIds.has(r.id))
-                      }
-                      onChange={handleToggleSelectAll}
-                      className="rounded text-[#006d32] focus:ring-[#006d32] cursor-pointer"
-                    />
-                  </th>
-                  <th className="py-3 px-4 font-semibold whitespace-nowrap">Program ID</th>
-                  <th className="py-3 px-4 font-semibold">Campaign Title & Product Scope</th>
-                  <th className="py-3 px-4 font-semibold whitespace-nowrap">Customer</th>
-                  <th className="py-3 px-4 font-semibold whitespace-nowrap">Plant</th>
-                  <th className="py-3 px-4 font-semibold text-center whitespace-nowrap">Year</th>
-                  <th className="py-3 px-4 font-semibold text-center whitespace-nowrap">Matrix SKUs</th>
-                  <th className="py-3 px-4 font-semibold whitespace-nowrap">SAMP Technical Review</th>
-                  <th className="py-3 px-4 font-semibold whitespace-nowrap">Target Date</th>
-                  <th className="py-3 px-4 font-semibold text-right pr-4 whitespace-nowrap">Commercial Action</th>
-                </tr>
-              </thead>
+      {/* ── 3. Full-Bleed Table Workspace (Seamlessly Blended into Full UI) ── */}
+      <div className="flex-1 min-h-0 overflow-auto bg-white flex flex-col">
+        <table className="w-full text-left text-xs border-collapse">
+          <thead className="sticky top-0 z-10 bg-slate-50/90 backdrop-blur-xs border-b border-slate-200/70">
+            <tr className="text-slate-600 font-mono text-[11px] uppercase tracking-wider select-none">
+              <th className="py-3 pl-6 pr-3 w-10 text-center">
+                <input
+                  type="checkbox"
+                  checked={
+                    paginatedRequests.length > 0 &&
+                    paginatedRequests.every((r) => selectedIds.has(r.id))
+                  }
+                  onChange={handleToggleSelectAll}
+                  className="rounded text-[#006d32] focus:ring-[#006d32] cursor-pointer"
+                />
+              </th>
+              <th className="py-3 px-4 font-semibold whitespace-nowrap">Program ID</th>
+              <th className="py-3 px-4 font-semibold">Campaign Title & Product Scope</th>
+              <th className="py-3 px-4 font-semibold whitespace-nowrap">Customer</th>
+              <th className="py-3 px-4 font-semibold whitespace-nowrap">Plant</th>
+              <th className="py-3 px-4 font-semibold text-center whitespace-nowrap">Year</th>
+              <th className="py-3 px-4 font-semibold text-center whitespace-nowrap">Matrix SKUs</th>
+              <th className="py-3 px-4 font-semibold whitespace-nowrap">SAMP Technical Review</th>
+              <th className="py-3 px-4 font-semibold whitespace-nowrap">Target Date</th>
+              <th className="py-3 pl-4 pr-6 font-semibold text-right whitespace-nowrap">Commercial Action</th>
+            </tr>
+          </thead>
 
               <tbody className="divide-y divide-slate-100">
                 {isLoading ? (
@@ -532,7 +538,7 @@ export const ProgramPlanningPage: React.FC<ProgramPlanningPageProps> = ({
                         }`}
                       >
                         {/* Checkbox */}
-                        <td className="py-3 px-3 text-center" onClick={(e) => e.stopPropagation()}>
+                        <td className="py-3 pl-6 pr-3 text-center" onClick={(e) => e.stopPropagation()}>
                           <input
                             type="checkbox"
                             checked={isSelected}
@@ -619,7 +625,7 @@ export const ProgramPlanningPage: React.FC<ProgramPlanningPageProps> = ({
                         </td>
 
                         {/* Actions */}
-                        <td className="py-3 px-4 text-right pr-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                        <td className="py-3 pl-4 pr-6 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center justify-end gap-1.5">
                             <button
                               type="button"
@@ -648,19 +654,19 @@ export const ProgramPlanningPage: React.FC<ProgramPlanningPageProps> = ({
                 )}
               </tbody>
             </table>
-          </div>
 
-          {/* Table Footer Pager */}
-          <PaginationBar
-            currentPage={currentPage}
-            totalPages={totalPages}
-            totalCount={filteredRequests.length}
-            pageSize={pageSize}
-            onPageChange={(p) => setCurrentPage(p)}
-            itemLabel="campaigns"
-          />
-        </div>
-      </div>
+            {/* Table Footer Pager */}
+            <div className="mt-auto px-6 py-2.5 bg-white border-t border-slate-100 shrink-0">
+              <PaginationBar
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalCount={filteredRequests.length}
+                pageSize={pageSize}
+                onPageChange={(p) => setCurrentPage(p)}
+                itemLabel="campaigns"
+              />
+            </div>
+          </div>
 
       {/* ── 4. Modals & Dialogs (Lazy-loaded) ── */}
       <React.Suspense fallback={null}>

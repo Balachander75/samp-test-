@@ -1,11 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { UserProfile } from "@/features/auth";
 import { NAVIGATION_GROUPS, NavigationItem } from "./navigation";
-import {
-  X, LogOut,
-  LayoutDashboard, Megaphone, Palette, Layers, FlaskConical,
-  Calculator, Factory, BarChart3, Users, Settings, HelpCircle,
-} from "lucide-react";
+import { X, LogOut } from "lucide-react";
 import logoImg from "@/assets/logo.png";
 import {
   fetchAllMarketingRequestsApi,
@@ -16,57 +12,37 @@ import {
 import { useBusinessYear } from "@/context/BusinessYearContext";
 import { getRequestTrackType } from "@/features/sample-requests/utils/trackTypes";
 
-const NAV_ICONS: Record<string, React.FC<{ style?: React.CSSProperties }>> = {
-  dashboard: LayoutDashboard,
-  marketing: Megaphone,
-  creative: Palette,
-  studio: Layers,
-  samp: FlaskConical,
-  costing: Calculator,
-  plant: Factory,
-  analytics: BarChart3,
-  members: Users,
-  settings: Settings,
-  help: HelpCircle,
-};
-
-// Inline-hover buttons (avoids Tailwind group/peer for active state conflicts)
+// Clean enterprise navigation buttons
 const NavButton: React.FC<{ active: boolean; onClick: () => void; "aria-current"?: "page"; children: React.ReactNode }> = ({ active, onClick, children, ...rest }) => {
-  const [hovered, setHovered] = React.useState(false);
   return (
     <button
       type="button"
       onClick={onClick}
-      style={{
-        width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
-        height: 38, padding: "0 10px", borderRadius: 10, border: "none", cursor: "pointer", textAlign: "left",
-        transition: "background 0.13s, box-shadow 0.13s",
-        background: active ? "#fff" : hovered ? "rgba(0,0,0,0.04)" : "transparent",
-        boxShadow: active ? "0 1px 5px rgba(0,0,0,0.07), 0 0 0 1px rgba(0,0,0,0.05)" : "none",
-      }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      className={`group w-full flex items-center justify-between gap-2 h-[38px] px-3 rounded-[10px] cursor-pointer text-left transition-all duration-150 relative ${
+        active
+          ? "bg-white text-slate-900 shadow-[0_1px_4px_rgba(0,0,0,0.06),0_0_0_1px_rgba(0,0,0,0.04)] border border-slate-200/80 font-bold"
+          : "bg-transparent hover:bg-slate-200/50 text-slate-700 border border-transparent font-medium"
+      }`}
       {...rest}
     >
+      {active && (
+        <span className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full bg-[#006d32]" />
+      )}
       {children}
     </button>
   );
 };
 
 const SubNavButton: React.FC<{ active: boolean; onClick: () => void; children: React.ReactNode }> = ({ active, onClick, children }) => {
-  const [hovered, setHovered] = React.useState(false);
   return (
     <button
       type="button"
       onClick={onClick}
-      style={{
-        width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
-        height: 30, padding: "0 8px", borderRadius: 7, border: "none", cursor: "pointer", textAlign: "left",
-        transition: "background 0.12s",
-        background: active ? "rgba(0,209,102,0.1)" : hovered ? "rgba(0,0,0,0.03)" : "transparent",
-      }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      className={`w-full flex items-center justify-between gap-2 h-[30px] px-2.5 rounded-[8px] cursor-pointer text-left transition-all duration-150 ${
+        active
+          ? "bg-emerald-500/10 text-[#006d32] font-semibold"
+          : "bg-transparent hover:bg-slate-200/40 text-slate-600 font-normal"
+      }`}
     >
       {children}
     </button>
@@ -180,10 +156,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
       const sampTotalActive = inSampling + sampFeasPending + programCount;
 
       // Creative & Studio workload breakdown:
-      const creativeDesignCount = requests.filter((r) =>
+      const nonProgramRequests = requests.filter(
+        (r) =>
+          r.requestKind !== "program" &&
+          r.creationMode !== "program_planning" &&
+          !String(r.srNumber || "").includes("-PG-") &&
+          !String(r.materialCode || "").startsWith("PG-")
+      );
+      const creativeDesignCount = nonProgramRequests.filter((r) =>
         (r.requestTypes || []).includes("design") || String(r.status || "").toLowerCase().includes("creative")
       ).length + briefs.length;
-      const creativeSamplingCount = requests.filter((r) =>
+      const creativeSamplingCount = nonProgramRequests.filter((r) =>
         (r.requestTypes || []).includes("sample") || (r.requestTypes || []).includes("mockup") || r.mockupRequired === "Yes"
       ).length;
 
@@ -197,12 +180,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
         creativeSampling: creativeSamplingCount,
         studio: dielines.length,
         studioArtwork: dielines.length,
+        studioMockup: dielines.filter((d) => d.status === "3D Simulation" || d.status === "CAD Intake").length || dielines.length,
+        studioSampling: dielines.filter((d) => d.status === "Laser Die Cleared" || d.status === "Plotter Sample Tested").length || dielines.length,
         samp: sampTotalActive,
         sampOverview: sampTotalActive,
         sampSampling: inSampling,
         sampFeasibility: sampFeasPending,
         sampPrograms: programCount,
         costing: costings.length,
+        plant: programCount,
+        plantPrograms: programCount,
       });
     });
     return () => { isMounted = false; };
@@ -251,70 +238,64 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const roleLabel = user?.sub_role || user?.role || "Global Admin";
 
   const renderNavContent = (isDrawer = false) => (
-    <div
-      className="flex flex-col h-full select-none"
-      style={{ background: "#f5f7fc", borderRight: "1px solid rgba(0,0,0,0.07)" }}
-    >
-
+    <div className="flex flex-col h-full select-none bg-[#f8f9ff] border-r border-slate-200/80">
       {/* ── Brand Header ── */}
-      <div
-        className="flex items-center justify-between shrink-0"
-        style={{ height: 56, padding: "0 18px", background: "#fff", borderBottom: "1px solid rgba(0,0,0,0.06)" }}
-      >
+      <div className="flex items-center justify-between shrink-0 h-14 px-4 bg-white border-b border-slate-200/60">
         <img
           src={logoImg}
           alt="Logo"
-          style={{ height: 27, width: "auto", maxWidth: 140, objectFit: "contain", objectPosition: "left" }}
+          className="h-7 w-auto max-w-[140px] object-contain object-left"
         />
         {isDrawer && onCloseMobile && (
           <button
             type="button"
             onClick={onCloseMobile}
             aria-label="Close navigation"
-            style={{ width: 28, height: 28, borderRadius: 8, border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", background: "transparent", color: "#94a3b8" }}
-            className="hover:bg-slate-100 hover:text-slate-700 transition-colors"
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 hover:text-slate-700 dark:hover:text-white transition-colors cursor-pointer"
           >
-            <X style={{ width: 14, height: 14 }} />
+            <X className="w-3.5 h-3.5" />
           </button>
         )}
       </div>
 
       {/* ── Nav Scroll Area ── */}
-      <div
-        className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-200"
-        style={{ padding: "10px 8px" }}
-      >
+      <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-200 dark:[&::-webkit-scrollbar-thumb]:bg-white/10 p-2.5">
         {NAVIGATION_GROUPS.map((group, gIdx) => (
-          <div key={group.groupTitle} style={{ marginBottom: gIdx < NAVIGATION_GROUPS.length - 1 ? 18 : 0 }}>
-
+          <div key={group.groupTitle} className={gIdx < NAVIGATION_GROUPS.length - 1 ? "mb-4" : ""}>
             {/* Group label */}
-            <div style={{ padding: "0 8px", marginBottom: 5 }}>
-              <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "#94a3b8", fontFamily: "monospace" }}>
+            <div className="px-2 mt-2 mb-1.5">
+              <span className="text-[10px] font-bold tracking-wider uppercase text-slate-400 dark:text-zinc-500 font-mono">
                 {group.groupTitle}
               </span>
             </div>
 
             {/* Nav items */}
-            <div style={{ display: "flex", flexDirection: "column" as const, gap: 2 }}>
+            <div className="flex flex-col gap-1">
               {group.items.map((item) => {
                 const active = isItemActive(item);
-                const Icon = NAV_ICONS[item.id];
                 const badgeValue = dynamicBadges[item.id] !== undefined ? String(dynamicBadges[item.id]) : item.badge;
                 const showBadge = badgeValue !== undefined && Number(badgeValue) > 0;
 
                 return (
                   <div key={item.id}>
                     <NavButton active={active} onClick={() => handleItemClick(item)} aria-current={active ? "page" : undefined}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 9, minWidth: 0, flex: 1, overflow: "hidden" }}>
-                        {Icon && (
-                          <Icon style={{ width: 15, height: 15, flexShrink: 0, color: active ? "#006d32" : "#94a3b8", transition: "color 0.15s" }} />
-                        )}
-                        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 13, fontWeight: active ? 600 : 500, color: active ? "#0f172a" : "#475569" }}>
+                      <div className="flex items-center min-w-0 flex-1 overflow-hidden">
+                        <span
+                          className={`overflow-hidden text-ellipsis whitespace-nowrap text-[13px] tracking-tight transition-colors duration-150 ${
+                            active ? "font-semibold text-slate-900 dark:text-white" : "font-medium text-slate-700 dark:text-zinc-300"
+                          }`}
+                        >
                           {item.title}
                         </span>
                       </div>
                       {showBadge && (
-                        <span style={{ flexShrink: 0, fontSize: 10, fontWeight: 700, fontFamily: "monospace", padding: "1px 7px", borderRadius: 99, background: active ? "rgba(0,109,50,0.1)" : "rgba(0,0,0,0.06)", color: active ? "#006d32" : "#64748b" }}>
+                        <span
+                          className={`shrink-0 text-[10px] font-bold font-mono px-2 py-0.5 rounded-full ${
+                            active
+                              ? "bg-emerald-50 dark:bg-emerald-500/20 text-[#006d32] dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-500/40 dark:shadow-[0_0_8px_rgba(0,209,102,0.2)]"
+                              : "bg-slate-100 dark:bg-white/[0.06] text-slate-600 dark:text-zinc-400 border border-slate-200/60 dark:border-white/[0.06]"
+                          }`}
+                        >
                           {badgeValue}
                         </span>
                       )}
@@ -322,7 +303,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
                     {/* Sub-items (when active) */}
                     {active && item.subItems && item.subItems.length > 0 && (
-                      <div style={{ margin: "3px 0 4px 20px", paddingLeft: 12, borderLeft: "1.5px solid rgba(0,109,50,0.18)", display: "flex", flexDirection: "column" as const, gap: 1 }}>
+                      <div className="my-1 ml-3 pl-2.5 border-l-2 border-emerald-500/20 dark:border-emerald-500/40 flex flex-col gap-1">
                         {item.subItems.map((sub) => {
                           const isSubActive = selectedPath === sub.path || (sub.path !== item.path && selectedPath.startsWith(sub.path));
                           const subBadge = sub.badgeKey ? dynamicBadges[sub.badgeKey] : undefined;
@@ -332,14 +313,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                               active={isSubActive}
                               onClick={() => { onSelectPath(sub.path); if (onCloseMobile) onCloseMobile(); }}
                             >
-                              <div style={{ display: "flex", alignItems: "center", gap: 7, minWidth: 0, flex: 1, overflow: "hidden" }}>
-                                <span style={{ width: 5, height: 5, borderRadius: "50%", flexShrink: 0, background: isSubActive ? "#00d166" : "#cbd5e1" }} />
-                                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 12, fontWeight: isSubActive ? 600 : 400, color: isSubActive ? "#006d32" : "#64748b" }}>
+                              <div className="flex items-center min-w-0 flex-1 overflow-hidden">
+                                <span className={`overflow-hidden text-ellipsis whitespace-nowrap text-xs ${isSubActive ? "font-semibold text-[#006d32] dark:text-emerald-400" : "font-normal text-slate-600 dark:text-zinc-400"}`}>
                                   {sub.title}
                                 </span>
                               </div>
                               {subBadge !== undefined && Number(subBadge) > 0 && (
-                                <span style={{ fontSize: 10, fontFamily: "monospace", fontWeight: 600, padding: "1px 6px", borderRadius: 99, background: "rgba(0,0,0,0.05)", color: "#64748b", flexShrink: 0 }}>
+                                <span className={`text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-full shrink-0 ${isSubActive ? "bg-emerald-500/20 text-[#006d32] dark:text-emerald-300" : "bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-zinc-400"}`}>
                                   {subBadge}
                                 </span>
                               )}
@@ -351,11 +331,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
                     {/* SubTeams (when active and no subItems) */}
                     {active && !item.subItems && item.subTeams && item.subTeams.length > 0 && (
-                      <div style={{ margin: "3px 0 4px 20px", paddingLeft: 12, borderLeft: "1.5px solid rgba(0,109,50,0.18)", display: "flex", flexDirection: "column" as const, gap: 1 }}>
+                      <div className="my-1 ml-3 pl-2.5 border-l-2 border-emerald-500/20 dark:border-emerald-500/30 flex flex-col gap-1">
                         {item.subTeams.map((sub, sIdx) => (
-                          <div key={sIdx} style={{ display: "flex", alignItems: "center", gap: 7, height: 30, padding: "0 8px", borderRadius: 7, cursor: "pointer" }} className="text-slate-500 hover:text-emerald-600 hover:bg-black/[0.03] transition-colors">
-                            <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#cbd5e1", flexShrink: 0 }} />
-                            <span style={{ fontSize: 12, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sub}</span>
+                          <div key={sIdx} className="flex items-center h-7 px-2 rounded-md cursor-pointer text-xs text-slate-500 dark:text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100/60 dark:hover:bg-white/[0.04] transition-colors">
+                            <span className="overflow-hidden text-ellipsis whitespace-nowrap">{sub}</span>
                           </div>
                         ))}
                       </div>
@@ -369,19 +348,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* ── Bottom User Card ── */}
-      <div style={{ padding: "10px", borderTop: "1px solid rgba(0,0,0,0.06)", background: "#fff", flexShrink: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 9, padding: "7px 9px", borderRadius: 10, background: "#f8fafc" }}>
-          <div style={{ width: 32, height: 32, borderRadius: 9, flexShrink: 0, background: "linear-gradient(135deg,#006d32 0%,#00d166 100%)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 12, boxShadow: "0 2px 8px rgba(0,109,50,0.22)" }}>
+      <div className="p-2.5 border-t border-slate-200/60 dark:border-white/[0.06] bg-white dark:bg-[#0c0f18] shrink-0">
+        <div className="flex items-center gap-2.5 p-2 rounded-xl bg-slate-50 dark:bg-[#121622] border border-slate-100 dark:border-white/[0.06]">
+          <div className="w-8 h-8 rounded-lg shrink-0 bg-gradient-to-tr from-[#006d32] to-[#00d166] flex items-center justify-center text-white font-bold text-xs shadow-xs dark:shadow-[0_0_12px_rgba(0,209,102,0.35)] font-display">
             {initials}
           </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <span style={{ fontSize: 12, fontWeight: 600, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-semibold text-slate-900 dark:text-zinc-100 overflow-hidden text-ellipsis whitespace-nowrap">
                 {user?.name || "User"}
               </span>
-              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#22c55e", flexShrink: 0 }} />
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:shadow-[0_0_6px_#10b981] shrink-0" />
             </div>
-            <span style={{ display: "block", fontSize: 10, color: "#94a3b8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontFamily: "monospace" }}>
+            <span className="block text-[10px] text-slate-400 dark:text-zinc-500 overflow-hidden text-ellipsis whitespace-nowrap font-mono">
               {roleLabel}
             </span>
           </div>
@@ -391,10 +370,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
               onClick={onLogout}
               title="Sign Out"
               aria-label="Sign out"
-              style={{ width: 28, height: 28, borderRadius: 8, border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", background: "transparent", flexShrink: 0 }}
-              className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+              className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 dark:text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer shrink-0"
             >
-              <LogOut style={{ width: 14, height: 14 }} />
+              <LogOut className="w-3.5 h-3.5" />
             </button>
           )}
         </div>

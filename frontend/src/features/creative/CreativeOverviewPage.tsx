@@ -138,80 +138,72 @@ export const CreativeOverviewPage: React.FC<CreativeOverviewPageProps> = ({
   };
 
   return (
-    <div className="flex-1 overflow-y-auto bg-[#F8F9FA] dark:bg-[#0b0c10] p-6 space-y-5 select-text">
-      {/* ── 1. Identity Header (Aligned to Marketing Overview Standards) ── */}
-      <div className="flex items-center justify-between">
+    <div className="flex-1 overflow-y-auto bg-[#f8f9ff] dark:bg-[#0c0d14] p-6 space-y-6 select-text">
+      {/* ── 1. Identity Header ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-0.5">
-            <Palette className="w-4 h-4 text-[#714B67]" />
-            <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#714B67]">
+          <div className="flex items-center gap-2 mb-1">
+            <Palette className="w-4 h-4 text-[#006d32] dark:text-[#00d166]" />
+            <span className="text-xs font-bold uppercase tracking-wider text-[#006d32] dark:text-[#00d166]">
               Creative HQ — Graphic Design &amp; Brand Command
             </span>
-            <span className="px-1.5 py-0.2 text-[10px] font-mono font-bold rounded bg-[#714B67]/10 text-[#714B67] border border-[#714B67]/20">
+            <span className="px-2 py-0.5 text-[10px] font-mono font-bold rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-[#006d32] dark:text-[#00d166] border border-emerald-200/60 dark:border-emerald-800/40">
               FY {selectedYear === "ALL" ? "Consolidated" : selectedYear}
             </span>
           </div>
-          <h1 className="text-xl font-bold text-neutral-900 dark:text-white tracking-tight">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
             Creative Overview Dashboard
           </h1>
-          <p className="text-xs text-neutral-500 dark:text-zinc-400 mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">
             Graphic assets, brand design briefs, and unified sampling &amp; CAD mockup requests across all accounts.
           </p>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2.5 shrink-0">
           <button
             type="button"
             onClick={handleExportCSV}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-neutral-50 text-xs font-semibold text-neutral-700 dark:text-zinc-200 shadow-2xs transition cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200/80 dark:border-white/[0.08] bg-white dark:bg-[#12141d] hover:bg-slate-50 dark:hover:bg-zinc-800 text-xs font-semibold text-slate-700 dark:text-zinc-200 shadow-sm transition cursor-pointer"
           >
-            <Download className="w-3.5 h-3.5 text-neutral-400" />
-            <span>Export</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => onNavigateToTab("design")}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#017E84] hover:bg-[#00666A] text-white text-xs font-bold transition cursor-pointer shadow-xs"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>New Design Brief</span>
+            <Download className="w-3.5 h-3.5 text-slate-400" />
+            <span>Export CSV</span>
           </button>
         </div>
       </div>
 
-      {/* ── 2. KPI Cards (5-Column Grid Aligned to Marketing) ── */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+      {/* ── 2. KPI Cards (5-Column Grid Aligned to App Theme) ── */}
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3.5">
         {/* Total Intake */}
-        <div className="p-4 rounded-xl border border-[#CED4DA] dark:border-white/[0.08] bg-white dark:bg-[#12141d] shadow-2xs">
+        <div className="p-4 rounded-2xl border border-slate-200/70 dark:border-white/[0.08] bg-white dark:bg-[#12141d] shadow-sm card-hover-lift">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-500">
+            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
               Total Intake
             </span>
-            <Activity className="w-3.5 h-3.5 text-[#714B67]" />
+            <Activity className="w-4 h-4 text-[#006d32] dark:text-[#00d166]" />
           </div>
-          <div className="text-2xl font-bold font-mono text-neutral-900 dark:text-white">
+          <div className="text-2xl font-bold font-mono text-slate-900 dark:text-white">
             {isLoading ? "—" : totalPipelineCount}
           </div>
-          <div className="text-[10px] text-neutral-400 font-mono mt-0.5">Designs &amp; mockups</div>
+          <div className="text-[11px] text-slate-500 font-medium mt-1">Designs &amp; mockups</div>
         </div>
 
         {/* Active Design Briefs */}
         <button
           type="button"
           onClick={() => onNavigateToTab("design")}
-          className="p-4 rounded-xl border border-[#CED4DA] dark:border-white/[0.08] bg-white dark:bg-[#12141d] hover:border-[#714B67] text-left transition cursor-pointer shadow-2xs group"
+          className="p-4 rounded-2xl border border-slate-200/70 dark:border-white/[0.08] bg-white dark:bg-[#12141d] hover:border-[#006d32]/60 text-left transition cursor-pointer shadow-sm hover:shadow-md group card-hover-lift"
         >
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-500">
+            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
               Design Briefs
             </span>
-            <Palette className="w-3.5 h-3.5 text-[#714B67] group-hover:scale-110 transition-transform" />
+            <Palette className="w-4 h-4 text-[#006d32] dark:text-[#00d166] group-hover:scale-110 transition-transform" />
           </div>
-          <div className="text-2xl font-bold font-mono text-neutral-900 dark:text-white">
+          <div className="text-2xl font-bold font-mono text-slate-900 dark:text-white">
             {isLoading ? "—" : totalDesignCount}
           </div>
-          <div className="flex items-center justify-between mt-0.5">
-            <span className="text-[10px] text-neutral-400 font-mono">Artworks &amp; covers</span>
-            <ChevronRight className="w-3 h-3 text-neutral-300 group-hover:text-[#714B67] transition-colors" />
+          <div className="flex items-center justify-between mt-1">
+            <span className="text-[11px] text-slate-500 font-medium">Artworks &amp; covers</span>
+            <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#006d32] transition-colors" />
           </div>
         </button>
 
@@ -219,20 +211,20 @@ export const CreativeOverviewPage: React.FC<CreativeOverviewPageProps> = ({
         <button
           type="button"
           onClick={() => onNavigateToTab("sampling")}
-          className="p-4 rounded-xl border border-[#CED4DA] dark:border-white/[0.08] bg-white dark:bg-[#12141d] hover:border-[#017E84] text-left transition cursor-pointer shadow-2xs group"
+          className="p-4 rounded-2xl border border-slate-200/70 dark:border-white/[0.08] bg-white dark:bg-[#12141d] hover:border-emerald-500/60 text-left transition cursor-pointer shadow-sm hover:shadow-md group card-hover-lift"
         >
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-500">
+            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
               Sampling &amp; Mockup
             </span>
-            <Box className="w-3.5 h-3.5 text-[#017E84] group-hover:scale-110 transition-transform" />
+            <Box className="w-4 h-4 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform" />
           </div>
-          <div className="text-2xl font-bold font-mono text-neutral-900 dark:text-white">
+          <div className="text-2xl font-bold font-mono text-slate-900 dark:text-white">
             {isLoading ? "—" : totalSamplingMockupCount}
           </div>
-          <div className="flex items-center justify-between mt-0.5">
-            <span className="text-[10px] text-neutral-400 font-mono">Combined queue</span>
-            <ChevronRight className="w-3 h-3 text-neutral-300 group-hover:text-[#017E84] transition-colors" />
+          <div className="flex items-center justify-between mt-1">
+            <span className="text-[11px] text-slate-500 font-medium">Combined queue</span>
+            <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-emerald-600 transition-colors" />
           </div>
         </button>
 
@@ -240,112 +232,59 @@ export const CreativeOverviewPage: React.FC<CreativeOverviewPageProps> = ({
         <button
           type="button"
           onClick={() => onNavigateToTab("design")}
-          className="p-4 rounded-xl border border-[#CED4DA] dark:border-white/[0.08] bg-white dark:bg-[#12141d] hover:border-amber-500 text-left transition cursor-pointer shadow-2xs group"
+          className="p-4 rounded-2xl border border-slate-200/70 dark:border-white/[0.08] bg-white dark:bg-[#12141d] hover:border-amber-500/60 text-left transition cursor-pointer shadow-sm hover:shadow-md group card-hover-lift"
         >
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-500">
+            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
               Client Review
             </span>
-            <Clock className="w-3.5 h-3.5 text-amber-500 group-hover:scale-110 transition-transform" />
+            <Clock className="w-4 h-4 text-amber-500 group-hover:scale-110 transition-transform" />
           </div>
-          <div className="text-2xl font-bold font-mono text-neutral-900 dark:text-white">
+          <div className="text-2xl font-bold font-mono text-slate-900 dark:text-white">
             {isLoading ? "—" : inReviewCount}
           </div>
-          <div className="flex items-center justify-between mt-0.5">
-            <span className="text-[10px] font-mono text-amber-600 dark:text-amber-400 font-semibold">
+          <div className="flex items-center justify-between mt-1">
+            <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400">
               Proof sign-off pending
             </span>
-            <ChevronRight className="w-3 h-3 text-neutral-300 group-hover:text-amber-500 transition-colors" />
+            <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-amber-500 transition-colors" />
           </div>
         </button>
 
         {/* Prepress Certified */}
-        <div className="p-4 rounded-xl border border-[#CED4DA] dark:border-white/[0.08] bg-white dark:bg-[#12141d] shadow-2xs">
+        <div className="p-4 rounded-2xl border border-slate-200/70 dark:border-white/[0.08] bg-white dark:bg-[#12141d] shadow-sm card-hover-lift">
+
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-500">
+            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
               Prepress Certified
             </span>
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+            <CheckCircle2 className="w-4 h-4 text-[#006d32] dark:text-[#00d166]" />
           </div>
-          <div className="text-2xl font-bold font-mono text-neutral-900 dark:text-white">
+          <div className="text-2xl font-bold font-mono text-slate-900 dark:text-white">
             {isLoading ? "—" : prepressApprovedCount}
           </div>
-          <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono mt-0.5">
+          <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold mt-1">
             CMYK &amp; bleed verified
           </div>
         </div>
       </div>
 
-      {/* ── 3. Dedicated Workstreams (Two Master Cards Aligned to Marketing) ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Stream 1: Graphic Design */}
-        <div
-          onClick={() => onNavigateToTab("design")}
-          className="group flex items-center justify-between p-4 bg-white dark:bg-[#12141d] rounded-xl border border-[#CED4DA] dark:border-white/[0.08] hover:border-[#714B67] hover:shadow-sm transition cursor-pointer overflow-hidden relative"
-        >
-          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#714B67] rounded-l-xl" />
-          <div className="pl-3">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-purple-50 dark:bg-purple-950/40 text-[#714B67] dark:text-purple-300 uppercase">
-                Creative Workstream 01
-              </span>
-              <span className="text-[10px] font-mono text-neutral-400">{totalDesignCount} active briefs</span>
-            </div>
-            <h3 className="text-sm font-bold text-neutral-900 dark:text-white group-hover:text-[#714B67] transition-colors">
-              Graphic Design &amp; Artwork Workspace
-            </h3>
-            <p className="text-[11px] text-neutral-500 dark:text-zinc-400 mt-0.5 leading-relaxed">
-              Cover ideation, typography proofing, client feedback cycles, and CMYK color certifications.
-            </p>
-          </div>
-          <div className="shrink-0 flex items-center gap-2 pl-4">
-            <span className="text-xs font-semibold text-[#714B67] font-mono whitespace-nowrap">Open Desk</span>
-            <ArrowRight className="w-4 h-4 text-[#714B67] group-hover:translate-x-0.5 transition-transform" />
-          </div>
-        </div>
-
-        {/* Stream 2: Sampling & Mockup Queue */}
-        <div
-          onClick={() => onNavigateToTab("sampling")}
-          className="group flex items-center justify-between p-4 bg-white dark:bg-[#12141d] rounded-xl border border-[#CED4DA] dark:border-white/[0.08] hover:border-[#017E84] hover:shadow-sm transition cursor-pointer overflow-hidden relative"
-        >
-          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#017E84] rounded-l-xl" />
-          <div className="pl-3">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-teal-50 dark:bg-teal-950/40 text-[#017E84] dark:text-teal-300 uppercase">
-                Creative Workstream 02
-              </span>
-              <span className="text-[10px] font-mono text-neutral-400">{totalSamplingMockupCount} combined</span>
-            </div>
-            <h3 className="text-sm font-bold text-neutral-900 dark:text-white group-hover:text-[#017E84] transition-colors">
-              Sampling &amp; Mockup Unified Desk
-            </h3>
-            <p className="text-[11px] text-neutral-500 dark:text-zinc-400 mt-0.5 leading-relaxed">
-              Physical dummy sample manufacturing and 3D CAD mockup requests synchronized into a unified workflow.
-            </p>
-          </div>
-          <div className="shrink-0 flex items-center gap-2 pl-4">
-            <span className="text-xs font-semibold text-[#017E84] font-mono whitespace-nowrap">Open Desk</span>
-            <ArrowRight className="w-4 h-4 text-[#017E84] group-hover:translate-x-0.5 transition-transform" />
-          </div>
-        </div>
-      </div>
 
       {/* ── 4. Two Data Tables: Design Projects vs Sampling & Mockup Queue ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Left: Active Design Projects */}
-        <div className="bg-white dark:bg-[#12141d] rounded-xl border border-[#CED4DA] dark:border-white/[0.08] shadow-2xs overflow-hidden flex flex-col">
-          <div className="p-3.5 border-b border-[#E2E8F0] dark:border-white/[0.08] flex items-center justify-between">
+        <div className="bg-white dark:bg-[#12141d] rounded-2xl border border-slate-200/70 dark:border-white/[0.08] shadow-sm overflow-hidden flex flex-col">
+          <div className="p-4 border-b border-slate-100 dark:border-white/[0.08] flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Palette className="w-4 h-4 text-[#714B67]" />
-              <h2 className="text-xs font-bold uppercase tracking-wider text-neutral-900 dark:text-white font-mono">
+              <Palette className="w-4 h-4 text-[#006d32] dark:text-[#00d166]" />
+              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
                 Active Design Projects ({recentDesigns.length})
               </h2>
             </div>
             <button
               type="button"
               onClick={() => onNavigateToTab("design")}
-              className="text-xs font-semibold font-mono text-[#714B67] hover:underline flex items-center gap-1 cursor-pointer"
+              className="text-xs font-semibold text-[#006d32] dark:text-[#00d166] hover:underline flex items-center gap-1 cursor-pointer"
             >
               <span>View All</span>
               <ArrowRight className="w-3 h-3" />
@@ -354,7 +293,7 @@ export const CreativeOverviewPage: React.FC<CreativeOverviewPageProps> = ({
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-[#F8F9FA] dark:bg-zinc-900/80 text-[11px] font-semibold text-neutral-500 uppercase tracking-wider border-b border-[#E2E8F0] dark:border-white/[0.08]">
+              <thead className="bg-slate-50/70 dark:bg-zinc-900/60 text-[11px] font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider border-b border-slate-100 dark:border-white/[0.08]">
                 <tr>
                   <th className="py-2.5 px-3">Ref Code</th>
                   <th className="py-2.5 px-3">Project Title</th>
@@ -364,7 +303,7 @@ export const CreativeOverviewPage: React.FC<CreativeOverviewPageProps> = ({
                   <th className="py-2.5 px-3 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#F1F5F9] dark:divide-white/[0.04]">
+              <tbody className="divide-y divide-slate-100 dark:divide-white/[0.04]">
                 {recentDesigns.map((item) => (
                   <tr
                     key={item.id}
@@ -372,19 +311,19 @@ export const CreativeOverviewPage: React.FC<CreativeOverviewPageProps> = ({
                       if (item.isBrief && item.rawBrief) onInspectBrief(item.rawBrief);
                       else if (!item.isBrief && item.rawReq) onInspectRequest(item.rawReq);
                     }}
-                    className="hover:bg-neutral-50/80 dark:hover:bg-zinc-800/40 transition cursor-pointer"
+                    className="hover:bg-slate-50/80 dark:hover:bg-zinc-800/40 transition cursor-pointer"
                   >
-                    <td className="py-2.5 px-3 font-mono font-bold text-[#714B67] whitespace-nowrap">
+                    <td className="py-2.5 px-3 font-mono font-bold text-[#006d32] dark:text-[#00d166] whitespace-nowrap">
                       {item.refCode}
                     </td>
-                    <td className="py-2.5 px-3 text-neutral-900 dark:text-zinc-100 font-medium max-w-[160px] truncate">
+                    <td className="py-2.5 px-3 text-slate-900 dark:text-zinc-100 font-medium max-w-[160px] truncate">
                       {item.title}
                     </td>
-                    <td className="py-2.5 px-3 text-neutral-600 dark:text-zinc-400 whitespace-nowrap">
+                    <td className="py-2.5 px-3 text-slate-600 dark:text-zinc-400 whitespace-nowrap">
                       {item.customer}
                     </td>
                     <td className="py-2.5 px-3 text-center font-mono">
-                      <span className="px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-zinc-800 text-[10.5px]">
+                      <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 text-[11px] font-semibold">
                         {item.designsCount}
                       </span>
                     </td>
@@ -392,7 +331,7 @@ export const CreativeOverviewPage: React.FC<CreativeOverviewPageProps> = ({
                       <StatusPill status={item.status} size="sm" />
                     </td>
                     <td className="py-2.5 px-3 text-right">
-                      <span className="text-[11px] font-mono text-[#017E84] hover:underline font-semibold">
+                      <span className="text-[11px] font-semibold text-[#006d32] dark:text-[#00d166] hover:underline">
                         Open
                       </span>
                     </td>
@@ -404,18 +343,18 @@ export const CreativeOverviewPage: React.FC<CreativeOverviewPageProps> = ({
         </div>
 
         {/* Right: Sampling & Mockup Unified Queue */}
-        <div className="bg-white dark:bg-[#12141d] rounded-xl border border-[#CED4DA] dark:border-white/[0.08] shadow-2xs overflow-hidden flex flex-col">
-          <div className="p-3.5 border-b border-[#E2E8F0] dark:border-white/[0.08] flex items-center justify-between">
+        <div className="bg-white dark:bg-[#12141d] rounded-2xl border border-slate-200/70 dark:border-white/[0.08] shadow-sm overflow-hidden flex flex-col">
+          <div className="p-4 border-b border-slate-100 dark:border-white/[0.08] flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Box className="w-4 h-4 text-[#017E84]" />
-              <h2 className="text-xs font-bold uppercase tracking-wider text-neutral-900 dark:text-white font-mono">
+              <Box className="w-4 h-4 text-[#006d32] dark:text-[#00d166]" />
+              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
                 Sampling &amp; Mockup Queue ({recentSamplingMockups.length})
               </h2>
             </div>
             <button
               type="button"
               onClick={() => onNavigateToTab("sampling")}
-              className="text-xs font-semibold font-mono text-[#017E84] hover:underline flex items-center gap-1 cursor-pointer"
+              className="text-xs font-semibold text-[#006d32] dark:text-[#00d166] hover:underline flex items-center gap-1 cursor-pointer"
             >
               <span>View All</span>
               <ArrowRight className="w-3 h-3" />
@@ -424,7 +363,7 @@ export const CreativeOverviewPage: React.FC<CreativeOverviewPageProps> = ({
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-[#F8F9FA] dark:bg-zinc-900/80 text-[11px] font-semibold text-neutral-500 uppercase tracking-wider border-b border-[#E2E8F0] dark:border-white/[0.08]">
+              <thead className="bg-slate-50/70 dark:bg-zinc-900/60 text-[11px] font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider border-b border-slate-100 dark:border-white/[0.08]">
                 <tr>
                   <th className="py-2.5 px-3">SR Code</th>
                   <th className="py-2.5 px-3">Sample Title</th>
@@ -434,7 +373,7 @@ export const CreativeOverviewPage: React.FC<CreativeOverviewPageProps> = ({
                   <th className="py-2.5 px-3 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#F1F5F9] dark:divide-white/[0.04]">
+              <tbody className="divide-y divide-slate-100 dark:divide-white/[0.04]">
                 {recentSamplingMockups.map((r) => {
                   const scopes = r.requestTypes || [];
                   const hasMockup = scopes.includes("mockup") || r.mockupRequired === "Yes";
@@ -444,26 +383,26 @@ export const CreativeOverviewPage: React.FC<CreativeOverviewPageProps> = ({
                     <tr
                       key={r.id}
                       onClick={() => onInspectRequest(r)}
-                      className="hover:bg-neutral-50/80 dark:hover:bg-zinc-800/40 transition cursor-pointer"
+                      className="hover:bg-slate-50/80 dark:hover:bg-zinc-800/40 transition cursor-pointer"
                     >
-                      <td className="py-2.5 px-3 font-mono font-bold text-[#017E84] whitespace-nowrap">
+                      <td className="py-2.5 px-3 font-mono font-bold text-[#006d32] dark:text-[#00d166] whitespace-nowrap">
                         {r.srNumber || `SR-${r.id}`}
                       </td>
-                      <td className="py-2.5 px-3 text-neutral-900 dark:text-zinc-100 font-medium max-w-[160px] truncate">
+                      <td className="py-2.5 px-3 text-slate-900 dark:text-zinc-100 font-medium max-w-[160px] truncate">
                         {r.productDescription || (r as any).opportunityName || "Sample Dummy"}
                       </td>
-                      <td className="py-2.5 px-3 text-neutral-600 dark:text-zinc-400 whitespace-nowrap">
+                      <td className="py-2.5 px-3 text-slate-600 dark:text-zinc-400 whitespace-nowrap">
                         {r.customer || "General"}
                       </td>
                       <td className="py-2.5 px-3 whitespace-nowrap">
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1.5">
                           {hasMockup && (
-                            <span className="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-amber-50 text-amber-700 border border-amber-200/80">
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200/80">
                               3D Mockup
                             </span>
                           )}
                           {hasSample && (
-                            <span className="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-teal-50 text-[#017E84] border border-teal-200/80">
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
                               Sample
                             </span>
                           )}
@@ -473,7 +412,7 @@ export const CreativeOverviewPage: React.FC<CreativeOverviewPageProps> = ({
                         <StatusPill status={r.status || "Creative"} size="sm" />
                       </td>
                       <td className="py-2.5 px-3 text-right">
-                        <span className="text-[11px] font-mono text-[#017E84] hover:underline font-semibold">
+                        <span className="text-[11px] font-semibold text-[#006d32] dark:text-[#00d166] hover:underline">
                           Inspect
                         </span>
                       </td>

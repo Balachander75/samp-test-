@@ -57,44 +57,38 @@ export const FeasibilitySheetHeader: React.FC<FeasibilitySheetHeaderProps> = ({
 
         {/* Status Badges Group */}
         <div className="flex items-center gap-2 flex-wrap">
-          {/* Classification Badge */}
-          <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-display font-semibold bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-zinc-200">
+          {/* Feasibility Scope Badge */}
+          <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-display font-semibold bg-[#eff4ff] dark:bg-[#006d32]/20 text-[#006d32] dark:text-[#00d166] border border-[#006d32]/25">
             {classificationLabel}
           </span>
 
           {/* Technical Verdict Badge */}
           {activeRequest.samplingFeasibilityResponse === "Yes" ? (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-display font-bold bg-[#eff4ff] text-[#006d32] dark:bg-[#006d32]/25 dark:text-[#00d166] border border-[#006d32]/20">
-              <CheckCircle2 className="w-3.5 h-3.5 text-[#006d32] dark:text-[#00d166]" />
-              <span>Feasible (Approved)</span>
+            <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-display font-bold bg-[#eff4ff] text-[#006d32] dark:bg-[#006d32]/25 dark:text-[#00d166] border border-[#006d32]/20">
+              Feasible (Approved)
             </span>
           ) : activeRequest.samplingFeasibilityResponse === "Maybe" ? (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-display font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300">
-              <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
-              <span>Conditional Review</span>
+            <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-display font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300">
+              Conditional Review
             </span>
           ) : activeRequest.samplingFeasibilityResponse === "No" ? (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-display font-bold bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-300">
-              <XCircle className="w-3.5 h-3.5 text-rose-600" />
-              <span>Not Feasible</span>
+            <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-display font-bold bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-300">
+              Not Feasible
             </span>
           ) : activeRequest.takenBySamp ? (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-display font-semibold bg-sky-50 text-sky-700 border border-sky-200 dark:bg-sky-950/40 dark:text-sky-300">
-              <UserCheck className="w-3.5 h-3.5 text-sky-600" />
-              <span>Under Review ({activeRequest.takenBySamp})</span>
+            <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-display font-semibold bg-sky-50 text-sky-700 border border-sky-200 dark:bg-sky-950/40 dark:text-sky-300">
+              Under Review ({activeRequest.takenBySamp})
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-display font-semibold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300">
-              <Clock className="w-3.5 h-3.5 text-amber-600" />
-              <span>Awaiting Lab Claim</span>
+            <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-display font-semibold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300">
+              Awaiting SAMP Claim
             </span>
           )}
 
           {/* Converted Sampling Badge */}
           {activeRequest.convertedSrNumber && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-display font-bold bg-[#006d32] text-white shadow-xs">
-              <Package className="w-3.5 h-3.5" />
-              <span>Sampling: {activeRequest.convertedSrNumber}</span>
+            <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-display font-bold bg-[#006d32] text-white">
+              Sampling: {activeRequest.convertedSrNumber}
             </span>
           )}
         </div>
@@ -120,28 +114,34 @@ export const FeasibilitySheetHeader: React.FC<FeasibilitySheetHeaderProps> = ({
 
         {/* ── 4-Card Executive Metrics Strip ── */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 mt-5">
-          {/* Card 1: Target Required Date */}
+          {/* Card 1: Feasibility Type Scope */}
+          <div className="p-3.5 rounded-2xl bg-[#eff4ff]/60 dark:bg-white/5 border border-slate-100/80 dark:border-white/5 space-y-1">
+            <span className="text-[10px] font-display uppercase tracking-wider text-slate-400 dark:text-zinc-400 block font-semibold">
+              Feasibility Type
+            </span>
+            <div className="font-display font-bold text-xs text-slate-900 dark:text-zinc-100 truncate" title={classificationLabel}>
+              {classificationLabel}
+            </div>
+          </div>
+
+          {/* Card 2: Target Required Date */}
           <div className="p-3.5 rounded-2xl bg-[#eff4ff]/60 dark:bg-white/5 border border-slate-100/80 dark:border-white/5 space-y-1">
             <span className="text-[10px] font-display uppercase tracking-wider text-slate-400 dark:text-zinc-400 block font-semibold">
               Required Target Date
             </span>
-            <div className="flex items-center gap-1.5 font-display font-bold text-xs text-slate-900 dark:text-zinc-100">
-              <Calendar className="w-3.5 h-3.5 text-[#006d32] dark:text-[#00d166] shrink-0" />
-              <span>
-                {activeRequest.sampleRequiredDate
-                  ? formatOdooDate(activeRequest.sampleRequiredDate)
-                  : "Flexible Turnaround"}
-              </span>
+            <div className="font-display font-bold text-xs text-slate-900 dark:text-zinc-100">
+              {activeRequest.sampleRequiredDate
+                ? formatOdooDate(activeRequest.sampleRequiredDate)
+                : "Flexible Turnaround"}
             </div>
           </div>
 
-          {/* Card 2: SAMP Team Assignee */}
+          {/* Card 3: SAMP Team Assignee */}
           <div className="p-3.5 rounded-2xl bg-[#eff4ff]/60 dark:bg-white/5 border border-slate-100/80 dark:border-white/5 space-y-1">
             <span className="text-[10px] font-display uppercase tracking-wider text-slate-400 dark:text-zinc-400 block font-semibold">
-              SAMP Lab Assignee
+              SAMP Team Assignee
             </span>
-            <div className="flex items-center gap-1.5 font-display font-bold text-xs">
-              <UserCheck className="w-3.5 h-3.5 text-[#006d32] dark:text-[#00d166] shrink-0" />
+            <div className="font-display font-bold text-xs">
               {activeRequest.takenBySamp ? (
                 <span className="text-slate-900 dark:text-zinc-100 truncate">
                   {activeRequest.takenBySamp}
@@ -154,24 +154,12 @@ export const FeasibilitySheetHeader: React.FC<FeasibilitySheetHeaderProps> = ({
             </div>
           </div>
 
-          {/* Card 3: Target Plant */}
-          <div className="p-3.5 rounded-2xl bg-[#eff4ff]/60 dark:bg-white/5 border border-slate-100/80 dark:border-white/5 space-y-1">
-            <span className="text-[10px] font-display uppercase tracking-wider text-slate-400 dark:text-zinc-400 block font-semibold">
-              Target Facility
-            </span>
-            <div className="flex items-center gap-1.5 font-display font-bold text-xs text-slate-900 dark:text-zinc-100">
-              <Factory className="w-3.5 h-3.5 text-[#006d32] dark:text-[#00d166] shrink-0" />
-              <span className="truncate">{activeRequest.targetPlant || "1505- Khaniwade"}</span>
-            </div>
-          </div>
-
           {/* Card 4: Commercial Status */}
           <div className="p-3.5 rounded-2xl bg-[#eff4ff]/60 dark:bg-white/5 border border-slate-100/80 dark:border-white/5 space-y-1">
             <span className="text-[10px] font-display uppercase tracking-wider text-slate-400 dark:text-zinc-400 block font-semibold">
               Commercial State
             </span>
-            <div className="flex items-center gap-1.5 font-display font-bold text-xs">
-              <ShieldCheck className="w-3.5 h-3.5 text-[#006d32] dark:text-[#00d166] shrink-0" />
+            <div className="font-display font-bold text-xs">
               {activeRequest.convertedSrNumber ? (
                 <span className="text-[#006d32] dark:text-[#00d166]">Converted to Sample</span>
               ) : activeRequest.marketingDecision ? (
@@ -181,7 +169,7 @@ export const FeasibilitySheetHeader: React.FC<FeasibilitySheetHeaderProps> = ({
               ) : isEvaluated ? (
                 <span className="text-sky-600 dark:text-sky-400">Ready for Decision</span>
               ) : (
-                <span className="text-slate-500 font-medium">Pending Lab Sign-Off</span>
+                <span className="text-slate-500 font-medium">Pending SAMP Sign-Off</span>
               )}
             </div>
           </div>

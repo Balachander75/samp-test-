@@ -1,36 +1,42 @@
 import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { UserProfile } from "@/features/auth";
 import { fetchStudioDielinesApi, updateStudioDielineApi } from "@/infrastructure/api/downstreamApi";
+import { fetchAllMarketingRequestsApi } from "@/infrastructure/api/sampleRequestsApi";
 import { useBusinessYear } from "@/context/BusinessYearContext";
-import { DielineItem } from "@/features/sample-requests/types";
+import type { UserProfile } from "@/features/auth";
+import { DielineItem } from "./types";
 import { StudioOverviewPage } from "./StudioOverviewPage";
 import { StudioArtworkPage } from "./StudioArtworkPage";
 import { StudioInspectorModal } from "./StudioInspectorModal";
-import { LayoutDashboard, FileCode2 } from "lucide-react";
 
 export interface StudioWorkDeskProps {
   user?: UserProfile | null;
 }
-
 
 export const StudioWorkDesk: React.FC<StudioWorkDeskProps> = ({ user }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { selectedYear } = useBusinessYear();
 
-  // Active sub-view: "overview" | "artwork"
-  const activeView: "overview" | "artwork" = useMemo(() => {
+  // Active sub-view: "overview" | "mockup" | "sampling"
+  const activeView: "overview" | "mockup" | "sampling" = useMemo(() => {
     const path = location.pathname.toLowerCase();
-    if (path.includes("/artwork") || path.includes("/cad") || path.includes("/prepress")) {
-      return "artwork";
+    if (path.includes("/mockup") || path.includes("/cad") || path.includes("/simulation")) {
+      return "mockup";
+    }
+    if (path.includes("/sampling") || path.includes("/prepress") || path.includes("/tooling")) {
+      return "sampling";
+    }
+    if (path.includes("/artwork")) {
+      return "mockup";
     }
     return "overview";
   }, [location.pathname]);
 
-  const handleSelectTab = (tab: "overview" | "artwork") => {
+  const handleSelectTab = (tab: "overview" | "mockup" | "sampling") => {
     if (tab === "overview") navigate("/studio-work");
-    else if (tab === "artwork") navigate("/studio-work/artwork");
+    else if (tab === "mockup") navigate("/studio-work/mockup");
+    else if (tab === "sampling") navigate("/studio-work/sampling");
   };
 
   // Plant state
@@ -53,7 +59,7 @@ export const StudioWorkDesk: React.FC<StudioWorkDeskProps> = ({ user }) => {
     return () => window.removeEventListener("app:plant-changed", handlePlantChanged);
   }, []);
 
-  // Data state: initialized to empty array (no mock seed data)
+  // Data state
   const [dielines, setDielines] = useState<DielineItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -67,19 +73,77 @@ export const StudioWorkDesk: React.FC<StudioWorkDeskProps> = ({ user }) => {
     setTimeout(() => setToastMessage(null), 3500);
   }, []);
 
-  // Fetch real dielines from backend API
+  // Fetch real dielines from backend API and active marketing mockup requests
   const loadDielines = useCallback(async () => {
     setIsLoading(true);
     try {
-      const live = await fetchStudioDielinesApi();
-      setDielines(Array.isArray(live) ? live : []);
+      const [live, marketingRequests] = await Promise.all([
+        fetchStudioDielinesApi().catch(() => []),
+        fetchAllMarketingRequestsApi(selectedYear).catch(() => []),
+      ]);
+
+      // Filter out any lingering fake requests
+      const cleanLive = (Array.isArray(live) ? live : []).filter(
+        (d) => !String(d.id || "").startsWith("DL-2024-") && !String(d.srNumber || "").startsWith("SR-25-")
+      );
+
+      // Map any real requests requiring CAD mockup or studio dieline
+      const realMockupDielines: DielineItem[] = (Array.isArray(marketingRequests) ? marketingRequests : [])
+        .filter((r) => {
+          const scopes = r.requestTypes || [];
+          return (
+            scopes.includes("mockup") ||
+            r.mockupRequired === "Yes" ||
+            String(r.status || "").toLowerCase().includes("studio")
+          );
+        })
+        .map((r) => {
+          const validBoxFormats: DielineItem["boxFormat"][] = [
+            "Rigid Box",
+            "Folding Carton",
+            "Flute Corrugated",
+            "Blister / Sleeve",
+          ];
+          const boxFormat: DielineItem["boxFormat"] = validBoxFormats.includes(r.productType as any)
+            ? (r.productType as DielineItem["boxFormat"])
+            : "Folding Carton";
+
+          return {
+            id: String(r.id),
+            dielineCode: r.srNumber || `DL-${r.id}`,
+            srNumber: r.srNumber || `SR-${r.id}`,
+            boxFormat,
+            title: r.productDescription || "CAD Structural Dieline",
+            client: r.customer || "General",
+            dimensions: "Standard Specification",
+            substrate: r.brandName || "Carton Board",
+            caliperMicrons: 350,
+            machineCompatibility: "Bobst VisionCut",
+            status: ((r.status === "Studio" ? "CAD Intake" : r.status) as any) || "CAD Intake",
+            dueDate: r.sampleRequiredDate || r.targetArtworkDateStudio || "Standard SLA",
+            targetPlant: r.targetPlant || "All Plants",
+            fluteGrade: undefined,
+            grainDirection: "Parallel to Spine",
+            fileFormats: ["DXF", "PDF"],
+          };
+        });
+
+      const combined = [...cleanLive, ...realMockupDielines];
+      const seen = new Set<string>();
+      const unique = combined.filter((d) => {
+        const key = d.srNumber || d.dielineCode || d.id;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+      setDielines(unique);
     } catch (err) {
       console.error("Failed to load studio dielines:", err);
       setDielines([]);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [selectedYear]);
 
   useEffect(() => {
     loadDielines();
@@ -149,63 +213,33 @@ export const StudioWorkDesk: React.FC<StudioWorkDeskProps> = ({ user }) => {
     showToast(`Exported ${dielines.length} dielines to CSV`);
   };
 
+  const mockupCount = useMemo(() => {
+    return dielines.filter(
+      (d) =>
+        d.status === "3D Simulation" ||
+        d.status === "CAD Intake" ||
+        d.status === "Plotter Sample Tested"
+    ).length || dielines.length;
+  }, [dielines]);
+
+  const samplingCount = useMemo(() => {
+    return dielines.filter(
+      (d) =>
+        d.status === "Laser Die Cleared" ||
+        d.status === "Plotter Sample Tested" ||
+        d.status === "Dieline Construction"
+    ).length || dielines.length;
+  }, [dielines]);
+
   return (
-    <div className="flex-1 flex flex-col h-full bg-[#F8F9FA] dark:bg-[#0b0c10] overflow-hidden select-none relative">
+    <div className="flex-1 flex flex-col h-full bg-white dark:bg-[#0c0d14] text-slate-800 dark:text-zinc-100 overflow-hidden select-none relative">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="absolute top-4 right-6 z-50 bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 text-[12px] font-semibold px-4 py-2 rounded-lg shadow-xl border border-zinc-700/50 flex items-center gap-2 animate-in fade-in duration-200">
+        <div className="absolute top-4 right-6 z-50 bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 text-[12px] font-semibold px-4 py-2 rounded-xl shadow-xl border border-slate-700/50 flex items-center gap-2 animate-in fade-in duration-200">
           <span>{toastMessage}</span>
         </div>
       )}
 
-      {/* Top Odoo 19 Navigation Tabs Ribbon (Overview & Artwork ONLY) */}
-      <div className="bg-white dark:bg-[#12141d] border-b border-[#E2E8F0] dark:border-white/[0.08] px-6 py-2 flex items-center justify-between shrink-0 shadow-2xs z-10">
-        <div className="flex items-center gap-1.5">
-          {/* Tab 1: Overview */}
-          <button
-            type="button"
-            onClick={() => handleSelectTab("overview")}
-            className={`px-3 py-1.5 rounded font-mono text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
-              activeView === "overview"
-                ? "bg-[#714B67] text-white shadow-2xs"
-                : "text-neutral-600 dark:text-zinc-400 hover:text-neutral-900 dark:hover:text-zinc-200 hover:bg-neutral-100 dark:hover:bg-white/[0.04]"
-            }`}
-          >
-            <LayoutDashboard className="w-3.5 h-3.5" />
-            <span>Overview</span>
-          </button>
-
-          {/* Tab 2: Artwork */}
-          <button
-            type="button"
-            onClick={() => handleSelectTab("artwork")}
-            className={`px-3 py-1.5 rounded font-mono text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
-              activeView === "artwork"
-                ? "bg-[#714B67] text-white shadow-2xs"
-                : "text-neutral-600 dark:text-zinc-400 hover:text-neutral-900 dark:hover:text-zinc-200 hover:bg-neutral-100 dark:hover:bg-white/[0.04]"
-            }`}
-          >
-            <FileCode2 className="w-3.5 h-3.5" />
-            <span>Artwork</span>
-            <span
-              className={`text-[10.5px] px-1.5 py-0.2 rounded-full font-mono ${
-                activeView === "artwork"
-                  ? "bg-white/20 text-white"
-                  : "bg-neutral-200/70 dark:bg-zinc-800 text-neutral-600 dark:text-zinc-400"
-              }`}
-            >
-              {dielines.length}
-            </span>
-          </button>
-        </div>
-
-        <div className="flex items-center gap-2 text-xs font-mono text-neutral-500">
-          <span className="hidden sm:inline">Active Plant:</span>
-          <span className="font-bold text-neutral-800 dark:text-zinc-200 px-2 py-0.5 rounded bg-neutral-100 dark:bg-zinc-800 border border-[#CED4DA] dark:border-zinc-700">
-            {selectedPlant === "ALL" ? "All Plants" : selectedPlant}
-          </span>
-        </div>
-      </div>
 
       {/* Active Sub-View Body */}
       {activeView === "overview" && (
@@ -214,7 +248,8 @@ export const StudioWorkDesk: React.FC<StudioWorkDeskProps> = ({ user }) => {
           isLoading={isLoading}
           selectedYear={selectedYear}
           selectedPlant={selectedPlant}
-          onNavigateToArtwork={() => handleSelectTab("artwork")}
+          onNavigateToMockup={() => handleSelectTab("mockup")}
+          onNavigateToSampling={() => handleSelectTab("sampling")}
           onInspectDieline={(dieline) => {
             setSelectedDieline(dieline);
             setIsInspectorOpen(true);
@@ -222,9 +257,10 @@ export const StudioWorkDesk: React.FC<StudioWorkDeskProps> = ({ user }) => {
         />
       )}
 
-      {activeView === "artwork" && (
+      {activeView === "mockup" && (
         <StudioArtworkPage
           dielines={dielines}
+          mode="mockup"
           selectedYear={selectedYear}
           selectedPlant={selectedPlant}
           onInspectDieline={(dieline) => {
@@ -232,6 +268,22 @@ export const StudioWorkDesk: React.FC<StudioWorkDeskProps> = ({ user }) => {
             setIsInspectorOpen(true);
           }}
           onExportCSV={handleExportCSV}
+          onRefresh={loadDielines}
+        />
+      )}
+
+      {activeView === "sampling" && (
+        <StudioArtworkPage
+          dielines={dielines}
+          mode="sampling"
+          selectedYear={selectedYear}
+          selectedPlant={selectedPlant}
+          onInspectDieline={(dieline) => {
+            setSelectedDieline(dieline);
+            setIsInspectorOpen(true);
+          }}
+          onExportCSV={handleExportCSV}
+          onRefresh={loadDielines}
         />
       )}
 

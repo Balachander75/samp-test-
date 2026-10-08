@@ -109,6 +109,15 @@ export const FeasibilityRequestsPage: React.FC<FeasibilityRequestsPageProps> = (
     });
   }, [requests]);
 
+  // Derived Customers List strictly from feasibility requests
+  const customerList = useMemo(() => {
+    const set = new Set<string>();
+    feasibilityRequests.forEach((r) => {
+      if (r.customer && r.customer.trim()) set.add(r.customer.trim());
+    });
+    return Array.from(set).sort();
+  }, [feasibilityRequests]);
+
   // Operational metrics
   const metrics = useMemo(() => {
     const total = feasibilityRequests.length;
@@ -236,7 +245,7 @@ export const FeasibilityRequestsPage: React.FC<FeasibilityRequestsPageProps> = (
   const navTabs: { id: MarketingFeasibilityTab; label: string; count: number; alert?: boolean }[] = [
     { id: "all", label: "All Feasibility", count: metrics.total },
     { id: "awaiting_claim", label: "Needs Claim", count: metrics.awaitingClaim },
-    { id: "in_review", label: "In Lab Review", count: metrics.inReview },
+    { id: "in_review", label: "Under Review", count: metrics.inReview },
     { id: "awaiting_decision", label: "Needs Sign-off", count: metrics.awaitingDecision, alert: metrics.awaitingDecision > 0 },
     { id: "feasible", label: "Feasible", count: metrics.feasible },
     { id: "conditional", label: "Conditional", count: metrics.conditional },
@@ -246,7 +255,7 @@ export const FeasibilityRequestsPage: React.FC<FeasibilityRequestsPageProps> = (
   ];
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 bg-[#f8f9ff] text-slate-800 select-text overflow-hidden">
+    <div className="flex-1 flex flex-col min-h-0 bg-white text-slate-800 select-text overflow-hidden">
 
       {/* ── 1. Compact Editorial Header (Maximized Space for Requests) ── */}
       <header className="bg-white px-6 py-3 shrink-0 border-b border-slate-200/60 shadow-[0_1px_4px_rgba(11,28,48,0.02)]">
@@ -351,14 +360,14 @@ export const FeasibilityRequestsPage: React.FC<FeasibilityRequestsPageProps> = (
             </button>
           )}
 
-          {uniqueCustomers.length > 0 && (
+          {customerList.length > 0 && (
             <select
               value={customerFilter}
               onChange={(e) => setCustomerFilter(e.target.value)}
               className="h-9 px-3 rounded-lg bg-slate-100/80 hover:bg-slate-200/60 text-xs font-medium text-slate-700 border border-slate-200/70 focus:outline-none focus:ring-2 focus:ring-[#006d32]/15 focus:border-[#006d32]/40 cursor-pointer transition"
             >
               <option value="all">All Customers</option>
-              {uniqueCustomers.map((c) => (
+              {customerList.map((c) => (
                 <option key={c} value={c}>
                   {c}
                 </option>
@@ -389,31 +398,29 @@ export const FeasibilityRequestsPage: React.FC<FeasibilityRequestsPageProps> = (
         </div>
       </div>
 
-      {/* ── 3. Main Work Area (70%+ Screen Space Dedicated to Requests Table) ── */}
-      <div className="flex-1 min-h-0 p-4 md:p-5 flex flex-col">
-        <div className="flex-1 min-h-0 bg-white rounded-2xl shadow-[0_2px_12px_rgba(11,28,48,0.03)] border border-slate-100 overflow-hidden flex flex-col">
-          <div className="flex-1 min-h-0 overflow-auto">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead className="sticky top-0 z-10">
-                <tr className="bg-[#eff4ff] text-slate-600 font-mono text-[11px] uppercase tracking-wider select-none border-b border-slate-200/70">
-                  <th className="py-3 px-3 w-8">
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.size === filteredRequests.length && filteredRequests.length > 0}
-                      onChange={handleToggleSelectAll}
-                      className="rounded text-[#006d32] focus:ring-[#006d32]"
-                    />
-                  </th>
-                  <th className="py-3 px-4 font-semibold whitespace-nowrap">Request / Code</th>
-                  <th className="py-3 px-4 font-semibold">Classification & Scope</th>
-                  <th className="py-3 px-4 font-semibold whitespace-nowrap">Customer</th>
-                  <th className="py-3 px-4 font-semibold whitespace-nowrap">Target SLA Date</th>
-                  <th className="py-3 px-4 font-semibold whitespace-nowrap">SAMP Lab Claim</th>
-                  <th className="py-3 px-4 font-semibold whitespace-nowrap">Technical Verdict</th>
-                  <th className="py-3 px-4 font-semibold whitespace-nowrap">Commercial Status</th>
-                  <th className="py-3 px-4 font-semibold text-right whitespace-nowrap">Commercial Action</th>
-                </tr>
-              </thead>
+      {/* ── 3. Full-Bleed Table Workspace (Seamlessly Blended into Full UI) ── */}
+      <div className="flex-1 min-h-0 overflow-auto bg-white flex flex-col">
+        <table className="w-full text-left text-xs border-collapse">
+          <thead className="sticky top-0 z-10 bg-slate-50/90 backdrop-blur-xs border-b border-slate-200/70">
+            <tr className="text-slate-600 font-mono text-[11px] uppercase tracking-wider select-none">
+              <th className="py-3 pl-6 pr-3 w-8">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.size === filteredRequests.length && filteredRequests.length > 0}
+                  onChange={handleToggleSelectAll}
+                  className="rounded text-[#006d32] focus:ring-[#006d32]"
+                />
+              </th>
+              <th className="py-3 px-4 font-semibold whitespace-nowrap">Request / Code</th>
+              <th className="py-3 px-4 font-semibold">Classification & Scope</th>
+              <th className="py-3 px-4 font-semibold whitespace-nowrap">Customer</th>
+              <th className="py-3 px-4 font-semibold whitespace-nowrap">Target SLA Date</th>
+              <th className="py-3 px-4 font-semibold whitespace-nowrap">SAMP Team Claim</th>
+              <th className="py-3 px-4 font-semibold whitespace-nowrap">Technical Verdict</th>
+              <th className="py-3 px-4 font-semibold whitespace-nowrap">Commercial Status</th>
+              <th className="py-3 pl-4 pr-6 font-semibold text-right whitespace-nowrap">Commercial Action</th>
+            </tr>
+          </thead>
               <tbody className="divide-y divide-slate-100">
                 {filteredRequests.length === 0 ? (
                   <tr>
@@ -472,7 +479,7 @@ export const FeasibilityRequestsPage: React.FC<FeasibilityRequestsPageProps> = (
                         }`}
                       >
                         {/* Checkbox */}
-                        <td className="py-3.5 px-3 w-8" onClick={(e) => handleToggleSelectRow(req.id, e)}>
+                        <td className="py-3.5 pl-6 pr-3 w-8" onClick={(e) => handleToggleSelectRow(req.id, e)}>
                           <input
                             type="checkbox"
                             checked={isSelected}
@@ -547,7 +554,7 @@ export const FeasibilityRequestsPage: React.FC<FeasibilityRequestsPageProps> = (
                             </span>
                           ) : (
                             <span className="text-[11px] font-mono text-slate-400">
-                              Pending Lab
+                              Pending Review
                             </span>
                           )}
                         </td>
@@ -574,7 +581,7 @@ export const FeasibilityRequestsPage: React.FC<FeasibilityRequestsPageProps> = (
                         </td>
 
                         {/* Action Buttons */}
-                        <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                        <td className="py-3.5 pl-4 pr-6 text-right whitespace-nowrap">
                           <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
                             {req.convertedSrNumber ? (
                               <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-slate-100 text-slate-700">
@@ -628,7 +635,13 @@ export const FeasibilityRequestsPage: React.FC<FeasibilityRequestsPageProps> = (
                 )}
               </tbody>
             </table>
-          </div>
+
+            {/* Table Footer info */}
+            <div className="mt-auto px-6 py-2.5 bg-white border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-mono shrink-0">
+              <span>
+                Showing {filteredRequests.length} of {feasibilityRequests.length} feasibility requests
+              </span>
+              <span>Sorted by Latest Raised Intake</span>
         </div>
       </div>
     </div>

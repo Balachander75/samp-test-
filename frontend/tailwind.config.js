@@ -10,22 +10,22 @@ export default {
       colors: {
         // Luminous Engine Surface Hierarchy (The "No-Line" Rule Foundation)
         surface: {
-          DEFAULT: "#f8f9ff",
-          lowest: "#ffffff",
-          low: "#eff4ff",
-          container: "#e5eeff",
-          high: "#dce8fd",
-          highest: "#d3e4fe",
+          DEFAULT: "var(--surface-base)",
+          lowest: "var(--surface-lowest)",
+          low: "var(--surface-low)",
+          container: "var(--surface-container)",
+          high: "var(--surface-high)",
+          highest: "var(--surface-highest)",
         },
         onSurface: {
-          DEFAULT: "#0b1c30",
-          muted: "#4a5b70",
-          subtle: "#73859b",
+          DEFAULT: "var(--on-surface)",
+          muted: "var(--on-surface-muted)",
+          subtle: "var(--on-surface-subtle)",
         },
         'on-surface': {
-          DEFAULT: "#0b1c30",
-          muted: "#4a5b70",
-          subtle: "#73859b",
+          DEFAULT: "var(--on-surface)",
+          muted: "var(--on-surface-muted)",
+          subtle: "var(--on-surface-subtle)",
         },
         // High-Performance Flow Accents: Energy & Water
         luminous: {

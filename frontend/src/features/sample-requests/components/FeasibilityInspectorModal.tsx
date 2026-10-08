@@ -15,8 +15,6 @@ import {
   AlertTriangle,
   XCircle,
   ArrowRight,
-  Sparkles,
-  FileText,
 } from "lucide-react";
 
 // Modular Sub-Components
@@ -34,6 +32,7 @@ import {
   ParsedImageRef,
   ParsedFeasibilityDetails,
   parseFeasibilityDetails,
+  getFeasibilityTypeDisplay,
 } from "../utils/feasibilityParsers";
 
 // Re-export for backward compatibility
@@ -167,13 +166,22 @@ export const FeasibilityInspectorModal: React.FC<FeasibilityInspectorModalProps>
   }, [feasibilityDetails.referenceImages, activeRequest?.productImagePath]);
 
   const classificationLabel = useMemo(() => {
+    if (!activeRequest) return "New Category";
+    if (activeRequest.customFeasibilityType && activeRequest.customFeasibilityType.trim()) {
+      return activeRequest.customFeasibilityType.trim();
+    }
+    if (activeRequest.feasibilityType && activeRequest.feasibilityType.trim()) {
+      return getFeasibilityTypeDisplay(activeRequest);
+    }
+    if (feasibilityDetails.category && feasibilityDetails.category.trim()) {
+      return feasibilityDetails.category.trim();
+    }
     return (
-      feasibilityDetails.category ||
-      activeRequest?.productTypeNavneet ||
-      activeRequest?.productType ||
+      activeRequest.productTypeNavneet ||
+      activeRequest.productType ||
       "New Category"
     );
-  }, [feasibilityDetails.category, activeRequest]);
+  }, [activeRequest, feasibilityDetails.category]);
 
   // Clean description and remarks
   const displayDescription = useMemo(() => {
@@ -451,12 +459,12 @@ export const FeasibilityInspectorModal: React.FC<FeasibilityInspectorModalProps>
                 {/* Tab 1: Scope & Specifications */}
                 {activeTab === "specs" && (
                   <div className="py-5 space-y-5">
-                    {/* Primary Technical Description */}
+                    {/* Primary Technical Description & Product Scope */}
                     <div>
-                      <div className="text-[11px] font-display font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-400 mb-2">
+                      <div className="text-[11px] font-display font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 mb-2">
                         Technical Description &amp; Product Scope
                       </div>
-                      <div className="p-4 rounded-2xl border border-slate-100 dark:border-white/5 bg-[#eff4ff]/35 dark:bg-zinc-900/40 text-xs text-slate-800 dark:text-zinc-100 leading-relaxed font-sans whitespace-pre-wrap">
+                      <div className="p-4 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-zinc-900/60 text-xs sm:text-[13px] text-slate-800 dark:text-zinc-100 leading-relaxed font-sans shadow-2xs whitespace-pre-wrap">
                         {displayDescription || "No technical description specified."}
                       </div>
                     </div>
@@ -464,11 +472,11 @@ export const FeasibilityInspectorModal: React.FC<FeasibilityInspectorModalProps>
                     {/* Marketing Directives & Commercial Notes (Render ONLY if filled!) */}
                     {displayRemark && (
                       <div>
-                        <div className="text-[11px] font-display font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-400 mb-2">
+                        <div className="text-[11px] font-display font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400 mb-2">
                           Marketing Directives &amp; Commercial Notes
                         </div>
-                        <div className="p-4 rounded-2xl border border-amber-200/60 dark:border-amber-900/40 bg-amber-50/40 dark:bg-amber-950/15 text-xs text-amber-950 dark:text-amber-200 italic font-sans leading-relaxed">
-                          "{displayRemark}"
+                        <div className="p-4 rounded-2xl border border-amber-200 dark:border-amber-900/40 bg-amber-50/50 dark:bg-amber-950/20 text-xs text-amber-950 dark:text-amber-200 font-sans leading-relaxed shadow-2xs">
+                          {displayRemark}
                         </div>
                       </div>
                     )}
@@ -476,7 +484,7 @@ export const FeasibilityInspectorModal: React.FC<FeasibilityInspectorModalProps>
                     {/* Benchmark URLs & Links (Render ONLY if filled!) */}
                     {feasibilityDetails.referenceLinks.length > 0 && (
                       <div>
-                        <div className="text-[11px] font-display font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-400 mb-2">
+                        <div className="text-[11px] font-display font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 mb-2">
                           Client Reference URLs &amp; Benchmark Links ({feasibilityDetails.referenceLinks.length})
                         </div>
                         <div className="flex flex-wrap gap-2.5">
@@ -486,9 +494,8 @@ export const FeasibilityInspectorModal: React.FC<FeasibilityInspectorModalProps>
                               href={url.startsWith("http") ? url : `https://${url}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:border-[#006d32] hover:text-[#006d32] dark:hover:text-[#00d166] text-xs font-mono text-slate-700 dark:text-zinc-300 transition shadow-2xs group"
+                              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:border-[#006d32] hover:text-[#006d32] dark:hover:text-[#00d166] text-xs font-mono text-slate-700 dark:text-zinc-300 transition shadow-2xs group"
                             >
-                              <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#006d32] dark:group-hover:text-[#00d166]" />
                               <span className="truncate max-w-xs">{url.replace(/^https?:\/\//, "")}</span>
                             </a>
                           ))}
@@ -499,7 +506,7 @@ export const FeasibilityInspectorModal: React.FC<FeasibilityInspectorModalProps>
                     {/* Attached Reference Images (Render ONLY if filled!) */}
                     {previewableImages.length > 0 && (
                       <div>
-                        <div className="text-[11px] font-display font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-400 mb-2.5">
+                        <div className="text-[11px] font-display font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 mb-2.5">
                           Attached Reference Images ({previewableImages.length})
                         </div>
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">

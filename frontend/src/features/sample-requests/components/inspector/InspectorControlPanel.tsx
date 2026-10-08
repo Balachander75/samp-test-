@@ -1,14 +1,6 @@
 import React from "react";
 import { SampleRequestItem } from "../../types";
-import {
-  Copy,
-  Check,
-  Clock,
-  Trash2,
-  Package,
-  Send,
-  X,
-} from "lucide-react";
+import { Copy, Check, Trash2, Send, X, ChevronRight, CheckCircle2 } from "lucide-react";
 
 export interface InspectorControlPanelProps {
   request: SampleRequestItem;
@@ -34,7 +26,6 @@ export const InspectorControlPanel: React.FC<InspectorControlPanelProps> = ({
   copiedCode,
   isConverting,
   isReleasing,
-  isSubmitting,
   onClose,
   onCopyCode,
   onDeleteRequest,
@@ -43,14 +34,116 @@ export const InspectorControlPanel: React.FC<InspectorControlPanelProps> = ({
   onMarketingFinalApprove,
   setIsReleasing,
 }) => {
+  const isDraft =
+    String(request.status || "").toLowerCase().includes("draft") ||
+    String(request.status || "").toLowerCase().includes("smt") ||
+    String(request.status || "").toLowerCase().includes("pending allocation");
+
+  // Dynamic Stepper Computation based on track type
+  const steps = React.useMemo(() => {
+    if (trackType === "feasibility_check") {
+      const isReviewDone = Boolean(activeRequest.samplingFeasibilityResponse);
+      const isDecisionDone = Boolean(activeRequest.marketingDecision);
+      const isConvertedDone = Boolean(activeRequest.convertedSrNumber);
+
+      return [
+        { label: "1. Scope & Intake", status: "done" as const },
+        {
+          label: "2. Technical Review",
+          status: isReviewDone ? ("done" as const) : ("active" as const),
+        },
+        {
+          label: "3. Commercial Sign-off",
+          status: isDecisionDone
+            ? ("done" as const)
+            : isReviewDone
+            ? ("active" as const)
+            : ("pending" as const),
+        },
+        {
+          label: isConvertedDone
+            ? `4. Sample: ${activeRequest.convertedSrNumber}`
+            : "4. Sampling Project",
+          status: isConvertedDone
+            ? ("done" as const)
+            : isDecisionDone && activeRequest.marketingDecision === "Accepted"
+            ? ("active" as const)
+            : ("pending" as const),
+        },
+      ];
+    }
+
+    if (trackType === "program_planning") {
+      return [
+        { label: "1. Seasonal Master", status: "done" as const },
+        { label: "2. Material Matrix", status: "active" as const },
+        { label: "3. Capacity Review", status: "pending" as const },
+        { label: "4. Plant Scheduled", status: "pending" as const },
+      ];
+    }
+
+    // Default Commercial Sampling Steps
+    const statusLower = String(activeRequest.status || "").toLowerCase();
+    const isCreative =
+      statusLower.includes("creative") || statusLower.includes("design");
+    const isCAD = statusLower.includes("studio") || statusLower.includes("cad");
+    const isCosting =
+      statusLower.includes("costing") || statusLower.includes("bom");
+    const isLab =
+      statusLower.includes("samp") || statusLower.includes("sampling");
+    const isPlant =
+      statusLower.includes("plant") || statusLower.includes("execution");
+    const isClosed =
+      statusLower.includes("dispatched") ||
+      statusLower.includes("deal") ||
+      statusLower.includes("closed");
+
+    const stage2Done = isCosting || isLab || isPlant || isClosed;
+    const stage2Active = isCreative || isCAD;
+
+    const stage3Done = isPlant || isClosed;
+    const stage3Active = isCosting || isLab;
+
+    const stage4Done = isClosed;
+    const stage4Active = isPlant;
+
+    return [
+      { label: "1. Intake & Specs", status: isDraft ? ("active" as const) : ("done" as const) },
+      {
+        label: "2. Creative & CAD",
+        status: stage2Done
+          ? ("done" as const)
+          : stage2Active
+          ? ("active" as const)
+          : ("pending" as const),
+      },
+      {
+        label: "3. Costing & Lab",
+        status: stage3Done
+          ? ("done" as const)
+          : stage3Active
+          ? ("active" as const)
+          : ("pending" as const),
+      },
+      {
+        label: "4. Plant Floor",
+        status: stage4Done
+          ? ("done" as const)
+          : stage4Active
+          ? ("active" as const)
+          : ("pending" as const),
+      },
+    ];
+  }, [trackType, activeRequest, isDraft]);
+
   return (
-    <div className="bg-white dark:bg-[#1a1c24] border-b border-[#D8DADD] dark:border-white/10 px-4 py-2 flex flex-wrap items-center justify-between gap-3 shrink-0 shadow-2xs">
-      {/* Left Action Buttons (Save, Discard, Workflow Actions) */}
-      <div className="flex items-center space-x-2">
+    <div className="bg-white/85 dark:bg-[#151824]/90 backdrop-blur-xl border-b border-slate-100/90 dark:border-white/5 px-6 py-2.5 flex flex-wrap items-center justify-between gap-3 shrink-0 shadow-[0_2px_12px_rgba(11,28,48,0.02)]">
+      {/* Left Action Buttons */}
+      <div className="flex items-center space-x-2 flex-wrap">
         <button
           type="button"
           onClick={onClose}
-          className="bg-[#714B67] hover:bg-[#5B3C53] text-white px-3 py-1 rounded text-xs font-semibold flex items-center space-x-1.5 shadow-xs transition active:scale-95 cursor-pointer"
+          className="bg-[#006d32] hover:bg-[#00883e] text-white px-4 py-1.5 rounded-xl text-xs font-display font-semibold flex items-center space-x-1.5 shadow-[0_4px_14px_rgba(0,109,50,0.25)] transition-all active:scale-95 cursor-pointer"
         >
           <span>Save &amp; Close</span>
         </button>
@@ -58,105 +151,59 @@ export const InspectorControlPanel: React.FC<InspectorControlPanelProps> = ({
         <button
           type="button"
           onClick={onClose}
-          className="bg-white dark:bg-zinc-800 hover:bg-neutral-50 dark:hover:bg-zinc-700 text-neutral-600 dark:text-zinc-300 border border-[#CED4DA] dark:border-zinc-700 px-2.5 py-1 rounded text-xs font-medium transition cursor-pointer"
+          className="bg-slate-100/70 hover:bg-slate-200/70 dark:bg-zinc-800/60 dark:hover:bg-zinc-700/60 text-slate-700 dark:text-zinc-300 px-3.5 py-1.5 rounded-xl text-xs font-medium transition cursor-pointer"
         >
           Discard
         </button>
 
-        {/* Feasibility Specific Production Actions */}
-        {trackType === "feasibility_check" && (
-          <>
-            <div className="h-4 w-px bg-neutral-300 dark:bg-zinc-700 mx-1"></div>
-
-            {/* Feasibility Review Status */}
-            {!activeRequest.samplingFeasibilityResponse && (
-              <span className="px-2.5 py-1 rounded text-xs font-mono font-bold bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-300/60 flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5" />
-                <span>
-                  {activeRequest.takenBySamp ? "In Review by SAMP" : "Awaiting SAMP Claim"}
-                </span>
-              </span>
-            )}
-
-            {/* Marketing Acceptance / Rejection */}
-            {!activeRequest.marketingDecision && activeRequest.samplingFeasibilityResponse && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => onMarketingFinalApprove(true)}
-                  disabled={isSubmitting}
-                  className="bg-[#017E84] hover:bg-[#00666A] text-white px-3 py-1 rounded text-xs font-semibold flex items-center space-x-1 shadow-xs transition cursor-pointer disabled:opacity-50"
-                >
-                  <Check className="w-3.5 h-3.5" />
-                  <span>Accept Feasibility</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onMarketingFinalApprove(false)}
-                  disabled={isSubmitting}
-                  className="bg-white dark:bg-zinc-800 text-rose-600 border border-rose-300 hover:bg-rose-50 px-2.5 py-1 rounded text-xs font-medium transition cursor-pointer disabled:opacity-50"
-                >
-                  Drop Request
-                </button>
-              </>
-            )}
-
-            {/* Convert to Sampling Request */}
-            {activeRequest.marketingDecision === "Accepted" &&
-              (activeRequest.convertedSampleRequestId || activeRequest.convertedSrNumber ? (
-                <span className="bg-purple-100 text-[#714B67] dark:bg-purple-950/60 dark:text-purple-300 font-mono font-bold px-2.5 py-1 rounded text-xs border border-purple-300/60 flex items-center gap-1.5 shadow-2xs">
-                  <Package className="w-3.5 h-3.5 text-[#714B67] dark:text-purple-400" />
-                  <span>Sample Created: {activeRequest.convertedSrNumber}</span>
-                </span>
-              ) : (
-                <button
-                  type="button"
-                  onClick={onConvertToSampling}
-                  disabled={isConverting}
-                  className="bg-[#714B67] hover:bg-[#5B3C53] text-white px-3 py-1 rounded text-xs font-semibold flex items-center space-x-1.5 shadow-xs transition active:scale-95 cursor-pointer disabled:opacity-50"
-                  title="Convert accepted feasibility into a commercial sample request"
-                >
-                  <Package className={`w-3.5 h-3.5 ${isConverting ? "animate-spin" : ""}`} />
-                  <span>{isConverting ? "Creating Sample..." : "Request Sampling (Convert)"}</span>
-                </button>
-              ))}
-          </>
+        {/* Draft Release Action */}
+        {isDraft && onReleaseDraft && (
+          <button
+            type="button"
+            onClick={async () => {
+              setIsReleasing(true);
+              try {
+                await onReleaseDraft(request);
+              } finally {
+                setIsReleasing(false);
+              }
+            }}
+            disabled={isReleasing}
+            className="text-white px-3.5 py-1.5 rounded-xl text-xs font-display font-semibold flex items-center space-x-1.5 shadow-[0_4px_14px_rgba(0,109,50,0.25)] transition-all cursor-pointer disabled:opacity-50"
+            style={{ background: "linear-gradient(135deg, #006d32 0%, #00d166 100%)" }}
+          >
+            <Send className={`w-3.5 h-3.5 ${isReleasing ? "animate-pulse" : ""}`} />
+            <span>{isReleasing ? "Releasing..." : "Release to Workflow"}</span>
+          </button>
         )}
 
-        {/* Draft Release Action */}
-        {trackType === "marketing_request" &&
-          (String(request.status || "").toLowerCase().includes("draft") ||
-            String(request.status || "").toLowerCase().includes("smt") ||
-            String(request.status || "").toLowerCase().includes("pending allocation")) &&
-          onReleaseDraft && (
-            <>
-              <div className="h-4 w-px bg-neutral-300 dark:bg-zinc-700 mx-1"></div>
-              <button
-                type="button"
-                onClick={async () => {
-                  setIsReleasing(true);
-                  try {
-                    await onReleaseDraft(request);
-                  } finally {
-                    setIsReleasing(false);
-                  }
-                }}
-                disabled={isReleasing}
-                className="bg-[#017E84] hover:bg-[#00666A] text-white px-3 py-1 rounded text-xs font-semibold flex items-center space-x-1 shadow-xs transition cursor-pointer disabled:opacity-50"
-              >
-                <Send className={`w-3.5 h-3.5 ${isReleasing ? "animate-pulse" : ""}`} />
-                <span>{isReleasing ? "Releasing..." : "Release Version V2"}</span>
-              </button>
-            </>
+        {/* Feasibility Conversion Shortcut */}
+        {trackType === "feasibility_check" &&
+          activeRequest.marketingDecision === "Accepted" &&
+          !activeRequest.convertedSrNumber && (
+            <button
+              type="button"
+              onClick={onConvertToSampling}
+              disabled={isConverting}
+              className="bg-[#006d32] hover:bg-[#00883e] text-white px-3.5 py-1.5 rounded-xl text-xs font-display font-semibold flex items-center space-x-1.5 shadow-[0_4px_14px_rgba(0,109,50,0.25)] transition active:scale-95 cursor-pointer disabled:opacity-50"
+            >
+              <span>{isConverting ? "Creating Sample..." : "Convert to Commercial Sample"}</span>
+            </button>
           )}
+
+        <div className="h-4 w-px bg-slate-200 dark:bg-zinc-800 mx-1" />
 
         <button
           type="button"
           onClick={onCopyCode}
-          className="text-neutral-500 hover:text-[#714B67] dark:hover:text-purple-300 font-medium px-2 py-1 text-xs flex items-center gap-1 cursor-pointer"
-          title="Copy request code"
+          className="text-slate-600 hover:text-[#006d32] dark:hover:text-[#00d166] hover:bg-[#eff4ff] dark:hover:bg-[#006d32]/10 font-medium px-2.5 py-1.5 rounded-xl text-xs flex items-center gap-1.5 cursor-pointer transition"
+          title="Copy reference code"
         >
-          {copiedCode ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+          {copiedCode ? (
+            <Check className="w-3.5 h-3.5 text-emerald-600" />
+          ) : (
+            <Copy className="w-3.5 h-3.5 text-slate-400" />
+          )}
           <span>{copiedCode ? "Copied" : "Copy Code"}</span>
         </button>
 
@@ -164,8 +211,8 @@ export const InspectorControlPanel: React.FC<InspectorControlPanelProps> = ({
           <button
             type="button"
             onClick={() => onDeleteRequest(request)}
-            className="text-neutral-400 hover:text-rose-600 font-medium px-2 py-1 text-xs flex items-center gap-1 cursor-pointer"
-            title="Delete this request"
+            className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 font-medium px-2.5 py-1.5 rounded-xl text-xs flex items-center gap-1.5 cursor-pointer transition"
+            title="Delete this record"
           >
             <Trash2 className="w-3.5 h-3.5" />
             <span>Delete</span>
@@ -173,64 +220,41 @@ export const InspectorControlPanel: React.FC<InspectorControlPanelProps> = ({
         )}
       </div>
 
-      {/* Right: Authentic Odoo Statusbar Polygon Stepper */}
-      <div className="flex items-center gap-2">
-        <div className="o_statusbar_status select-none">
-          {trackType === "feasibility_check" ? (
-            <>
-              <div className="o_arrow_button done">1. Request Scope</div>
-              <div className={`o_arrow_button ${activeRequest.samplingFeasibilityResponse ? "done" : "active"}`}>
-                2. SAMP Review
-              </div>
+      {/* Right: Modern Luminous Workflow Stepper (Replacing Old Polygon Chevrons) */}
+      <div className="flex items-center gap-3">
+        <div className="hidden lg:flex items-center gap-1.5 p-1 bg-slate-100/60 dark:bg-white/5 rounded-xl">
+          {steps.map((st, i) => (
+            <React.Fragment key={i}>
               <div
-                className={`o_arrow_button ${
-                  activeRequest.marketingDecision
-                    ? "done"
-                    : activeRequest.samplingFeasibilityResponse
-                    ? "active"
-                    : ""
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-display transition-all select-none ${
+                  st.status === "done"
+                    ? "bg-[#eff4ff] dark:bg-[#006d32]/25 text-[#006d32] dark:text-[#00d166] font-bold"
+                    : st.status === "active"
+                    ? "bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 font-bold shadow-xs ring-1 ring-[#006d32]/30"
+                    : "text-slate-400 dark:text-zinc-500 font-medium"
                 }`}
               >
-                3. Commercial Decision
+                {st.status === "done" ? (
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#006d32] dark:text-[#00d166]" />
+                ) : st.status === "active" ? (
+                  <span className="w-2 h-2 rounded-full bg-[#006d32] animate-pulse" />
+                ) : (
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-zinc-700" />
+                )}
+                <span>{st.label}</span>
               </div>
-              <div
-                className={`o_arrow_button ${
-                  activeRequest.convertedSrNumber
-                    ? "done"
-                    : activeRequest.marketingDecision === "Accepted"
-                    ? "active"
-                    : ""
-                }`}
-              >
-                {activeRequest.convertedSrNumber
-                  ? `4. Sample: ${activeRequest.convertedSrNumber}`
-                  : "4. Sampling Conversion"}
-              </div>
-            </>
-          ) : trackType === "program_planning" ? (
-            <>
-              <div className="o_arrow_button done">1. Seasonal Master</div>
-              <div className="o_arrow_button active">2. Material Allocation</div>
-              <div className="o_arrow_button">3. Lab Sign-Off</div>
-              <div className="o_arrow_button">4. Plant Scheduled</div>
-            </>
-          ) : (
-            <>
-              <div className="o_arrow_button done">1. Draft (Pre-PMT)</div>
-              <div className="o_arrow_button done">2. Submitted</div>
-              <div className="o_arrow_button active">3. Sampling Review</div>
-              <div className="o_arrow_button">4. Released (V2)</div>
-              <div className="o_arrow_button">5. Plant Execution</div>
-              <div className="o_arrow_button">6. Closed</div>
-            </>
-          )}
+              {i < steps.length - 1 && (
+                <ChevronRight className="w-3 h-3 text-slate-300 dark:text-zinc-700 shrink-0" />
+              )}
+            </React.Fragment>
+          ))}
         </div>
 
-        {/* Modal Close [X] with Esc */}
+        {/* Modal Close [X] */}
         <button
           type="button"
           onClick={onClose}
-          className="h-7 w-7 rounded flex items-center justify-center text-neutral-400 hover:text-neutral-800 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-zinc-800 transition cursor-pointer"
+          className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800 transition cursor-pointer"
           title="Close (Esc)"
         >
           <X className="w-4 h-4" />
@@ -239,3 +263,5 @@ export const InspectorControlPanel: React.FC<InspectorControlPanelProps> = ({
     </div>
   );
 };
+
+export default InspectorControlPanel;

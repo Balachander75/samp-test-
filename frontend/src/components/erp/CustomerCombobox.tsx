@@ -179,7 +179,7 @@ export const CustomerCombobox: React.FC<CustomerComboboxProps> = ({
               selectCustomer(filteredCustomers[activeIndex]);
             }
           }}
-          className={`h-9 w-full rounded-xl border border-zinc-200 bg-white pl-8 ${value ? "pr-14" : "pr-8"} text-[12px] font-medium text-zinc-900 outline-none transition-colors placeholder:text-zinc-400 focus:border-[#006d32] focus:ring-2 focus:ring-[#006d32]/15 disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-700/80 dark:bg-zinc-900/80 dark:text-zinc-100`}
+          className={`h-10 w-full rounded-xl border border-zinc-200 bg-white pl-8 ${value ? "pr-14" : "pr-8"} text-xs font-medium text-zinc-900 outline-none transition-colors placeholder:text-zinc-400 focus:border-[#006d32] focus:ring-2 focus:ring-[#006d32]/15 disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-700/80 dark:bg-zinc-900/80 dark:text-zinc-100`}
         />
         {value && (
           <button

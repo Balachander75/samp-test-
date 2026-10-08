@@ -446,13 +446,13 @@ export const SampleRequestInspector: React.FC<SampleRequestInspectorProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-[2px]"
+      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/70 backdrop-blur-md"
       onClick={onClose}
     >
       <div
         role="dialog"
         aria-modal="true"
-        className="relative w-full max-w-[96vw] xl:max-w-7xl h-[92vh] max-h-[92vh] flex flex-col bg-[#F1F3F5] dark:bg-[#12141a] border border-[#D8DADD] dark:border-white/10 rounded-sm shadow-2xl overflow-hidden select-text text-xs"
+        className="relative w-full max-w-[96vw] xl:max-w-7xl h-[92vh] max-h-[92vh] flex flex-col bg-[#f8f9ff] dark:bg-[#0f121d] border border-slate-200/80 dark:border-white/10 rounded-2xl shadow-[0_24px_70px_-12px_rgba(11,28,48,0.25)] overflow-hidden select-text text-xs"
         onClick={(e) => e.stopPropagation()}
       >
         {/* 1. TOP CONTROL PANEL */}
@@ -475,11 +475,11 @@ export const SampleRequestInspector: React.FC<SampleRequestInspectorProps> = ({
 
         {/* 2. MAIN WORKSPACE VIEWPORT (SPLIT: FORM SHEET + CHATTER) */}
         <div className="flex-1 flex overflow-hidden">
-          {/* LEFT: ODOO DOCUMENT FORM SHEET */}
-          <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 bg-[#F1F3F5] dark:bg-[#12141a]">
+          {/* LEFT: DOCUMENT FORM SHEET */}
+          <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 bg-[#f8f9ff] dark:bg-[#0f121d]">
             {submitFeedback && (
               <div
-                className={`max-w-5xl mx-auto p-3 rounded text-xs font-medium border ${
+                className={`max-w-4xl mx-auto p-3 rounded-xl text-xs font-medium border ${
                   submitFeedback.startsWith("✓")
                     ? "bg-emerald-50 text-emerald-800 border-emerald-300 dark:bg-emerald-950/40 dark:text-emerald-300"
                     : "bg-rose-50 text-rose-800 border-rose-300 dark:bg-rose-950/40 dark:text-rose-300"
@@ -489,7 +489,7 @@ export const SampleRequestInspector: React.FC<SampleRequestInspectorProps> = ({
               </div>
             )}
 
-            <div className="o_form_sheet max-w-5xl mx-auto rounded-sm bg-white dark:bg-[#1a1c24] border border-[#D8DADD] dark:border-white/10 shadow-sm">
+            <div className="max-w-4xl mx-auto rounded-2xl bg-white dark:bg-[#161928] border border-slate-100 dark:border-white/5 shadow-[0_8px_30px_rgba(11,28,48,0.04)] overflow-hidden">
               <InspectorSheetHeader
                 request={request}
                 activeRequest={activeRequest}
@@ -506,23 +506,23 @@ export const SampleRequestInspector: React.FC<SampleRequestInspectorProps> = ({
               />
 
               {/* NOTEBOOK TABS CONTAINER */}
-              <div className="px-6 pb-6 pt-2">
+              <div className="px-8 pb-6 pt-3">
                 {/* Tab Navigation Strip */}
-                <div className="border-b border-[#D8DADD] dark:border-white/10 flex items-center space-x-6 text-xs font-semibold overflow-x-auto">
+                <div className="border-b border-slate-100 dark:border-white/10 flex items-center space-x-6 text-xs font-semibold overflow-x-auto">
                   {trackType === "feasibility_check" ? (
                     <>
                       <button
                         type="button"
                         onClick={() => setActiveTab("specs")}
-                        className={`pb-2.5 border-b-2 transition cursor-pointer select-none flex items-center gap-1.5 whitespace-nowrap ${
+                        className={`pb-3 border-b-2 font-display transition cursor-pointer select-none flex items-center gap-2 whitespace-nowrap ${
                           activeTab === "specs"
-                            ? "border-[#714B67] text-[#714B67] dark:text-purple-300 font-bold"
-                            : "border-transparent text-neutral-500 hover:text-neutral-800 dark:hover:text-zinc-200"
+                            ? "border-[#006d32] text-[#006d32] dark:text-[#00d166] font-bold"
+                            : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-zinc-200"
                         }`}
                       >
                         <span>1. Specifications &amp; Scope</span>
                         {(previewableImages.length > 0 || feasibilityDetails.referenceLinks.length > 0) && (
-                          <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-purple-100 dark:bg-purple-950/60 text-[#714B67] dark:text-purple-300 font-bold">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-[#eff4ff] dark:bg-[#006d32]/25 text-[#006d32] dark:text-[#00d166] font-bold border border-[#006d32]/20">
                             {previewableImages.length + feasibilityDetails.referenceLinks.length}
                           </span>
                         )}
@@ -531,28 +531,28 @@ export const SampleRequestInspector: React.FC<SampleRequestInspectorProps> = ({
                       <button
                         type="button"
                         onClick={() => setActiveTab("review")}
-                        className={`pb-2.5 border-b-2 transition cursor-pointer select-none flex items-center gap-1.5 whitespace-nowrap ${
+                        className={`pb-3 border-b-2 font-display transition cursor-pointer select-none flex items-center gap-2 whitespace-nowrap ${
                           activeTab === "review"
-                            ? "border-[#714B67] text-[#714B67] dark:text-purple-300 font-bold"
-                            : "border-transparent text-neutral-500 hover:text-neutral-800 dark:hover:text-zinc-200"
+                            ? "border-[#006d32] text-[#006d32] dark:text-[#00d166] font-bold"
+                            : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-zinc-200"
                         }`}
                       >
                         <span>2. SAMP Technical Review</span>
                         {activeRequest.samplingFeasibilityResponse ? (
                           <span
-                            className={`px-1.5 py-0.2 rounded text-[10px] font-mono font-bold ${
+                            className={`px-2 py-0.5 rounded-lg text-[10px] font-display font-bold ${
                               activeRequest.samplingFeasibilityResponse === "Yes"
-                                ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"
+                                ? "bg-emerald-50 text-[#006d32] dark:bg-emerald-950/60 dark:text-[#00d166]"
                                 : activeRequest.samplingFeasibilityResponse === "No"
-                                ? "bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300"
-                                : "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300"
+                                ? "bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300"
+                                : "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300"
                             }`}
                           >
                             {activeRequest.samplingFeasibilityResponse}
                           </span>
                         ) : (
-                          <span className="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">
-                            {activeRequest.takenBySamp ? "In Review" : "Pending"}
+                          <span className="px-2 py-0.5 rounded-lg text-[10px] font-display font-bold bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300">
+                            {activeRequest.takenBySamp ? "In Review" : "Pending Claim"}
                           </span>
                         )}
                       </button>
@@ -560,29 +560,29 @@ export const SampleRequestInspector: React.FC<SampleRequestInspectorProps> = ({
                       <button
                         type="button"
                         onClick={() => setActiveTab("decision")}
-                        className={`pb-2.5 border-b-2 transition cursor-pointer select-none flex items-center gap-1.5 whitespace-nowrap ${
+                        className={`pb-3 border-b-2 font-display transition cursor-pointer select-none flex items-center gap-2 whitespace-nowrap ${
                           activeTab === "decision"
-                            ? "border-[#714B67] text-[#714B67] dark:text-purple-300 font-bold"
-                            : "border-transparent text-neutral-500 hover:text-neutral-800 dark:hover:text-zinc-200"
+                            ? "border-[#006d32] text-[#006d32] dark:text-[#00d166] font-bold"
+                            : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-zinc-200"
                         }`}
                       >
                         <span>3. Commercial Sign-Off &amp; Sampling</span>
                         {activeRequest.convertedSrNumber ? (
-                          <span className="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-purple-100 dark:bg-purple-950/60 text-[#714B67] dark:text-purple-300">
+                          <span className="px-2 py-0.5 rounded-lg text-[10px] font-display font-bold bg-[#eff4ff] dark:bg-[#006d32]/25 text-[#006d32] dark:text-[#00d166] border border-[#006d32]/20">
                             ✓ {activeRequest.convertedSrNumber}
                           </span>
                         ) : activeRequest.marketingDecision ? (
                           <span
-                            className={`px-1.5 py-0.2 rounded text-[10px] font-mono font-bold ${
+                            className={`px-2 py-0.5 rounded-lg text-[10px] font-display font-bold ${
                               activeRequest.marketingDecision === "Accepted"
-                                ? "bg-emerald-100 text-emerald-800"
-                                : "bg-rose-100 text-rose-800"
+                                ? "bg-emerald-50 text-[#006d32]"
+                                : "bg-rose-50 text-rose-700"
                             }`}
                           >
                             {activeRequest.marketingDecision}
                           </span>
                         ) : activeRequest.samplingFeasibilityResponse ? (
-                          <span className="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-teal-100 text-teal-800 dark:bg-teal-950/60 dark:text-teal-300 animate-pulse">
+                          <span className="px-2 py-0.5 rounded-lg text-[10px] font-display font-bold bg-teal-50 text-teal-800 border border-teal-200 animate-pulse">
                             Ready
                           </span>
                         ) : null}
@@ -591,10 +591,10 @@ export const SampleRequestInspector: React.FC<SampleRequestInspectorProps> = ({
                       <button
                         type="button"
                         onClick={() => setActiveTab("attachments")}
-                        className={`pb-2.5 border-b-2 transition cursor-pointer select-none flex items-center gap-1.5 whitespace-nowrap ${
+                        className={`pb-3 border-b-2 font-display transition cursor-pointer select-none flex items-center gap-2 whitespace-nowrap ${
                           activeTab === "attachments"
-                            ? "border-[#714B67] text-[#714B67] dark:text-purple-300 font-bold"
-                            : "border-transparent text-neutral-500 hover:text-neutral-800 dark:hover:text-zinc-200"
+                            ? "border-[#006d32] text-[#006d32] dark:text-[#00d166] font-bold"
+                            : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-zinc-200"
                         }`}
                       >
                         <span>4. Attachments &amp; Links</span>
@@ -603,10 +603,10 @@ export const SampleRequestInspector: React.FC<SampleRequestInspectorProps> = ({
                       <button
                         type="button"
                         onClick={() => setActiveTab("timeline")}
-                        className={`pb-2.5 border-b-2 transition cursor-pointer select-none whitespace-nowrap ${
+                        className={`pb-3 border-b-2 font-display transition cursor-pointer select-none whitespace-nowrap ${
                           activeTab === "timeline"
-                            ? "border-[#714B67] text-[#714B67] dark:text-purple-300 font-bold"
-                            : "border-transparent text-neutral-500 hover:text-neutral-800 dark:hover:text-zinc-200"
+                            ? "border-[#006d32] text-[#006d32] dark:text-[#00d166] font-bold"
+                            : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-zinc-200"
                         }`}
                       >
                         5. Workflow Audit Trail
@@ -617,17 +617,19 @@ export const SampleRequestInspector: React.FC<SampleRequestInspectorProps> = ({
                       <button
                         type="button"
                         onClick={() => setActiveTab("specs")}
-                        className={`pb-2.5 border-b-2 transition cursor-pointer select-none ${
+                        className={`pb-3 border-b-2 font-display transition cursor-pointer select-none flex items-center gap-2 whitespace-nowrap ${
                           activeTab === "specs"
-                            ? "border-[#714B67] text-[#714B67] dark:text-purple-300 font-bold"
-                            : "border-transparent text-neutral-500 hover:text-neutral-800 dark:hover:text-zinc-200"
+                            ? "border-[#006d32] text-[#006d32] dark:text-[#00d166] font-bold"
+                            : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-zinc-200"
                         }`}
                       >
-                        {trackType === "program_planning"
-                          ? "1. Material Specification Matrix"
-                          : "1. Deliverable Scopes"}
+                        <span>
+                          {trackType === "program_planning"
+                            ? "1. Material Specification Matrix"
+                            : "1. Specifications & Scope"}
+                        </span>
                         {trackType === "program_planning" && (
-                          <span className="ml-1.5 px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-neutral-100 text-neutral-700">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-slate-100 text-slate-700">
                             {unifiedMatrixRows.length}
                           </span>
                         )}
@@ -636,29 +638,31 @@ export const SampleRequestInspector: React.FC<SampleRequestInspectorProps> = ({
                       <button
                         type="button"
                         onClick={() => setActiveTab("review")}
-                        className={`pb-2.5 border-b-2 transition cursor-pointer select-none ${
+                        className={`pb-3 border-b-2 font-display transition cursor-pointer select-none flex items-center gap-2 whitespace-nowrap ${
                           activeTab === "review"
-                            ? "border-[#714B67] text-[#714B67] dark:text-purple-300 font-bold"
-                            : "border-transparent text-neutral-500 hover:text-neutral-800 dark:hover:text-zinc-200"
+                            ? "border-[#006d32] text-[#006d32] dark:text-[#00d166] font-bold"
+                            : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-zinc-200"
                         }`}
                       >
-                        {trackType === "program_planning"
-                          ? "2. Plant Planning &amp; SCU Capacity"
-                          : "2. SAMP Technical Review"}
+                        <span>
+                          {trackType === "program_planning"
+                            ? "2. Plant Planning & SCU Capacity"
+                            : "2. Technical & Plant Review"}
+                        </span>
                       </button>
 
                       <button
                         type="button"
                         onClick={() => setActiveTab("attachments")}
-                        className={`pb-2.5 border-b-2 transition cursor-pointer select-none ${
+                        className={`pb-3 border-b-2 font-display transition cursor-pointer select-none flex items-center gap-2 whitespace-nowrap ${
                           activeTab === "attachments"
-                            ? "border-[#714B67] text-[#714B67] dark:text-purple-300 font-bold"
-                            : "border-transparent text-neutral-500 hover:text-neutral-800 dark:hover:text-zinc-200"
+                            ? "border-[#006d32] text-[#006d32] dark:text-[#00d166] font-bold"
+                            : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-zinc-200"
                         }`}
                       >
-                        3. Reference Attachments &amp; Links
+                        <span>3. Attachments &amp; Benchmark Links</span>
                         {(previewableImages.length > 0 || feasibilityDetails.referenceLinks.length > 0) && (
-                          <span className="ml-1.5 px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-[#714B67]/10 text-[#714B67] font-bold">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-[#eff4ff] dark:bg-[#006d32]/25 text-[#006d32] dark:text-[#00d166] font-bold border border-[#006d32]/20">
                             {previewableImages.length + feasibilityDetails.referenceLinks.length}
                           </span>
                         )}

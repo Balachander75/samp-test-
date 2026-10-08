@@ -51,6 +51,22 @@ class ProgramRequestUpdate(BaseModel):
     program_campaign_title: Optional[str] = None
     program_year: Optional[str] = None
     status: Optional[str] = None
+    sampling_verdict: Optional[str] = None
+    sampling_remark: Optional[str] = None
+    plant_verdict: Optional[str] = None
+    plant_remark: Optional[str] = None
+
+
+class ProgramReviewSubmit(BaseModel):
+    department: str = Field(..., description="'sampling' or 'plant'")
+    verdict: str = Field(..., description="'Feasible', 'Revisions Required', 'Capacity Confrained', etc.")
+    remark: Optional[str] = None
+    actor_name: Optional[str] = None
+
+
+class ProgramSeenSubmit(BaseModel):
+    department: str = Field(..., description="'sampling' or 'plant'")
+    actor_name: Optional[str] = None
 
 
 class ProgramMaterialRemarkUpdate(BaseModel):
@@ -95,10 +111,28 @@ class ProgramRequestOut(BaseModel):
     program_year: str
     status: str
     created_by: Optional[str] = None
+
+    # Sampling Review & Seen
+    sampling_seen_at: Optional[datetime] = None
+    sampling_seen_by: Optional[str] = None
+    sampling_verdict: Optional[str] = None
+    sampling_remark: Optional[str] = None
+    sampling_signed_at: Optional[datetime] = None
+    sampling_signed_by: Optional[str] = None
+
+    # Plant Review & Seen
+    plant_seen_at: Optional[datetime] = None
+    plant_seen_by: Optional[str] = None
+    plant_verdict: Optional[str] = None
+    plant_remark: Optional[str] = None
+    plant_signed_at: Optional[datetime] = None
+    plant_signed_by: Optional[str] = None
+
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     materials: List[ProgramMaterialOut] = []
     activities: List[ProgramActivityLogOut] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)
+
 

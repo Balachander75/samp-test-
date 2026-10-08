@@ -959,9 +959,9 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
   };
 
   return (
-    <div className="flex-1 flex min-h-0 flex-col overflow-y-auto bg-[#F1F3F5] text-zinc-900 dark:bg-[#08090d] dark:text-zinc-100">
+    <div className="flex-1 flex min-h-0 flex-col overflow-y-auto bg-[#f8f9ff] text-slate-900 dark:bg-[#0c0d14] dark:text-zinc-100">
       {/* Main Container */}
-      <div className="mx-auto w-full max-w-[1680px] flex-1 space-y-2.5 px-3 py-2.5 sm:px-4 sm:py-3 lg:px-6">
+      <div className="mx-auto w-full max-w-[1680px] flex-1 space-y-4 px-4 py-4 sm:px-6 lg:px-8">
 
         {/* Toast Notification Banner */}
         {toastMsg && (

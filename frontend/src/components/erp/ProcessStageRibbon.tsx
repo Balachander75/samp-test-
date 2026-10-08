@@ -25,7 +25,7 @@ export const ProcessStageRibbon: React.FC<ProcessStageRibbonProps> = ({
 
   return (
     <div
-      className={`border-b border-[#e2e8f0] dark:border-white/[0.08] bg-[#f8f9fa] dark:bg-[#0e1017] px-4 sm:px-6 py-2 overflow-x-auto select-none no-scrollbar flex items-center justify-between gap-4 ${className}`}
+      className={`border-b border-[#e2e8f0] dark:border-white/[0.08] bg-[#f8f9fa] dark:bg-[#0e1017] px-4 sm:px-6 py-2 overflow-x-auto smooth-scroll select-none no-scrollbar flex items-center justify-between gap-4 ${className}`}
     >
       {/* Odoo 19 Polygon Chevron Statusbar */}
       <div className="o_statusbar_status select-none shadow-2xs">

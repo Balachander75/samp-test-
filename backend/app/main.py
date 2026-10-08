@@ -16,7 +16,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
 from app.config import settings
-from app.database import engine, Base, ensure_design_workflow_columns
+from app.database import engine, Base, ensure_design_workflow_columns, ensure_program_review_columns
 from app.routers import auth, feasibility, master, program_requests, sample_requests
 
 logger = logging.getLogger("uvicorn.error")
@@ -32,8 +32,17 @@ async def lifespan(app: FastAPI):
     # Auto-create any new DB tables (idempotent, safe to run on every restart)
     Base.metadata.create_all(bind=engine)
     ensure_design_workflow_columns()
+    ensure_program_review_columns()
+    try:
+        from app.database import SessionLocal
+        from app.services.downstream_service import DownstreamService
+        with SessionLocal() as db:
+            DownstreamService(db).seed_if_empty()
+    except Exception as e:
+        logger.warning("[Startup] Downstream seeding skipped: %s", e)
     logger.info("[Startup] ✓ Database tables verified / created.")
     yield
+
 
 
 # ---------------------------------------------------------------------------

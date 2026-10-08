@@ -1,16 +1,8 @@
 import React from "react";
 import { SampleRequestItem } from "../../types";
-import {
-  Clock,
-  Building2,
-  FileText,
-  Package,
-  Sparkles,
-  ThumbsUp,
-  ClipboardCheck,
-  Check,
-  ExternalLink,
-} from "lucide-react";
+import { formatOdooDate } from "../../utils/dateUtils";
+import { StatusPill } from "@/components/ui/StatusPill";
+import { getRequestTypes } from "../../sampling/utils/requestTypeUtils";
 import { ParsedFeasibilityDetails } from "../../utils/feasibilityParsers";
 
 export interface InspectorSheetHeaderProps {
@@ -34,194 +26,129 @@ export const InspectorSheetHeader: React.FC<InspectorSheetHeaderProps> = ({
   trackType,
   displayType,
   primaryTitle,
-  feasibilityDetails,
-  previewableImagesCount,
-  isSubmitting,
-  isConverting,
-  onOpenReviewTab,
-  onMarketingFinalApprove,
-  onConvertToSampling,
 }) => {
+  const code = request.srNumber || activeRequest.srNumber || `SR-${request.id}`;
+  const requestTypes = getRequestTypes(activeRequest);
+
   return (
-    <>
-      {/* Luminous Smart Stat Buttons Ribbon (Top-Right of Sheet) */}
-      <div className="flex justify-between items-center bg-[#eff4ff] dark:bg-zinc-900/60 backdrop-blur-xl flex-wrap py-1.5 px-2">
-        <div className="px-4 py-2 flex items-center gap-3 flex-wrap">
-          <span className="font-display text-sm font-bold text-[#006d32] dark:text-[#00d166] tracking-tight">
-            PMT No: {request.srNumber || `SR-${request.id}`}
+    <div className="bg-white/80 dark:bg-[#161928]/80 backdrop-blur-xl border-b border-slate-100 dark:border-white/5">
+      {/* ── Top Bar: Reference Code & Flow Progression ── */}
+      <div className="flex flex-wrap items-center justify-between gap-3 px-8 py-3 bg-[#f8f9ff]/70 dark:bg-zinc-900/40 border-b border-slate-100/80 dark:border-white/5">
+        <div className="flex items-center gap-2.5">
+          <span className="font-mono text-xs font-bold px-2.5 py-0.5 rounded-lg bg-[#eff4ff] dark:bg-[#006d32]/20 text-[#006d32] dark:text-[#00d166] border border-[#006d32]/20">
+            {code}
           </span>
-          <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-zinc-700" />
-          <span className="font-display text-xs text-slate-500 font-medium uppercase tracking-widest">
-            {trackType === "feasibility_check"
-              ? "Feasibility Check"
-              : trackType === "program_planning"
-              ? "Program Planning"
-              : "Sampling"}
-          </span>
-          <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-zinc-700" />
-          <span className="bg-[#006d32]/10 dark:bg-[#00d166]/20 text-[#006d32] dark:text-[#00d166] text-[10px] font-display font-bold px-2 py-0.5 rounded-md">
-            Active Snapshot: V1.0
+          <span className="text-slate-300 dark:text-zinc-700">/</span>
+          <span className="text-xs font-display font-semibold text-slate-500 dark:text-zinc-400">
+            {trackType === "program_planning"
+              ? "Seasonal Program Specification Sheet"
+              : trackType === "feasibility_check"
+              ? "Feasibility Evaluation Sheet"
+              : "Commercial Sample Specification Sheet"}
           </span>
         </div>
 
-        <div className="flex items-center flex-wrap gap-6 px-4">
-          {/* Stat 1: SLA Target */}
-          <div className="flex items-center gap-3" title="Target SLA Due Date">
-            <div className="w-8 h-8 rounded-full bg-white dark:bg-zinc-800 shadow-[0_4px_12px_rgba(11,28,48,0.04)] flex items-center justify-center text-[#006d32]">
-              <Clock className="w-4 h-4" />
-            </div>
-            <div className="leading-tight">
-              <div className="font-bold text-xs text-slate-900 dark:text-zinc-100 font-display">
-                {request.sampleRequiredDate || request.dateRequestCreated || "2026-10-12"}
-              </div>
-              <div className="text-[10px] text-slate-500 font-medium">Target SLA Date</div>
-            </div>
-          </div>
-
-          {/* Stat 2: Facility */}
-          <div className="flex items-center gap-3" title="Assigned Fulfillment Plant">
-            <div className="w-8 h-8 rounded-full bg-white dark:bg-zinc-800 shadow-[0_4px_12px_rgba(11,28,48,0.04)] flex items-center justify-center text-[#006d32]">
-              <Building2 className="w-4 h-4" />
-            </div>
-            <div className="leading-tight">
-              <div className="font-bold text-xs text-slate-900 dark:text-zinc-100 font-display truncate max-w-[120px]">
-                {request.targetPlant
-                  ? request.targetPlant.replace(/^\d{4}-?\s*/, "").trim()
-                  : "Plant 1 (Pune)"}
-              </div>
-              <div className="text-[10px] text-slate-500 font-medium">Plant Facility</div>
-            </div>
-          </div>
-
-          {/* Stat 3: Attachments / Materials */}
-          <div className="flex items-center gap-3" title="Evidence & Specifications">
-            <div className="w-8 h-8 rounded-full bg-white dark:bg-zinc-800 shadow-[0_4px_12px_rgba(11,28,48,0.04)] flex items-center justify-center text-amber-600">
-              <FileText className="w-4 h-4" />
-            </div>
-            <div className="leading-tight">
-              <div className="font-bold text-xs text-slate-900 dark:text-zinc-100 font-display">
-                {previewableImagesCount + feasibilityDetails.referenceLinks.length} Files
-              </div>
-              <div className="text-[10px] text-slate-500 font-medium">Attachments</div>
-            </div>
-          </div>
+        {/* Right Badges */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {requestTypes.map((type) => (
+            <span
+              key={type}
+              className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-display font-semibold bg-[#eff4ff] dark:bg-[#006d32]/20 text-[#006d32] dark:text-[#00d166] border border-[#006d32]/25 capitalize"
+            >
+              {type}
+            </span>
+          ))}
+          <StatusPill status={activeRequest.status || "Draft"} />
         </div>
       </div>
 
-
-
-      {/* Opportunity / Sample Title and Rating */}
-      <div className="px-8 pt-8 pb-4">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1 min-w-0">
-            <div className="text-[10px] uppercase font-bold tracking-widest text-[#006d32] dark:text-[#00d166] mb-2 font-display bg-[#006d32]/10 dark:bg-[#00d166]/10 inline-block px-2 py-0.5 rounded-md">
-              SAMPLE TITLE / OPPORTUNITY NAME
-            </div>
-            <h1 className="text-3xl font-display font-bold text-slate-900 dark:text-zinc-100 tracking-tight leading-snug">
-              {primaryTitle || `${request.customer || "General"} · ${displayType}`}
+      {/* ── Document Hero Section ── */}
+      <div className="px-8 py-5">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-display font-bold tracking-tight text-slate-900 dark:text-zinc-50">
+              {activeRequest.customer || "General Commercial Account"}
             </h1>
-          </div>
-
-          <div
-            className="flex items-center space-x-0.5 text-amber-400 text-xl shrink-0 drop-shadow-sm"
-            title="Priority Level: High"
-          >
-            <span>★</span>
-            <span>★</span>
-            <span>★</span>
-            <span className="text-slate-200 dark:text-zinc-700">★</span>
+            <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1 flex items-center gap-1.5 flex-wrap">
+              <span>Initiated by</span>
+              <span className="font-semibold text-slate-800 dark:text-zinc-200">
+                {activeRequest.createdBy || "Marketing Desk"}
+              </span>
+              <span>·</span>
+              <span>
+                on{" "}
+                {formatOdooDate(
+                  activeRequest.dateRequestCreated || activeRequest.createdAt
+                )}
+              </span>
+              {activeRequest.brandName && (
+                <>
+                  <span>·</span>
+                  <span className="font-mono text-slate-600 dark:text-slate-300">
+                    Brand: {activeRequest.brandName}
+                  </span>
+                </>
+              )}
+            </p>
           </div>
         </div>
 
-        {/* 2-Column Master Data Grid - Tonal Depth, No Lines */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4 pt-6 mt-6 border-t-0 bg-[#f8f9ff] dark:bg-zinc-900/40 p-5 rounded-2xl text-xs shadow-inner">
-          {/* Left Column */}
-          <div className="space-y-2">
-            <div className="flex items-baseline">
-              <span className="w-36 text-neutral-500 font-medium shrink-0">Customer</span>
-              <span className="flex-1 font-semibold text-neutral-900 dark:text-zinc-100">
-                {request.customer || "Unassigned Account"}
-              </span>
+        {/* ── 4-Card Executive Metrics Strip (Clean Tonal Depth, Zero Random Icons) ── */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 mt-5">
+          {/* Card 1: Product Title / Description */}
+          <div className="p-3.5 rounded-2xl bg-[#eff4ff]/60 dark:bg-white/5 border border-slate-100/80 dark:border-white/5 space-y-1">
+            <span className="text-[10px] font-display uppercase tracking-wider text-slate-400 dark:text-zinc-400 block font-semibold">
+              Product Scope
+            </span>
+            <div
+              className="font-display font-bold text-xs text-slate-900 dark:text-zinc-100 truncate"
+              title={primaryTitle}
+            >
+              {primaryTitle || displayType}
             </div>
-
-            <div className="flex items-baseline">
-              <span className="w-36 text-slate-500 font-medium shrink-0">Category / Type</span>
-              <span className="flex-1 font-semibold text-[#006d32] dark:text-[#00d166]">
-                {displayType}
-              </span>
-            </div>
-
-            <div className="flex items-baseline">
-              <span className="w-36 text-neutral-500 font-medium shrink-0">Program Name</span>
-              <span className="flex-1 text-neutral-800 dark:text-zinc-200">
-                {request.programName || request.programCampaignTitle || "Annual Sampling Plan"}
-              </span>
-            </div>
-
-            <div className="flex items-baseline">
-              <span className="w-36 text-neutral-500 font-medium shrink-0">Sales Team Owner</span>
-              <span className="flex-1 text-neutral-800 dark:text-zinc-200">
-                {request.createdBy || "Parin D (Sales Team)"}
-              </span>
-            </div>
-
-            {feasibilityDetails.referenceLinks.length > 0 && (
-              <div className="flex items-baseline">
-                <span className="w-36 text-neutral-500 font-medium shrink-0">Reference Link</span>
-                <span className="flex-1 font-mono flex items-center gap-1.5 truncate">
-                  <ExternalLink className="w-3.5 h-3.5 text-[#017E84] shrink-0" />
-                  <a
-                    href={
-                      feasibilityDetails.referenceLinks[0].startsWith("http")
-                        ? feasibilityDetails.referenceLinks[0]
-                        : `https://${feasibilityDetails.referenceLinks[0]}`
-                    }
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[#006d32] hover:underline font-semibold truncate"
-                    title={feasibilityDetails.referenceLinks[0]}
-                  >
-                    <span className="truncate">
-                      {feasibilityDetails.referenceLinks[0].replace(/^https?:\/\//, "")}
-                    </span>
-                  </a>
-                  {feasibilityDetails.referenceLinks.length > 1 && (
-                    <span className="text-[10px] text-neutral-400 font-normal shrink-0">
-                      (+{feasibilityDetails.referenceLinks.length - 1} more)
-                    </span>
-                  )}
-                </span>
-              </div>
-            )}
           </div>
 
-          {/* Right Column */}
-          <div className="space-y-2">
-            <div className="flex items-baseline">
-              <span className="w-36 text-neutral-500 font-medium shrink-0">Assigned Plant</span>
-              <span className="flex-1 text-neutral-800 dark:text-zinc-200">
-                {request.targetPlant || "Plant 1 (Central Notebooks & Wiro)"}
-              </span>
+          {/* Card 2: Required Target SLA */}
+          <div className="p-3.5 rounded-2xl bg-[#eff4ff]/60 dark:bg-white/5 border border-slate-100/80 dark:border-white/5 space-y-1">
+            <span className="text-[10px] font-display uppercase tracking-wider text-slate-400 dark:text-zinc-400 block font-semibold">
+              Target SLA Date
+            </span>
+            <div className="font-display font-bold text-xs text-slate-900 dark:text-zinc-100 font-mono">
+              {activeRequest.sampleRequiredDate
+                ? formatOdooDate(activeRequest.sampleRequiredDate)
+                : "Flexible Turnaround"}
             </div>
+          </div>
 
-            <div className="flex items-baseline">
-              <span className="w-36 text-neutral-500 font-medium shrink-0">Requested Pieces</span>
-              <span className="flex-1 font-mono text-neutral-800 dark:text-zinc-200">
-                {request.qtyForSampling ? `${request.qtyForSampling} Finished Mockups` : "6 Finished Mockups"}
-              </span>
+          {/* Card 3: Manufacturing Facility */}
+          <div className="p-3.5 rounded-2xl bg-[#eff4ff]/60 dark:bg-white/5 border border-slate-100/80 dark:border-white/5 space-y-1">
+            <span className="text-[10px] font-display uppercase tracking-wider text-slate-400 dark:text-zinc-400 block font-semibold">
+              Assigned Plant
+            </span>
+            <div className="font-display font-bold text-xs text-slate-900 dark:text-zinc-100 truncate">
+              {activeRequest.targetPlant
+                ? `Plant ${activeRequest.targetPlant}`
+                : "Plant 1 (Central)"}
             </div>
+          </div>
 
-            <div className="flex items-baseline">
-              <span className="w-36 text-neutral-500 font-medium shrink-0">Customer Due Date</span>
-              <span className="flex-1 font-mono font-semibold text-[#017E84] dark:text-teal-400">
-                {request.sampleRequiredDate || request.dateRequestCreated || "20-11-2026"}
-              </span>
+          {/* Card 4: Sampling Quantity */}
+          <div className="p-3.5 rounded-2xl bg-[#eff4ff]/60 dark:bg-white/5 border border-slate-100/80 dark:border-white/5 space-y-1">
+            <span className="text-[10px] font-display uppercase tracking-wider text-slate-400 dark:text-zinc-400 block font-semibold">
+              Required Units
+            </span>
+            <div className="font-display font-bold text-xs text-slate-900 dark:text-zinc-100 font-mono">
+              {activeRequest.qtyForSampling
+                ? `${activeRequest.qtyForSampling} Finished Pieces`
+                : activeRequest.qtyDesignCosting
+                ? `${Number(activeRequest.qtyDesignCosting).toLocaleString()} Units`
+                : "Prototype Sample"}
             </div>
-
-
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
+
+export default InspectorSheetHeader;

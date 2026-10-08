@@ -94,6 +94,19 @@ export interface SampleRequestItem {
   customFeasibilityType?: string | null;
   feasibilityDescription?: string;
   marketingRemarks?: string | null;
+  // Program Planning Dual Reviews (Sampling & Plant)
+  samplingSeenAt?: string | null;
+  samplingSeenBy?: string | null;
+  samplingVerdict?: string | null;
+  samplingRemark?: string | null;
+  samplingSignedAt?: string | null;
+  samplingSignedBy?: string | null;
+  plantSeenAt?: string | null;
+  plantSeenBy?: string | null;
+  plantVerdict?: string | null;
+  plantRemark?: string | null;
+  plantSignedAt?: string | null;
+  plantSignedBy?: string | null;
 }
 
 export interface FeasibilityActivityItem {
@@ -359,11 +372,36 @@ export interface ProgramRequestRecord {
   programYear: string;
   status: string;
   createdBy?: string | null;
+  samplingSeenAt?: string | null;
+  samplingSeenBy?: string | null;
+  samplingVerdict?: string | null;
+  samplingRemark?: string | null;
+  samplingSignedAt?: string | null;
+  samplingSignedBy?: string | null;
+  plantSeenAt?: string | null;
+  plantSeenBy?: string | null;
+  plantVerdict?: string | null;
+  plantRemark?: string | null;
+  plantSignedAt?: string | null;
+  plantSignedBy?: string | null;
   createdAt: string;
   updatedAt: string;
   materials: ProgramMaterialItem[];
   activities?: ProgramActivityItem[];
 }
+
+export interface ProgramReviewPayload {
+  department: "sampling" | "plant";
+  verdict: string;
+  remark?: string | null;
+  actor_name?: string | null;
+}
+
+export interface ProgramSeenPayload {
+  department: "sampling" | "plant";
+  actor_name?: string | null;
+}
+
 
 
 export interface CreateProgramRequestPayload {

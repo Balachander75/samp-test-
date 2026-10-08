@@ -400,10 +400,9 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
   if (!isOpen) return null;
 
 
-  // Create the request first, then open product staging for the saved request.
-  const handleSubmitSampling = async (e: React.FormEvent) => {
+  // Transition to product staging workspace with the program header parameters (without pre-creating empty sample request)
+  const handleSubmitSampling = (e: React.FormEvent) => {
     e.preventDefault();
-    if (isSubmitting) return;
     if (!marketingCustomer.trim()) {
       setError("Please select a customer account.");
       return;
@@ -412,53 +411,20 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
       setError("Please enter a program name.");
       return;
     }
-    const payload: Partial<SampleRequestItem> = {
-      customer: marketingCustomer,
-      programName: marketingProgramName,
+
+    const stagingContext = {
+      customer: marketingCustomer.trim(),
+      programName: marketingProgramName.trim(),
       programYear: marketingProgramYear,
       year: byInfo.businessYearStr,
       targetPlant: marketingTargetPlant || undefined,
-      productDescription: `${marketingProgramName.trim()} — Product staging pending`,
-      requestTypes: [],
-      status: "Draft (Pre-SMT)",
-      createdBy: requestCreatedBy || "Marketing Team (Corporate)",
-      dateRequestCreated: new Date().toISOString().split("T")[0],
-      creationMode: "marketing_request",
     };
 
-    setIsSubmitting(true);
-    try {
-      const saved = await onSubmit(payload);
-      if (!saved || typeof saved !== "object") {
-        setError("The sampling request could not be saved. Please check the details and try again.");
-        setIsSubmitting(false);
-        return;
-      }
-      const stagingContext = {
-        customer: marketingCustomer,
-        programName: marketingProgramName.trim(),
-        programYear: marketingProgramYear,
-        year: byInfo.businessYearStr,
-        targetPlant: marketingTargetPlant,
-        parentRequestId: saved.id,
-        parentSrNumber: saved.srNumber,
-      };
-      sessionStorage.setItem("samp_active_program_form", JSON.stringify(stagingContext));
-      sessionStorage.removeItem("samp_active_staged_products");
+    sessionStorage.setItem("samp_active_program_form", JSON.stringify(stagingContext));
+    sessionStorage.removeItem("samp_active_staged_products");
 
-      // Seamlessly navigate to Product Staging first
-      // This prevents the underlying table page from flashing before the workspace mounts
-      navigate("/sample-requests/product-staging", { state: stagingContext, replace: true });
-
-      // Clean up modal state smoothly after the route transition has been dispatched
-      setTimeout(() => {
-        onClose();
-        setIsSubmitting(false);
-      }, 100);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "The sampling request could not be saved.");
-      setIsSubmitting(false);
-    }
+    navigate("/sample-requests/product-staging", { state: stagingContext });
+    onClose();
   };
 
   // Submit Handler: Track 2 (Feasibility Check)
@@ -592,20 +558,20 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
       />
 
       <div className="flex min-h-full items-center justify-center p-3 sm:p-5">
-        <div className="relative w-full max-w-4xl bg-[#f8f9ff] dark:bg-[#12141a] border border-slate-200/80 dark:border-white/[0.08] rounded-2xl shadow-2xl select-text overflow-hidden transition-all duration-200">
+        <div className={`relative w-full ${selectedTrack === "feasibility_check" ? "max-w-4xl" : "max-w-3xl"} bg-[#f8f9ff] dark:bg-[#12141a] border border-slate-200/80 dark:border-white/[0.08] rounded-2xl shadow-2xl select-text overflow-hidden transition-all duration-200`}>
           
           {/* Luminous Engine Header Bar */}
           <div className="flex items-center justify-between px-6 py-4 bg-white dark:bg-[#161822] shrink-0 border-b border-slate-200/70 dark:border-white/[0.06] shadow-[0_1px_4px_rgba(11,28,48,0.02)]">
-            <div className="flex items-center gap-3.5">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#006d32]/15 to-[#00d166]/15 text-[#006d32] dark:text-emerald-400 flex items-center justify-center border border-[#006d32]/25 shadow-xs shrink-0">
-                {selectedTrack === "feasibility_check" ? (
-                  <ClipboardCheck className="w-5 h-5 stroke-[2.2]" />
-                ) : selectedTrack === "program_planning" ? (
-                  <Calendar className="w-5 h-5 stroke-[2.2]" />
-                ) : (
-                  <Package className="w-5 h-5 stroke-[2.2]" />
-                )}
-              </div>
+            <div className="flex items-center gap-3">
+              {selectedTrack !== "marketing_request" && (
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#006d32]/15 to-[#00d166]/15 text-[#006d32] dark:text-emerald-400 flex items-center justify-center border border-[#006d32]/25 shadow-xs shrink-0">
+                  {selectedTrack === "feasibility_check" ? (
+                    <ClipboardCheck className="w-4 h-4 stroke-[2.2]" />
+                  ) : (
+                    <Calendar className="w-4 h-4 stroke-[2.2]" />
+                  )}
+                </div>
+              )}
               <div>
                 <div className="flex items-center gap-2">
                   <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight font-display">
@@ -613,7 +579,7 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                     {selectedTrack === "marketing_request" && "Commercial Sample Request"}
                     {selectedTrack === "program_planning" && "Seasonal Program Planning"}
                   </h3>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#eff4ff] text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700 tracking-wider uppercase">
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#006d32]/10 text-[#006d32] dark:text-emerald-400 border border-[#006d32]/20 tracking-wider uppercase">
                     {selectedTrack === "feasibility_check" ? "FC-2026" : selectedTrack === "program_planning" ? "PLN-2026" : "SR-2026"}
                   </span>
                 </div>
@@ -1081,37 +1047,13 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
             {/* TAB 2: STANDARD SAMPLING FORM (Commercial Sample Request Step 1 Intake) */}
             {selectedTrack === "marketing_request" && (
               <form onSubmit={handleSubmitSampling} className="space-y-4">
-                {/* Step Flow Indicator */}
-                <div className="flex items-center justify-between px-4 py-2.5 bg-[#F8F9FA] dark:bg-zinc-800/80 border border-[#CED4DA] dark:border-zinc-700 rounded-lg text-xs shadow-2xs">
-                  <div className="flex items-center gap-2.5">
-                    <div className="flex items-center gap-1.5 font-bold text-[#006d32] dark:text-emerald-400">
-                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#006d32] text-white text-[11px] font-bold shadow-2xs">
-                        1
-                      </span>
-                      <span>Step 1: Program Header Setup</span>
-                    </div>
-                    <ArrowRight className="w-3.5 h-3.5 text-zinc-400" />
-                    <div className="flex items-center gap-1.5 text-zinc-500 dark:text-zinc-400 font-medium">
-                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 text-[11px] font-bold">
-                        2
-                      </span>
-                      <span>Step 2: Staging &amp; Deliverables</span>
-                    </div>
-                  </div>
-                  <span className="font-mono text-[10.5px] font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-[#006d32] dark:bg-emerald-950/60 dark:text-emerald-300 border border-[#006d32]/25 tracking-wide">
-                    COMMERCIAL INTAKE
-                  </span>
-                </div>
-
                 {/* Form Sheet Content */}
-                <div className="bg-white dark:bg-[#161822] border border-[#CED4DA] dark:border-white/[0.08] rounded-xl p-6 space-y-5 shadow-2xs">
+                <div className="bg-white dark:bg-[#161822] border border-slate-200/60 dark:border-white/[0.06] rounded-2xl p-6 space-y-5 shadow-[0_4px_24px_rgba(11,28,48,0.03)]">
                   {/* Row 1: Customer Account & Program Name */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div>
-                      <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 mb-2 font-sans">
-                        <Building2 className="w-3.5 h-3.5 text-[#714B67] dark:text-purple-400" />
-                        <span>Customer Account</span>
-                        <span className="text-rose-500">*</span>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-zinc-400 mb-1.5 font-sans">
+                        Customer Account <span className="text-rose-500">*</span>
                       </label>
                       <CustomerCombobox
                         customers={customers}
@@ -1124,14 +1066,12 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                     </div>
 
                     <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 font-sans">
-                          <FileText className="w-3.5 h-3.5 text-[#714B67] dark:text-purple-400" />
-                          <span>Program Name</span>
-                          <span className="text-rose-500">*</span>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-zinc-400 font-sans">
+                          Program Name <span className="text-rose-500">*</span>
                         </label>
                         {matchingPrograms.length > 0 && (
-                          <span className="text-[10.5px] font-mono text-[#017E84] dark:text-[#2dd4bf] font-bold">
+                          <span className="text-[10.5px] font-mono text-[#006d32] dark:text-emerald-400 font-bold">
                             {matchingPrograms.length} open program{matchingPrograms.length !== 1 ? "s" : ""} found
                           </span>
                         )}
@@ -1143,7 +1083,7 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                         placeholder="e.g. Back to School 2026, Hardcover Diaries..."
                         value={marketingProgramName}
                         onChange={(e) => setMarketingProgramName(e.target.value)}
-                        className="w-full h-10 px-3.5 rounded-lg border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-semibold text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 outline-none focus:border-[#714B67] focus:ring-2 focus:ring-[#714B67]/20 transition-all shadow-2xs"
+                        className="w-full h-10 px-3.5 rounded-xl border border-slate-200/80 dark:border-zinc-700/80 bg-white dark:bg-zinc-900/80 text-xs font-semibold text-slate-900 dark:text-zinc-100 placeholder:text-slate-400 outline-none focus:border-[#006d32] focus:ring-2 focus:ring-[#006d32]/15 transition-all shadow-2xs"
                       />
 
                       <datalist id="open-programs-datalist">
@@ -1156,9 +1096,8 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
 
                       {/* Open Seasonal Program Picker Pills */}
                       {matchingPrograms.length > 0 && (
-                        <div className="mt-2 flex flex-wrap items-center gap-1.5 animate-smooth-toast">
-                          <span className="text-[10.5px] font-mono text-zinc-500 dark:text-zinc-400 font-semibold flex items-center gap-1">
-                            <FolderGit2 className="w-3 h-3 text-[#714B67] dark:text-purple-400" />
+                        <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+                          <span className="text-[10.5px] font-mono text-slate-500 dark:text-zinc-400 font-semibold">
                             Open Programs:
                           </span>
                           {matchingPrograms.map((prog) => {
@@ -1175,15 +1114,15 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                                     setMarketingProgramYear(prog.programYear);
                                   }
                                 }}
-                                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded text-[10.5px] font-mono transition cursor-pointer ${
+                                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10.5px] font-mono transition cursor-pointer ${
                                   isCurrent
-                                    ? "bg-[#714B67] text-white font-bold shadow-2xs"
-                                    : "bg-[#F3E8EE] dark:bg-[#3E2938]/60 text-[#714B67] dark:text-purple-300 border border-purple-200 dark:border-purple-800/60 hover:bg-purple-100 dark:hover:bg-purple-950/60"
+                                    ? "bg-[#006d32] text-white font-bold shadow-xs"
+                                    : "bg-[#eff4ff] dark:bg-white/[0.05] text-slate-700 dark:text-zinc-300 border border-slate-200/60 dark:border-white/10 hover:bg-[#e5eeff] dark:hover:bg-white/10"
                                 }`}
-                                title={`Click to select: ${progTitle} (${prog.programYear || "2026"})`}
+                                title={`Select: ${progTitle} (${prog.programYear || "2026"})`}
                               >
                                 <span>{progTitle}</span>
-                                <span className="text-[9.5px] opacity-80">({prog.programYear || "2026"})</span>
+                                <span className="text-[9.5px] opacity-75">({prog.programYear || "2026"})</span>
                               </button>
                             );
                           })}
@@ -1194,10 +1133,8 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
 
                   {/* Program Year */}
                   <div className="pt-1">
-                    <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 mb-2 font-sans">
-                      <Calendar className="w-3.5 h-3.5 text-[#714B67] dark:text-purple-400" />
-                      <span>Program Year</span>
-                      <span className="text-rose-500">*</span>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-zinc-400 mb-2 font-sans">
+                      Program Year <span className="text-rose-500">*</span>
                     </label>
                     <div className="grid grid-cols-3 gap-3">
                       {byInfo.seasonYearOptions.map((year) => {
@@ -1207,25 +1144,16 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                             key={year}
                             type="button"
                             onClick={() => setMarketingProgramYear(year)}
-                            className={`h-11 px-4 rounded-lg border text-xs font-semibold transition-all flex items-center justify-between cursor-pointer select-none ${
+                            className={`h-11 px-4 rounded-xl border text-xs font-semibold transition-all flex items-center justify-center cursor-pointer select-none ${
                               isSelected
-                                ? "border-[#714B67] bg-[#714B67]/10 dark:bg-[#714B67]/20 text-[#714B67] dark:text-[#E8D7E3] font-bold ring-2 ring-[#714B67]/25 shadow-2xs"
-                                : "border-[#CED4DA] dark:border-zinc-800 bg-[#F8F9FA] dark:bg-zinc-900/60 text-zinc-700 dark:text-zinc-300 hover:border-zinc-400 hover:bg-white"
+                                ? "border-[#006d32] bg-[#eff4ff] dark:bg-[#006d32]/15 text-[#006d32] dark:text-[#00d166] font-bold ring-2 ring-[#006d32]/20 shadow-xs"
+                                : "border-slate-200/80 dark:border-zinc-800 bg-[#f8f9ff]/60 dark:bg-zinc-900/40 text-slate-600 dark:text-zinc-400 hover:border-slate-300 hover:bg-white dark:hover:bg-zinc-800/60"
                             }`}
                           >
-                            <span className="font-mono text-xs">{year}</span>
-                            {isSelected && <CheckCircle2 className="w-4 h-4 text-[#714B67] dark:text-[#E8D7E3]" />}
+                            <span className="font-mono text-xs tracking-wide">{year}</span>
                           </button>
                         );
                       })}
-                    </div>
-                  </div>
-
-                  {/* Informational Guidance Callout */}
-                  <div className="flex items-start gap-3 p-3.5 rounded-lg bg-[#017E84]/5 dark:bg-[#017E84]/15 border border-[#017E84]/20 text-xs text-zinc-700 dark:text-zinc-300">
-                    <Sparkles className="w-4 h-4 text-[#017E84] shrink-0 mt-0.5" />
-                    <div className="text-[11.5px] leading-relaxed">
-                      <strong className="text-[#017E84] dark:text-teal-400">Next Step: Product Staging Workspace</strong> — You will configure deliverable scopes (Design, Mockup, Sampling, Costing) and add individual products with specifications.
                     </div>
                   </div>
                 </div>
@@ -1235,7 +1163,7 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                   <button
                     type="button"
                     onClick={onClose}
-                    className="h-10 px-5 rounded-lg bg-white dark:bg-zinc-800 border border-[#CED4DA] dark:border-zinc-700 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 hover:bg-[#F8F9FA] transition-colors cursor-pointer shadow-2xs"
+                    className="h-10 px-5 rounded-xl bg-slate-100 dark:bg-white/[0.06] text-xs font-semibold text-slate-600 dark:text-zinc-300 hover:bg-slate-200/80 hover:text-slate-900 transition-colors cursor-pointer"
                   >
                     Discard
                   </button>
@@ -1253,7 +1181,6 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                         </>
                       ) : (
                         <>
-                          <CheckCircle2 className="w-4 h-4" />
                           <span>Create &amp; Add Product</span>
                           <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
                         </>
@@ -1267,33 +1194,33 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
             {/* TAB 3: PROGRAM PLANNING FORM (Single-Page Setup) */}
             {selectedTrack === "program_planning" && (
               <form onSubmit={handleProceedToPlanning} className="space-y-4">
-                <div className="bg-white dark:bg-[#1a1c24] border border-[#D8DADD] dark:border-white/[0.08] rounded-lg p-5 sm:p-6 shadow-2xs space-y-5">
+                <div className="bg-white dark:bg-[#161822] border border-slate-200/60 dark:border-white/[0.06] rounded-2xl p-6 shadow-[0_4px_24px_rgba(11,28,48,0.03)] space-y-5">
                   {/* Sheet Header Row */}
-                  <div className="flex flex-wrap items-center justify-between pb-3 border-b border-[#E2E8F0] dark:border-zinc-800 gap-2">
+                  <div className="flex flex-wrap items-center justify-between pb-3 border-b border-slate-100 dark:border-white/[0.06] gap-2">
                     <div>
                       <div className="flex items-center gap-2">
-                        <h4 className="text-sm font-bold text-[#1E293B] dark:text-zinc-100">
+                        <h4 className="text-sm font-bold text-slate-900 dark:text-zinc-100 font-display">
                           Seasonal Program Planning Setup
                         </h4>
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 font-bold">
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#006d32]/10 text-[#006d32] dark:text-emerald-400 border border-[#006d32]/20 font-bold uppercase tracking-wider">
                           CAMPAIGN SETUP
                         </span>
                       </div>
-                      <p className="text-[11px] text-[#64748B] dark:text-zinc-400 mt-0.5">
+                      <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-0.5">
                         Initialize high-volume seasonal line, define target facility, and setup planning workspace.
                       </p>
                     </div>
 
-                    <div className="hidden sm:flex items-center gap-2 bg-[#F8F9FA] dark:bg-zinc-800 border border-[#CED4DA] dark:border-zinc-700 px-3 py-1 rounded">
-                      <span className="text-[10px] font-bold text-[#64748B] uppercase">PLANNING CYCLE</span>
-                      <span className="text-xs font-mono font-bold text-[#714B67]">{byInfo.businessYearStr}</span>
+                    <div className="hidden sm:flex items-center gap-2 bg-[#eff4ff]/80 dark:bg-white/[0.04] border border-slate-200/50 dark:border-white/[0.05] px-3 py-1 rounded-xl">
+                      <span className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider">PLANNING CYCLE</span>
+                      <span className="text-xs font-mono font-bold text-[#006d32] dark:text-emerald-400">{byInfo.businessYearStr}</span>
                     </div>
                   </div>
 
                   {/* Customer Account & Target Plant */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-[11px] font-bold uppercase tracking-wider text-[#64748B] dark:text-zinc-400 mb-1.5 font-sans">
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-zinc-400 mb-1.5 font-sans">
                         Customer Name <span className="text-rose-500">*</span>
                       </label>
                       <CustomerCombobox
@@ -1306,14 +1233,14 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-bold uppercase tracking-wider text-[#64748B] dark:text-zinc-400 mb-1.5 font-sans">
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-zinc-400 mb-1.5 font-sans">
                         Target Plant <span className="text-rose-500">*</span>
                       </label>
                       <select
                         value={targetPlant}
                         disabled={isMasterDataLoading || plants.length === 0}
                         onChange={(e) => setTargetPlant(e.target.value)}
-                        className="w-full h-10 px-3 rounded-lg border border-[#CED4DA] dark:border-zinc-700/80 bg-white dark:bg-zinc-900/80 text-xs font-semibold text-zinc-900 dark:text-zinc-100 outline-none focus:border-[#714B67] focus:ring-2 focus:ring-[#714B67]/15 transition-all cursor-pointer shadow-2xs"
+                        className="w-full h-10 px-3 rounded-xl border border-slate-200/80 dark:border-zinc-700/80 bg-white dark:bg-zinc-900/80 text-xs font-semibold text-slate-900 dark:text-zinc-100 outline-none focus:border-[#006d32] focus:ring-2 focus:ring-[#006d32]/15 transition-all cursor-pointer shadow-2xs"
                       >
                         {plants.map((item) => (
                           <option key={item.id} value={item.name}>{item.name}</option>
@@ -1324,7 +1251,7 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
 
                   {/* Program Campaign Title */}
                   <div>
-                    <label className="block text-[11px] font-bold uppercase tracking-wider text-[#64748B] dark:text-zinc-400 mb-1.5 font-sans">
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-zinc-400 mb-1.5 font-sans">
                       Program Campaign Title <span className="text-rose-500">*</span>
                     </label>
                     <input
@@ -1333,19 +1260,19 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                       value={programPlanName}
                       onChange={(e) => setProgramPlanName(e.target.value)}
                       placeholder="e.g. Back-to-School 2026-2027 Hardcover Line"
-                      className="w-full h-10 px-3.5 rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-900/80 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 outline-none focus:border-[#006d32] focus:ring-2 focus:ring-[#006d32]/15 transition-all shadow-2xs"
+                      className="w-full h-10 px-3.5 rounded-xl border border-slate-200/80 dark:border-zinc-700/80 bg-white dark:bg-zinc-900/80 text-xs text-slate-900 dark:text-zinc-100 placeholder:text-slate-400 outline-none focus:border-[#006d32] focus:ring-2 focus:ring-[#006d32]/15 transition-all shadow-2xs"
                     />
                   </div>
 
                   {/* Program Business Year */}
                   <div>
-                    <label className="block text-[11px] font-bold uppercase tracking-wider text-[#64748B] dark:text-zinc-400 mb-1.5 font-sans">
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-zinc-400 mb-1.5 font-sans">
                       Program Business Year <span className="text-rose-500">*</span>
                     </label>
                     <select
                       value={programPlanYear}
                       onChange={(e) => setProgramPlanYear(e.target.value)}
-                      className="w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-900/80 text-xs font-mono font-medium text-zinc-900 dark:text-zinc-100 outline-none focus:border-[#006d32] focus:ring-2 focus:ring-[#006d32]/15 cursor-pointer transition-all shadow-2xs"
+                      className="w-full h-10 px-3 rounded-xl border border-slate-200/80 dark:border-zinc-700/80 bg-white dark:bg-zinc-900/80 text-xs font-mono font-medium text-slate-900 dark:text-zinc-100 outline-none focus:border-[#006d32] focus:ring-2 focus:ring-[#006d32]/15 cursor-pointer transition-all shadow-2xs"
                     >
                       {byInfo.businessYearOptions.map((by) => (
                         <option key={by} value={by}>{by}</option>
@@ -1359,13 +1286,13 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
                   <button
                     type="button"
                     onClick={onClose}
-                    className="h-9 px-4 rounded-xl bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer shadow-2xs"
+                    className="h-10 px-5 rounded-xl bg-slate-100 dark:bg-white/[0.06] text-xs font-semibold text-slate-600 dark:text-zinc-300 hover:bg-slate-200/80 hover:text-slate-900 transition-colors cursor-pointer"
                   >
                     Discard
                   </button>
                   <button
                     type="submit"
-                    className="h-9 px-5 rounded-xl text-white text-xs font-bold cursor-pointer transition-all shadow-[0_2px_10px_rgba(0,109,50,0.25)] hover:shadow-[0_4px_14px_rgba(0,109,50,0.35)] inline-flex items-center justify-center gap-1.5 select-none active:scale-98"
+                    className="h-10 px-6 rounded-xl text-white text-xs font-bold cursor-pointer transition-all shadow-[0_2px_10px_rgba(0,109,50,0.25)] hover:shadow-[0_4px_14px_rgba(0,109,50,0.35)] inline-flex items-center justify-center gap-1.5 select-none active:scale-98"
                     style={{ background: "linear-gradient(135deg, #006d32 0%, #00d166 100%)" }}
                   >
                     <span>Initialize Program Plan</span>

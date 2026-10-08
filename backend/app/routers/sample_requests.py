@@ -7,13 +7,15 @@ Delegates domain persistence to SampleRequestService, DesignRequestService, and 
 from typing import Any, Dict, List, Optional
 from datetime import datetime, timezone
 import re
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Request, Response, status
 from sqlalchemy.orm import Session
 
+from app.auth.security import get_optional_current_user
 from app.database import get_db
 from app.models.sample_request import ProductCharacteristic, ProductDetail
 from app.services.sample_request_service import SampleRequestService
 from app.services.design_request_service import DesignRequestService
+from app.services.downstream_service import DownstreamService
 from app.utils.business_year import get_current_business_year
 
 router = APIRouter(tags=["Sample Requests & Operations"])
@@ -29,6 +31,11 @@ def get_sample_request_service(db: Session = Depends(get_db)) -> SampleRequestSe
 
 def get_design_request_service(db: Session = Depends(get_db)) -> DesignRequestService:
     return DesignRequestService(db)
+
+
+def get_downstream_service(db: Session = Depends(get_db)) -> DownstreamService:
+    return DownstreamService(db)
+
 
 
 # ---------------------------------------------------------------------------
@@ -90,14 +97,13 @@ def get_sample_request(
 
 @router.post("/api/v1/sample-requests", status_code=status.HTTP_201_CREATED, summary="Create a single sample request")
 @router.post("/api/sample-requests", status_code=status.HTTP_201_CREATED, summary="Create a single sample request (legacy alias)")
-async def create_sample_request(
-    request: Request,
+def create_sample_request(
+    payload: Dict[str, Any] = Body(...),
     service: SampleRequestService = Depends(get_sample_request_service),
     design_service: DesignRequestService = Depends(get_design_request_service),
+    current_user = Depends(get_optional_current_user),
 ):
-    try:
-        payload = await request.json()
-    except Exception:
+    if not isinstance(payload, dict):
         raise HTTPException(status_code=400, detail="Invalid JSON body")
 
     created = service.create(payload)
@@ -112,16 +118,12 @@ async def create_sample_request(
 
 @router.post("/api/v1/sample-requests/batch", status_code=status.HTTP_201_CREATED, summary="Batch create multiple sample requests")
 @router.post("/api/sample-requests/batch", status_code=status.HTTP_201_CREATED, summary="Batch create multiple sample requests (legacy alias)")
-async def create_sample_requests_batch(
-    request: Request,
+def create_sample_requests_batch(
+    body: Any = Body(...),
     service: SampleRequestService = Depends(get_sample_request_service),
     design_service: DesignRequestService = Depends(get_design_request_service),
+    current_user = Depends(get_optional_current_user),
 ):
-    try:
-        body = await request.json()
-    except Exception:
-        raise HTTPException(status_code=400, detail="Invalid JSON body")
-
     if isinstance(body, list):
         normalized_items = [item for item in body if isinstance(item, dict)]
         if len(normalized_items) != len(body):
@@ -157,15 +159,11 @@ async def create_sample_requests_batch(
 
 
 @router.post("/api/v1/sample-requests/search-materials", summary="Search products by material code")
-async def search_materials_post(
-    request: Request,
+def search_materials_post(
+    body: Dict[str, Any] = Body(default_factory=dict),
     service: SampleRequestService = Depends(get_sample_request_service),
 ):
-    try:
-        body = await request.json()
-        query = body.get("query", "")
-    except Exception:
-        query = ""
+    query = body.get("query", "") if isinstance(body, dict) else ""
     return service.search_materials(query)
 
 
@@ -173,15 +171,14 @@ async def search_materials_post(
 @router.put("/api/sample-requests/{id}", summary="Update sample request (PUT legacy alias)")
 @router.patch("/api/v1/sample-requests/{id}", summary="Update sample request")
 @router.patch("/api/sample-requests/{id}", summary="Update sample request (legacy alias)")
-async def update_sample_request(
+def update_sample_request(
     id: str,
-    request: Request,
+    body: Dict[str, Any] = Body(...),
     service: SampleRequestService = Depends(get_sample_request_service),
     design_service: DesignRequestService = Depends(get_design_request_service),
+    current_user = Depends(get_optional_current_user),
 ):
-    try:
-        body = await request.json()
-    except Exception:
+    if not isinstance(body, dict):
         raise HTTPException(status_code=400, detail="Invalid JSON body")
 
     num_id = int(id) if id.isdigit() else None
@@ -205,13 +202,12 @@ async def update_sample_request(
 
 
 @router.post("/api/v1/sample-requests/batch-status", summary="Batch update status")
-async def batch_update_status(
-    request: Request,
+def batch_update_status(
+    body: Dict[str, Any] = Body(...),
     service: SampleRequestService = Depends(get_sample_request_service),
+    current_user = Depends(get_optional_current_user),
 ):
-    try:
-        body = await request.json()
-    except Exception:
+    if not isinstance(body, dict):
         raise HTTPException(status_code=400, detail="Invalid JSON body")
 
     ids = body.get("sample_request_ids") or body.get("ids") or []
@@ -222,6 +218,7 @@ async def batch_update_status(
     numeric_ids = [int(i) for i in ids if str(i).isdigit()]
     updated_count = service.batch_update_status(numeric_ids, new_status)
     return {"success": True, "updated_count": updated_count}
+
 
 
 @router.delete("/api/v1/sample-requests/{id}", status_code=status.HTTP_204_NO_CONTENT, summary="Delete sample request")
@@ -256,15 +253,14 @@ def list_design_requests(service: DesignRequestService = Depends(get_design_requ
 
 
 @router.post("/api/v1/sample-requests/{sample_id}/design-brief", summary="Submit a design-only brief to Creative")
-async def submit_design_brief(
+def submit_design_brief(
     sample_id: int,
-    request: Request,
+    body: Dict[str, Any] = Body(...),
     service: SampleRequestService = Depends(get_sample_request_service),
     design_service: DesignRequestService = Depends(get_design_request_service),
+    current_user = Depends(get_optional_current_user),
 ):
-    try:
-        body = await request.json()
-    except Exception:
+    if not isinstance(body, dict):
         raise HTTPException(status_code=400, detail="Invalid JSON body")
 
     description = str(body.get("product_description") or "").strip()
@@ -320,15 +316,14 @@ async def submit_design_brief(
 
 
 @router.put("/api/v1/design-requests/{id}/creative-output", summary="Submit Creative design output")
-async def submit_creative_design_output(
+def submit_creative_design_output(
     id: int,
-    request: Request,
+    body: Dict[str, Any] = Body(...),
     service: DesignRequestService = Depends(get_design_request_service),
     sample_service: SampleRequestService = Depends(get_sample_request_service),
+    current_user = Depends(get_optional_current_user),
 ):
-    try:
-        body = await request.json()
-    except Exception:
+    if not isinstance(body, dict):
         raise HTTPException(status_code=400, detail="Invalid JSON body")
     record = service.get_by_id(id)
     if not record:
@@ -384,15 +379,14 @@ async def submit_creative_design_output(
 
 
 @router.post("/api/v1/design-requests/{id}/marketing-decision", summary="Accept design output or request remaining designs")
-async def marketing_design_decision(
+def marketing_design_decision(
     id: int,
-    request: Request,
+    body: Dict[str, Any] = Body(...),
     service: DesignRequestService = Depends(get_design_request_service),
     sample_service: SampleRequestService = Depends(get_sample_request_service),
+    current_user = Depends(get_optional_current_user),
 ):
-    try:
-        body = await request.json()
-    except Exception:
+    if not isinstance(body, dict):
         raise HTTPException(status_code=400, detail="Invalid JSON body")
     record = service.get_by_id(id)
     if not record:
@@ -423,16 +417,12 @@ async def marketing_design_decision(
 
 
 @router.post("/api/v1/design-requests", status_code=status.HTTP_201_CREATED, summary="Create design request")
-async def create_design_request(
-    request: Request,
+def create_design_request(
+    body: Dict[str, Any] = Body(default_factory=dict),
     service: DesignRequestService = Depends(get_design_request_service),
+    current_user = Depends(get_optional_current_user),
 ):
-    try:
-        body = await request.json()
-    except Exception:
-        body = {}
-
-    return service.create(body)
+    return service.create(body if isinstance(body, dict) else {})
 
 
 @router.get("/api/v1/design-requests/{id}", response_model=Dict[str, Any], summary="Get design request")
@@ -447,17 +437,13 @@ def get_design_request(
 
 
 @router.patch("/api/v1/design-requests/{id}", summary="Update design request")
-async def update_design_request(
+def update_design_request(
     id: int,
-    request: Request,
+    body: Dict[str, Any] = Body(default_factory=dict),
     service: DesignRequestService = Depends(get_design_request_service),
+    current_user = Depends(get_optional_current_user),
 ):
-    try:
-        body = await request.json()
-    except Exception:
-        body = {}
-
-    record = service.update(id, body)
+    record = service.update(id, body if isinstance(body, dict) else {})
     if not record:
         raise HTTPException(status_code=404, detail="Design request not found")
     return record
@@ -473,37 +459,67 @@ def delete_design_request(
 
 
 # ---------------------------------------------------------------------------
-# Downstream Cross-Desk Task Stubs
+# Downstream Cross-Desk Persistent Operations
 # ---------------------------------------------------------------------------
 
 @router.get("/api/v1/creative/briefs", response_model=List[Dict[str, Any]], summary="List creative briefs")
-def list_creative_briefs():
-    return []
+def list_creative_briefs(service: DownstreamService = Depends(get_downstream_service)):
+    return service.list_creative_briefs()
 
 
 @router.patch("/api/v1/creative/briefs/{id}", summary="Update creative brief")
-async def update_creative_brief(id: str, request: Request):
-    return {"id": id, "success": True}
+def update_creative_brief(
+    id: str,
+    body: Dict[str, Any] = Body(...),
+    service: DownstreamService = Depends(get_downstream_service),
+    current_user = Depends(get_optional_current_user),
+):
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=400, detail="Invalid JSON body")
+    updated = service.update_creative_brief(id, body)
+    if not updated:
+        raise HTTPException(status_code=404, detail="Creative brief not found")
+    return updated
 
 
 @router.get("/api/v1/studio/dielines", response_model=List[Dict[str, Any]], summary="List studio dielines")
-def list_studio_dielines():
-    return []
+def list_studio_dielines(service: DownstreamService = Depends(get_downstream_service)):
+    return service.list_studio_dielines()
 
 
 @router.patch("/api/v1/studio/dielines/{id}", summary="Update studio dieline")
-async def update_studio_dieline(id: str, request: Request):
-    return {"id": id, "success": True}
+def update_studio_dieline(
+    id: str,
+    body: Dict[str, Any] = Body(...),
+    service: DownstreamService = Depends(get_downstream_service),
+    current_user = Depends(get_optional_current_user),
+):
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=400, detail="Invalid JSON body")
+    updated = service.update_studio_dieline(id, body)
+    if not updated:
+        raise HTTPException(status_code=404, detail="Studio dieline not found")
+    return updated
 
 
 @router.get("/api/v1/costing/estimations", response_model=List[Dict[str, Any]], summary="List costing estimations")
-def list_costing_estimations():
-    return []
+def list_costing_estimations(service: DownstreamService = Depends(get_downstream_service)):
+    return service.list_costing_estimations()
 
 
 @router.patch("/api/v1/costing/estimations/{id}", summary="Update costing estimation")
-async def update_costing_estimation(id: str, request: Request):
-    return {"id": id, "success": True}
+def update_costing_estimation(
+    id: str,
+    body: Dict[str, Any] = Body(...),
+    service: DownstreamService = Depends(get_downstream_service),
+    current_user = Depends(get_optional_current_user),
+):
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=400, detail="Invalid JSON body")
+    updated = service.update_costing_estimation(id, body)
+    if not updated:
+        raise HTTPException(status_code=404, detail="Costing estimation not found")
+    return updated
 
 
 # ---------------------------------------------------------------------------
@@ -530,15 +546,12 @@ def get_product_details(
 
 
 @router.post("/api/v1/product-characteristics/details", summary="Save product details for a sample request")
-async def save_product_details(
+def save_product_details(
     request: Request,
+    body: Any = Body(...),
     service: SampleRequestService = Depends(get_sample_request_service),
+    current_user = Depends(get_optional_current_user),
 ):
-    try:
-        body = await request.json()
-    except Exception:
-        raise HTTPException(status_code=400, detail="Invalid JSON body")
-
     sample_request_id = (
         request.query_params.get("sample_request_id")
         or (body.get("sample_request_id") if isinstance(body, dict) else None)
@@ -558,6 +571,7 @@ async def save_product_details(
     if not success:
         raise HTTPException(status_code=404, detail="Sample request not found")
     return {"success": True, "message": "Product details updated successfully"}
+
 
 
 @router.get("/api/v1/product-characteristics/binding-hierarchy", summary="Get binding hierarchy")

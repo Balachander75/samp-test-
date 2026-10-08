@@ -72,7 +72,7 @@ export const FeasibilityTechnicalReviewTab: React.FC<FeasibilityTechnicalReviewT
             <div className="text-xs text-slate-500 font-display">
               Evaluated by:{" "}
               <span className="font-bold text-slate-900 dark:text-zinc-100">
-                {activeRequest.samplingFeasibilityApprovedBy || "SAMP Lab Engineer"}
+                {activeRequest.samplingFeasibilityApprovedBy || "SAMP Team Engineer"}
               </span>
             </div>
           </div>

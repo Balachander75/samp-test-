@@ -111,13 +111,13 @@ const BindingProductResults: React.FC<{
             }}
             className={`h-[60px] px-3 text-left transition-colors flex items-center justify-between gap-3 cursor-pointer ${
               isSelected
-                ? "bg-[#F3E8EE] dark:bg-[#3E2938]/60 text-zinc-900 dark:text-zinc-100"
-                : "hover:bg-white dark:hover:bg-zinc-800 text-zinc-900 dark:text-zinc-100"
-            } ${activeIndex === index ? "ring-1 ring-inset ring-[#714B67]/40" : ""}`}
+                ? "bg-[#006d32]/10 text-zinc-900 dark:text-zinc-100"
+                : "hover:bg-slate-50 dark:hover:bg-zinc-800 text-zinc-900 dark:text-zinc-100"
+            } ${activeIndex === index ? "ring-1 ring-inset ring-[#006d32]/40" : ""}`}
           >
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <span className="font-mono text-[10.5px] font-bold px-1.5 py-0.5 rounded bg-white dark:bg-zinc-800 text-[#714B67] border border-[#714B67]/20 shrink-0">
+                <span className="font-mono text-[10.5px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/40 text-[#006d32] dark:text-emerald-300 border border-[#006d32]/25 shrink-0">
                   {item.material_code || "—"}
                 </span>
                 <span className="text-xs font-bold truncate">{item.product_description}</span>
@@ -131,7 +131,7 @@ const BindingProductResults: React.FC<{
               aria-hidden="true"
               className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
                 isSelected
-                  ? "border-[#714B67] bg-[#714B67] text-white"
+                  ? "border-[#006d32] bg-[#006d32] text-white"
                   : "border-zinc-300 dark:border-zinc-600"
               }`}
             >
@@ -177,23 +177,23 @@ export const AddProductSamplingStep: React.FC<AddProductSamplingStepProps> = ({
   onSubmit,
 }) => {
   return (
-    <div className="relative w-full max-w-3xl bg-white dark:bg-[#12141d] border border-[#CED4DA] dark:border-white/[0.08] rounded shadow-2xl overflow-hidden animate-smooth-modal max-h-[92vh] flex flex-col">
-      {/* Odoo 19 Modal Header */}
-      <div className="flex items-center justify-between px-6 py-3.5 bg-[#714B67] text-white shrink-0 border-b border-[#5B3C53]">
-        <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded bg-white/15 flex items-center justify-center text-white shrink-0">
+    <div className="relative w-full max-w-3xl bg-white dark:bg-[#161822] border border-slate-200/80 dark:border-white/[0.08] rounded-2xl shadow-2xl overflow-hidden animate-smooth-modal max-h-[92vh] flex flex-col">
+      {/* Luminous Engine Modal Header */}
+      <div className="flex items-center justify-between px-6 py-4 bg-white dark:bg-[#161822] text-slate-900 dark:text-white shrink-0 border-b border-slate-100 dark:border-white/[0.06]">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl bg-[#006d32]/10 text-[#006d32] dark:text-emerald-400 flex items-center justify-center shrink-0">
             <Layers3 className="w-4 h-4 stroke-[2.2]" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-bold text-white tracking-tight">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight font-display">
                 Configure Sampling Prototype
               </h3>
-              <span className="px-2 py-0.5 rounded text-[9.5px] font-mono font-bold bg-white/20 text-white tracking-wider uppercase">
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#006d32]/10 text-[#006d32] dark:text-emerald-400 border border-[#006d32]/20 tracking-wider uppercase">
                 SAMPLING SPEC
               </span>
             </div>
-            <p className="text-[11px] text-white/80 mt-0.5">
+            <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
               Specify physical prototype scope, binding options, and reference material
             </p>
           </div>
@@ -202,7 +202,7 @@ export const AddProductSamplingStep: React.FC<AddProductSamplingStepProps> = ({
         <button
           type="button"
           onClick={onClose}
-          className="h-7 w-7 rounded flex items-center justify-center text-white/80 hover:text-white hover:bg-white/15 transition-colors cursor-pointer"
+          className="h-8 w-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 dark:hover:text-white transition-colors cursor-pointer"
           aria-label="Close modal"
         >
           <X className="w-4 h-4" />
@@ -241,8 +241,8 @@ export const AddProductSamplingStep: React.FC<AddProductSamplingStepProps> = ({
                 onClick={() => onSetSampleType("full")}
                 className={`p-3 rounded border transition-all cursor-pointer select-none flex items-center justify-between ${
                   sampleType === "full"
-                    ? "border-[#714B67] bg-[#714B67]/5 ring-1 ring-[#714B67]/30 text-zinc-900 dark:text-zinc-100"
-                    : "border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:border-[#714B67]/50"
+                    ? "border-[#006d32] bg-[#006d32]/5 ring-1 ring-[#006d32]/30 text-zinc-900 dark:text-zinc-100"
+                    : "border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:border-[#006d32]/50"
                 }`}
               >
                 <div>
@@ -254,7 +254,7 @@ export const AddProductSamplingStep: React.FC<AddProductSamplingStepProps> = ({
                 <div
                   className={`w-4 h-4 rounded-full border flex items-center justify-center ${
                     sampleType === "full"
-                      ? "border-[#714B67] bg-[#714B67] text-white"
+                      ? "border-[#006d32] bg-[#006d32] text-white"
                       : "border-zinc-300 dark:border-zinc-600"
                   }`}
                 >
@@ -267,8 +267,8 @@ export const AddProductSamplingStep: React.FC<AddProductSamplingStepProps> = ({
                 onClick={() => onSetSampleType("partial")}
                 className={`p-3 rounded border transition-all cursor-pointer select-none flex items-center justify-between ${
                   sampleType === "partial"
-                    ? "border-[#714B67] bg-[#714B67]/5 ring-1 ring-[#714B67]/30 text-zinc-900 dark:text-zinc-100"
-                    : "border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:border-[#714B67]/50"
+                    ? "border-[#006d32] bg-[#006d32]/5 ring-1 ring-[#006d32]/30 text-zinc-900 dark:text-zinc-100"
+                    : "border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:border-[#006d32]/50"
                 }`}
               >
                 <div>
@@ -280,7 +280,7 @@ export const AddProductSamplingStep: React.FC<AddProductSamplingStepProps> = ({
                 <div
                   className={`w-4 h-4 rounded-full border flex items-center justify-center ${
                     sampleType === "partial"
-                      ? "border-[#714B67] bg-[#714B67] text-white"
+                      ? "border-[#006d32] bg-[#006d32] text-white"
                       : "border-zinc-300 dark:border-zinc-600"
                   }`}
                 >
@@ -301,7 +301,7 @@ export const AddProductSamplingStep: React.FC<AddProductSamplingStepProps> = ({
                   value={partialRequirements}
                   onChange={(e) => onSetPartialRequirements(e.target.value)}
                   placeholder="e.g. Spiral binding mockup without inner pages, only 4-color printed cover..."
-                  className="w-full p-2.5 rounded border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 outline-none focus:border-[#714B67] focus:ring-1 focus:ring-[#714B67] resize-none"
+                  className="w-full p-2.5 rounded border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 outline-none focus:border-[#006d32] focus:ring-1 focus:ring-[#006d32] resize-none"
                 />
               </div>
             )}
@@ -320,7 +320,7 @@ export const AddProductSamplingStep: React.FC<AddProductSamplingStepProps> = ({
                 onClick={() => onSetSamplingSearchMode("material_code")}
                 className={`flex-1 h-7 rounded text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                   samplingSearchMode === "material_code"
-                    ? "bg-[#714B67] text-white shadow-xs"
+                    ? "bg-[#006d32] text-white shadow-xs"
                     : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200"
                 }`}
               >
@@ -333,7 +333,7 @@ export const AddProductSamplingStep: React.FC<AddProductSamplingStepProps> = ({
                 onClick={() => onSetSamplingSearchMode("binding")}
                 className={`flex-1 h-7 rounded text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                   samplingSearchMode === "binding"
-                    ? "bg-[#714B67] text-white shadow-xs"
+                    ? "bg-[#006d32] text-white shadow-xs"
                     : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200"
                 }`}
               >
@@ -352,7 +352,7 @@ export const AddProductSamplingStep: React.FC<AddProductSamplingStepProps> = ({
                     value={materialSearchQuery}
                     onChange={(e) => onSetMaterialSearchQuery(e.target.value)}
                     placeholder="Search material code, SKU, or customer reference..."
-                    className="w-full h-9 pl-9 pr-8 rounded border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-medium text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 outline-none focus:border-[#714B67] focus:ring-1 focus:ring-[#714B67]"
+                    className="w-full h-9 pl-9 pr-8 rounded border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-medium text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 outline-none focus:border-[#006d32] focus:ring-1 focus:ring-[#006d32]"
                   />
                   {materialSearchQuery && (
                     <button
@@ -383,13 +383,13 @@ export const AddProductSamplingStep: React.FC<AddProductSamplingStepProps> = ({
                           onClick={() => onSelectDbSample(item)}
                           className={`p-2.5 transition-colors cursor-pointer flex items-center justify-between gap-3 text-left ${
                             isSelected
-                              ? "bg-[#F3E8EE] dark:bg-[#3E2938]/60 border-l-3 border-[#714B67]"
+                              ? "bg-[#006d32]/10 dark:bg-emerald-950/40 border-l-3 border-[#006d32]"
                               : "hover:bg-white dark:hover:bg-zinc-800"
                           }`}
                         >
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2">
-                              <span className="font-mono text-[10.5px] font-bold px-1.5 py-0.2 rounded bg-white dark:bg-zinc-800 text-[#714B67] dark:text-purple-300 border border-[#714B67]/20">
+                              <span className="font-mono text-[10.5px] font-bold px-1.5 py-0.2 rounded bg-white dark:bg-zinc-800 text-[#006d32] dark:text-emerald-300 border border-[#006d32]/20">
                                 {item.material_code || "—"}
                               </span>
                               <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 truncate">
@@ -405,7 +405,7 @@ export const AddProductSamplingStep: React.FC<AddProductSamplingStepProps> = ({
                           <div
                             className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
                               isSelected
-                                ? "border-[#714B67] bg-[#714B67] text-white"
+                                ? "border-[#006d32] bg-[#006d32] text-white"
                                 : "border-zinc-300 dark:border-zinc-600"
                             }`}
                           >
@@ -431,7 +431,7 @@ export const AddProductSamplingStep: React.FC<AddProductSamplingStepProps> = ({
                     <select
                       value={selectedBinding1}
                       onChange={(e) => onSelectBinding1(e.target.value)}
-                      className="w-full h-9 px-3 rounded border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-semibold text-zinc-900 dark:text-zinc-100 outline-none focus:border-[#714B67] cursor-pointer"
+                      className="w-full h-9 px-3 rounded border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-semibold text-zinc-900 dark:text-zinc-100 outline-none focus:border-[#006d32] cursor-pointer"
                     >
                       <option value="">Select Binding 1...</option>
                       {bindingHierarchy.binding1_options.map((opt) => (
@@ -454,7 +454,7 @@ export const AddProductSamplingStep: React.FC<AddProductSamplingStepProps> = ({
                       className={`w-full h-9 px-3 rounded border text-xs font-semibold outline-none ${
                         !selectedBinding1
                           ? "border-[#CED4DA] dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800/40 text-zinc-400 cursor-not-allowed"
-                          : "border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:border-[#714B67] cursor-pointer"
+                          : "border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:border-[#006d32] cursor-pointer"
                       }`}
                     >
                       <option value="">
@@ -484,7 +484,7 @@ export const AddProductSamplingStep: React.FC<AddProductSamplingStepProps> = ({
                       Products matching Binding 1 ({bindingSearchResults.length})
                     </span>
                     {selectedBinding1 && (
-                      <span className="text-[10.5px] text-[#714B67] font-mono font-semibold">
+                      <span className="text-[10.5px] text-[#006d32] font-mono font-semibold">
                         Binding 1: {selectedBinding1}
                       </span>
                     )}
@@ -518,21 +518,21 @@ export const AddProductSamplingStep: React.FC<AddProductSamplingStepProps> = ({
         </div>
 
         {/* Actions Footer */}
-        <div className="px-6 py-3 border-t border-[#CED4DA] dark:border-zinc-700 bg-[#F8F9FA] dark:bg-[#161822] flex items-center justify-between shrink-0">
+        <div className="px-6 py-4 border-t border-slate-100 bg-white dark:border-white/[0.06] dark:bg-[#161822] flex items-center justify-between shrink-0">
           <button
             type="button"
             onClick={onBackToScopes}
-            className="h-8 px-3.5 rounded border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-[#F8F9FA] transition-colors cursor-pointer flex items-center gap-1"
+            className="h-10 px-4 rounded-xl bg-slate-100 dark:bg-white/[0.06] text-xs font-semibold text-slate-700 dark:text-zinc-300 hover:bg-slate-200/80 transition-colors cursor-pointer flex items-center gap-1.5"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Back</span>
           </button>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <button
               type="button"
               onClick={onClose}
-              className="h-8 px-3.5 rounded border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-[#F8F9FA] text-xs font-semibold cursor-pointer transition-colors"
+              className="h-10 px-4 rounded-xl bg-slate-100 dark:bg-white/[0.06] text-slate-600 dark:text-zinc-300 hover:bg-slate-200/80 text-xs font-semibold cursor-pointer transition-colors"
             >
               Cancel
             </button>
@@ -540,7 +540,8 @@ export const AddProductSamplingStep: React.FC<AddProductSamplingStepProps> = ({
             <button
               type="submit"
               disabled={isSubmittingAll}
-              className="h-8 px-4 rounded bg-[#017E84] hover:bg-[#00666A] active:bg-[#005256] text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+              className="h-10 px-5 rounded-xl text-white text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-[0_2px_10px_rgba(0,109,50,0.25)] hover:shadow-[0_4px_14px_rgba(0,109,50,0.35)] disabled:opacity-50 active:scale-98"
+              style={{ background: "linear-gradient(135deg, #006d32 0%, #00d166 100%)" }}
             >
               <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
               <span>Stage Product</span>

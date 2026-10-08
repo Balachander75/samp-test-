@@ -44,3 +44,25 @@ def ensure_design_workflow_columns():
     with engine.begin() as connection:
         for statement in statements:
             connection.execute(text(statement))
+
+
+def ensure_program_review_columns():
+    """Add columns for dual review (Sampling & Plant) to program_requests."""
+    statements = (
+        "ALTER TABLE program_requests ADD COLUMN IF NOT EXISTS sampling_seen_at TIMESTAMPTZ",
+        "ALTER TABLE program_requests ADD COLUMN IF NOT EXISTS sampling_seen_by VARCHAR(255)",
+        "ALTER TABLE program_requests ADD COLUMN IF NOT EXISTS sampling_verdict VARCHAR(64)",
+        "ALTER TABLE program_requests ADD COLUMN IF NOT EXISTS sampling_remark TEXT",
+        "ALTER TABLE program_requests ADD COLUMN IF NOT EXISTS sampling_signed_at TIMESTAMPTZ",
+        "ALTER TABLE program_requests ADD COLUMN IF NOT EXISTS sampling_signed_by VARCHAR(255)",
+        "ALTER TABLE program_requests ADD COLUMN IF NOT EXISTS plant_seen_at TIMESTAMPTZ",
+        "ALTER TABLE program_requests ADD COLUMN IF NOT EXISTS plant_seen_by VARCHAR(255)",
+        "ALTER TABLE program_requests ADD COLUMN IF NOT EXISTS plant_verdict VARCHAR(64)",
+        "ALTER TABLE program_requests ADD COLUMN IF NOT EXISTS plant_remark TEXT",
+        "ALTER TABLE program_requests ADD COLUMN IF NOT EXISTS plant_signed_at TIMESTAMPTZ",
+        "ALTER TABLE program_requests ADD COLUMN IF NOT EXISTS plant_signed_by VARCHAR(255)",
+    )
+    with engine.begin() as connection:
+        for statement in statements:
+            connection.execute(text(statement))
+

@@ -1,4 +1,5 @@
 """SQLAlchemy model exports."""
+from app.models.downstream import CostingEstimation, CreativeBrief, StudioDieline
 from app.models.feasibility import FeasibilityActivityLog, FeasibilityReferenceImage, FeasibilityRequest
 from app.models.master import Customer, Plant, User
 from app.models.program_request import (
@@ -15,6 +16,8 @@ from app.models.sample_request import (
 )
 
 __all__ = [
+    "CostingEstimation",
+    "CreativeBrief",
     "Customer",
     "CreateSampleRequest",
     "DesignRequest",
@@ -28,6 +31,8 @@ __all__ = [
     "ProgramMaterialSpecification",
     "ProgramRequest",
     "SampleRequestType",
+    "StudioDieline",
     "User",
 ]
+
 

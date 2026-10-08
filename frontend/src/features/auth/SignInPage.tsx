@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { User, Lock, Eye, EyeOff, Sun, Moon, ArrowRight, Loader2, X, ShieldCheck, AlertCircle } from "lucide-react";
+import { User, Lock, Eye, EyeOff, ArrowRight, Loader2, X, ShieldCheck, AlertCircle } from "lucide-react";
 import { AuthResponse } from "./types";
 import { API_BASE_URL } from "@/infrastructure/api/client";
 import { persistAuthSession } from "@/lib/session";
-import { useTheme } from "@/context/ThemeContext";
 import logoImg from "@/assets/logo.png";
 import brandHeroImg from "@/assets/brand-hero.jpg";
 
@@ -37,7 +36,6 @@ function parseErrorMessage(data: Record<string, unknown>): ParsedError {
 }
 
 export const SignInPage: React.FC<SignInPageProps> = ({ onSignInSuccess }) => {
-  const { theme, toggleTheme } = useTheme();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(true);
@@ -148,28 +146,6 @@ export const SignInPage: React.FC<SignInPageProps> = ({ onSignInSuccess }) => {
         <div className="absolute -top-[10%] left-[15%] w-[500px] h-[500px] rounded-full bg-[#00d166]/15 dark:bg-[#00d166]/10 blur-[130px]" />
         <div className="absolute -bottom-[15%] right-[15%] w-[550px] h-[550px] rounded-full bg-[#0070ff]/15 dark:bg-[#0070ff]/10 blur-[140px]" />
       </div>
-
-      {/* Top Header: High-Contrast Floating Theme Toggle */}
-      <header className="absolute top-5 right-5 sm:top-7 sm:right-8 z-20">
-        <button
-          type="button"
-          onClick={toggleTheme}
-          aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-          className="flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold text-white/95 bg-black/45 hover:bg-black/65 border border-white/25 shadow-lg backdrop-blur-md transition-all duration-150 cursor-pointer"
-        >
-          {theme === "dark" ? (
-            <>
-              <Sun className="w-3.5 h-3.5 text-amber-400" />
-              <span>Light Mode</span>
-            </>
-          ) : (
-            <>
-              <Moon className="w-3.5 h-3.5 text-[#00d166]" />
-              <span>Dark Mode</span>
-            </>
-          )}
-        </button>
-      </header>
 
       {/* Luminous Floating Notification Toast for Exceptions */}
       {errorInfo && (

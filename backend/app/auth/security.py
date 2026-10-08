@@ -203,8 +203,8 @@ def get_optional_current_user(
     db: Session = Depends(get_db),
 ) -> Optional["User"]:
     """
-    Returns the active user if a valid bearer token is provided;
-    falls back to the first active user (e.g. Admin) if no credentials are provided.
+    Returns the active user if a valid bearer token is provided.
+    Falls back to first active user only in development/debug mode.
     """
     from app.models.master import User
 
@@ -219,7 +219,9 @@ def get_optional_current_user(
         except Exception:
             pass
 
-    return db.query(User).filter(User.is_active == True).first()
+    if not (settings.APP_ENV.lower() in ("production", "prod")) and settings.DEBUG:
+        return db.query(User).filter(User.is_active == True).first()
+    return None
 
 
 def get_current_user(
@@ -228,14 +230,17 @@ def get_current_user(
 ):
     """
     FastAPI dependency that validates the Bearer token and returns the active User ORM object.
-    Falls back to default active user in development / ERP single-tenant mode if no credentials are sent.
+    Enforces strict 401 Unauthorized in production and on expired/invalid credentials.
     """
-    from app.models.master import User  # local import to avoid circular deps
+    from app.models.master import User
+
+    is_prod = settings.APP_ENV.lower() in ("production", "prod")
 
     if credentials is None:
-        fallback_user = db.query(User).filter(User.is_active == True).first()
-        if fallback_user:
-            return fallback_user
+        if not is_prod and settings.DEBUG:
+            fallback_user = db.query(User).filter(User.is_active == True).first()
+            if fallback_user:
+                return fallback_user
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authorization header missing or invalid.",
@@ -245,6 +250,12 @@ def get_current_user(
     try:
         payload = decode_access_token(credentials.credentials)
         user_id = payload.get("sub")
+        if not user_id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token payload.",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
         user = db.query(User).filter(User.id == int(user_id)).first()
         if user is None or not user.is_active:
             raise HTTPException(
@@ -254,14 +265,8 @@ def get_current_user(
             )
         return user
     except HTTPException:
-        fallback_user = db.query(User).filter(User.is_active == True).first()
-        if fallback_user:
-            return fallback_user
         raise
     except Exception:
-        fallback_user = db.query(User).filter(User.is_active == True).first()
-        if fallback_user:
-            return fallback_user
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials.",

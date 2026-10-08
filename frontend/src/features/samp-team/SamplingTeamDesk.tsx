@@ -177,7 +177,7 @@ export const SamplingTeamDesk: React.FC<SamplingTeamDeskProps> = ({ user }) => {
   , [feasibilityReqs]);
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 bg-[#F8F9FA] dark:bg-[#0b0c10] select-text">
+    <div className="flex-1 flex flex-col min-h-0 bg-[#f8f9ff] text-slate-800 select-text">
       {/* ── Toast ── */}
       {toastMessage && (
         <div className="fixed top-16 right-5 z-[70] flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-2xl text-xs font-semibold border border-zinc-800 dark:border-zinc-200/80 max-w-sm">
@@ -277,7 +277,7 @@ export const SamplingTeamDesk: React.FC<SamplingTeamDeskProps> = ({ user }) => {
             <button
               type="button"
               onClick={() => navigate("/samp-team-work/feasibility")}
-              className="bg-white dark:bg-[#12141d] rounded-xl border border-amber-200 dark:border-amber-900/40 p-4 text-left hover:border-amber-400 transition shadow-2xs group cursor-pointer"
+              className="bg-white dark:bg-[#12141d] rounded-xl border border-amber-200 dark:border-amber-900/40 p-4 text-left hover:border-amber-400 transition shadow-2xs group cursor-pointer card-hover-lift"
             >
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">Needs Claim</span>
@@ -297,7 +297,7 @@ export const SamplingTeamDesk: React.FC<SamplingTeamDeskProps> = ({ user }) => {
             <button
               type="button"
               onClick={() => navigate("/samp-team-work/feasibility")}
-              className="bg-white dark:bg-[#12141d] rounded-xl border border-sky-200 dark:border-sky-900/40 p-4 text-left hover:border-sky-400 transition shadow-2xs cursor-pointer"
+              className="bg-white dark:bg-[#12141d] rounded-xl border border-sky-200 dark:border-sky-900/40 p-4 text-left hover:border-sky-400 transition shadow-2xs cursor-pointer card-hover-lift"
             >
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-sky-700 dark:text-sky-400">My Tasks</span>
@@ -314,7 +314,7 @@ export const SamplingTeamDesk: React.FC<SamplingTeamDeskProps> = ({ user }) => {
             </button>
 
             {/* Evaluated */}
-            <div className="bg-white dark:bg-[#12141d] rounded-xl border border-emerald-200 dark:border-emerald-900/40 p-4 shadow-2xs">
+            <div className="bg-white dark:bg-[#12141d] rounded-xl border border-emerald-200 dark:border-emerald-900/40 p-4 shadow-2xs card-hover-lift transition-all">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">Evaluated</span>
                 <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 flex items-center justify-center">
@@ -330,7 +330,7 @@ export const SamplingTeamDesk: React.FC<SamplingTeamDeskProps> = ({ user }) => {
             </div>
 
             {/* Awaiting Marketing Decision */}
-            <div className="bg-white dark:bg-[#12141d] rounded-xl border border-[#714B67]/25 dark:border-purple-900/40 p-4 shadow-2xs">
+            <div className="bg-white dark:bg-[#12141d] rounded-xl border border-[#714B67]/25 dark:border-purple-900/40 p-4 shadow-2xs card-hover-lift transition-all">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#714B67] dark:text-purple-400">Awaiting MKT</span>
                 <div className="w-7 h-7 rounded-lg bg-purple-50 dark:bg-purple-950/50 flex items-center justify-center">
@@ -564,7 +564,7 @@ export const SamplingTeamDesk: React.FC<SamplingTeamDeskProps> = ({ user }) => {
                   border: "border-purple-200 dark:border-purple-900/40",
                 },
               ].map((item) => (
-                <div key={item.step} className={`p-3.5 rounded-lg border ${item.bg} ${item.border}`}>
+                <div key={item.step} className={`p-3.5 rounded-lg border card-hover-lift transition-all ${item.bg} ${item.border}`}>
                   <div className={`text-[11px] font-mono font-bold mb-1.5 ${item.color}`}>
                     Step {item.step} · {item.title}
                   </div>

@@ -2,7 +2,8 @@ import React from "react";
 import { SampleRequestItem, AddProgramMaterialPayload } from "../../types";
 import { ParsedFeasibilityDetails, ParsedImageRef, ParsedMatrixRow } from "../../utils/feasibilityParsers";
 import { InspectorMaterialsTable } from "./InspectorMaterialsTable";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Eye } from "lucide-react";
+import { getRequestTypes } from "../../sampling/utils/requestTypeUtils";
 
 export interface InspectorSpecsTabProps {
   trackType: string | null;
@@ -56,8 +57,10 @@ export const InspectorSpecsTab: React.FC<InspectorSpecsTabProps> = ({
   onNewRowDataChange,
   onSaveNewRow,
 }) => {
+  const requestTypes = getRequestTypes(activeRequest);
+
   return (
-    <div className="py-4 space-y-5">
+    <div className="py-4 space-y-6">
       {trackType === "program_planning" ? (
         <InspectorMaterialsTable
           unifiedMatrixRows={unifiedMatrixRows}
@@ -75,117 +78,124 @@ export const InspectorSpecsTab: React.FC<InspectorSpecsTabProps> = ({
           onNewRowDataChange={onNewRowDataChange}
           onSaveNewRow={onSaveNewRow}
         />
-      ) : trackType === "marketing_request" ? (
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="p-3 border border-[#CED4DA] rounded bg-[#F8F9FA] dark:bg-zinc-900">
-              <span className="font-mono text-[10px] uppercase font-bold text-neutral-400 block mb-1">
-                01. Creative Art
-              </span>
-              <div className="font-bold text-neutral-800 dark:text-zinc-200">
-                {request.trend || "Artwork Series"}
-              </div>
-              <div className="text-[10px] text-neutral-500 mt-1">
-                {request.numberOfDesigns || 3} Artworks Required
-              </div>
-            </div>
-            <div className="p-3 border border-[#CED4DA] rounded bg-[#F8F9FA] dark:bg-zinc-900">
-              <span className="font-mono text-[10px] uppercase font-bold text-neutral-400 block mb-1">
-                02. CAD Dummy
-              </span>
-              <div className="font-bold text-neutral-800 dark:text-zinc-200">
-                {request.mockupRequired || "Standard Mockup"}
-              </div>
-              <div className="text-[10px] text-neutral-500 mt-1">Prototype verification</div>
-            </div>
-            <div className="p-3 border border-[#CED4DA] rounded bg-[#F8F9FA] dark:bg-zinc-900">
-              <span className="font-mono text-[10px] uppercase font-bold text-neutral-400 block mb-1">
-                03. Sampling
-              </span>
-              <div className="font-bold text-neutral-800 dark:text-zinc-200">
-                {request.qtyForSampling || 6} Pieces
-              </div>
-              <div className="text-[10px] text-neutral-500 mt-1">Plant finished sample</div>
-            </div>
-            <div className="p-3 border border-[#CED4DA] rounded bg-[#F8F9FA] dark:bg-zinc-900">
-              <span className="font-mono text-[10px] uppercase font-bold text-neutral-400 block mb-1">
-                04. Costing
-              </span>
-              <div className="font-bold text-neutral-800 dark:text-zinc-200">
-                {Number(request.qtyDesignCosting || 50000).toLocaleString()} Units
-              </div>
-              <div className="text-[10px] text-neutral-500 mt-1">BOM commercial run</div>
-            </div>
-          </div>
-        </div>
       ) : (
-        /* Feasibility Specifications & Scope */
-        <div className="space-y-5">
-          {/* Scope Metadata Summary */}
+        <div className="space-y-6">
+          {/* ── 1. Requested Deliverable Scopes Matrix ── */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="p-3 rounded border border-neutral-200 dark:border-zinc-800 bg-[#FBFBFC] dark:bg-zinc-900/50">
-              <span className="font-mono text-[10px] uppercase font-bold text-neutral-400 block mb-1">
-                Feasibility Category
+            <div className="p-3.5 rounded-2xl bg-[#eff4ff]/60 dark:bg-white/5 border border-slate-100/80 dark:border-white/5">
+              <span className="font-display text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-400 block mb-1">
+                Creative Design
               </span>
-              <div className="font-bold text-xs text-neutral-800 dark:text-zinc-200 font-mono">
-                {feasibilityDetails.category || "Custom Specification"}
+              <div className="font-display font-bold text-xs text-slate-900 dark:text-zinc-100">
+                {requestTypes.includes("design") ? "Required" : "Not Required"}
+              </div>
+              <div className="text-[10px] text-slate-500 font-mono mt-0.5">
+                {request.numberOfDesigns || 1} Artwork Files
               </div>
             </div>
-            <div className="p-3 rounded border border-neutral-200 dark:border-zinc-800 bg-[#FBFBFC] dark:bg-zinc-900/50">
-              <span className="font-mono text-[10px] uppercase font-bold text-neutral-400 block mb-1">
-                Target Fulfillment
+
+            <div className="p-3.5 rounded-2xl bg-[#eff4ff]/60 dark:bg-white/5 border border-slate-100/80 dark:border-white/5">
+              <span className="font-display text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-400 block mb-1">
+                Studio CAD / Dieline
               </span>
-              <div className="font-bold text-xs text-[#017E84] dark:text-teal-400">
-                {activeRequest.targetPlant || "Plant 1 (Pune)"}
+              <div className="font-display font-bold text-xs text-slate-900 dark:text-zinc-100">
+                {requestTypes.includes("mockup") ? "Required" : "Standard"}
+              </div>
+              <div className="text-[10px] text-slate-500 font-mono mt-0.5">
+                CAD verification
               </div>
             </div>
-            <div className="p-3 rounded border border-neutral-200 dark:border-zinc-800 bg-[#FBFBFC] dark:bg-zinc-900/50">
-              <span className="font-mono text-[10px] uppercase font-bold text-neutral-400 block mb-1">
-                Target Order Volume
+
+            <div className="p-3.5 rounded-2xl bg-[#eff4ff]/60 dark:bg-white/5 border border-slate-100/80 dark:border-white/5">
+              <span className="font-display text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-400 block mb-1">
+                Physical Sampling
               </span>
-              <div className="font-bold text-xs text-[#714B67] dark:text-purple-300 font-mono">
-                {activeRequest.qtyDesignCosting
-                  ? `${Number(activeRequest.qtyDesignCosting).toLocaleString()} Units`
-                  : "Evaluation Prototype"}
+              <div className="font-display font-bold text-xs text-slate-900 dark:text-zinc-100">
+                {requestTypes.includes("sample") ? "Required" : "Optional"}
+              </div>
+              <div className="text-[10px] text-slate-500 font-mono mt-0.5">
+                {request.qtyForSampling || 6} Prototype Units
               </div>
             </div>
-            <div className="p-3 rounded border border-neutral-200 dark:border-zinc-800 bg-[#FBFBFC] dark:bg-zinc-900/50">
-              <span className="font-mono text-[10px] uppercase font-bold text-neutral-400 block mb-1">
-                Required By
+
+            <div className="p-3.5 rounded-2xl bg-[#eff4ff]/60 dark:bg-white/5 border border-slate-100/80 dark:border-white/5">
+              <span className="font-display text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-400 block mb-1">
+                Commercial Costing
               </span>
-              <div className="font-bold text-xs text-neutral-800 dark:text-zinc-200 font-mono">
-                {activeRequest.sampleRequiredDate || activeRequest.dateRequestCreated || "Flexible"}
+              <div className="font-display font-bold text-xs text-slate-900 dark:text-zinc-100">
+                {requestTypes.includes("costing") ? "BOM Required" : "Standard"}
+              </div>
+              <div className="text-[10px] text-slate-500 font-mono mt-0.5">
+                {Number(request.qtyDesignCosting || 10000).toLocaleString()} Run Size
               </div>
             </div>
           </div>
 
-          {/* Technical Scope & Description */}
-          <div>
-            <div className="text-[11px] font-bold uppercase tracking-wider text-neutral-500 dark:text-zinc-400 mb-2 font-mono flex items-center gap-1.5">
-              <span>Technical Description & Product Scope</span>
-            </div>
-            <div className="p-3.5 rounded border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs text-neutral-900 dark:text-zinc-100 leading-relaxed font-sans whitespace-pre-wrap">
-              {displayDescription || "No technical description specified for this feasibility check."}
-            </div>
-          </div>
-
-          {/* Marketing Remarks */}
-          {displayRemark && (
+          {/* ── 2. Technical Scope & Specifications Card ── */}
+          <div className="p-5 rounded-2xl bg-white dark:bg-[#161928] border border-slate-100 dark:border-white/5 shadow-[0_4px_20px_rgba(11,28,48,0.02)] space-y-4">
             <div>
-              <div className="text-[11px] font-bold uppercase tracking-wider text-neutral-500 dark:text-zinc-400 mb-1.5 font-mono">
-                Marketing Commercial Directives
+              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 mb-2 font-display">
+                Technical Specification &amp; Product Description
               </div>
-              <div className="p-3 rounded border border-amber-200 dark:border-amber-900/40 bg-amber-50/30 dark:bg-amber-950/10 text-xs text-amber-900 dark:text-amber-200 italic font-sans leading-relaxed">
-                "{displayRemark}"
+              <div className="p-4 rounded-xl bg-slate-50/70 dark:bg-zinc-900/40 border border-slate-100/80 dark:border-white/5 text-xs text-slate-800 dark:text-zinc-200 leading-relaxed font-sans whitespace-pre-wrap">
+                {displayDescription || "No detailed technical description recorded for this item."}
               </div>
             </div>
-          )}
 
-          {/* Reference Web Links */}
+            {/* Marketing Remarks / Directives */}
+            {displayRemark && (
+              <div>
+                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 mb-1.5 font-display">
+                  Marketing Directives &amp; Commercial Notes
+                </div>
+                <div className="p-3.5 rounded-xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/30 text-xs text-amber-900 dark:text-amber-200 font-sans leading-relaxed italic">
+                  "{displayRemark}"
+                </div>
+              </div>
+            )}
+
+            {/* Key-Value Specifications Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 pt-2 border-t border-slate-100 dark:border-white/5 text-xs">
+              {activeRequest.materialCode && (
+                <div className="flex items-baseline py-1">
+                  <span className="w-36 text-slate-400 font-medium shrink-0">Material Code</span>
+                  <span className="flex-1 font-mono font-bold text-slate-800 dark:text-zinc-200">
+                    {activeRequest.materialCode}
+                  </span>
+                </div>
+              )}
+              {activeRequest.brandName && (
+                <div className="flex items-baseline py-1">
+                  <span className="w-36 text-slate-400 font-medium shrink-0">Brand Name</span>
+                  <span className="flex-1 font-semibold text-slate-800 dark:text-zinc-200">
+                    {activeRequest.brandName}
+                  </span>
+                </div>
+              )}
+              {activeRequest.targetPlant && (
+                <div className="flex items-baseline py-1">
+                  <span className="w-36 text-slate-400 font-medium shrink-0">Target Facility</span>
+                  <span className="flex-1 text-slate-800 dark:text-zinc-200">
+                    Plant {activeRequest.targetPlant}
+                  </span>
+                </div>
+              )}
+              {activeRequest.sampleRequiredDate && (
+                <div className="flex items-baseline py-1">
+                  <span className="w-36 text-slate-400 font-medium shrink-0">Customer Due Date</span>
+                  <span className="flex-1 font-mono font-bold text-[#006d32] dark:text-[#00d166]">
+                    {activeRequest.sampleRequiredDate}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* ── 3. Reference URLs & Links ── */}
           {feasibilityDetails.referenceLinks.length > 0 && (
-            <div>
-              <div className="text-[11px] font-bold uppercase tracking-wider text-neutral-500 dark:text-zinc-400 mb-2 font-mono">
-                Client Reference URLs & Benchmark Links ({feasibilityDetails.referenceLinks.length})
+            <div className="space-y-2">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 font-display">
+                Client Reference URLs &amp; Benchmark Links ({feasibilityDetails.referenceLinks.length})
               </div>
               <div className="flex flex-wrap gap-2">
                 {feasibilityDetails.referenceLinks.map((url, i) => (
@@ -194,9 +204,9 @@ export const InspectorSpecsTab: React.FC<InspectorSpecsTabProps> = ({
                     href={url.startsWith("http") ? url : `https://${url}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:border-[#714B67] hover:text-[#714B67] text-xs font-mono text-neutral-700 dark:text-zinc-300 transition shadow-2xs group"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100/70 hover:bg-slate-200/70 dark:bg-zinc-800/60 dark:hover:bg-zinc-700/60 text-xs font-mono text-slate-700 dark:text-zinc-300 transition group"
                   >
-                    <ExternalLink className="w-3.5 h-3.5 text-neutral-400 group-hover:text-[#714B67]" />
+                    <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#006d32]" />
                     <span className="truncate max-w-xs">{url.replace(/^https?:\/\//, "")}</span>
                   </a>
                 ))}
@@ -204,34 +214,35 @@ export const InspectorSpecsTab: React.FC<InspectorSpecsTabProps> = ({
             </div>
           )}
 
-          {/* Direct Photo Thumbnails in Specs */}
+          {/* ── 4. Attached Photos & Mockup Gallery ── */}
           {previewableImages.length > 0 && (
-            <div>
-              <div className="text-[11px] font-bold uppercase tracking-wider text-neutral-500 dark:text-zinc-400 mb-2 font-mono">
-                Attached Product Photos ({previewableImages.length})
+            <div className="space-y-2">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 font-display">
+                Attached Reference Images &amp; Mockups ({previewableImages.length})
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {previewableImages.map((img, idx) => (
                   <div
                     key={img.id}
                     onClick={() => img.url && onSelectPreviewImage(img.url)}
-                    className="group relative rounded border border-[#CED4DA] dark:border-zinc-700 bg-neutral-50 dark:bg-zinc-900 overflow-hidden cursor-pointer hover:border-[#714B67] transition shadow-2xs"
+                    className="group relative rounded-2xl bg-slate-100/60 dark:bg-zinc-900 border border-slate-200/60 dark:border-white/5 overflow-hidden cursor-pointer transition hover:shadow-md"
                   >
-                    <div className="aspect-[4/3] w-full bg-neutral-100 dark:bg-zinc-800 overflow-hidden relative">
+                    <div className="aspect-[4/3] w-full bg-slate-100 dark:bg-zinc-800 overflow-hidden relative">
                       <img
                         src={imageSourceFor(img.url)}
                         alt={img.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition duration-200"
                       />
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-                        <span className="text-[10px] font-medium text-white bg-black/70 px-2 py-0.5 rounded">
-                          View Preview
+                        <span className="text-[11px] font-semibold text-white bg-black/60 px-2.5 py-1 rounded-lg backdrop-blur-xs flex items-center gap-1">
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>Preview</span>
                         </span>
                       </div>
                     </div>
-                    <div className="p-1.5 flex items-center justify-between text-[10px] text-neutral-600 dark:text-zinc-400">
-                      <span className="truncate">{img.name}</span>
-                      <span className="font-mono text-neutral-400">#{idx + 1}</span>
+                    <div className="p-2 flex items-center justify-between text-[11px] text-slate-600 dark:text-zinc-400">
+                      <span className="truncate font-medium">{img.name}</span>
+                      <span className="font-mono text-[10px] text-slate-400">#{idx + 1}</span>
                     </div>
                   </div>
                 ))}
@@ -243,3 +254,5 @@ export const InspectorSpecsTab: React.FC<InspectorSpecsTabProps> = ({
     </div>
   );
 };
+
+export default InspectorSpecsTab;

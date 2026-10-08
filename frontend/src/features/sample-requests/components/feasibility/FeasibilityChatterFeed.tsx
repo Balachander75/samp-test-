@@ -1,8 +1,6 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useRef, useEffect } from "react";
 import { SampleRequestItem, FeasibilityActivityItem } from "../../types";
 import { formatOdooLogDate } from "../../utils/dateUtils";
-import { cleanFeasibilityDescription } from "@/infrastructure/api";
-import { Clock } from "lucide-react";
 import { UserProfile } from "@/features/auth";
 
 export interface FeasibilityChatterFeedProps {
@@ -12,12 +10,14 @@ export interface FeasibilityChatterFeedProps {
   currentUser?: UserProfile | null;
 }
 
-interface TimeLogEvent {
+interface ChatLogEvent {
   id: string | number;
+  kind: "system_event" | "marketing_message" | "sampling_message";
   actorName: string;
   actorDepartment: string;
   title: string;
   summary: string;
+  detailRemark?: string;
   timestamp: string;
   badge?: {
     text: string;
@@ -35,13 +35,30 @@ function getInitials(name?: string): string {
   return clean.slice(0, 2).toUpperCase();
 }
 
+function formatTimeOnly(dateInput?: string | Date | null): string {
+  if (!dateInput) return "";
+  try {
+    const d = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
+    if (isNaN(d.getTime())) return "";
+    return d.toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  } catch {
+    return "";
+  }
+}
+
 export const FeasibilityChatterFeed: React.FC<FeasibilityChatterFeedProps> = ({
   activeRequest,
   classificationLabel,
 }) => {
-  // Compile concise, 1-2 line chronological time log entries
-  const logEvents = useMemo<TimeLogEvent[]>(() => {
-    const events: TimeLogEvent[] = [];
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+  // Compile chronological WhatsApp-style timeline events
+  const chatEvents = useMemo<ChatLogEvent[]>(() => {
+    const events: ChatLogEvent[] = [];
     const recordedActions = new Set<string>();
 
     const rawActivities: FeasibilityActivityItem[] = Array.isArray(activeRequest.activities)
@@ -59,50 +76,56 @@ export const FeasibilityChatterFeed: React.FC<FeasibilityChatterFeedProps> = ({
           const author = act.actorName || activeRequest.createdBy || "Marketing Desk";
           events.push({
             id: act.id,
+            kind: "marketing_message",
             actorName: author,
             actorDepartment: act.actorDepartment || "Marketing",
-            title: "Raised Request",
-            summary: `Submitted feasibility inquiry for ${activeRequest.customer || "Client"} (${classificationLabel}).`,
+            title: "Feasibility Inquiry Raised",
+            summary: `Submitted feasibility inquiry for ${activeRequest.customer || "General Client"}. Scope: ${classificationLabel}.`,
             timestamp: act.createdAt || activeRequest.createdAt || activeRequest.dateRequestCreated || "",
             badge: { text: "Intake", variant: "indigo" },
           });
         } else if (act.action === "TASK_CLAIMED") {
-          const assignee = act.actorName || activeRequest.takenBySamp || "SAMP Lab Engineer";
+          const assignee = act.actorName || payload.claimed_by || activeRequest.takenBySamp || "SAMP Engineer";
           events.push({
             id: act.id,
+            kind: "system_event",
             actorName: assignee,
-            actorDepartment: act.actorDepartment || "SAMP Team",
-            title: "Claimed Assessment",
-            summary: "Assigned for manufacturing capability & tooling feasibility review.",
+            actorDepartment: "SAMP",
+            title: "Claimed Task",
+            summary: `${assignee} joined to evaluate this feasibility`,
             timestamp: act.createdAt || activeRequest.takenAtSamp || "",
-            badge: { text: "Under Review", variant: "sky" },
+            badge: { text: "Assigned", variant: "sky" },
           });
         } else if (act.action === "SAMP_EVALUATED") {
           const verdict = payload.verdict || activeRequest.samplingFeasibilityResponse || "Yes";
-          const remark = payload.remark || activeRequest.samplingFeasibilityRemark || "Technical specs verified feasible.";
-          const reviewer = act.actorName || activeRequest.samplingFeasibilityApprovedBy || "SAMP Lab";
+          const remark = payload.remark || activeRequest.samplingFeasibilityRemark || "";
+          const reviewer = act.actorName || activeRequest.samplingFeasibilityApprovedBy || "SAMP Team";
           events.push({
             id: act.id,
+            kind: "sampling_message",
             actorName: reviewer,
-            actorDepartment: act.actorDepartment || "SAMP Team",
+            actorDepartment: "SAMP Team",
             title: `Technical Verdict: ${verdict}`,
-            summary: remark,
+            summary: verdict === "Maybe" ? "Chose Maybe" : verdict === "Yes" ? "Feasible" : "Not Feasible",
+            detailRemark: remark,
             timestamp: act.createdAt || activeRequest.feasibilityClosedAt || "",
             badge: {
-              text: verdict === "Yes" ? "Feasible" : verdict === "No" ? "Not Feasible" : "Conditional",
+              text: verdict === "Yes" ? "Feasible" : verdict === "No" ? "Not Feasible" : "Maybe",
               variant: verdict === "Yes" ? "emerald" : verdict === "No" ? "rose" : "amber",
             },
           });
         } else if (act.action === "MARKETING_DECIDED") {
           const decision = payload.decision || activeRequest.marketingDecision || "Accepted";
-          const remark = payload.remark || activeRequest.marketingDecisionRemark || "Commercial sign-off concluded.";
+          const remark = payload.remark || activeRequest.marketingDecisionRemark || "";
           const decider = act.actorName || activeRequest.marketingDecisionBy || "Marketing Authority";
           events.push({
             id: act.id,
+            kind: "marketing_message",
             actorName: decider,
-            actorDepartment: act.actorDepartment || "Marketing",
-            title: `Commercial: ${decision}`,
-            summary: remark,
+            actorDepartment: "Marketing",
+            title: `Commercial Decision: ${decision}`,
+            summary: decision === "Accepted" ? "Commercial Approved" : "Commercial Dropped",
+            detailRemark: remark,
             timestamp: act.createdAt || activeRequest.marketingDecisionAt || "",
             badge: {
               text: decision === "Accepted" ? "Approved" : "Dropped",
@@ -113,18 +136,22 @@ export const FeasibilityChatterFeed: React.FC<FeasibilityChatterFeedProps> = ({
           const srNum = payload.sample_sr_number || activeRequest.convertedSrNumber || "";
           events.push({
             id: act.id,
-            actorName: act.actorName || activeRequest.convertedBy || "Marketing",
-            actorDepartment: act.actorDepartment || "Operations",
+            kind: "system_event",
+            actorName: act.actorName || activeRequest.convertedBy || "Marketing Lead",
+            actorDepartment: "Operations",
             title: "Converted to Sample",
-            summary: `Commissioned official sample request ${srNum}.`,
+            summary: `Commissioned official sample request ${srNum}`,
             timestamp: act.createdAt || activeRequest.convertedAt || "",
             badge: { text: srNum ? `Sample: ${srNum}` : "Converted", variant: "emerald" },
           });
         } else if (act.action === "NOTE_ADDED") {
+          const dept = (act.actorDepartment || "").toLowerCase();
+          const isSamp = dept.includes("samp");
           events.push({
             id: act.id,
+            kind: isSamp ? "sampling_message" : "marketing_message",
             actorName: act.actorName || "Team Member",
-            actorDepartment: act.actorDepartment || "Operations",
+            actorDepartment: act.actorDepartment || (isSamp ? "SAMP Team" : "Marketing"),
             title: "Internal Note",
             summary: payload.note || "",
             timestamp: act.createdAt || "",
@@ -133,15 +160,16 @@ export const FeasibilityChatterFeed: React.FC<FeasibilityChatterFeedProps> = ({
         }
       });
 
-    // 2. Synthesize canonical timeline events if not recorded in DB activities
+    // 2. Synthesize canonical timeline events if not present in DB activities
     if (!recordedActions.has("CREATED")) {
       const author = activeRequest.createdBy || "Marketing Desk";
       events.push({
         id: "synth-create",
+        kind: "marketing_message",
         actorName: author,
         actorDepartment: "Marketing",
-        title: "Raised Request",
-        summary: `Submitted feasibility inquiry for ${activeRequest.customer || "General Client"} (${classificationLabel}).`,
+        title: "Feasibility Inquiry Raised",
+        summary: `Submitted feasibility inquiry for ${activeRequest.customer || "General Client"}. Scope: ${classificationLabel}.`,
         timestamp: activeRequest.createdAt || activeRequest.dateRequestCreated || "",
         badge: { text: "Intake", variant: "indigo" },
       });
@@ -150,10 +178,11 @@ export const FeasibilityChatterFeed: React.FC<FeasibilityChatterFeedProps> = ({
     if (!recordedActions.has("TASK_CLAIMED") && activeRequest.takenBySamp) {
       events.push({
         id: "synth-claim",
+        kind: "system_event",
         actorName: activeRequest.takenBySamp,
         actorDepartment: "SAMP Team",
         title: "Claimed Assessment",
-        summary: "Assigned for manufacturing capability & tooling feasibility review.",
+        summary: `${activeRequest.takenBySamp} joined to evaluate this feasibility`,
         timestamp: activeRequest.takenAtSamp || activeRequest.createdAt || "",
         badge: { text: "Under Review", variant: "sky" },
       });
@@ -163,13 +192,15 @@ export const FeasibilityChatterFeed: React.FC<FeasibilityChatterFeedProps> = ({
       const verdict = activeRequest.samplingFeasibilityResponse;
       events.push({
         id: "synth-evaluated",
-        actorName: activeRequest.samplingFeasibilityApprovedBy || "SAMP Lab",
+        kind: "sampling_message",
+        actorName: activeRequest.samplingFeasibilityApprovedBy || "SAMP Team",
         actorDepartment: "SAMP Team",
         title: `Technical Verdict: ${verdict}`,
-        summary: activeRequest.samplingFeasibilityRemark || "Technical specs verified feasible with plant tooling.",
+        summary: verdict === "Maybe" ? "Chose Maybe" : verdict === "Yes" ? "Feasible" : "Not Feasible",
+        detailRemark: activeRequest.samplingFeasibilityRemark || undefined,
         timestamp: activeRequest.feasibilityClosedAt || activeRequest.takenAtSamp || "",
         badge: {
-          text: verdict === "Yes" ? "Feasible" : verdict === "No" ? "Not Feasible" : "Conditional",
+          text: verdict === "Yes" ? "Feasible" : verdict === "No" ? "Not Feasible" : "Maybe",
           variant: verdict === "Yes" ? "emerald" : verdict === "No" ? "rose" : "amber",
         },
       });
@@ -179,10 +210,12 @@ export const FeasibilityChatterFeed: React.FC<FeasibilityChatterFeedProps> = ({
       const decision = activeRequest.marketingDecision;
       events.push({
         id: "synth-decision",
+        kind: "marketing_message",
         actorName: activeRequest.marketingDecisionBy || "Marketing Authority",
         actorDepartment: "Marketing",
-        title: `Commercial: ${decision}`,
-        summary: activeRequest.marketingDecisionRemark || "Commercial sign-off concluded.",
+        title: `Commercial Decision: ${decision}`,
+        summary: decision === "Accepted" ? "Commercial Approved" : "Commercial Dropped",
+        detailRemark: activeRequest.marketingDecisionRemark || undefined,
         timestamp: activeRequest.marketingDecisionAt || "",
         badge: {
           text: decision === "Accepted" ? "Approved" : "Dropped",
@@ -194,110 +227,192 @@ export const FeasibilityChatterFeed: React.FC<FeasibilityChatterFeedProps> = ({
     if (!recordedActions.has("CONVERTED_TO_SAMPLING") && activeRequest.convertedSrNumber) {
       events.push({
         id: "synth-converted",
-        actorName: activeRequest.convertedBy || "Marketing",
+        kind: "system_event",
+        actorName: activeRequest.convertedBy || "Marketing Lead",
         actorDepartment: "Operations",
         title: "Converted to Sample",
-        summary: `Commissioned official sample request ${activeRequest.convertedSrNumber}.`,
+        summary: `Commissioned official sample request ${activeRequest.convertedSrNumber}`,
         timestamp: activeRequest.convertedAt || "",
         badge: { text: `Sample: ${activeRequest.convertedSrNumber}`, variant: "emerald" },
       });
     }
 
-    // Sort descending by timestamp
+    // Sort ascending (chronological: oldest at top, newest at bottom like WhatsApp)
     return events.sort((a, b) => {
       const timeA = new Date(a.timestamp).getTime() || 0;
       const timeB = new Date(b.timestamp).getTime() || 0;
-      return timeB - timeA;
+      return timeA - timeB;
     });
   }, [activeRequest, classificationLabel]);
 
-  // Color variants mapping
-  const badgeStyles = {
-    emerald: "bg-emerald-50 dark:bg-emerald-950/40 text-[#006d32] dark:text-[#00d166] border-emerald-200/60 dark:border-emerald-800/40",
-    amber: "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border-amber-200/60 dark:border-amber-800/40",
-    rose: "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border-rose-200/60 dark:border-rose-800/40",
-    sky: "bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-400 border-sky-200/60 dark:border-sky-800/40",
-    indigo: "bg-[#eff4ff] dark:bg-[#006d32]/15 text-[#006d32] dark:text-[#00d166] border-[#006d32]/20 dark:border-[#006d32]/30",
-    neutral: "bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border-slate-200 dark:border-zinc-700",
-  };
+  // Scroll to bottom on load or new events
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [chatEvents.length]);
+
 
   return (
-    <div className="w-80 lg:w-[390px] bg-[#f8f9ff] dark:bg-[#131622] flex flex-col h-full overflow-hidden select-none shadow-[-12px_0_36px_rgba(11,28,48,0.03)] z-10 relative">
-      {/* ── Time Log Header ── */}
-      <div className="px-5 py-3.5 bg-white/80 dark:bg-[#161826]/80 backdrop-blur-xl flex items-center justify-between sticky top-0 z-20 border-b border-slate-100 dark:border-white/5 shadow-[0_2px_10px_rgba(11,28,48,0.02)]">
-        <div className="flex items-center gap-2">
-          <Clock className="w-4 h-4 text-[#006d32] dark:text-[#00d166]" />
-          <h2 className="font-display font-bold text-sm text-slate-900 dark:text-zinc-100 tracking-tight leading-none">
-            Time Log
+    <div className="w-80 lg:w-[390px] bg-[#f8f9ff] dark:bg-[#131622] flex flex-col h-full overflow-hidden select-text shadow-[-12px_0_36px_rgba(11,28,48,0.03)] z-10 relative">
+      {/* ── 1. Top Header ── */}
+      <div className="px-4 py-3 bg-white/90 dark:bg-[#161826]/90 backdrop-blur-xl flex items-center justify-between sticky top-0 z-20 border-b border-slate-100 dark:border-white/5 shadow-[0_2px_10px_rgba(11,28,48,0.02)]">
+        <div>
+          <h2 className="font-display font-bold text-xs text-slate-900 dark:text-zinc-100 tracking-tight leading-none">
+            Activity &amp; Communication Log
           </h2>
+          <span className="text-[10px] text-slate-400 dark:text-zinc-500 font-sans mt-0.5 block">
+            Marketing &amp; SAMP Team Handoff
+          </span>
         </div>
 
-        <span className="text-[11px] font-display text-[#006d32] dark:text-[#00d166] bg-[#eff4ff] dark:bg-[#006d32]/20 px-2.5 py-0.5 rounded-full font-bold">
-          {logEvents.length} {logEvents.length === 1 ? "Record" : "Records"}
+        <span className="text-[10.5px] font-mono text-[#006d32] dark:text-[#00d166] bg-[#eff4ff] dark:bg-[#006d32]/20 px-2.5 py-0.5 rounded-full font-bold border border-[#006d32]/20">
+          {chatEvents.length} {chatEvents.length === 1 ? "Event" : "Events"}
         </span>
       </div>
 
-      {/* ── Chronological Time Log Stream (Max 1-2 lines per entry) ── */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3.5">
-        {logEvents.length === 0 ? (
+      {/* ── 2. WhatsApp-Style Chronological Stream ── */}
+      <div className="flex-1 overflow-y-auto p-3.5 space-y-3 font-sans">
+        {chatEvents.length === 0 ? (
           <div className="py-12 text-center text-slate-400 font-display text-xs">
-            No time log records found.
+            No activity records found.
           </div>
         ) : (
-          logEvents.map((evt, idx) => {
-            return (
-              <div key={evt.id} className="relative flex items-start gap-2.5 select-text group">
-                {/* Connecting Vertical Line */}
-                {idx !== logEvents.length - 1 && (
-                  <div className="absolute left-3.5 top-7 bottom-[-14px] w-px bg-slate-200 dark:bg-white/10" />
-                )}
-
-                {/* User Initials Avatar (No icon) */}
-                <div
-                  className="w-7 h-7 rounded-full bg-[#eff4ff] dark:bg-[#006d32]/25 text-[#006d32] dark:text-[#00d166] font-display font-bold text-[10.5px] flex items-center justify-center shrink-0 border border-[#006d32]/20 shadow-2xs z-10"
-                  title={`${evt.actorName} (${evt.actorDepartment})`}
-                >
-                  {getInitials(evt.actorName)}
+          chatEvents.map((evt) => {
+            // Case A: WhatsApp System Event Pill (Task Claimed, Converted to Sampling)
+            if (evt.kind === "system_event") {
+              const isClaim = evt.title.includes("Claim");
+              return (
+                <div key={evt.id} className="flex justify-center my-2.5 select-none">
+                  <div
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium shadow-2xs border backdrop-blur-xs ${
+                      isClaim
+                        ? "bg-sky-50/90 text-sky-900 border-sky-200/80 dark:bg-sky-950/60 dark:text-sky-200 dark:border-sky-800/40"
+                        : "bg-emerald-50/90 text-emerald-900 border-emerald-200/80 dark:bg-emerald-950/60 dark:text-emerald-200 dark:border-emerald-800/40"
+                    }`}
+                  >
+                    <span>{evt.summary}</span>
+                    <span className="text-[9.5px] opacity-75 font-mono ml-0.5">
+                      · {formatTimeOnly(evt.timestamp)}
+                    </span>
+                  </div>
                 </div>
+              );
+            }
 
-                {/* Compact 1-2 Line Card */}
-                <div className="flex-1 min-w-0 bg-white dark:bg-[#1a1d2c] px-3.5 py-2 rounded-xl border border-slate-100/90 dark:border-white/5 shadow-[0_2px_8px_rgba(11,28,48,0.03)] hover:shadow-xs transition-shadow">
-                  {/* Line 1: User Name + Action Title + Timestamp */}
-                  <div className="flex items-center justify-between gap-1.5 min-w-0">
-                    <div className="flex items-center gap-1.5 min-w-0 truncate">
-                      <span className="font-display font-bold text-[12px] text-slate-900 dark:text-zinc-100 truncate">
-                        {evt.actorName}
-                      </span>
-                      <span className="text-slate-300 dark:text-zinc-600">·</span>
-                      <span className="font-display font-medium text-[11px] text-slate-600 dark:text-zinc-300 truncate">
-                        {evt.title}
+            // Case B: Marketing Desk Message Bubble
+            if (evt.kind === "marketing_message") {
+              const isCreate = evt.badge?.text === "Intake";
+              return (
+                <div key={evt.id} className="flex flex-col items-start select-text max-w-[94%]">
+                  <div className="w-full bg-white dark:bg-[#1a202c] rounded-2xl rounded-tl-xs p-3.5 border border-emerald-200/70 dark:border-emerald-900/30 shadow-[0_2px_8px_rgba(0,109,50,0.04)]">
+                    {/* Header */}
+                    <div className="flex items-center justify-between gap-2 pb-1.5 border-b border-emerald-50 dark:border-white/5">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-6 h-6 rounded-full bg-[#006d32] text-white font-bold text-[10px] font-mono flex items-center justify-center shrink-0 shadow-2xs">
+                          {getInitials(evt.actorName)}
+                        </div>
+                        <div className="min-w-0 truncate">
+                          <span className="font-display font-bold text-xs text-slate-900 dark:text-zinc-100 truncate block">
+                            {evt.actorName}
+                          </span>
+                        </div>
+                        <span className="px-1.5 py-0.2 rounded text-[9.5px] font-bold font-mono bg-emerald-100/80 text-[#006d32] dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40 shrink-0">
+                          Marketing
+                        </span>
+                      </div>
+                      <span className="text-[9.5px] text-slate-400 dark:text-zinc-500 font-mono whitespace-nowrap">
+                        {formatOdooLogDate(evt.timestamp)}
                       </span>
                     </div>
-                    <span className="text-[9.5px] text-slate-400 dark:text-zinc-500 font-medium shrink-0 whitespace-nowrap">
+
+                    {/* Status / Content */}
+                    {isCreate ? (
+                      <p className="text-xs text-slate-700 dark:text-zinc-200 mt-2 leading-relaxed font-sans">
+                        {evt.summary}
+                      </p>
+                    ) : (
+                      <div className="flex items-center gap-2 mt-2">
+                        <span className="text-xs font-semibold text-slate-900 dark:text-zinc-100 font-sans">
+                          Decision:
+                        </span>
+                        <span
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                            evt.badge?.variant === "emerald"
+                              ? "bg-emerald-50 text-[#006d32] border-emerald-200"
+                              : "bg-rose-50 text-rose-700 border-rose-200"
+                          }`}
+                        >
+                          {evt.badge?.text || "Decided"}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Remark */}
+                    {evt.detailRemark && (
+                      <div className="mt-2 p-2.5 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/40 text-[11.5px] text-emerald-950 dark:text-emerald-200 font-sans leading-relaxed">
+                        {evt.detailRemark}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            }
+
+            // Case C: Sampling Team (SAMP Team) Message Bubble
+            return (
+              <div key={evt.id} className="flex flex-col items-end select-text ml-auto max-w-[94%]">
+                <div className="w-full bg-[#f4f8ff] dark:bg-[#152033] rounded-2xl rounded-tr-xs p-3.5 border border-sky-200/70 dark:border-sky-900/40 shadow-[0_2px_8px_rgba(0,112,255,0.05)]">
+                  {/* Header */}
+                  <div className="flex items-center justify-between gap-2 pb-1.5 border-b border-sky-100/80 dark:border-white/5">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="w-6 h-6 rounded-full bg-[#0070ff] text-white font-bold text-[10px] font-mono flex items-center justify-center shrink-0 shadow-2xs">
+                        {getInitials(evt.actorName)}
+                      </div>
+                      <div className="min-w-0 truncate">
+                        <span className="font-display font-bold text-xs text-slate-900 dark:text-zinc-100 truncate block">
+                          {evt.actorName}
+                        </span>
+                      </div>
+                      <span className="px-1.5 py-0.2 rounded text-[9.5px] font-bold font-mono bg-sky-100 text-[#0070ff] dark:bg-sky-950/60 dark:text-sky-300 border border-sky-200 dark:border-sky-800/40 shrink-0">
+                        SAMP Team
+                      </span>
+                    </div>
+                    <span className="text-[9.5px] text-slate-400 dark:text-zinc-500 font-mono whitespace-nowrap">
                       {formatOdooLogDate(evt.timestamp)}
                     </span>
                   </div>
 
-                  {/* Line 2: Badge + 1-Line Description */}
-                  <div className="flex items-center gap-2 mt-1 min-w-0">
-                    {evt.badge && (
-                      <span
-                        className={`text-[9px] font-bold px-1.5 py-0.2 rounded border shrink-0 ${
-                          badgeStyles[evt.badge.variant] || badgeStyles.neutral
-                        }`}
-                      >
-                        {evt.badge.text}
-                      </span>
-                    )}
-                    <p className="text-[11px] text-slate-500 dark:text-zinc-400 truncate leading-snug font-sans">
-                      {evt.summary}
-                    </p>
+                  {/* Verdict Line */}
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="text-xs font-semibold text-slate-900 dark:text-zinc-100 font-sans">
+                      Verdict:
+                    </span>
+                    <span
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                        evt.badge?.variant === "emerald"
+                          ? "bg-emerald-50 text-[#006d32] border-emerald-200"
+                          : evt.badge?.variant === "rose"
+                          ? "bg-rose-50 text-rose-700 border-rose-200"
+                          : "bg-amber-50 text-amber-700 border-amber-200"
+                      }`}
+                    >
+                      {evt.badge?.text || "Evaluated"}
+                    </span>
                   </div>
+
+                  {/* Detail Technical Remark */}
+                  {evt.detailRemark && (
+                    <div className="mt-2 p-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-sky-100 dark:border-sky-900/40 text-[11.5px] text-slate-800 dark:text-zinc-200 font-sans leading-relaxed shadow-2xs">
+                      {evt.detailRemark}
+                    </div>
+                  )}
                 </div>
               </div>
             );
           })
         )}
+        <div ref={messagesEndRef} />
       </div>
     </div>
   );

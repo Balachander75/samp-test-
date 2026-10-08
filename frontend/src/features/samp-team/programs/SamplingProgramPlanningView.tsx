@@ -4,31 +4,18 @@ import { SampleRequestItem } from "@/features/sample-requests/types";
 import { getRequestTrackType } from "@/features/sample-requests/utils/trackTypes";
 import {
   Search,
-  Filter,
+  X,
   RefreshCw,
   FolderGit2,
   Building2,
-  Calendar,
-  Layers,
   CheckCircle2,
   Clock,
   Highlighter,
-  Eye,
-  ShieldCheck,
-  Copy,
-  Check,
-  ExternalLink,
-  Sparkles,
   Download,
-  List as ListIcon,
-  LayoutGrid,
-  Package,
 } from "lucide-react";
 import { isMaterialAddedRecently } from "@/features/sample-requests/programs/components/ProgramChatterFeed";
 import { parseSampRemark } from "@/features/sample-requests/programs/utils/programRemarkUtils";
 import { CopyBadge } from "@/components/ui/CopyBadge";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { WorkflowTabStrip } from "@/components/erp/WorkflowTabStrip";
 import { PaginationBar } from "@/components/erp/PaginationBar";
 import { exportRecordsToCsv } from "@/lib/csvExport";
 
@@ -46,15 +33,9 @@ export interface SamplingProgramPlanningViewProps {
 
 export type SampProgramTab = "all" | "pending_review" | "reviewed";
 
-
-
 export const SamplingProgramPlanningView: React.FC<SamplingProgramPlanningViewProps> = ({
   requests,
   isLoading,
-  selectedPlant,
-  uniquePlants,
-  user,
-  isAdmin,
   onInspectRequest,
   onRefresh,
   showToast,
@@ -66,7 +47,7 @@ export const SamplingProgramPlanningView: React.FC<SamplingProgramPlanningViewPr
   const [currentPage, setCurrentPage] = useState(1);
   const PAGE_SIZE = 15;
 
-  // Only consider program planning requests
+  // Scoped strictly to program planning requests
   const programRequests = useMemo(() => {
     return requests.filter((r) => {
       const mode = String(r.creationMode || "").toLowerCase();
@@ -83,8 +64,8 @@ export const SamplingProgramPlanningView: React.FC<SamplingProgramPlanningViewPr
     });
   }, [requests]);
 
-  // Unique customers for filter
-  const uniqueCustomers = useMemo(() => {
+  // Derived Customers List strictly from programRequests
+  const customerList = useMemo(() => {
     const set = new Set<string>();
     programRequests.forEach((r) => {
       if (r.customer?.trim()) set.add(r.customer.trim());
@@ -92,7 +73,16 @@ export const SamplingProgramPlanningView: React.FC<SamplingProgramPlanningViewPr
     return Array.from(set).sort();
   }, [programRequests]);
 
-  // Telemetry metrics
+  // Derived Plants List strictly from programRequests
+  const plantList = useMemo(() => {
+    const set = new Set<string>();
+    programRequests.forEach((r) => {
+      if (r.targetPlant?.trim()) set.add(r.targetPlant.trim());
+    });
+    return Array.from(set).sort();
+  }, [programRequests]);
+
+  // Operational metrics
   const metrics = useMemo(() => {
     const total = programRequests.length;
     let pending = 0;
@@ -112,16 +102,14 @@ export const SamplingProgramPlanningView: React.FC<SamplingProgramPlanningViewPr
     return { total, pending, reviewed, totalMaterials };
   }, [programRequests]);
 
-  // Tab counts
-  const tabCounts = useMemo(() => {
-    return {
-      all: metrics.total,
-      pending_review: metrics.pending,
-      reviewed: metrics.reviewed,
-    };
-  }, [metrics]);
+  // Navigation tab definitions with live counters
+  const navTabs: { id: SampProgramTab; label: string; count: number }[] = [
+    { id: "all", label: "All Programs", count: metrics.total },
+    { id: "pending_review", label: "Pending SAMP Review", count: metrics.pending },
+    { id: "reviewed", label: "Reviewed / Verified", count: metrics.reviewed },
+  ];
 
-  // Filtered list
+  // Filtered dataset
   const filteredRequests = useMemo(() => {
     return programRequests.filter((r) => {
       const st = (r.status || "").toLowerCase();
@@ -160,15 +148,6 @@ export const SamplingProgramPlanningView: React.FC<SamplingProgramPlanningViewPr
     return filteredRequests.slice(start, start + PAGE_SIZE);
   }, [filteredRequests, currentPage]);
 
-  const sampTabs = useMemo(
-    () => [
-      { id: "all", label: "All Programs", count: tabCounts.all },
-      { id: "pending_review", label: "Pending SAMP Review", count: tabCounts.pending_review },
-      { id: "reviewed", label: "Reviewed / Verified", count: tabCounts.reviewed },
-    ],
-    [tabCounts]
-  );
-
   // Export CSV
   const handleExportCSV = () => {
     const dateStr = new Date().toISOString().split("T")[0];
@@ -192,31 +171,43 @@ export const SamplingProgramPlanningView: React.FC<SamplingProgramPlanningViewPr
   };
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 bg-[#F8F9FA] dark:bg-[#0b0c10] select-text">
-      {/* ── 1. Compact Page Header (Matched to Feasibility Workbench) ── */}
-      <div className="bg-white dark:bg-[#12141d] border-b border-[#E2E8F0] dark:border-white/[0.08] px-6 py-3 shrink-0">
-        <div className="flex items-center justify-between gap-4">
-          {/* Title + badge */}
-          <div className="flex items-center gap-2.5 min-w-0">
-            <h1 className="text-sm font-bold text-neutral-900 dark:text-white truncate">
+    <div className="flex-1 flex flex-col min-h-0 bg-white text-slate-800 select-text overflow-hidden">
+      {/* ── 1. Compact Editorial Header ── */}
+      <header className="bg-white px-6 py-3 shrink-0 border-b border-slate-200/60 shadow-[0_1px_4px_rgba(11,28,48,0.02)]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <h1 className="text-base sm:text-lg font-bold tracking-tight text-slate-900 font-display">
               Seasonal Program Planning Review Workbench
             </h1>
-            <span className="shrink-0 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#017E84]/10 text-[#017E84] dark:bg-teal-950/40 dark:text-teal-300 border border-[#017E84]/20">
+            <span className="px-2 py-0.5 rounded-full text-[11px] font-bold font-mono bg-[#006d32]/10 text-[#006d32]">
               SAMP Team
             </span>
+            <span className="px-2 py-0.5 rounded-full text-[11px] font-bold font-mono bg-slate-100 text-slate-600">
+              {metrics.total} Programs
+            </span>
+            <span className="px-2 py-0.5 rounded-full text-[11px] font-bold font-mono bg-[#006d32]/10 text-[#006d32] border border-[#006d32]/20">
+              {metrics.totalMaterials} SKUs
+            </span>
+            {metrics.pending > 0 && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold font-mono bg-amber-50 text-amber-700 animate-pulse">
+                ⚡ {metrics.pending} Needs Review
+              </span>
+            )}
           </div>
 
-          {/* Action buttons */}
+          {/* Quick Actions */}
           <div className="flex items-center gap-2 shrink-0">
             {/* Refresh */}
             <button
               type="button"
               onClick={onRefresh}
               disabled={isLoading}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-neutral-50 dark:hover:bg-zinc-700 text-xs font-semibold text-neutral-700 dark:text-zinc-200 shadow-2xs transition cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-xs font-semibold text-slate-700 transition cursor-pointer disabled:opacity-50"
               title="Refresh Records"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin text-[#017E84]" : ""}`} />
+              <RefreshCw
+                className={`w-3.5 h-3.5 ${isLoading ? "animate-spin text-[#006d32]" : "text-slate-500"}`}
+              />
               <span className="hidden sm:inline">Refresh</span>
             </button>
 
@@ -225,364 +216,306 @@ export const SamplingProgramPlanningView: React.FC<SamplingProgramPlanningViewPr
               type="button"
               onClick={handleExportCSV}
               disabled={filteredRequests.length === 0}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-neutral-50 dark:hover:bg-zinc-700 text-xs font-semibold text-neutral-700 dark:text-zinc-200 shadow-2xs transition cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-xs font-semibold text-slate-700 transition cursor-pointer disabled:opacity-50"
               title="Export CSV"
             >
-              <Download className="w-3.5 h-3.5 text-neutral-500" />
+              <Download className="w-3.5 h-3.5 text-slate-500" />
               <span className="hidden sm:inline">Export</span>
             </button>
-
           </div>
         </div>
+      </header>
 
-        {/* ── 2. KPI Metric Ribbon (Exact 4 Cards Matching Feasibility Workbench) ── */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-3 pt-3 border-t border-[#F1F5F9] dark:border-white/[0.05]">
-          {/* Card 1: Total Programs */}
-          <div
-            onClick={() => {
-              setFilterTab("all");
-              setCurrentPage(1);
-            }}
-            className={`p-2.5 rounded-lg border transition cursor-pointer ${
-              filterTab === "all"
-                ? "border-[#714B67] bg-[#714B67]/5 dark:bg-[#714B67]/20 shadow-2xs"
-                : "border-[#E2E8F0] dark:border-white/[0.06] bg-neutral-50/60 dark:bg-zinc-900/40 hover:border-neutral-300"
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-[10.5px] uppercase font-bold text-neutral-500 dark:text-zinc-400 font-mono tracking-wider">
-                Total Intake
-              </span>
-              <FolderGit2 className="w-3.5 h-3.5 text-[#714B67]" />
-            </div>
-            <div className="text-xl font-bold font-mono text-neutral-900 dark:text-zinc-100 mt-0.5">
-              {isLoading ? "—" : metrics.total}
-            </div>
-            <div className="text-[10px] text-neutral-400 font-mono">From Marketing Desk</div>
-          </div>
-
-          {/* Card 2: Needs Lab Review */}
-          <div
-            onClick={() => {
-              setFilterTab("pending_review");
-              setCurrentPage(1);
-            }}
-            className={`p-2.5 rounded-lg border transition cursor-pointer ${
-              filterTab === "pending_review"
-                ? "border-amber-400 bg-amber-500/10 dark:bg-amber-950/30 shadow-2xs"
-                : "border-[#E2E8F0] dark:border-white/[0.06] bg-neutral-50/60 dark:bg-zinc-900/40 hover:border-amber-300"
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-[10.5px] uppercase font-bold text-amber-700 dark:text-amber-300 font-mono tracking-wider">
-                Needs SAMP Review
-              </span>
-              <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-            </div>
-            <div className="text-xl font-bold font-mono text-amber-900 dark:text-amber-200 mt-0.5">
-              {isLoading ? "—" : metrics.pending}
-            </div>
-            <div className="text-[10px] text-amber-700/80 dark:text-amber-400/80 font-mono">
-              Awaiting Technical Check
-            </div>
-          </div>
-
-          {/* Card 3: Reviewed by SAMP */}
-          <div
-            onClick={() => {
-              setFilterTab("reviewed");
-              setCurrentPage(1);
-            }}
-            className={`p-2.5 rounded-lg border transition cursor-pointer ${
-              filterTab === "reviewed"
-                ? "border-[#017E84] bg-teal-500/10 dark:bg-teal-950/30 shadow-2xs"
-                : "border-[#E2E8F0] dark:border-white/[0.06] bg-neutral-50/60 dark:bg-zinc-900/40 hover:border-teal-300"
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-[10.5px] uppercase font-bold text-teal-700 dark:text-teal-300 font-mono tracking-wider">
-                Reviewed by SAMP
-              </span>
-              <ShieldCheck className="w-3.5 h-3.5 text-[#017E84] dark:text-[#2dd4bf]" />
-            </div>
-            <div className="text-xl font-bold font-mono text-[#017E84] dark:text-[#2dd4bf] mt-0.5">
-              {isLoading ? "—" : metrics.reviewed}
-            </div>
-            <div className="text-[10px] text-teal-700/80 dark:text-teal-400/80 font-mono">
-              Matrix Verified &amp; Signed
-            </div>
-          </div>
-
-          {/* Card 4: Total Materials SKUs */}
-          <div className="p-2.5 rounded-lg border border-[#E2E8F0] dark:border-white/[0.06] bg-neutral-50/60 dark:bg-zinc-900/40">
-            <div className="flex items-center justify-between">
-              <span className="text-[10.5px] uppercase font-bold text-purple-700 dark:text-purple-300 font-mono tracking-wider">
-                Matrix SKUs Total
-              </span>
-              <Layers className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-            </div>
-            <div className="text-xl font-bold font-mono text-purple-900 dark:text-purple-200 mt-0.5">
-              {isLoading ? "—" : metrics.totalMaterials}
-            </div>
-            <div className="text-[10px] text-purple-700/80 dark:text-purple-400/80 font-mono">
-              Raw Material Lines
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── 3. Filter Tabs + Search Controls ── */}
-      <div className="bg-white dark:bg-[#12141d] border-b border-[#E2E8F0] dark:border-white/[0.08] px-6 py-2 shrink-0">
-        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
-          {/* Tabs */}
-          <WorkflowTabStrip
-            tabs={sampTabs}
-            activeTab={filterTab}
-            onSelectTab={(id) => {
-              setFilterTab(id as SampProgramTab);
-              setCurrentPage(1);
-            }}
-            compact
-          />
-
-          {/* Search + Dropdown Filters */}
-          <div className="flex items-center gap-2">
-            {/* Customer Filter */}
-            <div className="relative shrink-0">
-              <select
-                value={customerFilter}
-                onChange={(e) => {
-                  setCustomerFilter(e.target.value);
+      {/* ── 2. Floating Filter & Search Strip ── */}
+      <div className="px-6 py-2 bg-white/80 backdrop-blur-xs shrink-0 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/50">
+        {/* Soft Segmented Filter Pills */}
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 select-none">
+          {navTabs.map((t) => {
+            const isActive = filterTab === t.id;
+            return (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => {
+                  setFilterTab(t.id);
                   setCurrentPage(1);
                 }}
-                className="h-8 pl-2.5 pr-7 rounded border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-medium text-neutral-700 dark:text-zinc-200 focus:outline-none focus:border-[#714B67] transition cursor-pointer appearance-none"
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-150 cursor-pointer ${
+                  isActive
+                    ? "bg-[#006d32] text-white shadow-[0_2px_8px_rgba(0,109,50,0.25)]"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 bg-transparent"
+                }`}
               >
-                <option value="all">All Customers</option>
-                {uniqueCustomers.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-              <Filter className="w-3 h-3 text-neutral-400 absolute right-2 top-2.5 pointer-events-none" />
-            </div>
-
-            {/* Plant Filter */}
-            <div className="relative shrink-0">
-              <select
-                value={plantFilter}
-                onChange={(e) => {
-                  setPlantFilter(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="h-8 pl-2.5 pr-7 rounded border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-medium text-neutral-700 dark:text-zinc-200 focus:outline-none focus:border-[#714B67] transition cursor-pointer appearance-none font-mono"
-              >
-                <option value="all">All Plants ({metrics.total})</option>
-                {uniquePlants.map((p) => (
-                  <option key={p} value={p}>
-                    {p}
-                  </option>
-                ))}
-              </select>
-              <Filter className="w-3 h-3 text-neutral-400 absolute right-2 top-2.5 pointer-events-none" />
-            </div>
-
-            {/* Search Input */}
-            <div className="relative w-48 sm:w-64">
-              <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-2.5 pointer-events-none" />
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  setCurrentPage(1);
-                }}
-                placeholder="Search programs, SKUs, customer..."
-                className="w-full h-8 pl-8 pr-3 rounded border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs text-neutral-800 dark:text-zinc-100 placeholder:text-neutral-400 focus:outline-none focus:border-[#714B67] transition"
-              />
-              {searchTerm && (
-                <button
-                  type="button"
-                  onClick={() => setSearchTerm("")}
-                  className="absolute right-2 top-2 text-neutral-400 hover:text-neutral-700 dark:hover:text-zinc-200 text-xs font-bold"
+                <span>{t.label}</span>
+                <span
+                  className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full tabular-nums ${
+                    isActive ? "bg-white/25 text-white" : "bg-slate-200/70 text-slate-600"
+                  }`}
                 >
-                  ×
-                </button>
-              )}
-            </div>
-          </div>
+                  {t.count}
+                </span>
+              </button>
+            );
+          })}
         </div>
-      </div>
 
-      {/* ── 4. Main Data Table ── */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="min-w-full inline-block align-middle">
-            {filteredRequests.length === 0 ? (
-              <EmptyState
-                icon={FolderGit2}
-                title="No seasonal programs match your current filter"
-                description="Try resetting the search facet or changing plant / stage filter."
-                onResetFilters={() => {
-                  setFilterTab("all");
-                  setPlantFilter("all");
-                  setCustomerFilter("all");
-                  setSearchTerm("");
-                }}
-              />
-            ) : (
-              <table className="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr className="bg-white dark:bg-[#12141d] border-b border-[#E2E8F0] dark:border-white/[0.08] text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-500 dark:text-zinc-400 select-none">
-                    <th className="py-2.5 px-4 w-12 text-center">#</th>
-                    <th className="py-2.5 px-4">Program Ref / Code</th>
-                    <th className="py-2.5 px-4">Campaign Title</th>
-                    <th className="py-2.5 px-4">Customer</th>
-                    <th className="py-2.5 px-4">Plant</th>
-                    <th className="py-2.5 px-4">Year</th>
-                    <th className="py-2.5 px-4 text-center">Matrix SKUs</th>
-                    <th className="py-2.5 px-4">Status</th>
-                    <th className="py-2.5 px-4">Submitter</th>
-                    <th className="py-2.5 px-4 text-right">Actions</th>
-                  </tr>
-                </thead>
+        {/* Right Search, Customer, Plant Select */}
+        <div className="flex items-center gap-2 flex-1 sm:flex-initial justify-end">
+          {customerList.length > 0 && (
+            <select
+              value={customerFilter}
+              onChange={(e) => {
+                setCustomerFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="h-9 px-3 rounded-lg bg-slate-100/80 hover:bg-slate-200/60 text-xs font-medium text-slate-700 border border-slate-200/70 focus:outline-none focus:ring-2 focus:ring-[#006d32]/15 focus:border-[#006d32]/40 cursor-pointer transition"
+            >
+              <option value="all">All Customers</option>
+              {customerList.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          )}
 
-                <tbody className="divide-y divide-[#F1F3F5] dark:divide-white/[0.04] bg-white dark:bg-[#12141d]">
-                  {paginatedRequests.map((req, idx) => {
-                    const rowNumber = (currentPage - 1) * PAGE_SIZE + idx + 1;
-                    const materialCount = (req.programMaterials || []).length;
-                    const isReviewed =
-                      req.status?.toLowerCase().includes("reviewed") ||
-                      req.status?.toLowerCase().includes("approved");
-                    const hasRecent = (req.programMaterials || []).some((m) =>
-                      isMaterialAddedRecently(m.createdAt)
-                    );
-                    const totalFlags = (req.programMaterials || []).reduce((acc, m) => {
-                      const { highlightedCols } = parseSampRemark(m.sampRemark);
-                      return acc + highlightedCols.length;
-                    }, 0);
-                    const evaluatedCount = (req.programMaterials || []).filter((m) => {
-                      const { text, highlightedCols } = parseSampRemark(m.sampRemark);
-                      return Boolean(text.trim() || highlightedCols.length > 0);
-                    }).length;
+          {plantList.length > 0 && (
+            <select
+              value={plantFilter}
+              onChange={(e) => {
+                setPlantFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="h-9 px-3 rounded-lg bg-slate-100/80 hover:bg-slate-200/60 text-xs font-medium text-slate-700 border border-slate-200/70 focus:outline-none focus:ring-2 focus:ring-[#006d32]/15 focus:border-[#006d32]/40 cursor-pointer transition font-mono"
+            >
+              <option value="all">All Plants</option>
+              {plantList.map((p) => (
+                <option key={p} value={p}>
+                  Plant {p}
+                </option>
+              ))}
+            </select>
+          )}
 
-                    return (
-                      <tr
-                        key={req.id}
-                        onClick={() => onInspectRequest(req)}
-                        className="hover:bg-neutral-50/80 dark:hover:bg-zinc-800/50 transition cursor-pointer"
-                      >
-                        {/* 1. # */}
-                        <td className="py-3 px-4 text-center font-mono text-[11px] text-neutral-400 font-semibold">
-                          {String(rowNumber).padStart(2, "0")}
-                        </td>
-
-                        {/* 2. Code */}
-                        <td className="py-3 px-4 font-mono font-bold text-xs whitespace-nowrap">
-                          <CopyBadge text={req.materialCode || req.srNumber} />
-                        </td>
-
-                        {/* 3. Title */}
-                        <td className="py-3 px-4 font-semibold text-neutral-900 dark:text-zinc-100 max-w-xs truncate">
-                          {req.programName || req.productDescription || "Seasonal Program"}
-                        </td>
-
-                        {/* 4. Customer */}
-                        <td className="py-3 px-4 text-neutral-800 dark:text-zinc-200 font-medium">
-                          <div className="flex items-center gap-1.5">
-                            <Building2 className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
-                            <span>{req.customer}</span>
-                          </div>
-                        </td>
-
-                        {/* 5. Plant */}
-                        <td className="py-3 px-4 font-mono text-[11px] text-neutral-600 dark:text-zinc-400">
-                          {req.targetPlant || "1505"}
-                        </td>
-
-                        {/* 6. Year */}
-                        <td className="py-3 px-4 font-mono text-[11px] text-neutral-800 dark:text-zinc-200">
-                          <span className="px-2 py-0.5 rounded bg-neutral-100 dark:bg-zinc-800 text-neutral-700 dark:text-zinc-300 font-bold">
-                            {req.programYear || "2026"}
-                          </span>
-                        </td>
-
-                        {/* 7. Matrix SKUs */}
-                        <td className="py-3 px-4 text-center">
-                          <div className="flex items-center justify-center gap-1.5 flex-wrap">
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10.5px] font-mono font-bold bg-neutral-100 dark:bg-zinc-800 text-neutral-800 dark:text-zinc-200 border border-neutral-200 dark:border-zinc-700">
-                              {materialCount} line{materialCount !== 1 ? "s" : ""}
-                            </span>
-                            {hasRecent && (
-                              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[8.5px] font-mono font-bold bg-emerald-500 text-white shadow-2xs animate-pulse uppercase">
-                                ✨ New Line
-                              </span>
-                            )}
-                          </div>
-                        </td>
-
-                        {/* 8. Status & Flags */}
-                        <td className="py-3 px-4">
-                          <div className="flex flex-col gap-1 items-start">
-                            <span
-                              className={`inline-flex items-center px-2.5 py-0.5 rounded text-[10.5px] font-mono font-bold uppercase tracking-wider border ${
-                                isReviewed
-                                  ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
-                                  : "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border-amber-200 dark:border-amber-800"
-                              }`}
-                            >
-                              {req.status || "Pending SAMP Review"}
-                            </span>
-                            {totalFlags > 0 ? (
-                              <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold text-amber-700 dark:text-amber-400">
-                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                                {totalFlags} Column Flag{totalFlags !== 1 ? "s" : ""}
-                              </span>
-                            ) : evaluatedCount > 0 ? (
-                              <span className="text-[10px] font-mono text-zinc-500">
-                                {evaluatedCount}/{materialCount} evaluated
-                              </span>
-                            ) : null}
-                          </div>
-                        </td>
-
-                        {/* 9. Submitter */}
-                        <td className="py-3 px-4 text-neutral-500 font-mono text-[11px]">
-                          <div>{req.createdBy || "Marketing"}</div>
-                          <div className="text-[10px] text-neutral-400">{req.dateRequestCreated || "Recent"}</div>
-                        </td>
-
-                        {/* 10. Actions */}
-                        <td className="py-3 px-4 text-right">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onInspectRequest(req);
-                            }}
-                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-[#017E84] hover:bg-[#00666A] active:bg-[#005256] text-white text-[11px] font-bold shadow-xs transition active:scale-95 cursor-pointer"
-                          >
-                            <Highlighter className="w-3 h-3" />
-                            <span>Review Matrix</span>
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+          <div className="relative w-60 sm:w-72 group">
+            <Search className="w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#006d32] transition-colors pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search programs, SKUs, customer..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-full h-9 pl-[34px] pr-8 rounded-lg bg-slate-100/80 hover:bg-slate-200/50 focus:bg-white text-xs text-slate-800 placeholder:text-slate-400 border border-slate-200/70 focus:border-[#006d32]/40 focus:outline-none focus:ring-2 focus:ring-[#006d32]/15 shadow-2xs transition-all"
+            />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={() => setSearchTerm("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-4.5 h-4.5 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-200/80 transition-colors cursor-pointer"
+                title="Clear search"
+              >
+                <X className="w-3 h-3" />
+              </button>
             )}
           </div>
         </div>
+      </div>
 
-      {/* ── 5. Sticky Bottom Pagination (Matched to Feasibility Workbench) ── */}
-      <PaginationBar
-        currentPage={currentPage}
-        totalPages={totalPages}
-        totalCount={filteredRequests.length}
-        pageSize={PAGE_SIZE}
-        onPageChange={(p) => setCurrentPage(p)}
-        itemLabel="campaigns"
-      />
+      {/* ── 3. Full-Bleed Table Workspace (Seamlessly Blended into Full UI) ── */}
+      <div className="flex-1 min-h-0 overflow-auto bg-white flex flex-col">
+        <table className="w-full text-left text-xs border-collapse">
+          <thead className="sticky top-0 z-10 bg-slate-50/90 backdrop-blur-xs border-b border-slate-200/70">
+            <tr className="text-slate-600 font-mono text-[11px] uppercase tracking-wider select-none">
+              <th className="py-3 pl-6 pr-3 w-12 text-center">#</th>
+              <th className="py-3 px-4 font-semibold whitespace-nowrap">Program ID</th>
+              <th className="py-3 px-4 font-semibold">Campaign Title & Scope</th>
+              <th className="py-3 px-4 font-semibold whitespace-nowrap">Customer</th>
+              <th className="py-3 px-4 font-semibold whitespace-nowrap">Plant</th>
+              <th className="py-3 px-4 font-semibold text-center whitespace-nowrap">Year</th>
+              <th className="py-3 px-4 font-semibold text-center whitespace-nowrap">Matrix SKUs</th>
+              <th className="py-3 px-4 font-semibold whitespace-nowrap">Review Status</th>
+              <th className="py-3 px-4 font-semibold whitespace-nowrap">Submitter</th>
+              <th className="py-3 pl-4 pr-6 font-semibold text-right whitespace-nowrap">Action</th>
+            </tr>
+          </thead>
+
+          <tbody className="divide-y divide-slate-100">
+            {filteredRequests.length === 0 ? (
+              <tr>
+                <td colSpan={10} className="py-20 text-center">
+                  <div className="max-w-sm mx-auto flex flex-col items-center">
+                    <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mb-3">
+                      <FolderGit2 className="w-6 h-6" />
+                    </div>
+                    <h3 className="text-sm font-bold text-slate-800">No Seasonal Programs Found</h3>
+                    <p className="text-xs text-slate-500 mt-1">
+                      {searchTerm || customerFilter !== "all" || filterTab !== "all" || plantFilter !== "all"
+                        ? "No programs match your search or active filter criteria."
+                        : "There are currently no seasonal program planning requests submitted."}
+                    </p>
+                    {(searchTerm || customerFilter !== "all" || filterTab !== "all" || plantFilter !== "all") && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSearchTerm("");
+                          setCustomerFilter("all");
+                          setPlantFilter("all");
+                          setFilterTab("all");
+                        }}
+                        className="mt-3 text-xs font-semibold text-[#006d32] hover:underline cursor-pointer"
+                      >
+                        Reset filters
+                      </button>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ) : (
+              paginatedRequests.map((req, idx) => {
+                const rowNumber = (currentPage - 1) * PAGE_SIZE + idx + 1;
+                const materialCount = (req.programMaterials || []).length;
+                const isReviewed =
+                  req.status?.toLowerCase().includes("reviewed") ||
+                  req.status?.toLowerCase().includes("approved");
+                const hasRecent = (req.programMaterials || []).some((m) =>
+                  isMaterialAddedRecently(m.createdAt)
+                );
+                const totalFlags = (req.programMaterials || []).reduce((acc, m) => {
+                  const { highlightedCols } = parseSampRemark(m.sampRemark);
+                  return acc + highlightedCols.length;
+                }, 0);
+                const evaluatedCount = (req.programMaterials || []).filter((m) => {
+                  const { text, highlightedCols } = parseSampRemark(m.sampRemark);
+                  return Boolean(text.trim() || highlightedCols.length > 0);
+                }).length;
+
+                return (
+                  <tr
+                    key={req.id}
+                    onClick={() => onInspectRequest(req)}
+                    className="hover:bg-slate-50/70 transition-colors cursor-pointer group"
+                  >
+                    {/* 1. # */}
+                    <td className="py-3.5 pl-6 pr-3 text-center font-mono text-[11px] text-slate-400 font-semibold">
+                      {String(rowNumber).padStart(2, "0")}
+                    </td>
+
+                    {/* 2. Program ID */}
+                    <td className="py-3.5 px-4 font-mono font-bold text-xs whitespace-nowrap">
+                      <CopyBadge text={req.materialCode || req.srNumber} />
+                    </td>
+
+                    {/* 3. Campaign Title & Scope */}
+                    <td className="py-3.5 px-4 max-w-xs">
+                      <div className="font-semibold text-slate-900 truncate">
+                        {req.programName || req.productDescription || "Seasonal Program"}
+                      </div>
+                      <div className="text-[11px] text-slate-500 truncate mt-0.5">
+                        {req.productDescription || "Multi-SKU range"}
+                      </div>
+                    </td>
+
+                    {/* 4. Customer */}
+                    <td className="py-3.5 px-4 font-semibold text-slate-900 whitespace-nowrap">
+                      <div className="flex items-center gap-1.5">
+                        <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                        <span>{req.customer || "—"}</span>
+                      </div>
+                    </td>
+
+                    {/* 5. Plant */}
+                    <td className="py-3.5 px-4 font-mono text-slate-600 whitespace-nowrap">
+                      Plant {req.targetPlant || "1505"}
+                    </td>
+
+                    {/* 6. Year */}
+                    <td className="py-3.5 px-4 text-center font-mono text-xs whitespace-nowrap">
+                      <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-bold">
+                        {req.programYear || "2026"}
+                      </span>
+                    </td>
+
+                    {/* 7. Matrix SKUs */}
+                    <td className="py-3.5 px-4 text-center">
+                      <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10.5px] font-mono font-bold bg-[#006d32]/10 text-[#006d32]">
+                          {materialCount} SKU{materialCount !== 1 ? "s" : ""}
+                        </span>
+                        {hasRecent && (
+                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-full text-[8.5px] font-mono font-bold bg-emerald-500 text-white shadow-2xs animate-pulse uppercase">
+                            ✨ New
+                          </span>
+                        )}
+                      </div>
+                    </td>
+
+                    {/* 8. Status & Flags */}
+                    <td className="py-3.5 px-4 whitespace-nowrap">
+                      <div className="flex flex-col gap-1 items-start">
+                        {isReviewed ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-emerald-50 text-emerald-700">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                            <span>Reviewed by SAMP</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-amber-50 text-amber-700">
+                            <Clock className="w-3.5 h-3.5 text-amber-600" />
+                            <span>Pending Review</span>
+                          </span>
+                        )}
+                        {totalFlags > 0 ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold text-amber-700">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                            {totalFlags} Column Flag{totalFlags !== 1 ? "s" : ""}
+                          </span>
+                        ) : evaluatedCount > 0 ? (
+                          <span className="text-[10px] font-mono text-slate-500">
+                            {evaluatedCount}/{materialCount} evaluated
+                          </span>
+                        ) : null}
+                      </div>
+                    </td>
+
+                    {/* 9. Submitter */}
+                    <td className="py-3.5 px-4 text-slate-600 font-mono text-xs whitespace-nowrap">
+                      <div>{req.createdBy || "Marketing"}</div>
+                      <div className="text-[10px] text-slate-400">{req.dateRequestCreated || "Recent"}</div>
+                    </td>
+
+                    {/* 10. Actions */}
+                    <td className="py-3.5 pl-4 pr-6 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        type="button"
+                        onClick={() => onInspectRequest(req)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold font-mono transition cursor-pointer"
+                      >
+                        <Highlighter className="w-3 h-3 text-[#006d32]" />
+                        <span>Review Matrix</span>
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+
+        {/* Table Footer Pager */}
+        <div className="mt-auto px-6 py-2.5 bg-white border-t border-slate-100 shrink-0">
+          <PaginationBar
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalCount={filteredRequests.length}
+            pageSize={PAGE_SIZE}
+            onPageChange={(p) => setCurrentPage(p)}
+            itemLabel="campaigns"
+          />
+        </div>
+      </div>
     </div>
   );
 };
+
+export default SamplingProgramPlanningView;

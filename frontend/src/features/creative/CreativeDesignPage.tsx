@@ -16,9 +16,9 @@ import {
   LayoutGrid,
   List as ListIcon,
   Layers,
-  Eye,
   Sliders,
   Image as ImageIcon,
+  X,
 } from "lucide-react";
 import { CreativeBriefItem, SampleRequestItem } from "@/features/sample-requests/types";
 import { StatusPill } from "@/components/ui/StatusPill";
@@ -93,7 +93,7 @@ export const CreativeDesignPage: React.FC<CreativeDesignPageProps> = ({
         designer: b.designer,
         dueDate: b.dueDate,
         proofStatus: b.proofStatus,
-        accentColor: b.accentColor || "#714B67",
+        accentColor: b.accentColor || "#006d32",
         isBrief: true,
         rawBrief: b,
       });
@@ -124,7 +124,7 @@ export const CreativeDesignPage: React.FC<CreativeDesignPageProps> = ({
         designer: d.createdBy || "Marketing Specialist",
         dueDate: d.sampleRequiredDate || d.targetArtworkDateCreative || "Standard SLA",
         proofStatus: status,
-        accentColor: "#017E84",
+        accentColor: "#006d32",
         isBrief: false,
         rawReq: d,
       });
@@ -237,34 +237,37 @@ export const CreativeDesignPage: React.FC<CreativeDesignPageProps> = ({
         setIsRefreshing(false);
       }
     }
-  };
-
-  return (
-    <div className="flex-1 flex flex-col min-h-0 bg-[#F8F9FA] dark:bg-[#0b0c10] select-text">
-      {/* ── 1. Compact Page Header (Aligned to Marketing Desk Standards) ── */}
-      <div className="bg-white dark:bg-[#12141d] border-b border-[#E2E8F0] dark:border-white/[0.08] px-6 py-3 shrink-0">
-        <div className="flex items-center justify-between gap-4">
-          {/* Title + Desk Badge */}
-          <div className="flex items-center gap-2.5 min-w-0">
-            <h1 className="text-sm font-bold text-neutral-900 dark:text-white truncate">
-              Artwork Design Briefs &amp; Graphic Assets Workbench
+  };  return (
+    <div className="flex-1 flex flex-col min-h-0 bg-white dark:bg-[#0c0d14] text-slate-800 dark:text-zinc-100 select-text overflow-hidden">
+      {/* ── 1. Compact Editorial Header (Maximized Space for Requests) ── */}
+      <header className="bg-white dark:bg-[#0e121a] px-6 py-3 shrink-0 border-b border-slate-200/60 dark:border-white/[0.06] shadow-[0_1px_4px_rgba(11,28,48,0.02)] dark:shadow-none">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <h1 className="text-base sm:text-lg font-bold tracking-tight text-slate-900 dark:text-white font-display">
+              Artwork Design Briefs &amp; Graphic Assets
             </h1>
-            <span className="shrink-0 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#714B67]/10 text-[#714B67] dark:bg-purple-950/40 dark:text-purple-300 border border-[#714B67]/20">
-              Creative Desk
+            <span className="px-2 py-0.5 rounded-full text-[11px] font-bold font-mono bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-zinc-300">
+              {unifiedDesigns.length} Briefs
             </span>
+            {unifiedDesigns.filter((d) => d.proofStatus === "Client Review").length > 0 && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold font-mono bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 animate-pulse">
+                ⚡ {unifiedDesigns.filter((d) => d.proofStatus === "Client Review").length} In Review
+              </span>
+            )}
           </div>
 
-          {/* Action Buttons & View Switcher */}
+          {/* Quick Actions */}
           <div className="flex items-center gap-2 shrink-0">
             {onOpenNewBriefModal && (
               <button
                 type="button"
                 onClick={onOpenNewBriefModal}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-[#017E84] hover:bg-[#00666A] text-white text-xs font-semibold shadow-xs transition active:scale-95 cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold text-white shadow-[0_2px_10px_rgba(0,109,50,0.25)] hover:shadow-[0_4px_14px_rgba(0,109,50,0.35)] transition-all cursor-pointer active:scale-98"
+                style={{ background: "linear-gradient(135deg, #006d32 0%, #00d166 100%)" }}
                 title="Create New Graphic Design Brief"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>New</span>
+                <span>New Design Brief</span>
               </button>
             )}
 
@@ -272,10 +275,10 @@ export const CreativeDesignPage: React.FC<CreativeDesignPageProps> = ({
               type="button"
               onClick={handleRefreshClick}
               disabled={isRefreshing}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-neutral-50 dark:hover:bg-zinc-700 text-xs font-semibold text-neutral-700 dark:text-zinc-200 shadow-2xs transition cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200/80 dark:hover:bg-white/[0.1] text-xs font-semibold text-slate-700 dark:text-zinc-200 transition cursor-pointer disabled:opacity-50"
               title="Refresh Records"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin text-[#017E84]" : ""}`} />
+              <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin text-[#006d32]" : "text-slate-500 dark:text-zinc-400"}`} />
               <span className="hidden sm:inline">Refresh</span>
             </button>
 
@@ -283,187 +286,202 @@ export const CreativeDesignPage: React.FC<CreativeDesignPageProps> = ({
               type="button"
               onClick={handleExportCSV}
               disabled={filteredDesigns.length === 0}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-neutral-50 dark:hover:bg-zinc-700 text-xs font-semibold text-neutral-700 dark:text-zinc-200 shadow-2xs transition cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200/80 dark:hover:bg-white/[0.1] text-xs font-semibold text-slate-700 dark:text-zinc-200 transition cursor-pointer disabled:opacity-50"
               title="Export Filtered CSV"
             >
-              <Download className="w-3.5 h-3.5 text-neutral-500" />
+              <Download className="w-3.5 h-3.5 text-slate-500 dark:text-zinc-400" />
               <span className="hidden sm:inline">Export</span>
             </button>
-
           </div>
         </div>
+      </header>
 
-        {/* ── 2. KPI Metric Cards Ribbon (Exact 6 Executive Cards Aligned to Marketing) ── */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 mt-3 pt-3 border-t border-[#F1F5F9] dark:border-white/[0.05]">
-          {stages.map((stage) => {
-            const isSelected = selectedStage === stage.id;
+      {/* ── 2. Floating Filter & Search Strip ── */}
+      <div className="px-6 py-2 bg-white/80 dark:bg-[#0e121a]/80 backdrop-blur-xs shrink-0 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/50 dark:border-white/[0.06]">
+        {/* Soft Segmented Filter Pills */}
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 select-none">
+          {stages.map((t) => {
+            const isActive = selectedStage === t.id;
             return (
-              <div
-                key={stage.id}
-                onClick={() => setSelectedStage(stage.id)}
-                className={`p-2.5 rounded-lg border transition cursor-pointer ${
-                  isSelected
-                    ? "border-[#714B67] bg-[#714B67]/5 dark:bg-[#714B67]/20 shadow-2xs"
-                    : "border-[#E2E8F0] dark:border-white/[0.06] bg-neutral-50/60 dark:bg-zinc-900/40 hover:border-neutral-300"
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setSelectedStage(t.id)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-150 cursor-pointer ${
+                  isActive
+                    ? "bg-[#006d32] text-white shadow-[0_2px_8px_rgba(0,109,50,0.25)]"
+                    : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-white/[0.06] bg-transparent"
                 }`}
               >
-                <div className="flex items-center justify-between">
-                  <span className="text-[10.5px] uppercase font-bold text-neutral-500 dark:text-zinc-400 font-mono tracking-wider">
-                    {stage.label}
-                  </span>
-                  <Palette className="w-3.5 h-3.5 text-neutral-400" />
-                </div>
-                <div className="text-xl font-bold font-mono text-neutral-900 dark:text-zinc-100 mt-0.5">
-                  {stage.count}
-                </div>
-                <div className="text-[10px] text-neutral-400 font-mono">{stage.sub}</div>
-              </div>
+                <span>{t.label}</span>
+                <span
+                  className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full tabular-nums ${
+                    isActive ? "bg-white/25 text-white" : "bg-slate-200/70 dark:bg-white/10 text-slate-600 dark:text-zinc-300"
+                  }`}
+                >
+                  {t.count}
+                </span>
+              </button>
             );
           })}
         </div>
-      </div>
 
-      {/* ── 3. Segmented Filter Pills & Control Strip (Aligned to Marketing Desk) ── */}
-      <div className="bg-white dark:bg-[#12141d] border-b border-[#E2E8F0] dark:border-white/[0.08] px-6 py-2.5 shrink-0 flex flex-wrap items-center justify-between gap-3">
-        {/* Left: Odoo Segmented Stage Filter Pills */}
-        <WorkflowTabStrip
-          tabs={stages}
-          activeTab={selectedStage}
-          onSelectTab={setSelectedStage}
-          compact
-        />
-
-        {/* Right: Search & Trend Dropdown */}
-        <div className="flex items-center gap-2 flex-1 sm:flex-initial justify-end flex-wrap">
+        {/* Right Search & Filter Select */}
+        <div className="flex items-center gap-2 flex-1 sm:flex-initial justify-end">
           {uniqueTrends.length > 0 && (
             <select
               value={selectedTrend}
               onChange={(e) => setSelectedTrend(e.target.value)}
-              className="h-8 px-2.5 rounded border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs text-neutral-700 dark:text-zinc-200 focus:outline-none focus:border-[#714B67] cursor-pointer"
+              className="h-9 px-3 rounded-lg bg-slate-100/80 dark:bg-zinc-900 hover:bg-slate-200/60 dark:hover:bg-zinc-850 text-xs font-medium text-slate-700 dark:text-zinc-200 border border-slate-200/70 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-[#006d32]/15 focus:border-[#006d32]/40 cursor-pointer transition"
             >
-              <option value="all">All Themes / Trends</option>
-              {uniqueTrends.map((t) => (
-                <option key={t} value={t}>
-                  {t}
+              <option value="all">All Trends / Themes</option>
+              {uniqueTrends.map((tr) => (
+                <option key={tr} value={tr}>
+                  {tr}
                 </option>
               ))}
             </select>
           )}
 
-          <div className="relative">
-            <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <div className="relative w-60 sm:w-72 group">
+            <Search className="w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#006d32] transition-colors pointer-events-none" />
             <input
               type="text"
+              placeholder="Search code, title, customer..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search code, title, customer..."
-              className="h-8 pl-8 pr-3 w-48 sm:w-64 rounded border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs text-neutral-900 dark:text-zinc-100 placeholder-neutral-400 focus:outline-none focus:border-[#714B67]"
+              className="w-full h-9 pl-[34px] pr-8 rounded-lg bg-slate-100/80 dark:bg-zinc-900 hover:bg-slate-200/50 dark:hover:bg-zinc-850 focus:bg-white dark:focus:bg-zinc-900 text-xs text-slate-800 dark:text-zinc-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500 border border-slate-200/70 dark:border-white/10 focus:border-[#006d32]/40 focus:outline-none focus:ring-2 focus:ring-[#006d32]/15 shadow-2xs transition-all"
             />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={() => setSearchTerm("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-4.5 h-4.5 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-200/80 dark:hover:bg-white/10 transition-colors cursor-pointer"
+                title="Clear search"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            )}
           </div>
         </div>
       </div>
 
-      {/* ── 4. Main Body: Table View ── */}
-      <div className="flex-1 overflow-y-auto p-6 min-h-0">
-        {filteredDesigns.length === 0 ? (
-          <EmptyState
-            icon={Palette}
-            title="No design briefs match the selected filters"
-            description="Try adjusting your stage, trend dropdown, or search query."
-            onResetFilters={() => {
-              setSelectedStage("all");
-              setSelectedTrend("all");
-              setSearchTerm("");
-            }}
-          />
-        ) : (
-          /* Odoo ERP Table View */
-          <div className="bg-white dark:bg-[#12141d] rounded-xl border border-[#E2E8F0] dark:border-white/[0.08] shadow-2xs overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-[#F8F9FA] dark:bg-zinc-900/80 text-[11px] font-semibold text-neutral-500 uppercase tracking-wider border-b border-[#E2E8F0] dark:border-white/[0.08]">
-                  <tr>
-                    <th className="py-2.5 px-3">Ref Code</th>
-                    <th className="py-2.5 px-3">Design Brief &amp; Title</th>
-                    <th className="py-2.5 px-3">Customer / Brand</th>
-                    <th className="py-2.5 px-3">Theme / Trend</th>
-                    <th className="py-2.5 px-3">Target Audience</th>
-                    <th className="py-2.5 px-3 text-center">Variants</th>
-                    <th className="py-2.5 px-3">References</th>
-                    <th className="py-2.5 px-3">Due Date</th>
-                    <th className="py-2.5 px-3">Status</th>
-                    <th className="py-2.5 px-3 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#F1F5F9] dark:divide-white/[0.04]">
-                  {filteredDesigns.map((item) => (
-                    <tr
-                      key={item.id}
-                      onClick={() => {
+      {/* ── 3. Full-Bleed Table Workspace ── */}
+      <div className="flex-1 min-h-0 overflow-auto bg-white dark:bg-[#0c0d14] flex flex-col">
+        <table className="w-full text-left text-xs border-collapse">
+          <thead className="sticky top-0 z-10 bg-slate-50/90 dark:bg-[#121622] backdrop-blur-xs border-b border-slate-200/70 dark:border-white/[0.07]">
+            <tr className="text-slate-600 dark:text-zinc-400 font-mono text-[11px] uppercase tracking-wider select-none">
+              <th className="py-3 pl-6 pr-3 font-semibold whitespace-nowrap">Ref Code</th>
+              <th className="py-3 px-4 font-semibold">Design Brief &amp; Title</th>
+              <th className="py-3 px-4 font-semibold whitespace-nowrap">Customer / Brand</th>
+              <th className="py-3 px-4 font-semibold whitespace-nowrap">Theme / Trend</th>
+              <th className="py-3 px-4 font-semibold whitespace-nowrap">Target Audience</th>
+              <th className="py-3 px-4 font-semibold text-center whitespace-nowrap">Variants</th>
+              <th className="py-3 px-4 font-semibold whitespace-nowrap">Due Date</th>
+              <th className="py-3 px-4 font-semibold whitespace-nowrap">Status</th>
+              <th className="py-3 pl-4 pr-6 font-semibold text-right whitespace-nowrap">Action</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100 dark:divide-white/[0.04]">
+            {filteredDesigns.length === 0 ? (
+              <tr>
+                <td colSpan={9} className="py-16 text-center">
+                  <div className="max-w-sm mx-auto flex flex-col items-center">
+                    <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-white/[0.05] text-slate-400 dark:text-zinc-500 flex items-center justify-center mb-3">
+                      <Palette className="w-6 h-6" />
+                    </div>
+                    <h3 className="text-sm font-bold text-slate-800 dark:text-zinc-200">No Design Briefs Found</h3>
+                    <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">
+                      {searchTerm || selectedTrend !== "all" || selectedStage !== "all"
+                        ? "No design briefs match your search or active filter."
+                        : "There are currently no graphic design briefs registered."}
+                    </p>
+                    {(searchTerm || selectedTrend !== "all" || selectedStage !== "all") && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSearchTerm("");
+                          setSelectedTrend("all");
+                          setSelectedStage("all");
+                        }}
+                        className="mt-3 text-xs font-semibold text-[#006d32] dark:text-emerald-400 hover:underline cursor-pointer"
+                      >
+                        Reset filters
+                      </button>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ) : (
+              filteredDesigns.map((item) => (
+                <tr
+                  key={item.id}
+                  onClick={() => {
+                    if (item.isBrief && item.rawBrief) onInspectBrief(item.rawBrief);
+                    else if (!item.isBrief && item.rawReq) onInspectRequest(item.rawReq);
+                  }}
+                  className="hover:bg-slate-50/80 dark:hover:bg-white/[0.025] transition-colors cursor-pointer"
+                >
+                  <td className="py-3 pl-6 pr-3 whitespace-nowrap">
+                    <CopyBadge text={item.refCode} />
+                  </td>
+                  <td className="py-3 px-4 text-slate-900 dark:text-zinc-100 font-medium max-w-xs">
+                    <span className="line-clamp-1">{item.title}</span>
+                  </td>
+                  <td className="py-3 px-4 text-slate-600 dark:text-zinc-300 whitespace-nowrap font-medium">
+                    {item.customer}
+                  </td>
+                  <td className="py-3 px-4 whitespace-nowrap">
+                    <span className="px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-zinc-300 text-[11px] font-medium">
+                      {item.trend}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 text-slate-600 dark:text-zinc-300 whitespace-nowrap">
+                    {item.targetAudience}
+                  </td>
+                  <td className="py-3 px-4 text-center font-mono">
+                    <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/10 text-[11px] font-semibold text-slate-700 dark:text-zinc-300">
+                      {item.variantsCount} Artworks
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 font-mono text-[11px] text-slate-500 dark:text-zinc-400 whitespace-nowrap">
+                    {item.dueDate}
+                  </td>
+                  <td className="py-3 px-4 whitespace-nowrap">
+                    <StatusPill status={item.proofStatus} size="sm" />
+                  </td>
+                  <td className="py-3.5 pl-4 pr-6 text-right whitespace-nowrap">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
                         if (item.isBrief && item.rawBrief) onInspectBrief(item.rawBrief);
                         else if (!item.isBrief && item.rawReq) onInspectRequest(item.rawReq);
                       }}
-                      className="hover:bg-neutral-50/80 dark:hover:bg-zinc-800/40 transition cursor-pointer"
+                      className="px-3 py-1 rounded-lg bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/15 text-slate-700 dark:text-zinc-200 text-xs font-medium font-mono transition cursor-pointer"
                     >
-                      <td className="py-2.5 px-3 whitespace-nowrap">
-                        <CopyBadge text={item.refCode} />
-                      </td>
-                      <td className="py-2.5 px-3 text-neutral-900 dark:text-zinc-100 font-medium max-w-xs">
-                        <span className="line-clamp-1">{item.title}</span>
-                      </td>
-                      <td className="py-2.5 px-3 text-neutral-600 dark:text-zinc-400 whitespace-nowrap font-medium">
-                        {item.customer}
-                      </td>
-                      <td className="py-2.5 px-3 text-neutral-700 dark:text-zinc-300 whitespace-nowrap">
-                        <span className="px-2 py-0.5 rounded bg-purple-50 dark:bg-purple-950/40 text-[#714B67] dark:text-purple-300 border border-[#714B67]/20 text-[11px] font-semibold">
-                          {item.trend}
-                        </span>
-                      </td>
-                      <td className="py-2.5 px-3 text-neutral-600 dark:text-zinc-400 whitespace-nowrap">
-                        {item.targetAudience}
-                      </td>
-                      <td className="py-2.5 px-3 text-center font-mono">
-                        <span className="px-2 py-0.5 rounded bg-neutral-100 dark:bg-zinc-800 text-[11px] font-semibold text-neutral-700 dark:text-zinc-300">
-                          {item.variantsCount} Artworks
-                        </span>
-                      </td>
-                      <td className="py-2.5 px-3 font-mono text-[11px] text-neutral-500 whitespace-nowrap">
-                        {item.referenceCount > 0 ? (
-                          <span className="inline-flex items-center gap-1 text-[#017E84] font-semibold">
-                            <ImageIcon className="w-3 h-3" />
-                            {item.referenceCount} File{item.referenceCount > 1 ? "s" : ""}
-                          </span>
-                        ) : (
-                          <span className="text-neutral-400">—</span>
-                        )}
-                      </td>
-                      <td className="py-2.5 px-3 font-mono text-[11px] text-neutral-500 whitespace-nowrap">
-                        {item.dueDate}
-                      </td>
-                      <td className="py-2.5 px-3 whitespace-nowrap">
-                        <StatusPill status={item.proofStatus} size="sm" />
-                      </td>
-                      <td className="py-2.5 px-3 text-right">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (item.isBrief && item.rawBrief) onInspectBrief(item.rawBrief);
-                            else if (!item.isBrief && item.rawReq) onInspectRequest(item.rawReq);
-                          }}
-                          className="px-2.5 py-1 rounded border border-[#CED4DA] dark:border-zinc-700 hover:bg-neutral-100 dark:hover:bg-zinc-800 text-[11px] font-semibold text-neutral-700 dark:text-zinc-200 shadow-2xs transition cursor-pointer"
-                        >
-                          Open
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
+                      Inspect
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
+
+      {/* ── 4. Compact Footer / Status Strip ── */}
+      <footer className="mt-auto px-6 py-2.5 bg-white dark:bg-[#0e121a] border-t border-slate-100 dark:border-white/[0.06] flex items-center justify-between text-xs text-slate-500 dark:text-zinc-400 font-mono shrink-0">
+        <span>
+          Showing {filteredDesigns.length} of {unifiedDesigns.length} design briefs
+        </span>
+        <div className="flex items-center gap-4">
+          <span className="hidden sm:flex items-center gap-1.5 text-slate-400 dark:text-zinc-500">
+            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+            Sorted by Latest Raised Intake
+          </span>
+        </div>
+      </footer>
     </div>
   );
 };

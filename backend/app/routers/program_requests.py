@@ -13,6 +13,8 @@ from app.schemas.program_request import (
     ProgramRequestCreate,
     ProgramRequestOut,
     ProgramRequestUpdate,
+    ProgramReviewSubmit,
+    ProgramSeenSubmit,
     SingleSampRemarkUpdate,
 )
 from app.services.program_request_service import ProgramRequestService
@@ -180,6 +182,42 @@ def delete_program_material(
     return item
 
 
+@router.post(
+    "/{request_id}/review",
+    response_model=ProgramRequestOut,
+    summary="Submit sign-off review by Sampling Team or Plant Team",
+)
+def submit_program_review(
+    request_id: int,
+    payload: ProgramReviewSubmit,
+    service: ProgramRequestService = Depends(get_program_service),
+    current_user=Depends(get_optional_current_user),
+):
+    """Record technical or manufacturing review, verdict, and remarks."""
+    item = service.submit_review(request_id, payload, current_user=current_user)
+    if not item:
+        raise HTTPException(status_code=404, detail="Program planning request was not found")
+    return item
+
+
+@router.post(
+    "/{request_id}/seen",
+    response_model=ProgramRequestOut,
+    summary="Record that Sampling Team or Plant Team has seen/opened this program request",
+)
+def mark_program_seen(
+    request_id: int,
+    payload: ProgramSeenSubmit,
+    service: ProgramRequestService = Depends(get_program_service),
+    current_user=Depends(get_optional_current_user),
+):
+    """Update seen status timestamp and viewer."""
+    item = service.mark_seen(request_id, payload, current_user=current_user)
+    if not item:
+        raise HTTPException(status_code=404, detail="Program planning request was not found")
+    return item
+
+
 @router.delete(
     "/{request_id}",
     status_code=status.HTTP_204_NO_CONTENT,
@@ -194,3 +232,4 @@ def delete_program_request(
     if not deleted:
         raise HTTPException(status_code=404, detail="Program planning request was not found")
     return None
+

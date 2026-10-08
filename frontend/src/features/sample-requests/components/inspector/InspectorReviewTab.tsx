@@ -12,103 +12,100 @@ export const InspectorReviewTab: React.FC<InspectorReviewTabProps> = ({
   activeRequest,
 }) => {
   return (
-    <div className="py-4 space-y-4">
+    <div className="py-4 space-y-5">
       {trackType === "program_planning" ? (
         /* Plant Planning SCU Effort */
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <div className="bg-[#F8F9FA] dark:bg-zinc-900 border border-[#CED4DA] dark:border-zinc-700 p-3 rounded">
-            <div className="font-mono text-[10px] uppercase text-neutral-500 font-bold">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+          <div className="bg-[#eff4ff]/60 dark:bg-white/5 border border-slate-100/80 dark:border-white/5 p-4 rounded-2xl">
+            <div className="font-display text-[10px] uppercase text-slate-400 font-bold">
               Base Notebook Effort
             </div>
-            <div className="text-base font-extrabold text-neutral-900 dark:text-zinc-100 font-mono mt-1">
+            <div className="text-lg font-bold text-slate-900 dark:text-zinc-100 font-display mt-1">
               1.00 SCU
             </div>
-            <div className="text-[11px] text-neutral-500 mt-0.5">
+            <div className="text-[11px] text-slate-500 mt-0.5">
               Standard scholastic binding baseline.
             </div>
           </div>
-          <div className="bg-[#F8F9FA] dark:bg-zinc-900 border border-[#CED4DA] dark:border-zinc-700 p-3 rounded">
-            <div className="font-mono text-[10px] uppercase text-neutral-500 font-bold">
+          <div className="bg-[#eff4ff]/60 dark:bg-white/5 border border-slate-100/80 dark:border-white/5 p-4 rounded-2xl">
+            <div className="font-display text-[10px] uppercase text-slate-400 font-bold">
               Wiro + Tab Modifier
             </div>
-            <div className="text-base font-extrabold text-[#017E84] font-mono mt-1">
+            <div className="text-lg font-bold text-[#006d32] dark:text-[#00d166] font-display mt-1">
               +0.50 SCU
             </div>
-            <div className="text-[11px] text-neutral-500 mt-0.5">
+            <div className="text-[11px] text-slate-500 mt-0.5">
               Twin loop wire insertion &amp; tabs.
             </div>
           </div>
-          <div className="bg-[#F8F9FA] dark:bg-zinc-900 border border-[#CED4DA] dark:border-zinc-700 p-3 rounded">
-            <div className="font-mono text-[10px] uppercase text-neutral-500 font-bold">
+          <div className="bg-[#eff4ff]/60 dark:bg-white/5 border border-slate-100/80 dark:border-white/5 p-4 rounded-2xl">
+            <div className="font-display text-[10px] uppercase text-slate-400 font-bold">
               Total Capacity Required
             </div>
-            <div className="text-base font-extrabold text-[#714B67] dark:text-purple-300 font-mono mt-1">
+            <div className="text-lg font-bold text-slate-900 dark:text-zinc-100 font-display mt-1">
               1.90 SCU
             </div>
-            <div className="text-[11px] text-neutral-500 mt-0.5">
+            <div className="text-[11px] text-slate-500 mt-0.5">
               Plant 01 Workcentre WC-30 (Finishing).
             </div>
           </div>
         </div>
-      ) : (
+      ) : trackType === "feasibility_check" ? (
         /* Feasibility Review: Dedicated SAMP Technical Evaluation */
         <div className="space-y-4">
           {activeRequest.samplingFeasibilityResponse ? (
             /* Evaluated View */
-            <div className="space-y-4">
-              <div className="p-4 rounded border bg-[#FBFBFC] dark:bg-zinc-900/60 border-neutral-200 dark:border-zinc-800">
-                <div className="flex items-center justify-between flex-wrap gap-2 mb-2 pb-2 border-b border-neutral-200 dark:border-zinc-800">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-neutral-600 dark:text-zinc-400 font-mono">
-                      Technical Verdict:
-                    </span>
-                    <span
-                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded text-xs font-bold font-mono border ${
-                        activeRequest.samplingFeasibilityResponse === "Yes"
-                          ? "bg-emerald-50 text-emerald-800 border-emerald-300"
-                          : activeRequest.samplingFeasibilityResponse === "No"
-                          ? "bg-rose-50 text-rose-800 border-rose-300"
-                          : "bg-amber-50 text-amber-800 border-amber-300"
-                      }`}
-                    >
-                      {activeRequest.samplingFeasibilityResponse === "Yes" && "✓ Feasible (Yes)"}
-                      {activeRequest.samplingFeasibilityResponse === "No" && "✕ Not Feasible (No)"}
-                      {activeRequest.samplingFeasibilityResponse === "Maybe" &&
-                        "⚠ Conditional Feasibility (Maybe)"}
-                    </span>
-                  </div>
-                  <div className="text-[11px] font-mono text-neutral-500">
-                    Evaluated by:{" "}
-                    <span className="font-semibold text-neutral-800 dark:text-zinc-200">
-                      {activeRequest.samplingFeasibilityApprovedBy || "SAMP Team"}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="mt-2">
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-neutral-400 block mb-1">
-                    Technical Explanation &amp; Feasibility Assessment:
+            <div className="p-5 rounded-2xl bg-white dark:bg-[#161928] border border-slate-100 dark:border-white/5 shadow-[0_4px_20px_rgba(11,28,48,0.02)] space-y-3">
+              <div className="flex items-center justify-between flex-wrap gap-2 pb-3 border-b border-slate-100 dark:border-white/5">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-slate-600 dark:text-zinc-400 font-display">
+                    Technical Verdict:
                   </span>
-                  <div className="text-xs text-neutral-900 dark:text-zinc-100 font-sans leading-relaxed whitespace-pre-wrap">
-                    {activeRequest.samplingFeasibilityRemark || "Technical specifications verified feasible."}
-                  </div>
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold font-display ${
+                      activeRequest.samplingFeasibilityResponse === "Yes"
+                        ? "bg-emerald-50 text-[#006d32] dark:bg-emerald-950/60 dark:text-[#00d166]"
+                        : activeRequest.samplingFeasibilityResponse === "No"
+                        ? "bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300"
+                        : "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300"
+                    }`}
+                  >
+                    {activeRequest.samplingFeasibilityResponse === "Yes" && "✓ Feasible (Approved)"}
+                    {activeRequest.samplingFeasibilityResponse === "No" && "✕ Not Feasible (Rejected)"}
+                    {activeRequest.samplingFeasibilityResponse === "Maybe" && "⚠ Conditional Feasibility"}
+                  </span>
+                </div>
+                <div className="text-xs font-mono text-slate-500">
+                  Evaluated by:{" "}
+                  <span className="font-semibold text-slate-800 dark:text-zinc-200">
+                    {activeRequest.samplingFeasibilityApprovedBy || "SAMP Team"}
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <span className="text-[10px] font-display uppercase tracking-wider text-slate-400 block mb-1">
+                  Technical Explanation &amp; Assessment:
+                </span>
+                <div className="p-3.5 rounded-xl bg-slate-50/70 dark:bg-zinc-900/40 text-xs text-slate-800 dark:text-zinc-200 leading-relaxed font-sans whitespace-pre-wrap">
+                  {activeRequest.samplingFeasibilityRemark || "Technical specifications verified feasible."}
                 </div>
               </div>
             </div>
           ) : (
             /* Awaiting SAMP Team Evaluation */
-            <div className="p-4 rounded border border-amber-200 dark:border-amber-900/40 bg-amber-50/40 dark:bg-amber-950/20 space-y-2">
+            <div className="p-5 rounded-2xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/30 space-y-2">
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-amber-600 shrink-0" />
-                <span className="font-bold text-xs text-amber-900 dark:text-amber-300 font-mono">
-                  Awaiting Technical Evaluation by SAMP Team
+                <span className="font-bold text-xs text-amber-900 dark:text-amber-300 font-display">
+                  Awaiting Technical Review by Sampling Team
                 </span>
               </div>
               <p className="text-xs text-amber-800/90 dark:text-amber-300/80 leading-relaxed font-sans">
-                Marketing has logged this request. A SAMP Team engineer must claim this task from the SAMP Desk
-                and determine whether the product is technically feasible before you can accept or reject.
+                This feasibility check is pending laboratory evaluation. The SAMP team will determine
+                manufacturing viability before commercial production release.
               </p>
-              <div className="text-[11px] font-mono text-neutral-500 pt-1">
+              <div className="text-[11px] font-mono text-slate-500 pt-1">
                 Status:{" "}
                 {activeRequest.takenBySamp
                   ? `Claimed by ${activeRequest.takenBySamp} (In Review)`
@@ -117,7 +114,78 @@ export const InspectorReviewTab: React.FC<InspectorReviewTabProps> = ({
             </div>
           )}
         </div>
+      ) : (
+        /* Commercial Sample Request: Cross-Departmental Execution Review */
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+            {/* Department 1: Creative Studio */}
+            <div className="p-4 rounded-2xl bg-white dark:bg-[#161928] border border-slate-100 dark:border-white/5 shadow-[0_4px_20px_rgba(11,28,48,0.02)] space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold font-display text-slate-800 dark:text-zinc-200">
+                  Creative &amp; Artwork Brief
+                </span>
+                <span className="px-2 py-0.5 rounded-lg text-[10.5px] font-mono font-bold bg-[#eff4ff] text-[#006d32]">
+                  {activeRequest.targetArtworkDateCreative ? "Scheduled" : "In Progress"}
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                {activeRequest.designsCustomerCreative || activeRequest.productArtworkNos
+                  ? `${activeRequest.designsCustomerCreative || activeRequest.productArtworkNos} Artwork themes assigned to creative designers.`
+                  : "Standard brand artwork specifications applied."}
+              </p>
+            </div>
+
+            {/* Department 2: Structural CAD */}
+            <div className="p-4 rounded-2xl bg-white dark:bg-[#161928] border border-slate-100 dark:border-white/5 shadow-[0_4px_20px_rgba(11,28,48,0.02)] space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold font-display text-slate-800 dark:text-zinc-200">
+                  CAD Dielines &amp; Structural Specs
+                </span>
+                <span className="px-2 py-0.5 rounded-lg text-[10.5px] font-mono font-bold bg-slate-100 text-slate-700">
+                  {activeRequest.mockupRequired ? "Mockup Requested" : "Standard"}
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                {activeRequest.mockupRequired
+                  ? `Mockup requirement: ${activeRequest.mockupRequired}.`
+                  : "Standard packaging construction geometry verified."}
+              </p>
+            </div>
+
+            {/* Department 3: Costing & BOM */}
+            <div className="p-4 rounded-2xl bg-white dark:bg-[#161928] border border-slate-100 dark:border-white/5 shadow-[0_4px_20px_rgba(11,28,48,0.02)] space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold font-display text-slate-800 dark:text-zinc-200">
+                  Costing Estimations &amp; Margins
+                </span>
+                <span className="px-2 py-0.5 rounded-lg text-[10.5px] font-mono font-bold bg-[#eff4ff] text-[#006d32]">
+                  Run: {Number(activeRequest.qtyDesignCosting || 10000).toLocaleString()}
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                BOM costing matrix calculated based on required quantity volume.
+              </p>
+            </div>
+
+            {/* Department 4: Plant Execution */}
+            <div className="p-4 rounded-2xl bg-white dark:bg-[#161928] border border-slate-100 dark:border-white/5 shadow-[0_4px_20px_rgba(11,28,48,0.02)] space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold font-display text-slate-800 dark:text-zinc-200">
+                  Plant Fulfillment Facility
+                </span>
+                <span className="px-2 py-0.5 rounded-lg text-[10.5px] font-mono font-bold bg-[#eff4ff] text-[#006d32]">
+                  Plant {activeRequest.targetPlant || "1"}
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Targeted for production schedule and physical prototype dispatch.
+              </p>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
 };
+
+export default InspectorReviewTab;

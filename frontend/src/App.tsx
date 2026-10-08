@@ -1,7 +1,6 @@
 import { useState, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { ArrowRight, LayoutGrid, Settings2 } from "lucide-react";
-import { ThemeProvider } from "@/context/ThemeContext";
 import { BusinessYearProvider } from "@/context/BusinessYearContext";
 import { PlantProvider } from "@/context/PlantContext";
 import { SignInPage, UserProfile, AuthResponse } from "@/features/auth";
@@ -19,6 +18,7 @@ import SamplingTeamDesk from "@/features/samp-team/SamplingTeamDesk";
 import CreativeWorkDesk from "@/features/creative/CreativeWorkDesk";
 import StudioWorkDesk from "@/features/studio/StudioWorkDesk";
 import CostingTeamDesk from "@/features/costing/CostingTeamDesk";
+import PlantExecutionDesk from "@/features/plant/PlantExecutionDesk";
 
 // Low-CLS industrial skeleton loader matching ERP table & ribbon metrics
 function DeskSkeletonLoader() {
@@ -62,11 +62,13 @@ function ActiveModuleView({
   return (
     <ErrorBoundary variant="page">
     <Suspense fallback={<DeskSkeletonLoader />}>
+      <div key={location.pathname} className="flex-1 min-h-0 flex flex-col animate-page-enter">
       {(() => {
         // Executive Operations Overview (Dashboard Landing)
         if (location.pathname === "/dashboard" || location.pathname === "/") {
           return <OperationsOverview />;
         }
+
 
         // Seasonal Program Planning Workspace
         if (location.pathname === "/sample-requests/program-planning") {
@@ -139,10 +141,21 @@ function ActiveModuleView({
           return <SampleRequestsDesk user={user} />;
         }
 
+        // Plant Execution Desk (Seasonal Program Planning, Production Floor, QC, Dispatch)
+        if (
+          location.pathname === "/plant" ||
+          location.pathname === "/plant-execution" ||
+          location.pathname === "/plant-work" ||
+          location.pathname === "/plants" ||
+          location.pathname.startsWith("/plant/") ||
+          location.pathname.startsWith("/plant-execution/")
+        ) {
+          return <PlantExecutionDesk user={user} />;
+        }
+
         // Keep unconfigured destinations honest while giving them the same workspace navigation language.
         const title = getNavigationTitle(location.pathname);
         const descriptionByPath: Record<string, string> = {
-          "/plant": "Plant execution and production-floor workflows are not configured in this workspace yet.",
           "/analytics": "Analytics and service-level views are not configured in this workspace yet.",
           "/members": "Member and plant administration workflows are not configured in this workspace yet.",
           "/settings": "Workspace settings are not available on this page yet.",
@@ -189,7 +202,7 @@ function ActiveModuleView({
                 </div>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
                   {destinations.map((item) => (
-                    <button key={item.path} type="button" onClick={() => navigate(item.path)} className="group flex items-center justify-between rounded-lg border border-zinc-200 bg-white p-4 text-left transition-colors hover:border-brand-300 hover:bg-brand-50/40 dark:border-white/[0.08] dark:bg-[#0f1118] dark:hover:border-brand-800 dark:hover:bg-brand-950/20">
+                    <button key={item.path} type="button" onClick={() => navigate(item.path)} className="group flex items-center justify-between rounded-lg border border-zinc-200 bg-white p-4 text-left transition-colors hover:border-brand-300 hover:bg-brand-50/40 dark:border-white/[0.08] dark:bg-[#0f1118] dark:hover:border-brand-800 dark:hover:bg-brand-950/20 card-hover-lift cursor-pointer">
                       <span>
                         <span className="block text-[13px] font-semibold text-zinc-900 dark:text-zinc-100">{item.label}</span>
                         <span className="mt-0.5 block text-xs text-zinc-500 dark:text-zinc-400">{item.detail}</span>
@@ -203,9 +216,11 @@ function ActiveModuleView({
           </div>
         );
       })()}
+      </div>
     </Suspense>
     </ErrorBoundary>
   );
+
 }
 
 
@@ -347,6 +362,8 @@ function AppRoutes() {
     "/costing-work",
     "/bom",
     "/plant",
+    "/plant/*",
+    "/plants",
     "/analytics",
     "/members",
     "/settings",
@@ -379,14 +396,12 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <BusinessYearProvider>
-        <PlantProvider>
-          <ErrorBoundary variant="page">
-            <AppRoutes />
-          </ErrorBoundary>
-        </PlantProvider>
-      </BusinessYearProvider>
-    </ThemeProvider>
+    <BusinessYearProvider>
+      <PlantProvider>
+        <ErrorBoundary variant="page">
+          <AppRoutes />
+        </ErrorBoundary>
+      </PlantProvider>
+    </BusinessYearProvider>
   );
 }

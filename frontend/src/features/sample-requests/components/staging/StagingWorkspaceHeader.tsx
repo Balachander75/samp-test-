@@ -55,66 +55,58 @@ export const StagingWorkspaceHeader: React.FC<StagingWorkspaceHeaderProps> = ({
   const costingCount = stagedProducts.filter((product) => product.scopes.includes("costing")).length;
 
   return (
-    <div className="bg-white dark:bg-[#12141d] border border-[#CED4DA] dark:border-white/[0.08] rounded shadow-2xs overflow-hidden">
-      {/* ── 1. Top Bar: Breadcrumb, Document Title & Odoo Pipeline Stepper ── */}
-      <div className="px-4 py-2.5 border-b border-[#E2E8F0] dark:border-zinc-800 flex flex-wrap items-center justify-between gap-3 bg-[#FBFBFC] dark:bg-zinc-900/40">
+    <div className="bg-white dark:bg-[#161822] border border-slate-200/60 dark:border-white/[0.06] rounded-2xl shadow-[0_4px_20px_rgba(11,28,48,0.03)] overflow-hidden">
+      {/* ── 1. Top Bar: Breadcrumb, Document Title & Pipeline Stepper ── */}
+      <div className="px-5 py-3 border-b border-slate-100 dark:border-white/[0.06] flex flex-wrap items-center justify-between gap-3 bg-[#f8f9ff] dark:bg-white/[0.02]">
         {/* Left: Return Arrow + Breadcrumb & Title */}
-        <div className="flex items-center gap-2.5 min-w-0">
+        <div className="flex items-center gap-3 min-w-0">
           <button
             type="button"
             onClick={onNavigateBack}
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded border border-[#CED4DA] bg-white text-zinc-600 transition-colors hover:border-[#714B67] hover:bg-[#F3E8EE] hover:text-[#714B67] cursor-pointer dark:border-zinc-700 dark:bg-[#171923] dark:text-zinc-300 dark:hover:text-purple-200"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-white/[0.06] text-slate-600 dark:text-zinc-300 hover:bg-slate-200/80 hover:text-slate-900 transition-colors cursor-pointer"
             title="Return to Requests Desk"
             aria-label="Return to Requests Desk"
           >
-            <ArrowLeft className="h-3.5 w-3.5" />
+            <ArrowLeft className="h-4 w-4" />
           </button>
 
           <div className="min-w-0">
-            <div className="flex items-center gap-1.5 text-[11px] text-zinc-500 dark:text-zinc-400 font-sans leading-none">
+            <div className="flex items-center gap-1.5 text-[11px] text-slate-400 dark:text-zinc-500 font-sans leading-none">
               <button
                 type="button"
                 onClick={onNavigateBack}
-                className="hover:text-[#714B67] hover:underline cursor-pointer"
+                className="hover:text-[#006d32] dark:hover:text-emerald-400 hover:underline cursor-pointer transition-colors"
               >
                 Requests Desk
               </button>
-              <ChevronRight className="w-2.5 h-2.5 text-zinc-400 shrink-0" />
-              <span className="text-zinc-600 dark:text-zinc-300">Commercial Sampling</span>
-              <ChevronRight className="w-2.5 h-2.5 text-zinc-400 shrink-0" />
-              <span className="font-bold text-[#714B67] dark:text-[#E8D7E3]">Product Staging</span>
+              <ChevronRight className="w-2.5 h-2.5 text-slate-300 dark:text-zinc-600 shrink-0" />
+              <span className="text-slate-500 dark:text-zinc-400">Commercial Sampling</span>
+              <ChevronRight className="w-2.5 h-2.5 text-slate-300 dark:text-zinc-600 shrink-0" />
+              <span className="font-semibold text-[#006d32] dark:text-emerald-400">Product Staging</span>
             </div>
 
-            <div className="flex items-center gap-2 mt-1">
-              <h1 className="truncate text-sm sm:text-base font-bold text-zinc-900 dark:text-zinc-50 tracking-tight leading-none">
+            <div className="flex items-center gap-2 mt-1.5">
+              <h1 className="truncate text-base font-bold text-slate-900 dark:text-zinc-50 tracking-tight font-display">
                 {programContext.programName || "Commercial Sample Request"}
               </h1>
-              <span className="px-1.5 py-0.2 rounded text-[9.5px] font-mono font-bold bg-[#F3E8EE] text-[#714B67] border border-[#714B67]/25 dark:bg-[#3E2938] dark:text-[#E8D7E3]">
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#006d32]/10 text-[#006d32] dark:text-emerald-400 border border-[#006d32]/20 uppercase tracking-wider">
                 BATCH STAGING
               </span>
             </div>
           </div>
         </div>
 
-        {/* Right: Odoo Pipeline Stage Status Bar */}
-        <div className="flex items-center border border-[#CED4DA] dark:border-zinc-700 rounded overflow-hidden text-[10.5px] font-semibold bg-[#F8F9FA] dark:bg-zinc-900/60 divide-x divide-[#CED4DA] dark:divide-zinc-700 select-none">
-          <div className="px-2.5 py-1 text-zinc-400 dark:text-zinc-500">1. Draft</div>
-          <div className="px-3 py-1 bg-[#714B67] text-white font-bold flex items-center gap-1.5 shadow-2xs">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span>2. Product Staging</span>
-          </div>
-          <div className="px-2.5 py-1 text-zinc-400 dark:text-zinc-500">3. Sampling</div>
-        </div>
       </div>
 
-      {/* ── 2. Unified Action Bar & Streamlined Metadata Ribbon ── */}
-      <div className="px-4 py-2 flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-[#12141d]">
+      {/* ── 2. Action Ribbon & Metadata Chips ── */}
+      <div className="px-5 py-3 flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-[#161822]">
         {/* Left: Primary Workflow Action Buttons */}
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={onOpenAddModal}
-            className="inline-flex h-7 items-center gap-1.5 rounded bg-[#714B67] hover:bg-[#5B3C53] active:bg-[#4b3145] px-3 text-xs font-bold text-white shadow-xs transition-colors cursor-pointer"
+            className="inline-flex h-8 items-center gap-1.5 rounded-xl px-4 text-xs font-bold text-white shadow-[0_2px_10px_rgba(0,109,50,0.25)] hover:shadow-[0_4px_14px_rgba(0,109,50,0.35)] transition-all cursor-pointer active:scale-98"
+            style={{ background: "linear-gradient(135deg, #006d32 0%, #00d166 100%)" }}
           >
             <Plus className="h-3.5 w-3.5 stroke-[2.5]" />
             <span>Add Product</span>
@@ -125,10 +117,10 @@ export const StagingWorkspaceHeader: React.FC<StagingWorkspaceHeaderProps> = ({
               type="button"
               onClick={onSaveAsDraft}
               disabled={isSubmittingAll || isReleasing}
-              className="inline-flex h-7 items-center gap-1.5 rounded border border-[#CED4DA] bg-white px-2.5 text-xs font-semibold text-zinc-700 hover:bg-[#F8F9FA] transition-colors cursor-pointer dark:border-zinc-700 dark:bg-[#12141d] dark:text-zinc-300 dark:hover:bg-zinc-800 disabled:opacity-50"
+              className="inline-flex h-8 items-center gap-1.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-white/[0.06] dark:hover:bg-white/10 px-3.5 text-xs font-semibold text-slate-700 dark:text-zinc-300 transition-colors cursor-pointer disabled:opacity-50"
               title="Save staged products into Draft queue"
             >
-              <BookmarkCheck className="h-3.5 w-3.5 text-zinc-500" />
+              <BookmarkCheck className="h-3.5 w-3.5 text-slate-500" />
               <span>Save as Draft</span>
             </button>
           )}
@@ -138,7 +130,8 @@ export const StagingWorkspaceHeader: React.FC<StagingWorkspaceHeaderProps> = ({
               type="button"
               onClick={onReleaseRequest || onSubmitAll}
               disabled={isSubmittingAll || isReleasing}
-              className="inline-flex h-7 items-center gap-1.5 rounded bg-[#017E84] hover:bg-[#00666A] active:bg-[#005256] px-3 text-xs font-bold text-white shadow-xs transition-colors cursor-pointer disabled:cursor-wait disabled:opacity-60"
+              className="inline-flex h-8 items-center gap-1.5 rounded-xl px-4 text-xs font-bold text-white shadow-[0_2px_10px_rgba(0,109,50,0.25)] hover:shadow-[0_4px_14px_rgba(0,109,50,0.35)] transition-all cursor-pointer disabled:cursor-wait disabled:opacity-60"
+              style={{ background: "linear-gradient(135deg, #006d32 0%, #00d166 100%)" }}
               title="Release this request to active PMT / Creative workflow"
             >
               <Send className="h-3 w-3" />
@@ -156,76 +149,74 @@ export const StagingWorkspaceHeader: React.FC<StagingWorkspaceHeaderProps> = ({
             <button
               type="button"
               onClick={onClearAll}
-              className="inline-flex h-7 items-center gap-1 rounded text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-2 text-[11px] font-semibold transition-colors cursor-pointer dark:text-rose-400 dark:hover:bg-rose-950/40 ml-1"
+              className="inline-flex h-8 items-center gap-1 rounded-xl text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-2.5 text-xs font-semibold transition-colors cursor-pointer dark:text-rose-400 dark:hover:bg-rose-950/40 ml-1"
             >
-              <Trash2 className="h-3 w-3" />
+              <Trash2 className="h-3.5 w-3.5" />
               <span>Clear</span>
             </button>
           )}
         </div>
 
-        {/* Center / Right: Compact Metadata Chips */}
-        <div className="flex items-center gap-3 text-xs text-zinc-600 dark:text-zinc-300 flex-wrap">
+        {/* Center / Right: Clean Metadata Chips */}
+        <div className="flex items-center gap-2.5 text-xs text-slate-600 dark:text-zinc-300 flex-wrap">
           {programContext.customer && (
-            <div className="flex items-center gap-1 font-medium bg-neutral-50 dark:bg-zinc-800/60 px-2 py-0.5 rounded border border-neutral-200 dark:border-zinc-700">
-              <Building2 className="w-3 h-3 text-[#714B67]" />
-              <span className="text-zinc-400 text-[10.5px]">Account:</span>
-              <span className="font-bold text-zinc-900 dark:text-zinc-100 truncate max-w-[180px]">
+            <div className="flex items-center gap-1.5 font-medium bg-[#eff4ff]/80 dark:bg-white/[0.04] px-3 py-1 rounded-xl border border-slate-200/50 dark:border-white/[0.05]">
+              <span className="text-slate-400 dark:text-zinc-500 text-[10.5px] uppercase tracking-wider font-semibold">Account:</span>
+              <span className="font-bold text-slate-900 dark:text-zinc-100 truncate max-w-[180px]">
                 {programContext.customer}
               </span>
             </div>
           )}
 
-          <div className="flex items-center gap-1 font-medium bg-neutral-50 dark:bg-zinc-800/60 px-2 py-0.5 rounded border border-neutral-200 dark:border-zinc-700">
-            <Calendar className="w-3 h-3 text-[#714B67]" />
-            <span className="text-zinc-400 text-[10.5px]">Season:</span>
-            <span className="font-mono font-bold text-zinc-900 dark:text-zinc-100">
+          <div className="flex items-center gap-1.5 font-medium bg-[#eff4ff]/80 dark:bg-white/[0.04] px-3 py-1 rounded-xl border border-slate-200/50 dark:border-white/[0.05]">
+            <span className="text-slate-400 dark:text-zinc-500 text-[10.5px] uppercase tracking-wider font-semibold">Season:</span>
+            <span className="font-mono font-bold text-slate-900 dark:text-zinc-100">
               {programContext.programYear || "2026"} (BY {programContext.year || "2026-27"})
             </span>
           </div>
 
-          {/* Odoo Smart Stat Pills */}
-          <div className="flex items-center gap-1 pl-1 border-l border-neutral-200 dark:border-zinc-700">
+          {/* Staged Counters */}
+          <div className="flex items-center gap-1.5 pl-1.5 border-l border-slate-200/70 dark:border-zinc-800">
             <span
-              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-[#F3E8EE] text-[#714B67] dark:bg-[#3E2938] dark:text-[#E8D7E3] border border-[#714B67]/20"
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[10.5px] font-mono font-bold bg-[#006d32]/10 text-[#006d32] dark:text-emerald-400 border border-[#006d32]/20"
               title="Total Staged Products"
             >
-              <Package className="w-2.5 h-2.5" />
+              <Package className="w-3 h-3" />
               {stagedProducts.length} Staged
             </span>
             {designCount > 0 && (
               <span
-                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-purple-50 text-purple-700 border border-purple-200"
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[10.5px] font-mono font-bold bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200 dark:border-purple-800/50"
                 title="Design Deliverables"
               >
-                <Palette className="w-2.5 h-2.5" />
+                <Palette className="w-3 h-3" />
                 {designCount} Design
               </span>
             )}
             {mockupCount > 0 && (
               <span
-                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-50 text-amber-700 border border-amber-200"
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[10.5px] font-mono font-bold bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200 dark:border-amber-800/50"
                 title="Mockup Deliverables"
               >
-                <Box className="w-2.5 h-2.5" />
+                <Box className="w-3 h-3" />
                 {mockupCount} Mockup
               </span>
             )}
             {samplingCount > 0 && (
               <span
-                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-violet-50 text-violet-700 border border-violet-200"
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[10.5px] font-mono font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50"
                 title="Sample Deliverables"
               >
-                <Layers className="w-2.5 h-2.5" />
+                <Layers className="w-3 h-3" />
                 {samplingCount} Sample
               </span>
             )}
             {costingCount > 0 && (
               <span
-                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-teal-50 text-[#017E84] border border-teal-200"
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[10.5px] font-mono font-bold bg-teal-50 text-teal-700 dark:bg-teal-950/40 dark:text-teal-300 border border-teal-200 dark:border-teal-800/50"
                 title="Costing Deliverables"
               >
-                <Calculator className="w-2.5 h-2.5" />
+                <Calculator className="w-3 h-3" />
                 {costingCount} Costing
               </span>
             )}

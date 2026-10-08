@@ -141,3 +141,45 @@ class BatchCreateSampleRequestsPayload(BaseModel):
     sample_required_date: Optional[str] = None
     items: Optional[List[StagedProductItemPayload]] = None
     requests: Optional[List[Dict[str, Any]]] = None
+
+
+class DesignBriefSubmitPayload(BaseModel):
+    product_description: str
+    number_of_designs: int = 1
+    trend: Optional[str] = None
+    target_audience: Optional[str] = None
+    design_required_date: Optional[str] = None
+    reference_image: Optional[str] = None
+    reference_images: Optional[List[str]] = Field(default_factory=list)
+    reference_links: Optional[List[str]] = Field(default_factory=list)
+    design_remarks: Optional[str] = None
+
+
+class CreativeDesignRow(BaseModel):
+    design_number: Optional[str] = None
+    description: str
+    stock_number: Optional[str] = ""
+    remarks: Optional[str] = ""
+
+
+class CreativeOutputPayload(BaseModel):
+    design_file_url: str
+    rows: List[CreativeDesignRow]
+
+
+class MarketingDecisionPayload(BaseModel):
+    decision: str
+
+
+class ProductDetailItem(BaseModel):
+    class_name: Optional[str] = None
+    characteristic_name: Optional[str] = None
+    value: Optional[Any] = None
+    uom: Optional[str] = None
+
+
+class ProductDetailsSavePayload(BaseModel):
+    sample_request_id: Optional[int] = None
+    sampleRequestId: Optional[int] = None
+    details: Optional[List[ProductDetailItem]] = None
+

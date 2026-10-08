@@ -158,7 +158,7 @@ export const MarketingOverviewPage: React.FC<MarketingOverviewPageProps> = ({
         <button
           type="button"
           onClick={() => setFilterTrack("all")}
-          className={`p-4 rounded-xl border text-left transition cursor-pointer shadow-2xs ${
+          className={`p-4 rounded-xl border text-left transition cursor-pointer shadow-2xs card-hover-lift ${
             filterTrack === "all"
               ? "bg-white dark:bg-[#12141d] border-[#714B67] ring-1 ring-[#714B67]/20"
               : "bg-white dark:bg-[#12141d] border-[#CED4DA] dark:border-white/[0.08] hover:border-neutral-300"
@@ -178,7 +178,7 @@ export const MarketingOverviewPage: React.FC<MarketingOverviewPageProps> = ({
         <button
           type="button"
           onClick={() => navigate("/sample-requests/sampling")}
-          className="p-4 rounded-xl border border-[#CED4DA] dark:border-white/[0.08] bg-white dark:bg-[#12141d] hover:border-[#017E84] text-left transition cursor-pointer shadow-2xs group"
+          className="p-4 rounded-xl border border-[#CED4DA] dark:border-white/[0.08] bg-white dark:bg-[#12141d] hover:border-[#017E84] text-left transition cursor-pointer shadow-2xs group card-hover-lift"
         >
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-500">Sampling</span>
@@ -197,7 +197,7 @@ export const MarketingOverviewPage: React.FC<MarketingOverviewPageProps> = ({
         <button
           type="button"
           onClick={() => navigate("/sample-requests/feasibility")}
-          className="p-4 rounded-xl border border-[#CED4DA] dark:border-white/[0.08] bg-white dark:bg-[#12141d] hover:border-amber-500 text-left transition cursor-pointer shadow-2xs group"
+          className="p-4 rounded-xl border border-[#CED4DA] dark:border-white/[0.08] bg-white dark:bg-[#12141d] hover:border-amber-500 text-left transition cursor-pointer shadow-2xs group card-hover-lift"
         >
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-500">Feasibility</span>
@@ -218,7 +218,7 @@ export const MarketingOverviewPage: React.FC<MarketingOverviewPageProps> = ({
         <button
           type="button"
           onClick={() => navigate("/sample-requests/programs")}
-          className="p-4 rounded-xl border border-[#CED4DA] dark:border-white/[0.08] bg-white dark:bg-[#12141d] hover:border-indigo-500 text-left transition cursor-pointer shadow-2xs group"
+          className="p-4 rounded-xl border border-[#CED4DA] dark:border-white/[0.08] bg-white dark:bg-[#12141d] hover:border-indigo-500 text-left transition cursor-pointer shadow-2xs group card-hover-lift"
         >
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-500">Programs</span>
@@ -234,7 +234,7 @@ export const MarketingOverviewPage: React.FC<MarketingOverviewPageProps> = ({
         </button>
 
         {/* Completed */}
-        <div className="p-4 rounded-xl border border-[#CED4DA] dark:border-white/[0.08] bg-white dark:bg-[#12141d] shadow-2xs">
+        <div className="p-4 rounded-xl border border-[#CED4DA] dark:border-white/[0.08] bg-white dark:bg-[#12141d] shadow-2xs card-hover-lift transition-all">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-500">Completed</span>
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
@@ -263,7 +263,7 @@ export const MarketingOverviewPage: React.FC<MarketingOverviewPageProps> = ({
           {/* Sampling */}
           <div
             onClick={() => navigate("/sample-requests/sampling")}
-            className="group flex items-center justify-between p-4 bg-white dark:bg-[#12141d] rounded-xl border border-[#CED4DA] dark:border-white/[0.08] hover:border-[#017E84] hover:shadow-sm transition cursor-pointer overflow-hidden relative"
+            className="group flex items-center justify-between p-4 bg-white dark:bg-[#12141d] rounded-xl border border-[#CED4DA] dark:border-white/[0.08] hover:border-[#017E84] hover:shadow-sm transition cursor-pointer overflow-hidden relative card-hover-lift"
           >
             <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#017E84] rounded-l-xl" />
             <div className="pl-3">
@@ -289,7 +289,7 @@ export const MarketingOverviewPage: React.FC<MarketingOverviewPageProps> = ({
           {/* Feasibility */}
           <div
             onClick={() => navigate("/sample-requests/feasibility")}
-            className="group flex items-center justify-between p-4 bg-white dark:bg-[#12141d] rounded-xl border border-[#CED4DA] dark:border-white/[0.08] hover:border-amber-500 hover:shadow-sm transition cursor-pointer overflow-hidden relative"
+            className="group flex items-center justify-between p-4 bg-white dark:bg-[#12141d] rounded-xl border border-[#CED4DA] dark:border-white/[0.08] hover:border-amber-500 hover:shadow-sm transition cursor-pointer overflow-hidden relative card-hover-lift"
           >
             <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500 rounded-l-xl" />
             <div className="pl-3">
@@ -319,7 +319,7 @@ export const MarketingOverviewPage: React.FC<MarketingOverviewPageProps> = ({
           {/* Programs */}
           <div
             onClick={() => navigate("/sample-requests/programs")}
-            className="group flex items-center justify-between p-4 bg-white dark:bg-[#12141d] rounded-xl border border-[#CED4DA] dark:border-white/[0.08] hover:border-indigo-500 hover:shadow-sm transition cursor-pointer overflow-hidden relative"
+            className="group flex items-center justify-between p-4 bg-white dark:bg-[#12141d] rounded-xl border border-[#CED4DA] dark:border-white/[0.08] hover:border-indigo-500 hover:shadow-sm transition cursor-pointer overflow-hidden relative card-hover-lift"
           >
             <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500 rounded-l-xl" />
             <div className="pl-3">

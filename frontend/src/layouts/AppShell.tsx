@@ -2,13 +2,10 @@ import React, { useState, useEffect, useRef, useMemo } from "react";
 import { UserProfile } from "@/features/auth";
 import { Sidebar } from "./Sidebar";
 import { getNavigationTitle } from "./navigation";
-import { useTheme } from "@/context/ThemeContext";
 import { useBusinessYear } from "@/context/BusinessYearContext";
 import { usePlant } from "@/context/PlantContext";
 import {
   Menu,
-  Sun,
-  Moon,
   Calendar,
   Clock,
   X,
@@ -38,7 +35,6 @@ export const AppShell: React.FC<AppShellProps> = ({
   onNavigate,
   children,
 }) => {
-  const { theme, toggleTheme } = useTheme();
   const {
     selectedYear,
     setSelectedYear,
@@ -169,7 +165,7 @@ export const AppShell: React.FC<AppShellProps> = ({
   const plantDisplayLabel = activePlantLabel;
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#f8f9ff] dark:bg-[#08090f] text-slate-900 dark:text-zinc-100 font-sans transition-colors duration-150 select-none">
+    <div className="flex h-screen w-screen overflow-hidden bg-[#f8f9ff] text-slate-900 font-sans transition-colors duration-150 select-none">
       {/* Primary Navigation Sidebar */}
       <Sidebar
         user={user}
@@ -182,15 +178,15 @@ export const AppShell: React.FC<AppShellProps> = ({
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
-        {/* THE LUMINOUS ENGINE — FROSTED UTILITY TOP BAR */}
-        <header className="h-14 bg-white/90 dark:bg-[#0c0e16]/90 backdrop-blur-xl text-slate-900 dark:text-white flex items-center justify-between px-4 sm:px-6 border-b border-slate-200/80 dark:border-white/[0.06] shrink-0 z-40 transition-colors gap-3">
+        {/* Enterprise Frosted Utility Top Bar */}
+        <header className="h-14 bg-white/95 backdrop-blur-xl text-slate-900 flex items-center justify-between px-4 sm:px-6 border-b border-slate-200/80 shrink-0 z-40 transition-colors gap-3">
           
           {/* Left: Mobile Menu Toggle & Current Workspace Breadcrumb */}
           <div className="flex items-center gap-3 min-w-0">
             <button
               type="button"
               onClick={() => setIsMobileNavOpen(true)}
-              className="md:hidden p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300 transition focus:outline-none cursor-pointer"
+              className="md:hidden p-1.5 rounded-xl hover:bg-slate-100 text-slate-600 transition focus:outline-none cursor-pointer"
               aria-label="Open navigation menu"
             >
               <Menu className="w-4.5 h-4.5" />
@@ -198,30 +194,30 @@ export const AppShell: React.FC<AppShellProps> = ({
 
             {/* Current Active Workspace Indicator */}
             <div className="flex items-center gap-2.5">
-              <span className="text-xs text-slate-400 dark:text-slate-500 font-medium hidden sm:inline">Workspace</span>
-              <span className="text-slate-300 dark:text-slate-600 text-xs hidden sm:inline">/</span>
-              <h1 className="text-sm sm:text-base font-bold font-display tracking-tight text-slate-900 dark:text-white truncate">
+              <span className="text-xs text-slate-400 font-medium hidden sm:inline">Workspace</span>
+              <span className="text-slate-300 text-xs hidden sm:inline">/</span>
+              <h1 className="text-sm sm:text-base font-bold font-display tracking-tight text-slate-900 truncate">
                 {activeTitle}
               </h1>
-              <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 text-[10px] font-semibold font-mono tracking-wide uppercase border border-emerald-200/60 dark:border-emerald-800/40">
+              <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-semibold font-mono tracking-wide uppercase border border-emerald-200">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 Live
               </span>
             </div>
           </div>
 
-          {/* Right: Multi-Plant Selector, Live Date/Time, BY, Theme Toggle, Profile */}
+          {/* Right: Multi-Plant Selector, Live Date/Time, BY, Profile */}
           <div className="flex items-center gap-2 sm:gap-3">
             {/* Multi-Plant Scope Selector */}
             <div className="relative" ref={plantDropdownRef}>
               <button
                 type="button"
                 onClick={() => setIsPlantDropdownOpen((prev) => !prev)}
-                className="flex items-center gap-1.5 bg-slate-100/90 dark:bg-white/[0.06] hover:bg-slate-200/70 dark:hover:bg-white/[0.1] px-3 py-1.5 rounded-full border border-slate-200/80 dark:border-white/10 text-xs text-slate-800 dark:text-slate-200 cursor-pointer transition select-none shadow-2xs"
+                className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200/80 px-3 py-1.5 rounded-full border border-slate-200/80 text-xs text-slate-800 cursor-pointer transition select-none shadow-2xs"
                 title="Select Active Fulfillment Plant"
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-                <span className="text-[10px] text-slate-400 dark:text-slate-400 uppercase font-mono hidden md:inline">Plant:</span>
+                <span className="text-[10px] text-slate-400 uppercase font-mono hidden md:inline">Plant:</span>
                 <span className="font-semibold text-xs truncate max-w-[130px] sm:max-w-none">
                   {plantDisplayLabel}
                 </span>
@@ -229,8 +225,8 @@ export const AppShell: React.FC<AppShellProps> = ({
               </button>
 
               {isPlantDropdownOpen && (
-                <div className="absolute right-0 top-full mt-2 w-64 rounded-2xl bg-white dark:bg-[#121622] text-slate-800 dark:text-zinc-100 border border-slate-200 dark:border-white/10 shadow-2xl z-50 p-1.5 text-xs select-none animate-in fade-in duration-100">
-                  <div className="px-2.5 py-1.5 text-[10px] font-mono uppercase text-slate-400 font-bold border-b border-slate-100 dark:border-white/[0.06] mb-1">
+                <div className="absolute right-0 top-full mt-2 w-64 rounded-2xl bg-white text-slate-800 border border-slate-200 shadow-xl z-50 p-1.5 text-xs select-none animate-in fade-in duration-100">
+                  <div className="px-2.5 py-1.5 text-[10px] font-mono uppercase text-slate-400 font-bold border-b border-slate-100 mb-1">
                     Select Plant Scope
                   </div>
                   <div className="max-h-60 overflow-y-auto space-y-0.5">
@@ -241,8 +237,8 @@ export const AppShell: React.FC<AppShellProps> = ({
                         onClick={() => handleSelectPlant(opt.code, opt.label)}
                         className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition cursor-pointer ${
                           selectedPlant === opt.code
-                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold"
-                            : "hover:bg-slate-50 dark:hover:bg-white/[0.05] text-slate-700 dark:text-zinc-300 font-medium"
+                            ? "bg-emerald-500/10 text-emerald-600 font-bold"
+                            : "hover:bg-slate-50 text-slate-700 font-medium"
                         }`}
                       >
                         <span className="truncate">{opt.label}</span>
@@ -255,13 +251,13 @@ export const AppShell: React.FC<AppShellProps> = ({
             </div>
 
             {/* Live Clock & Date Badge */}
-            <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100/70 dark:bg-white/[0.04] border border-slate-200/60 dark:border-white/[0.06] text-xs text-slate-600 dark:text-slate-300">
-              <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
+            <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100/70 border border-slate-200/60 text-xs text-slate-600">
+              <div className="flex items-center gap-1.5 text-slate-500">
                 <Calendar className="w-3.5 h-3.5 text-slate-400" />
                 <span>{formattedDate}</span>
               </div>
-              <span className="text-slate-300 dark:text-slate-700">|</span>
-              <div className="flex items-center gap-1.5 font-mono font-semibold text-slate-800 dark:text-slate-200">
+              <span className="text-slate-300">|</span>
+              <div className="flex items-center gap-1.5 font-mono font-semibold text-slate-800">
                 <Clock className="w-3.5 h-3.5 text-slate-400" />
                 <span>{formattedTime}</span>
               </div>
@@ -272,7 +268,7 @@ export const AppShell: React.FC<AppShellProps> = ({
               <button
                 type="button"
                 onClick={() => setIsYearDropdownOpen((prev) => !prev)}
-                className="flex items-center gap-1.5 bg-slate-100/90 dark:bg-white/[0.06] hover:bg-slate-200/70 dark:hover:bg-white/[0.1] px-3 py-1.5 rounded-full border border-slate-200/80 dark:border-white/10 text-slate-800 dark:text-slate-200 font-mono text-xs font-semibold cursor-pointer select-none"
+                className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200/80 px-3 py-1.5 rounded-full border border-slate-200/80 text-slate-800 font-mono text-xs font-semibold cursor-pointer select-none"
                 title="Business Year (October to September)"
               >
                 <span>{selectedYear === "ALL" ? "All Years" : `BY ${selectedYear}`}</span>
@@ -280,7 +276,7 @@ export const AppShell: React.FC<AppShellProps> = ({
               </button>
 
               {isYearDropdownOpen && (
-                <div className="absolute right-0 top-full mt-2 w-56 rounded-2xl bg-white dark:bg-[#121622] text-slate-800 dark:text-zinc-100 border border-slate-200 dark:border-white/10 shadow-2xl z-50 p-1.5 text-xs select-none animate-in fade-in duration-100 max-h-72 overflow-y-auto">
+                <div className="absolute right-0 top-full mt-2 w-56 rounded-2xl bg-white text-slate-800 border border-slate-200 shadow-xl z-50 p-1.5 text-xs select-none animate-in fade-in duration-100 max-h-72 overflow-y-auto">
                   <button
                     type="button"
                     onClick={() => {
@@ -289,8 +285,8 @@ export const AppShell: React.FC<AppShellProps> = ({
                     }}
                     className={`w-full flex items-center justify-between px-3 py-2 rounded-xl font-mono transition cursor-pointer ${
                       selectedYear === "ALL"
-                        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold"
-                        : "text-slate-600 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-white/[0.05]"
+                        ? "bg-emerald-500/10 text-emerald-600 font-bold"
+                        : "text-slate-600 hover:bg-slate-50"
                     }`}
                   >
                     <span>All Business Years</span>
@@ -309,8 +305,8 @@ export const AppShell: React.FC<AppShellProps> = ({
                         }}
                         className={`w-full flex items-center justify-between px-3 py-2 rounded-xl font-mono transition cursor-pointer ${
                           isSelected
-                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold"
-                            : "text-slate-600 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-white/[0.05]"
+                            ? "bg-emerald-500/10 text-emerald-600 font-bold"
+                            : "text-slate-600 hover:bg-slate-50"
                         }`}
                       >
                         <span className="flex items-center gap-1.5">
@@ -325,37 +321,26 @@ export const AppShell: React.FC<AppShellProps> = ({
               )}
             </div>
 
-            {/* Theme Toggle */}
-            <button
-              type="button"
-              onClick={toggleTheme}
-              aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-              title="Toggle Theme"
-              className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300 transition cursor-pointer"
-            >
-              {theme === "dark" ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-600" />}
-            </button>
-
             {/* User Profile Pill & Dropdown */}
             <div className="relative" ref={userMenuRef}>
               <button
                 type="button"
                 onClick={() => setIsUserMenuOpen((prev) => !prev)}
-                className="flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-white/10 cursor-pointer select-none group"
+                className="flex items-center gap-2 pl-2 border-l border-slate-200 cursor-pointer select-none group"
               >
                 <span className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#006d32] to-[#00d166] text-white font-bold flex items-center justify-center text-xs shadow-xs font-display">
                   {initials}
                 </span>
-                <span className="hidden xl:inline text-xs font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[120px]">
+                <span className="hidden xl:inline text-xs font-semibold text-slate-800 truncate max-w-[120px]">
                   {user?.name || "Admin"}
                 </span>
               </button>
 
               {isUserMenuOpen && (
-                <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-white/95 dark:bg-[#121622]/95 backdrop-blur-xl text-slate-800 dark:text-zinc-100 border border-slate-200/80 dark:border-white/10 shadow-2xl z-50 p-1.5 text-xs select-none animate-in fade-in duration-100">
-                  <div className="px-3 py-2 border-b border-slate-100 dark:border-white/[0.06] mb-1">
-                    <p className="font-bold text-slate-900 dark:text-white truncate font-display">{user?.name}</p>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">{user?.role || "Global Admin"}</p>
+                <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-white text-slate-800 border border-slate-200 shadow-xl z-50 p-1.5 text-xs select-none animate-in fade-in duration-100">
+                  <div className="px-3 py-2 border-b border-slate-100 mb-1">
+                    <p className="font-bold text-slate-900 truncate font-display">{user?.name}</p>
+                    <p className="text-[10px] text-slate-400 font-mono">{user?.role || "Global Admin"}</p>
                   </div>
                   <button
                     type="button"
@@ -363,7 +348,7 @@ export const AppShell: React.FC<AppShellProps> = ({
                       setIsUserMenuOpen(false);
                       onNavigate("/settings");
                     }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-white/[0.05] rounded-xl transition text-left cursor-pointer font-medium"
+                    className="w-full flex items-center gap-2 px-3 py-2 text-slate-700 hover:bg-slate-50 rounded-xl transition text-left cursor-pointer font-medium"
                   >
                     <Settings className="w-3.5 h-3.5 text-slate-400" />
                     <span>Workspace Settings</span>
@@ -374,7 +359,7 @@ export const AppShell: React.FC<AppShellProps> = ({
                       setIsUserMenuOpen(false);
                       onLogout();
                     }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl transition text-left cursor-pointer font-semibold"
+                    className="w-full flex items-center gap-2 px-3 py-2 text-rose-600 hover:bg-rose-50 rounded-xl transition text-left cursor-pointer font-semibold"
                   >
                     <LogOut className="w-3.5 h-3.5" />
                     <span>Sign Out</span>

@@ -28,6 +28,22 @@ class ProgramRequest(Base):
     status = Column(String(64), nullable=False, default="Pending SAMP Review", server_default="Pending SAMP Review")
     created_by = Column(String(255), nullable=True)
 
+    # Sampling Team Review & Seen status
+    sampling_seen_at = Column(DateTime(timezone=True), nullable=True)
+    sampling_seen_by = Column(String(255), nullable=True)
+    sampling_verdict = Column(String(64), nullable=True)  # "Feasible", "Revisions Required", "Not Feasible", "Pending"
+    sampling_remark = Column(Text, nullable=True)
+    sampling_signed_at = Column(DateTime(timezone=True), nullable=True)
+    sampling_signed_by = Column(String(255), nullable=True)
+
+    # Plant Team Review & Seen status
+    plant_seen_at = Column(DateTime(timezone=True), nullable=True)
+    plant_seen_by = Column(String(255), nullable=True)
+    plant_verdict = Column(String(64), nullable=True)  # "Capacity Confirmed", "Tooling Constrained", "Not Feasible", "Pending"
+    plant_remark = Column(Text, nullable=True)
+    plant_signed_at = Column(DateTime(timezone=True), nullable=True)
+    plant_signed_by = Column(String(255), nullable=True)
+
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
     updated_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
 

@@ -15,6 +15,8 @@ from app.schemas.program_request import (
     ProgramBatchSampRemarksUpdate,
     SingleSampRemarkUpdate,
     ProgramMaterialCreate,
+    ProgramReviewSubmit,
+    ProgramSeenSubmit,
 )
 from app.utils.business_year import get_current_business_year
 
@@ -56,6 +58,18 @@ class ProgramRequestService:
             "program_year": item.program_year,
             "status": item.status,
             "created_by": item.created_by,
+            "sampling_seen_at": item.sampling_seen_at,
+            "sampling_seen_by": item.sampling_seen_by,
+            "sampling_verdict": item.sampling_verdict,
+            "sampling_remark": item.sampling_remark,
+            "sampling_signed_at": item.sampling_signed_at,
+            "sampling_signed_by": item.sampling_signed_by,
+            "plant_seen_at": item.plant_seen_at,
+            "plant_seen_by": item.plant_seen_by,
+            "plant_verdict": item.plant_verdict,
+            "plant_remark": item.plant_remark,
+            "plant_signed_at": item.plant_signed_at,
+            "plant_signed_by": item.plant_signed_by,
             "created_at": item.created_at,
             "updated_at": item.updated_at,
             "materials": [
@@ -314,7 +328,12 @@ class ProgramRequestService:
                 "material_id": mat.id,
                 "material_type": mat.material_type,
                 "supplier_name": mat.supplier_name,
+                "grade": mat.grade,
+                "color_variant": mat.color_variant,
+                "caliper_wt": mat.caliper_wt,
                 "quantity": mat.quantity,
+                "unit": mat.unit,
+                "created_at": mat.created_at.isoformat() if mat.created_at else None,
             },
             actor_id=actor_id,
         )
@@ -383,6 +402,129 @@ class ProgramRequestService:
         )
 
         self.db.refresh(item)
+        return self.serialize(item)
+
+    def submit_review(
+        self,
+        request_id: int,
+        payload: ProgramReviewSubmit,
+        current_user: Optional[Any] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """Submit sign-off review for either Sampling Team or Plant Team."""
+        item = self.repo.get_with_materials(request_id)
+        if not item:
+            return None
+
+        actor_id, actor_name, actor_dept = self._get_actor_info(current_user)
+        reviewer_name = payload.actor_name or actor_name
+        now = datetime.now(timezone.utc)
+        dept = payload.department.lower()
+
+        if "samp" in dept:
+            item.sampling_verdict = payload.verdict
+            item.sampling_remark = (payload.remark or "").strip() or None
+            item.sampling_signed_at = now
+            item.sampling_signed_by = reviewer_name
+            if not item.sampling_seen_at:
+                item.sampling_seen_at = now
+                item.sampling_seen_by = reviewer_name
+            action = "SAMP_REVIEWED"
+            log_dept = "SAMP Team"
+        else:
+            item.plant_verdict = payload.verdict
+            item.plant_remark = (payload.remark or "").strip() or None
+            item.plant_signed_at = now
+            item.plant_signed_by = reviewer_name
+            if not item.plant_seen_at:
+                item.plant_seen_at = now
+                item.plant_seen_by = reviewer_name
+            action = "PLANT_REVIEWED"
+            log_dept = f"Plant Desk ({item.target_plant or 'Fulfillment'})"
+
+        # Dynamically determine overall status based on dual reviews
+        samp_v = (item.sampling_verdict or "").lower()
+        plant_v = (item.plant_verdict or "").lower()
+
+        samp_ok = any(w in samp_v for w in ["feasible", "approved", "yes", "confirmed"])
+        plant_ok = any(w in plant_v for w in ["feasible", "approved", "capacity confirmed", "yes", "scheduled"])
+        has_revision = any("revision" in v or "constrained" in v for v in [samp_v, plant_v])
+
+        if samp_ok and plant_ok:
+            item.status = "Dual Sign-off Completed"
+        elif has_revision:
+            item.status = "Revisions Required"
+        elif samp_ok:
+            item.status = "Reviewed by SAMP Team"
+        elif plant_ok:
+            item.status = "Reviewed by Plant"
+
+        self.repo.add_activity_log(
+            program_request_id=item.id,
+            actor_name=reviewer_name,
+            actor_department=log_dept,
+            action=action,
+            payload={
+                "verdict": payload.verdict,
+                "remark": payload.remark,
+                "department": payload.department,
+                "reviewer": reviewer_name,
+                "signed_at": now.isoformat(),
+            },
+            actor_id=actor_id,
+        )
+
+        self.db.commit()
+        self.db.refresh(item)
+        return self.serialize(item)
+
+    def mark_seen(
+        self,
+        request_id: int,
+        payload: ProgramSeenSubmit,
+        current_user: Optional[Any] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """Mark program request as seen by Sampling Team or Plant Team."""
+        item = self.repo.get_with_materials(request_id)
+        if not item:
+            return None
+
+        actor_id, actor_name, actor_dept = self._get_actor_info(current_user)
+        viewer_name = payload.actor_name or actor_name
+        now = datetime.now(timezone.utc)
+        dept = payload.department.lower()
+
+        is_new_view = False
+        if "samp" in dept:
+            if not item.sampling_seen_at:
+                item.sampling_seen_at = now
+                item.sampling_seen_by = viewer_name
+                is_new_view = True
+                action = "SAMP_VIEWED"
+                log_dept = "SAMP Team"
+        else:
+            if not item.plant_seen_at:
+                item.plant_seen_at = now
+                item.plant_seen_by = viewer_name
+                is_new_view = True
+                action = "PLANT_VIEWED"
+                log_dept = f"Plant Desk ({item.target_plant or 'Fulfillment'})"
+
+        if is_new_view:
+            self.repo.add_activity_log(
+                program_request_id=item.id,
+                actor_name=viewer_name,
+                actor_department=log_dept,
+                action=action,
+                payload={
+                    "viewer": viewer_name,
+                    "department": payload.department,
+                    "viewed_at": now.isoformat(),
+                },
+                actor_id=actor_id,
+            )
+            self.db.commit()
+            self.db.refresh(item)
+
         return self.serialize(item)
 
     def delete(self, request_id: int) -> bool:

@@ -2,22 +2,19 @@ import React, { useState, useMemo } from "react";
 import {
   FileCode2,
   Search,
-  Copy,
-  Check,
-  ChevronRight,
-  Factory,
-  Download,
-  LayoutGrid,
-  List as ListIcon,
-  Box,
-  Maximize2,
-  Layers,
   RefreshCw,
+  Download,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Box,
+  Scissors,
+  Layers,
+  Sparkles,
+  Building2,
 } from "lucide-react";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { CopyBadge } from "@/components/ui/CopyBadge";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { WorkflowTabStrip } from "@/components/erp/WorkflowTabStrip";
 import { exportRecordsToCsv } from "@/lib/csvExport";
 import { DielineItem } from "./types";
 
@@ -25,6 +22,7 @@ export interface StudioArtworkPageProps {
   dielines: DielineItem[];
   selectedYear: string;
   selectedPlant: string;
+  mode?: "all" | "mockup" | "sampling";
   onInspectDieline: (dieline: DielineItem) => void;
   onExportCSV?: () => void;
   onRefresh?: () => Promise<void>;
@@ -34,6 +32,7 @@ export const StudioArtworkPage: React.FC<StudioArtworkPageProps> = ({
   dielines,
   selectedYear,
   selectedPlant,
+  mode = "all",
   onInspectDieline,
   onExportCSV,
   onRefresh,
@@ -43,63 +42,133 @@ export const StudioArtworkPage: React.FC<StudioArtworkPageProps> = ({
   const [formatFilter, setFormatFilter] = useState<string>("all");
   const [plantFilter, setPlantFilter] = useState<string>("all");
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 40;
 
-  // Stage filters matching Marketing structure
-  const stages = useMemo(() => [
-    { id: "all", label: "All Dielines", count: dielines.length, sub: "Total CAD Database" },
-    {
-      id: "intake",
-      label: "CAD Intake",
-      count: dielines.filter((d) => d.status === "CAD Intake").length,
-      sub: "Spec Brief Received",
-    },
-    {
-      id: "construction",
-      label: "Dieline Construction",
-      count: dielines.filter((d) => d.status === "Dieline Construction").length,
-      sub: "ArtiosCAD Drafting",
-    },
-    {
-      id: "simulation",
-      label: "3D Fold Simulation",
-      count: dielines.filter((d) => d.status === "3D Simulation").length,
-      sub: "Interference Check",
-    },
-    {
-      id: "plotter",
-      label: "Plotter Sample Tested",
-      count: dielines.filter((d) => d.status === "Plotter Sample Tested").length,
-      sub: "Kongsberg Cutting",
-    },
-    {
-      id: "cleared",
-      label: "Laser Die Cleared",
-      count: dielines.filter((d) => d.status === "Laser Die Cleared").length,
-      sub: "Machine Tooling Ready",
-    },
-  ], [dielines]);
+  const handleToggleSelectRow = (id: string | number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleToggleSelectAll = () => {
+    if (selectedIds.size === paginatedDielines.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(paginatedDielines.map((d) => d.id)));
+    }
+  };
+
+  // Base dielines matching current mode
+  const baseDielines = useMemo(() => {
+    return dielines;
+  }, [dielines]);
+
+  // Stage filters matching current mode
+  const stages = useMemo(() => {
+    if (mode === "mockup") {
+      return [
+        { id: "all", label: "All Mockups", count: baseDielines.length },
+        {
+          id: "intake",
+          label: "CAD Intake",
+          count: baseDielines.filter((d) => d.status === "CAD Intake").length,
+        },
+        {
+          id: "construction",
+          label: "Dieline Construction",
+          count: baseDielines.filter((d) => d.status === "Dieline Construction").length,
+        },
+        {
+          id: "simulation",
+          label: "3D Fold Simulation",
+          count: baseDielines.filter((d) => d.status === "3D Simulation").length,
+        },
+        {
+          id: "plotter",
+          label: "Plotter Sample Tested",
+          count: baseDielines.filter((d) => d.status === "Plotter Sample Tested").length,
+        },
+      ];
+    }
+
+    if (mode === "sampling") {
+      return [
+        { id: "all", label: "All Sampling CADs", count: baseDielines.length },
+        {
+          id: "plotter",
+          label: "Plotter Cut Verified",
+          count: baseDielines.filter((d) => d.status === "Plotter Sample Tested").length,
+        },
+        {
+          id: "cleared",
+          label: "Laser Die Cleared",
+          count: baseDielines.filter((d) => d.status === "Laser Die Cleared").length,
+        },
+        {
+          id: "construction",
+          label: "CAD Engineering",
+          count: baseDielines.filter((d) => d.status === "Dieline Construction").length,
+        },
+      ];
+    }
+
+    return [
+      { id: "all", label: "All Dielines", count: baseDielines.length },
+      {
+        id: "intake",
+        label: "CAD Intake",
+        count: baseDielines.filter((d) => d.status === "CAD Intake").length,
+      },
+      {
+        id: "construction",
+        label: "Dieline Construction",
+        count: baseDielines.filter((d) => d.status === "Dieline Construction").length,
+      },
+      {
+        id: "simulation",
+        label: "3D Fold Simulation",
+        count: baseDielines.filter((d) => d.status === "3D Simulation").length,
+      },
+      {
+        id: "plotter",
+        label: "Plotter Tested",
+        count: baseDielines.filter((d) => d.status === "Plotter Sample Tested").length,
+      },
+      {
+        id: "cleared",
+        label: "Laser Cleared",
+        count: baseDielines.filter((d) => d.status === "Laser Die Cleared").length,
+      },
+    ];
+  }, [baseDielines, mode]);
 
   // Unique formats for dropdown
   const uniqueFormats = useMemo(() => {
     const set = new Set<string>();
-    dielines.forEach((d) => {
+    baseDielines.forEach((d) => {
       if (d.boxFormat) set.add(d.boxFormat);
     });
     return Array.from(set).sort();
-  }, [dielines]);
+  }, [baseDielines]);
 
   // Unique plants for dropdown
   const uniquePlants = useMemo(() => {
     const set = new Set<string>();
-    dielines.forEach((d) => {
+    baseDielines.forEach((d) => {
       if (d.targetPlant) set.add(d.targetPlant);
     });
     return Array.from(set).sort();
-  }, [dielines]);
+  }, [baseDielines]);
 
   // Filtered dielines
   const filteredDielines = useMemo(() => {
-    return dielines.filter((d) => {
+    return baseDielines.filter((d) => {
       // Stage filter
       if (selectedStage !== "all") {
         if (selectedStage === "intake" && d.status !== "CAD Intake") return false;
@@ -123,13 +192,22 @@ export const StudioArtworkPage: React.FC<StudioArtworkPageProps> = ({
           d.title.toLowerCase().includes(q) ||
           d.client.toLowerCase().includes(q) ||
           d.dimensions.toLowerCase().includes(q) ||
-          d.targetPlant.toLowerCase().includes(q)
+          d.targetPlant.toLowerCase().includes(q) ||
+          d.boxFormat.toLowerCase().includes(q)
         );
       }
 
       return true;
     });
-  }, [dielines, selectedStage, formatFilter, plantFilter, searchTerm]);
+  }, [baseDielines, selectedStage, formatFilter, plantFilter, searchTerm]);
+
+  // Paginated items
+  const paginatedDielines = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredDielines.slice(start, start + pageSize);
+  }, [filteredDielines, currentPage, pageSize]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredDielines.length / pageSize));
 
   const handleExportClick = () => {
     if (onExportCSV) {
@@ -138,7 +216,7 @@ export const StudioArtworkPage: React.FC<StudioArtworkPageProps> = ({
     }
     const dateStr = new Date().toISOString().split("T")[0];
     exportRecordsToCsv({
-      filename: `studio_artwork_dielines_${dateStr}.csv`,
+      filename: `studio_${mode}_dielines_${dateStr}.csv`,
       columns: [
         { header: "Dieline Code", accessor: (d) => d.dielineCode },
         { header: "Title", accessor: (d) => d.title },
@@ -167,31 +245,56 @@ export const StudioArtworkPage: React.FC<StudioArtworkPageProps> = ({
     }
   };
 
+  const deskTitle =
+    mode === "mockup"
+      ? "CAD Mockup & 3D Simulation Workbench"
+      : mode === "sampling"
+      ? "Sampling Tooling & Laser Clearance Workbench"
+      : "Artwork & Structural Dieline Engineering Workbench";
+
+  const alertCount =
+    mode === "mockup"
+      ? baseDielines.filter((d) => d.status === "3D Simulation").length
+      : mode === "sampling"
+      ? baseDielines.filter((d) => d.status === "Laser Die Cleared").length
+      : baseDielines.filter((d) => d.status === "Plotter Sample Tested").length;
+
+  const alertLabel =
+    mode === "mockup"
+      ? `${alertCount} Simulations In Progress`
+      : mode === "sampling"
+      ? `${alertCount} Tooling Cleared`
+      : `${alertCount} Plotter Tested`;
+
   return (
-    <div className="flex-1 flex flex-col min-h-0 bg-[#F8F9FA] dark:bg-[#0b0c10] select-text">
-      {/* ── 1. Compact Page Header (Aligned to Marketing Desk Standards) ── */}
-      <div className="bg-white dark:bg-[#12141d] border-b border-[#E2E8F0] dark:border-white/[0.08] px-6 py-3 shrink-0">
-        <div className="flex items-center justify-between gap-4">
-          {/* Title + Desk Badge */}
-          <div className="flex items-center gap-2.5 min-w-0">
-            <h1 className="text-sm font-bold text-neutral-900 dark:text-white truncate">
-              Artwork &amp; Structural Dieline Engineering Workbench
+    <div className="flex-1 flex flex-col min-h-0 bg-white dark:bg-[#0c0d14] text-slate-800 dark:text-zinc-100 select-text overflow-hidden">
+      {/* ── 1. Compact Editorial Header (Maximized Space for Records) ── */}
+      <header className="bg-white dark:bg-[#121622] px-6 py-3 shrink-0 border-b border-slate-200/60 dark:border-white/[0.06] shadow-[0_1px_4px_rgba(11,28,48,0.02)]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <h1 className="text-base sm:text-lg font-bold tracking-tight text-slate-900 dark:text-zinc-100 font-display">
+              {deskTitle}
             </h1>
-            <span className="shrink-0 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#714B67]/10 text-[#714B67] dark:bg-purple-950/40 dark:text-purple-300 border border-[#714B67]/20">
-              Studio Desk
+            <span className="px-2 py-0.5 rounded-full text-[11px] font-bold font-mono bg-slate-100 dark:bg-white/[0.06] text-slate-600 dark:text-zinc-400">
+              {baseDielines.length} {mode === "mockup" ? "Mockups" : mode === "sampling" ? "Tooling Specs" : "Dielines"}
             </span>
+            {alertCount > 0 && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold font-mono bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40 animate-pulse">
+                ⚡ {alertLabel}
+              </span>
+            )}
           </div>
 
-          {/* Action Buttons & View Switcher */}
+          {/* Quick Actions */}
           <div className="flex items-center gap-2 shrink-0">
             <button
               type="button"
               onClick={handleRefreshClick}
               disabled={isRefreshing}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-neutral-50 dark:hover:bg-zinc-700 text-xs font-semibold text-neutral-700 dark:text-zinc-200 shadow-2xs transition cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-white/[0.06] dark:hover:bg-white/[0.1] text-xs font-semibold text-slate-700 dark:text-zinc-300 transition cursor-pointer disabled:opacity-50"
               title="Refresh Records"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin text-[#017E84]" : ""}`} />
+              <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin text-[#006d32]" : "text-slate-500 dark:text-zinc-400"}`} />
               <span className="hidden sm:inline">Refresh</span>
             </button>
 
@@ -199,67 +302,63 @@ export const StudioArtworkPage: React.FC<StudioArtworkPageProps> = ({
               type="button"
               onClick={handleExportClick}
               disabled={filteredDielines.length === 0}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-neutral-50 dark:hover:bg-zinc-700 text-xs font-semibold text-neutral-700 dark:text-zinc-200 shadow-2xs transition cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-white/[0.06] dark:hover:bg-white/[0.1] text-xs font-semibold text-slate-700 dark:text-zinc-300 transition cursor-pointer disabled:opacity-50"
               title="Export Filtered CSV"
             >
-              <Download className="w-3.5 h-3.5 text-neutral-500" />
+              <Download className="w-3.5 h-3.5 text-slate-500 dark:text-zinc-400" />
               <span className="hidden sm:inline">Export</span>
             </button>
-
           </div>
         </div>
+      </header>
 
-        {/* ── 2. KPI Metric Cards Ribbon (Exact 6 Executive Cards Aligned to Marketing) ── */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 mt-3 pt-3 border-t border-[#F1F5F9] dark:border-white/[0.05]">
-          {stages.map((stage) => {
-            const isSelected = selectedStage === stage.id;
+      {/* ── 2. Floating Filter & Search Strip ── */}
+      <div className="px-6 py-2 bg-white/80 dark:bg-[#0c0d14]/80 backdrop-blur-xs shrink-0 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/50 dark:border-white/[0.06]">
+        {/* Soft Segmented Filter Pills */}
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 select-none">
+          {stages.map((t) => {
+            const isActive = selectedStage === t.id;
             return (
-              <div
-                key={stage.id}
-                onClick={() => setSelectedStage(stage.id)}
-                className={`p-2.5 rounded-lg border transition cursor-pointer ${
-                  isSelected
-                    ? "border-[#714B67] bg-[#714B67]/5 dark:bg-[#714B67]/20 shadow-2xs"
-                    : "border-[#E2E8F0] dark:border-white/[0.06] bg-neutral-50/60 dark:bg-zinc-900/40 hover:border-neutral-300"
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => {
+                  setSelectedStage(t.id);
+                  setCurrentPage(1);
+                }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-150 cursor-pointer ${
+                  isActive
+                    ? "bg-[#006d32] text-white shadow-[0_2px_8px_rgba(0,109,50,0.25)]"
+                    : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 hover:bg-slate-100/80 dark:hover:bg-white/[0.06] bg-transparent"
                 }`}
               >
-                <div className="flex items-center justify-between">
-                  <span className="text-[10.5px] uppercase font-bold text-neutral-500 dark:text-zinc-400 font-mono tracking-wider">
-                    {stage.label}
-                  </span>
-                  <FileCode2 className="w-3.5 h-3.5 text-neutral-400" />
-                </div>
-                <div className="text-xl font-bold font-mono text-neutral-900 dark:text-zinc-100 mt-0.5">
-                  {stage.count}
-                </div>
-                <div className="text-[10px] text-neutral-400 font-mono">{stage.sub}</div>
-              </div>
+                <span>{t.label}</span>
+                <span
+                  className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full tabular-nums ${
+                    isActive ? "bg-white/25 text-white" : "bg-slate-200/70 dark:bg-white/[0.08] text-slate-600 dark:text-zinc-400"
+                  }`}
+                >
+                  {t.count}
+                </span>
+              </button>
             );
           })}
         </div>
-      </div>
 
-      {/* ── 3. Segmented Filter Pills & Control Strip (Aligned to Marketing Desk) ── */}
-      <div className="bg-white dark:bg-[#12141d] border-b border-[#E2E8F0] dark:border-white/[0.08] px-6 py-2.5 shrink-0 flex flex-wrap items-center justify-between gap-3">
-        {/* Left: Odoo Segmented Stage Filter Pills */}
-        <WorkflowTabStrip
-          tabs={stages}
-          activeTab={selectedStage}
-          onSelectTab={setSelectedStage}
-          compact
-        />
-
-        {/* Right: Format Dropdown, Plant Dropdown & Search */}
-        <div className="flex items-center gap-2 flex-1 sm:flex-initial justify-end flex-wrap">
+        {/* Right Search & Filter Dropdowns */}
+        <div className="flex items-center gap-2 flex-1 sm:flex-initial justify-end">
           {uniqueFormats.length > 0 && (
             <select
               value={formatFilter}
-              onChange={(e) => setFormatFilter(e.target.value)}
-              className="h-8 px-2.5 rounded border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs text-neutral-700 dark:text-zinc-200 focus:outline-none focus:border-[#714B67] cursor-pointer"
+              onChange={(e) => {
+                setFormatFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="h-9 px-3 rounded-lg bg-slate-100/80 hover:bg-slate-200/60 dark:bg-white/[0.06] dark:hover:bg-white/[0.08] text-xs font-medium text-slate-700 dark:text-zinc-200 border border-slate-200/70 dark:border-white/[0.08] focus:outline-none focus:ring-2 focus:ring-[#006d32]/15 focus:border-[#006d32]/40 cursor-pointer transition"
             >
-              <option value="all">All Box Formats</option>
+              <option value="all" className="dark:bg-[#121622] dark:text-zinc-200">All Box Formats</option>
               {uniqueFormats.map((f) => (
-                <option key={f} value={f}>
+                <option key={f} value={f} className="dark:bg-[#121622] dark:text-zinc-200">
                   {f}
                 </option>
               ))}
@@ -269,121 +368,232 @@ export const StudioArtworkPage: React.FC<StudioArtworkPageProps> = ({
           {uniquePlants.length > 0 && (
             <select
               value={plantFilter}
-              onChange={(e) => setPlantFilter(e.target.value)}
-              className="h-8 px-2.5 rounded border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs text-neutral-700 dark:text-zinc-200 focus:outline-none focus:border-[#714B67] cursor-pointer"
+              onChange={(e) => {
+                setPlantFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="h-9 px-3 rounded-lg bg-slate-100/80 hover:bg-slate-200/60 dark:bg-white/[0.06] dark:hover:bg-white/[0.08] text-xs font-medium text-slate-700 dark:text-zinc-200 border border-slate-200/70 dark:border-white/[0.08] focus:outline-none focus:ring-2 focus:ring-[#006d32]/15 focus:border-[#006d32]/40 cursor-pointer transition"
             >
-              <option value="all">All Plants</option>
+              <option value="all" className="dark:bg-[#121622] dark:text-zinc-200">All Plants</option>
               {uniquePlants.map((p) => (
-                <option key={p} value={p}>
+                <option key={p} value={p} className="dark:bg-[#121622] dark:text-zinc-200">
                   {p}
                 </option>
               ))}
             </select>
           )}
 
-          <div className="relative">
-            <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <div className="relative w-60 sm:w-72 group">
+            <Search className="w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500 group-focus-within:text-[#006d32] transition-colors pointer-events-none" />
             <input
               type="text"
+              placeholder="Search code, client, box format..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search dieline, client, machine..."
-              className="h-8 pl-8 pr-3 w-48 sm:w-64 rounded border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs text-neutral-900 dark:text-zinc-100 placeholder-neutral-400 focus:outline-none focus:border-[#714B67]"
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-full h-9 pl-[34px] pr-8 rounded-lg bg-slate-100/80 hover:bg-slate-200/50 dark:bg-white/[0.06] dark:hover:bg-white/[0.08] focus:bg-white dark:focus:bg-[#121622] text-xs text-slate-800 dark:text-zinc-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500 border border-slate-200/70 dark:border-white/[0.08] focus:border-[#006d32]/40 focus:outline-none focus:ring-2 focus:ring-[#006d32]/15 shadow-2xs transition-all"
             />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchTerm("");
+                  setCurrentPage(1);
+                }}
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-4.5 h-4.5 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200 hover:bg-slate-200/80 dark:hover:bg-white/[0.1] transition-colors cursor-pointer"
+                title="Clear search"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            )}
           </div>
         </div>
       </div>
 
-      {/* ── 4. Main Body: Table View ── */}
-      <div className="flex-1 overflow-y-auto p-6 min-h-0">
-        {filteredDielines.length === 0 ? (
-          <EmptyState
-            icon={FileCode2}
-            title="No structural dielines match the selected filters"
-            description="Try adjusting your stage tab, packaging format dropdown, or search query."
-            onResetFilters={() => {
-              setSelectedStage("all");
-              setFormatFilter("all");
-              setPlantFilter("all");
-              setSearchTerm("");
-            }}
-          />
-        ) : (
-          /* Odoo ERP Table View */
-          <div className="bg-white dark:bg-[#12141d] rounded-xl border border-[#E2E8F0] dark:border-white/[0.08] shadow-2xs overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-[#F8F9FA] dark:bg-zinc-900/80 text-[11px] font-semibold text-neutral-500 uppercase tracking-wider border-b border-[#E2E8F0] dark:border-white/[0.08]">
-                  <tr>
-                    <th className="py-2.5 px-3">Dieline Code</th>
-                    <th className="py-2.5 px-3">Structural Design Title</th>
-                    <th className="py-2.5 px-3">Client / Brand</th>
-                    <th className="py-2.5 px-3">Format</th>
-                    <th className="py-2.5 px-3">Dimensions</th>
-                    <th className="py-2.5 px-3">Substrate &amp; Caliper</th>
-                    <th className="py-2.5 px-3">Machine Profile</th>
-                    <th className="py-2.5 px-3">Plant</th>
-                    <th className="py-2.5 px-3">Status</th>
-                    <th className="py-2.5 px-3 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#F1F5F9] dark:divide-white/[0.04]">
-                  {filteredDielines.map((d) => (
-                    <tr
-                      key={d.id}
-                      onClick={() => onInspectDieline(d)}
-                      className="hover:bg-neutral-50/80 dark:hover:bg-zinc-800/40 transition cursor-pointer"
+      {/* ── 3. Full-Bleed Table Workspace ── */}
+      <div className="flex-1 min-h-0 overflow-auto bg-white dark:bg-[#0c0d14] flex flex-col">
+        <table className="w-full text-left text-xs border-collapse">
+          <thead className="sticky top-0 z-10 bg-slate-50/90 dark:bg-[#121622]/90 backdrop-blur-xs border-b border-slate-200/70 dark:border-white/[0.08]">
+            <tr className="text-slate-600 dark:text-zinc-400 font-mono text-[11px] uppercase tracking-wider select-none">
+              <th className="py-3 pl-6 pr-3 w-8">
+                <input
+                  type="checkbox"
+                  checked={
+                    paginatedDielines.length > 0 &&
+                    paginatedDielines.every((d) => selectedIds.has(d.id))
+                  }
+                  onChange={handleToggleSelectAll}
+                  className="rounded text-[#006d32] focus:ring-[#006d32] cursor-pointer"
+                />
+              </th>
+              <th className="py-3 px-4 font-semibold whitespace-nowrap">Dieline Code</th>
+              <th className="py-3 px-4 font-semibold">Structural Design Title</th>
+              <th className="py-3 px-4 font-semibold whitespace-nowrap">Client / Brand</th>
+              <th className="py-3 px-4 font-semibold whitespace-nowrap">Packaging Format</th>
+              <th className="py-3 px-4 font-semibold whitespace-nowrap">Dimensions (L×W×D)</th>
+              <th className="py-3 px-4 font-semibold whitespace-nowrap">Substrate &amp; Caliper</th>
+              <th className="py-3 px-4 font-semibold whitespace-nowrap">Machine Profile</th>
+              <th className="py-3 px-4 font-semibold whitespace-nowrap">Plant</th>
+              <th className="py-3 px-4 font-semibold whitespace-nowrap">Status</th>
+              <th className="py-3 pl-4 pr-6 font-semibold text-right whitespace-nowrap">Action</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100 dark:divide-white/[0.04]">
+            {filteredDielines.length === 0 ? (
+              <tr>
+                <td colSpan={11} className="py-16 text-center">
+                  <div className="max-w-sm mx-auto flex flex-col items-center">
+                    <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-white/[0.06] text-slate-400 dark:text-zinc-500 flex items-center justify-center mb-3">
+                      {mode === "mockup" ? (
+                        <Box className="w-6 h-6" />
+                      ) : mode === "sampling" ? (
+                        <Scissors className="w-6 h-6" />
+                      ) : (
+                        <FileCode2 className="w-6 h-6" />
+                      )}
+                    </div>
+                    <h3 className="text-sm font-bold text-slate-800 dark:text-zinc-200">
+                      No {mode === "mockup" ? "Mockup" : mode === "sampling" ? "Tooling Spec" : "Structural"} Dielines Found
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">
+                      {searchTerm || formatFilter !== "all" || plantFilter !== "all" || selectedStage !== "all"
+                        ? "No dielines match your search or active filter."
+                        : "There are currently no structural dielines registered."}
+                    </p>
+                    {(searchTerm || formatFilter !== "all" || plantFilter !== "all" || selectedStage !== "all") && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSearchTerm("");
+                          setFormatFilter("all");
+                          setPlantFilter("all");
+                          setSelectedStage("all");
+                          setCurrentPage(1);
+                        }}
+                        className="mt-3 text-xs font-semibold text-[#006d32] hover:underline cursor-pointer"
+                      >
+                        Reset filters
+                      </button>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ) : (
+              paginatedDielines.map((d) => {
+                const isSelected = selectedIds.has(d.id);
+
+                return (
+                  <tr
+                    key={d.id}
+                    onClick={() => onInspectDieline(d)}
+                    className={`hover:bg-slate-50/80 dark:hover:bg-white/[0.03] transition-colors cursor-pointer group ${
+                      isSelected ? "bg-emerald-50/40 dark:bg-emerald-950/20" : ""
+                    }`}
+                  >
+                    <td
+                      className="py-3.5 pl-6 pr-3 w-8"
+                      onClick={(e) => handleToggleSelectRow(d.id, e)}
                     >
-                      <td className="py-2.5 px-3 whitespace-nowrap">
-                        <CopyBadge text={d.dielineCode} />
-                      </td>
-                      <td className="py-2.5 px-3 text-neutral-900 dark:text-zinc-100 font-medium">
-                        {d.title}
-                      </td>
-                      <td className="py-2.5 px-3 text-neutral-600 dark:text-zinc-400 whitespace-nowrap">
-                        {d.client}
-                      </td>
-                      <td className="py-2.5 px-3 whitespace-nowrap font-mono">
-                        <span className="px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-zinc-800 text-[10.5px]">
-                          {d.boxFormat}
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => {}}
+                        className="rounded text-[#006d32] focus:ring-[#006d32] cursor-pointer"
+                      />
+                    </td>
+                    <td className="py-3.5 px-4 font-mono font-bold whitespace-nowrap">
+                      <CopyBadge text={d.dielineCode} />
+                    </td>
+                    <td className="py-3.5 px-4 text-slate-900 dark:text-zinc-100 font-medium max-w-xs">
+                      <span className="line-clamp-1">{d.title}</span>
+                    </td>
+                    <td className="py-3.5 px-4 font-semibold text-slate-900 dark:text-zinc-100 whitespace-nowrap">
+                      <div className="flex items-center gap-1.5">
+                        <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                        <span className="truncate max-w-[180px]" title={d.client}>
+                          {d.client}
                         </span>
-                      </td>
-                      <td className="py-2.5 px-3 font-mono text-[11px] text-neutral-600 dark:text-zinc-300 whitespace-nowrap">
-                        {d.dimensions}
-                      </td>
-                      <td className="py-2.5 px-3 text-[11px] text-neutral-500 whitespace-nowrap">
-                        <span>{d.substrate}</span>
-                        <span className="ml-1 font-mono text-neutral-400">({d.caliperMicrons}µm)</span>
-                      </td>
-                      <td className="py-2.5 px-3 text-[11px] text-neutral-500 whitespace-nowrap">
-                        {d.machineCompatibility}
-                      </td>
-                      <td className="py-2.5 px-3 text-neutral-600 dark:text-zinc-400 whitespace-nowrap">
-                        {d.targetPlant}
-                      </td>
-                      <td className="py-2.5 px-3 whitespace-nowrap">
-                        <StatusPill status={d.status} size="sm" />
-                      </td>
-                      <td className="py-2.5 px-3 text-right">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onInspectDieline(d);
-                          }}
-                          className="px-2.5 py-1 rounded border border-[#CED4DA] dark:border-zinc-700 hover:bg-neutral-100 dark:hover:bg-zinc-800 text-[11px] font-semibold text-neutral-700 dark:text-zinc-200 shadow-2xs transition cursor-pointer"
-                        >
-                          Inspect
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
+                      </div>
+                    </td>
+                    <td className="py-3.5 px-4 whitespace-nowrap font-mono">
+                      <span className="px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-white/[0.06] text-[10.5px] font-semibold text-slate-700 dark:text-zinc-300">
+                        {d.boxFormat}
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-4 font-mono text-[11px] text-slate-600 dark:text-zinc-400 whitespace-nowrap">
+                      {d.dimensions}
+                    </td>
+                    <td className="py-3.5 px-4 text-[11px] text-slate-500 dark:text-zinc-400 whitespace-nowrap">
+                      <span className="font-medium text-slate-700 dark:text-zinc-300">{d.substrate}</span>
+                      <span className="ml-1 font-mono text-slate-400 dark:text-zinc-500">({d.caliperMicrons}µm)</span>
+                    </td>
+                    <td className="py-3.5 px-4 text-[11px] text-slate-500 dark:text-zinc-400 whitespace-nowrap">
+                      {d.machineCompatibility}
+                    </td>
+                    <td className="py-3.5 px-4 font-mono text-slate-600 dark:text-zinc-400 whitespace-nowrap">
+                      {d.targetPlant}
+                    </td>
+                    <td className="py-3.5 px-4 whitespace-nowrap">
+                      <StatusPill status={d.status} size="sm" />
+                    </td>
+                    <td className="py-3.5 pl-4 pr-6 text-right whitespace-nowrap">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onInspectDieline(d);
+                        }}
+                        className="px-3 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.06] dark:hover:bg-white/[0.1] text-slate-700 dark:text-zinc-300 text-xs font-medium font-mono transition cursor-pointer"
+                      >
+                        Inspect
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
       </div>
+
+      {/* ── 4. Compact Footer / Status Strip ── */}
+      <footer className="mt-auto px-6 py-2.5 bg-white dark:bg-[#121622] border-t border-slate-100 dark:border-white/[0.06] flex items-center justify-between text-xs text-slate-500 dark:text-zinc-400 font-mono shrink-0">
+        <span>
+          Showing {filteredDielines.length === 0 ? 0 : (currentPage - 1) * pageSize + 1}
+          {filteredDielines.length > 0 && <> – {Math.min(filteredDielines.length, currentPage * pageSize)}</>} of {filteredDielines.length} specifications
+        </span>
+        <div className="flex items-center gap-4">
+          <span className="hidden sm:flex items-center gap-1.5 text-slate-400 dark:text-zinc-500">
+            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+            Sorted by Latest Raised Intake
+          </span>
+          {totalPages > 1 && (
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="p-1 rounded-md border border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-white/[0.06] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <span className="px-2 font-mono text-slate-600 dark:text-zinc-400">
+                {currentPage} / {totalPages}
+              </span>
+              <button
+                type="button"
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="p-1 rounded-md border border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-white/[0.06] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+        </div>
+      </footer>
     </div>
   );
 };

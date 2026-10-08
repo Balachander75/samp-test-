@@ -131,13 +131,16 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
     return "overview";
   }, [location.pathname, searchParams]);
 
-  // Handle external navigation states (e.g. from Dashboard or Quick Actions)
+  // Handle external navigation states (e.g. from Dashboard, Quick Actions, or Program Workspace)
   useEffect(() => {
     if ((location.state as any)?.openMarketingSetup) {
       setModalInitialTrack("marketing_request");
       setIsNewModalOpen(true);
     }
-  }, [location.state]);
+    if ((location.state as any)?.toastMessage) {
+      showToast((location.state as any).toastMessage);
+    }
+  }, [location.state, showToast]);
 
   // Fetch Requests from Backend API
   const loadRequests = useCallback(async () => {

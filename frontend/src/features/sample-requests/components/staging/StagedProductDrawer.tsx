@@ -24,14 +24,14 @@ export const StagedProductDrawer: React.FC<StagedProductDrawerProps> = ({
       <div className="fixed inset-0 bg-black/60 transition-opacity" onClick={onClose} />
 
       <div className="flex min-h-full items-center justify-center p-3 sm:p-5">
-        <div className="relative w-full max-w-3xl bg-white dark:bg-[#0f1118] border border-zinc-200 dark:border-white/[0.08] rounded-lg shadow-xl overflow-hidden animate-smooth-modal flex flex-col max-h-[90vh]">
+        <div className="relative w-full max-w-3xl bg-white dark:bg-[#161822] border border-slate-200/80 dark:border-white/[0.08] rounded-2xl shadow-2xl overflow-hidden animate-smooth-modal flex flex-col max-h-[90vh]">
           {/* Header */}
-          <div className="px-6 py-3.5 bg-[#714B67] text-white flex items-center justify-between shrink-0 border-b border-[#5B3C53]">
+          <div className="px-6 py-4 bg-white dark:bg-[#161822] text-slate-900 dark:text-white flex items-center justify-between shrink-0 border-b border-slate-100 dark:border-white/[0.06]">
             <div className="flex items-center gap-2.5">
-              <span className="font-mono font-bold text-xs bg-white/20 text-white px-2 py-0.5 rounded border border-white/25">
+              <span className="font-mono font-bold text-xs bg-[#006d32]/10 text-[#006d32] dark:text-emerald-400 px-2.5 py-0.5 rounded-full border border-[#006d32]/20">
                 {inspectingProduct.materialCode}
               </span>
-              <span className="text-sm font-bold text-white tracking-tight">
+              <span className="text-sm font-bold text-slate-900 dark:text-white tracking-tight font-display">
                 Staged Product Specification
               </span>
             </div>
@@ -39,7 +39,7 @@ export const StagedProductDrawer: React.FC<StagedProductDrawerProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="h-7 w-7 rounded flex items-center justify-center text-white/80 hover:text-white hover:bg-white/15 transition-colors cursor-pointer"
+              className="h-8 w-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 dark:hover:text-white transition-colors cursor-pointer"
               aria-label="Close modal"
             >
               <X className="w-4 h-4" />
@@ -66,10 +66,25 @@ export const StagedProductDrawer: React.FC<StagedProductDrawerProps> = ({
             <div className="flex items-center gap-1.5 flex-wrap pt-1">
               {inspectingProduct.scopes.map((scope) => {
                 const def = DELIVERABLES.find((d) => d.id === scope);
+                const isDesign = scope === "design";
+                const isMockup = scope === "mockup";
+                const isSample = scope === "sample";
+                const isCosting = scope === "costing";
+
+                const badgeStyle = isDesign
+                  ? "bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border-purple-200 dark:border-purple-800/40"
+                  : isMockup
+                  ? "bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 border-amber-200 dark:border-amber-800/40"
+                  : isSample
+                  ? "bg-emerald-50 text-[#006d32] dark:bg-emerald-950/40 dark:text-emerald-300 border-[#006d32]/25"
+                  : isCosting
+                  ? "bg-teal-50 text-teal-700 dark:bg-teal-950/40 dark:text-teal-300 border-teal-200 dark:border-teal-800/40"
+                  : "bg-slate-100 text-slate-800 border-slate-200";
+
                 return (
                   <span
                     key={scope}
-                    className="px-2.5 py-0.5 rounded text-xs font-mono font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700"
+                    className={`px-2.5 py-0.5 rounded-full text-xs font-mono font-bold border ${badgeStyle}`}
                   >
                     {def?.label.toUpperCase() || scope.toUpperCase()}
                   </span>
@@ -276,7 +291,7 @@ export const StagedProductDrawer: React.FC<StagedProductDrawerProps> = ({
           </div>
 
           {/* Footer */}
-          <div className="px-6 py-3 border-t border-[#CED4DA] dark:border-zinc-700 bg-[#F8F9FA] dark:bg-[#161822] flex items-center justify-between shrink-0">
+          <div className="px-6 py-3.5 border-t border-slate-100 dark:border-white/[0.06] bg-[#f8f9ff] dark:bg-white/[0.02] flex items-center justify-between shrink-0">
             <button
               type="button"
               onClick={() => {
@@ -284,7 +299,7 @@ export const StagedProductDrawer: React.FC<StagedProductDrawerProps> = ({
                 onClose();
                 onRemoveProduct(toDelete);
               }}
-              className="h-8 px-3 rounded text-rose-600 hover:bg-rose-50 text-xs font-semibold cursor-pointer transition-colors flex items-center gap-1.5"
+              className="h-8 px-3 rounded-xl text-rose-600 hover:bg-rose-50 text-xs font-semibold cursor-pointer transition-colors flex items-center gap-1.5 dark:text-rose-400 dark:hover:bg-rose-950/40"
             >
               <Trash2 className="w-3.5 h-3.5" />
               <span>Remove from Batch</span>
@@ -298,7 +313,7 @@ export const StagedProductDrawer: React.FC<StagedProductDrawerProps> = ({
                   onClose();
                   onDuplicateProduct(toDuplicate);
                 }}
-                className="h-8 px-3.5 rounded border border-[#CED4DA] bg-white text-zinc-700 hover:bg-[#F8F9FA] text-xs font-semibold cursor-pointer transition-colors flex items-center gap-1.5"
+                className="h-8 px-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-white/[0.06] dark:text-zinc-300 dark:hover:bg-white/10 text-xs font-semibold cursor-pointer transition-colors flex items-center gap-1.5"
               >
                 <Copy className="w-3.5 h-3.5" />
                 <span>Duplicate</span>
@@ -307,7 +322,8 @@ export const StagedProductDrawer: React.FC<StagedProductDrawerProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="h-8 px-4 rounded bg-[#714B67] hover:bg-[#5B3C53] text-white text-xs font-bold cursor-pointer transition-colors shadow-xs"
+                className="h-8 px-4 rounded-xl text-white text-xs font-bold cursor-pointer transition-all shadow-[0_2px_10px_rgba(0,109,50,0.25)] hover:shadow-[0_4px_14px_rgba(0,109,50,0.35)]"
+                style={{ background: "linear-gradient(135deg, #006d32 0%, #00d166 100%)" }}
               >
                 Close
               </button>

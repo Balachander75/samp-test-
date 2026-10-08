@@ -62,23 +62,23 @@ export const AddProductCatalogStep: React.FC<AddProductCatalogStepProps> = ({
   const hasBinding = Boolean(selectedBinding1);
 
   return (
-    <div className="relative flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded border border-[#CED4DA] bg-white shadow-2xl animate-smooth-modal dark:border-white/[0.08] dark:bg-[#12141d]">
-      {/* Odoo 19 Modal Header */}
-      <div className="flex items-center justify-between px-6 py-3.5 bg-[#714B67] text-white shrink-0 border-b border-[#5B3C53]">
-        <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded bg-white/15 flex items-center justify-center text-white shrink-0">
+    <div className="relative flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-2xl animate-smooth-modal dark:border-white/[0.08] dark:bg-[#161822]">
+      {/* Modal Header */}
+      <div className="flex items-center justify-between px-6 py-4 bg-white dark:bg-[#161822] text-slate-900 dark:text-white shrink-0 border-b border-slate-100 dark:border-white/[0.06]">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl bg-[#006d32]/10 text-[#006d32] dark:text-emerald-400 flex items-center justify-center shrink-0">
             <BookOpen className="w-4 h-4 stroke-[2.2]" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-bold text-white tracking-tight">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight font-display">
                 Select Catalog Product Reference
               </h3>
-              <span className="px-2 py-0.5 rounded text-[9.5px] font-mono font-bold bg-white/20 text-white tracking-wider uppercase">
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#006d32]/10 text-[#006d32] dark:text-emerald-400 border border-[#006d32]/20 tracking-wider uppercase">
                 {scopeLabel.toUpperCase()} SPEC
               </span>
             </div>
-            <p className="text-[11px] text-white/80 mt-0.5">
+            <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
               {includesDesign
                 ? "Your design brief will be linked to the selected catalog product"
                 : "Search existing master product database by material code or binding"}
@@ -89,7 +89,7 @@ export const AddProductCatalogStep: React.FC<AddProductCatalogStepProps> = ({
         <button
           type="button"
           onClick={onClose}
-          className="h-7 w-7 rounded flex items-center justify-center text-white/80 hover:text-white hover:bg-white/15 transition-colors cursor-pointer"
+          className="h-8 w-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 dark:hover:text-white transition-colors cursor-pointer"
           aria-label="Close modal"
         >
           <X className="w-4 h-4" />
@@ -115,7 +115,7 @@ export const AddProductCatalogStep: React.FC<AddProductCatalogStepProps> = ({
                 aria-pressed={searchMode === "material_code"}
                 className={`flex min-h-9 flex-1 items-center justify-center gap-1.5 rounded px-3 text-xs transition-colors ${
                   searchMode === "material_code"
-                    ? "bg-white font-semibold text-[#714B67] shadow-sm dark:bg-[#3E2938] dark:text-purple-200"
+                    ? "bg-white font-semibold text-[#006d32] shadow-sm dark:bg-[#1f2233] dark:text-emerald-400"
                     : "font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200"
                 }`}
               >
@@ -128,7 +128,7 @@ export const AddProductCatalogStep: React.FC<AddProductCatalogStepProps> = ({
                 aria-pressed={searchMode === "binding"}
                 className={`flex min-h-9 flex-1 items-center justify-center gap-1.5 rounded px-3 text-xs transition-colors ${
                   searchMode === "binding"
-                    ? "bg-white font-semibold text-[#714B67] shadow-sm dark:bg-[#3E2938] dark:text-purple-200"
+                    ? "bg-white font-semibold text-[#006d32] shadow-sm dark:bg-[#1f2233] dark:text-emerald-400"
                     : "font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200"
                 }`}
               >
@@ -146,7 +146,7 @@ export const AddProductCatalogStep: React.FC<AddProductCatalogStepProps> = ({
                 value={materialSearchQuery}
                 onChange={(event) => onSetMaterialSearchQuery(event.target.value)}
                 placeholder="Search by material code, description, or customer..."
-                className="h-10 w-full rounded-md border border-zinc-200 bg-white pl-9 pr-3 text-xs text-zinc-900 outline-none placeholder:text-zinc-400 focus:border-[#714B67]/60 focus:ring-2 focus:ring-[#714B67]/15 dark:border-zinc-700 dark:bg-[#171923] dark:text-zinc-100"
+                className="h-10 w-full rounded-md border border-zinc-200 bg-white pl-9 pr-3 text-xs text-zinc-900 outline-none placeholder:text-zinc-400 focus:border-[#006d32]/60 focus:ring-2 focus:ring-[#006d32]/15 dark:border-zinc-700 dark:bg-[#171923] dark:text-zinc-100"
               />
             </div>
           ) : (
@@ -157,7 +157,7 @@ export const AddProductCatalogStep: React.FC<AddProductCatalogStepProps> = ({
                   required
                   value={selectedBinding1}
                   onChange={(event) => onSelectBinding1(event.target.value)}
-                  className="mt-1.5 h-10 w-full rounded-md border border-zinc-200 bg-white px-3 text-xs text-zinc-900 outline-none focus:border-[#714B67]/60 focus:ring-2 focus:ring-[#714B67]/15 dark:border-zinc-700 dark:bg-[#171923] dark:text-zinc-100"
+                  className="mt-1.5 h-10 w-full rounded-md border border-zinc-200 bg-white px-3 text-xs text-zinc-900 outline-none focus:border-[#006d32]/60 focus:ring-2 focus:ring-[#006d32]/15 dark:border-zinc-700 dark:bg-[#171923] dark:text-zinc-100"
                 >
                   <option value="">Select binding 1</option>
                   {bindingHierarchy.binding1_options.map((binding) => (
@@ -171,7 +171,7 @@ export const AddProductCatalogStep: React.FC<AddProductCatalogStepProps> = ({
                   disabled={!hasBinding}
                   value={selectedBinding2}
                   onChange={(event) => onSelectBinding2(event.target.value)}
-                  className="mt-1.5 h-10 w-full rounded-md border border-zinc-200 bg-white px-3 text-xs text-zinc-900 outline-none focus:border-[#714B67]/60 focus:ring-2 focus:ring-[#714B67]/15 disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:text-zinc-400 dark:border-zinc-700 dark:bg-[#171923] dark:text-zinc-100 dark:disabled:bg-zinc-800/60"
+                  className="mt-1.5 h-10 w-full rounded-md border border-zinc-200 bg-white px-3 text-xs text-zinc-900 outline-none focus:border-[#006d32]/60 focus:ring-2 focus:ring-[#006d32]/15 disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:text-zinc-400 dark:border-zinc-700 dark:bg-[#171923] dark:text-zinc-100 dark:disabled:bg-zinc-800/60"
                 >
                   <option value="">{hasBinding ? "Any binding 2" : "Select binding 1 first"}</option>
                   {hasBinding &&
@@ -215,13 +215,13 @@ export const AddProductCatalogStep: React.FC<AddProductCatalogStepProps> = ({
                       aria-pressed={isSelected}
                       className={`flex w-full items-center gap-3 px-3 py-3 text-left transition-colors ${
                         isSelected
-                          ? "bg-[#F8F3F6] ring-inset ring-1 ring-[#714B67]/20 dark:bg-[#3E2938]/35 dark:ring-purple-300/15"
+                          ? "bg-emerald-50/70 ring-inset ring-1 ring-[#006d32]/25 dark:bg-emerald-950/30 dark:ring-emerald-500/20"
                           : "bg-white hover:bg-zinc-50 dark:bg-[#12141d] dark:hover:bg-white/[0.035]"
                       }`}
                     >
                       <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
                         isSelected
-                          ? "border-[#714B67] bg-[#714B67] text-white dark:border-purple-300 dark:bg-purple-300 dark:text-[#231922]"
+                          ? "border-[#006d32] bg-[#006d32] text-white"
                           : "border-zinc-300 text-transparent dark:border-zinc-600"
                       }`}>
                         {isSelected && <Check className="h-3 w-3" />}
@@ -252,10 +252,10 @@ export const AddProductCatalogStep: React.FC<AddProductCatalogStepProps> = ({
           )}
 
           {selectedProduct && (
-            <div className="space-y-2 rounded-md border border-[#714B67]/20 bg-[#F8F3F6] p-3 dark:border-purple-300/15 dark:bg-[#3E2938]/25">
+            <div className="space-y-2 rounded-xl border border-[#006d32]/20 bg-emerald-50/50 p-3.5 dark:border-emerald-500/20 dark:bg-emerald-950/25">
               <div className="text-xs">
-                <span className="font-semibold text-[#714B67] dark:text-purple-200">Starting product</span>
-                <span className="ml-2 text-zinc-700 dark:text-zinc-200">
+                <span className="font-bold text-[#006d32] dark:text-emerald-400">Starting product</span>
+                <span className="ml-2 font-medium text-zinc-800 dark:text-zinc-200">
                   {selectedProduct.material_code} · {selectedProduct.product_description}
                 </span>
               </div>
@@ -267,7 +267,7 @@ export const AddProductCatalogStep: React.FC<AddProductCatalogStepProps> = ({
                     value={newProductDescription}
                     onChange={(event) => onSetNewProductDescription(event.target.value)}
                     placeholder="Describe the new product"
-                    className="mt-1.5 h-10 w-full rounded-md border border-zinc-200 bg-white px-3 text-xs font-normal normal-case tracking-normal text-zinc-900 outline-none placeholder:text-zinc-400 focus:border-[#714B67]/60 focus:ring-2 focus:ring-[#714B67]/15 dark:border-zinc-700 dark:bg-[#171923] dark:text-zinc-100"
+                    className="mt-1.5 h-10 w-full rounded-md border border-zinc-200 bg-white px-3 text-xs font-normal normal-case tracking-normal text-zinc-900 outline-none placeholder:text-zinc-400 focus:border-[#006d32]/60 focus:ring-2 focus:ring-[#006d32]/15 dark:border-zinc-700 dark:bg-[#171923] dark:text-zinc-100"
                   />
                   <span className="mt-1 block font-normal normal-case tracking-normal text-zinc-500 dark:text-zinc-400">
                     The selected record is used as a reference. A new material code will be generated.
@@ -278,11 +278,11 @@ export const AddProductCatalogStep: React.FC<AddProductCatalogStepProps> = ({
           )}
         </div>
 
-        <div className="flex shrink-0 items-center justify-between gap-3 border-t border-[#CED4DA] dark:border-zinc-700 bg-[#F8F9FA] px-6 py-3 dark:border-white/[0.08] dark:bg-[#161822]">
+        <div className="flex shrink-0 items-center justify-between gap-3 border-t border-slate-100 bg-white px-6 py-4 dark:border-white/[0.06] dark:bg-[#161822]">
           <button
             type="button"
             onClick={onBack}
-            className="inline-flex h-8 items-center gap-1.5 rounded border border-[#CED4DA] bg-white px-3.5 text-xs font-semibold text-zinc-700 transition-colors hover:bg-[#F8F9FA] cursor-pointer dark:border-zinc-700 dark:bg-[#12141d] dark:text-zinc-300 dark:hover:bg-zinc-800"
+            className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 px-4 text-xs font-semibold text-slate-700 transition-colors cursor-pointer dark:bg-white/[0.06] dark:text-zinc-300 dark:hover:bg-white/10"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
             <span>{includesDesign ? "Back to Design Brief" : "Back to Deliverables"}</span>
@@ -290,7 +290,8 @@ export const AddProductCatalogStep: React.FC<AddProductCatalogStepProps> = ({
           <button
             type="submit"
             disabled={!selectedProduct || (!includesDesign && !newProductDescription.trim())}
-            className="inline-flex h-8 items-center gap-1.5 rounded bg-[#017E84] hover:bg-[#00666A] active:bg-[#005256] px-4 text-xs font-bold text-white shadow-xs transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-45"
+            className="inline-flex h-9 items-center gap-1.5 rounded-xl px-5 text-xs font-bold text-white shadow-[0_2px_10px_rgba(0,109,50,0.25)] hover:shadow-[0_4px_14px_rgba(0,109,50,0.35)] transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-45 active:scale-98"
+            style={{ background: "linear-gradient(135deg, #006d32 0%, #00d166 100%)" }}
           >
             <span>Add Product to Batch</span>
             <ChevronRight className="h-3.5 w-3.5 stroke-[2.5]" />

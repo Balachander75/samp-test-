@@ -1,23 +1,17 @@
-import React, { useState, useMemo } from "react";
+import React, { useMemo, useRef, useEffect } from "react";
 import { SampleRequestItem, ProgramActivityItem } from "../../types";
-import { formatOdooDate, formatOdooLogDate } from "../../utils/dateUtils";
+import { formatOdooLogDate } from "../../utils/dateUtils";
 import {
-  MessageSquare,
   Clock,
-  Highlighter,
   CheckCircle2,
   AlertCircle,
   Building2,
-  Calendar,
   Layers,
-  Send,
-  User,
+  Zap,
+  Activity,
   ShieldCheck,
-  Sparkles,
-  Filter,
-  Plus,
-  Trash2,
-  FileText,
+  Factory,
+  Eye,
 } from "lucide-react";
 import { UserProfile } from "@/features/auth";
 
@@ -41,465 +35,503 @@ export interface ProgramChatterFeedProps {
   request: SampleRequestItem;
   materialRows: ProgramMaterialReviewItem[];
   isSamplingMode?: boolean;
-  onAddNote?: (note: string) => Promise<void>;
+  isPlantMode?: boolean;
   currentUser?: UserProfile | null;
 }
 
-// Calculate if a material row was added within the last 1 day (24 hours)
+// Calculate if a material row was added within the last 36 hours
 export function isMaterialAddedRecently(createdAt?: string | Date | null): boolean {
   if (!createdAt) return false;
   try {
     const d = typeof createdAt === "string" ? new Date(createdAt) : createdAt;
     const diffMs = Date.now() - d.getTime();
-    const oneDayMs = 24 * 60 * 60 * 1000;
-    return diffMs >= -60000 && diffMs <= oneDayMs;
+    const thirtySixHoursMs = 36 * 60 * 60 * 1000;
+    return diffMs >= -60000 && diffMs <= thirtySixHoursMs;
   } catch {
     return false;
   }
 }
 
-interface TimelineEvent {
+interface ChatLogEvent {
   id: string | number;
+  kind: "system_event" | "marketing_message" | "sampling_message" | "plant_message" | "material_added";
   actorName: string;
   actorDepartment: string;
-  action: string;
   title: string;
-  body: string | React.ReactNode;
+  summary: string;
+  detailRemark?: string;
   timestamp: string;
+  materialDetails?: {
+    type?: string;
+    supplier?: string;
+    grade?: string;
+    color?: string;
+    caliper?: string;
+    qty?: string;
+    unit?: string;
+  };
   badge?: {
     text: string;
-    variant: "purple" | "teal" | "amber" | "emerald" | "rose" | "neutral";
+    variant: "emerald" | "amber" | "rose" | "sky" | "indigo" | "teal" | "neutral";
   };
-  isNote?: boolean;
+}
+
+function getInitials(name?: string): string {
+  if (!name) return "US";
+  const clean = name.trim();
+  const parts = clean.split(/\s+/);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+  return clean.slice(0, 2).toUpperCase();
+}
+
+function formatTimeOnly(dateInput?: string | Date | null): string {
+  if (!dateInput) return "";
+  try {
+    const d = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
+    if (isNaN(d.getTime())) return "";
+    return d.toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  } catch {
+    return "";
+  }
 }
 
 export const ProgramChatterFeed: React.FC<ProgramChatterFeedProps> = ({
   request,
   materialRows,
   isSamplingMode,
-  onAddNote,
-  currentUser,
+  isPlantMode,
 }) => {
-  const [filterMode, setFilterMode] = useState<"all" | "audit" | "notes">("all");
-  const [isComposingNote, setIsComposingNote] = useState(false);
-  const [quickNote, setQuickNote] = useState("");
-  const [isSubmittingNote, setIsSubmittingNote] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
-  const handlePostNote = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const clean = quickNote.trim();
-    if (!clean || isSubmittingNote || !onAddNote) return;
+  // Compile chronological timeline events matching Luminous Engine style
+  const chatEvents = useMemo<ChatLogEvent[]>(() => {
+    const events: ChatLogEvent[] = [];
+    const recordedActions = new Set<string>();
 
-    setIsSubmittingNote(true);
-    try {
-      await onAddNote(clean);
-      setQuickNote("");
-      setIsComposingNote(false);
-    } catch (err) {
-      console.error("Failed to post chatter note:", err);
-    } finally {
-      setIsSubmittingNote(false);
-    }
-  };
-
-  const flaggedRows = useMemo(
-    () => materialRows.filter((r) => r.highlightedCols.length > 0 || r.sampRemarkText.trim()),
-    [materialRows]
-  );
-
-  const totalFlagsCount = useMemo(
-    () => materialRows.reduce((acc, r) => acc + r.highlightedCols.length, 0),
-    [materialRows]
-  );
-
-  // Compile real database activities into timeline events
-  const timelineEvents = useMemo<TimelineEvent[]>(() => {
-    const events: TimelineEvent[] = [];
-    const activities: ProgramActivityItem[] = Array.isArray(request.activities)
+    const rawActivities: ProgramActivityItem[] = Array.isArray(request.activities)
       ? (request.activities as unknown as ProgramActivityItem[])
       : [];
 
-
-    const hasCreatedAction = activities.some((a) => a.action === "CREATED");
-
     // 1. Process persisted DB activities
-    activities.forEach((act) => {
+    rawActivities.forEach((act) => {
+      recordedActions.add(act.action);
       const payload = act.payload || {};
 
       if (act.action === "CREATED") {
+        const author = act.actorName || request.createdBy || "Marketing Desk";
         events.push({
           id: act.id,
-          actorName: act.actorName || request.createdBy || "Marketing",
+          kind: "marketing_message",
+          actorName: author,
           actorDepartment: act.actorDepartment || "Marketing",
-          action: act.action,
-          title: "Program Campaign Registered",
-          body: `Seasonal Program "${payload.program_campaign_title || request.programName || "Program"}" initialized for account ${
-            payload.customer_name || request.customer
-          } with ${payload.material_count || materialRows.length} material specifications allocated to plant ${
-            request.targetPlant || "Plant 1"
-          }.`,
+          title: "Seasonal Campaign Registered",
+          summary: `Initialized program "${request.programName || payload.program_campaign_title || "Program"}" for ${
+            request.customer || payload.customer_name || "Client"
+          } with ${request.targetPlant || "designated plant"}.`,
           timestamp: act.createdAt || request.createdAt || "",
-          badge: { text: "Created", variant: "purple" },
-        });
-      } else if (act.action === "NOTE_POSTED") {
-        events.push({
-          id: act.id,
-          actorName: act.actorName || "Team Member",
-          actorDepartment: act.actorDepartment || (isSamplingMode ? "SAMP Team" : "Marketing"),
-          action: act.action,
-          title: "Internal Note Logged",
-          body: payload.note || "",
-          timestamp: act.createdAt,
-          isNote: true,
-          badge: {
-            text: act.actorDepartment?.toLowerCase().includes("samp") ? "SAMP Note" : "Marketing Note",
-            variant: act.actorDepartment?.toLowerCase().includes("samp") ? "teal" : "purple",
-          },
-        });
-      } else if (act.action === "STATUS_UPDATED") {
-        events.push({
-          id: act.id,
-          actorName: act.actorName || "System",
-          actorDepartment: act.actorDepartment || "System",
-          action: act.action,
-          title: "Program Status Advanced",
-          body: `Stage changed from "${payload.old_status || "—"}" to "${payload.new_status || request.status}".`,
-          timestamp: act.createdAt,
-          badge: { text: "Status Update", variant: "emerald" },
+          badge: { text: "Intake", variant: "indigo" },
         });
       } else if (act.action === "MATERIAL_ADDED") {
         events.push({
           id: act.id,
+          kind: "material_added",
           actorName: act.actorName || "Marketing Team",
           actorDepartment: act.actorDepartment || "Marketing",
-          action: act.action,
-          title: "Material Specification Line Added",
-          body: `Added matrix row: ${payload.material_type || "Material"} ${
+          title: "New Material Specification Added",
+          summary: `Added ${payload.material_type || "Material"} ${
             payload.supplier_name ? `(${payload.supplier_name})` : ""
-          } — Qty: ${payload.quantity || "—"}.`,
+          }`,
           timestamp: act.createdAt,
-          badge: { text: "Matrix Update", variant: "neutral" },
+          materialDetails: {
+            type: payload.material_type,
+            supplier: payload.supplier_name,
+            grade: payload.grade,
+            color: payload.color_variant,
+            caliper: payload.caliper_wt,
+            qty: payload.quantity,
+            unit: payload.unit || "pcs",
+          },
+          badge: { text: "⚡ Added", variant: "emerald" },
         });
       } else if (act.action === "MATERIAL_DELETED") {
         events.push({
           id: act.id,
-          actorName: act.actorName || "Operator",
-          actorDepartment: act.actorDepartment || "Marketing",
-          action: act.action,
-          title: "Material Specification Removed",
-          body: `Removed specification row #${payload.material_id} (${payload.material_type || "item"}).`,
+          kind: "system_event",
+          actorName: act.actorName || "Marketing Operator",
+          actorDepartment: "Marketing",
+          title: "Specification Line Removed",
+          summary: `Removed line: ${payload.material_type || `Item #${payload.material_id}`}`,
           timestamp: act.createdAt,
-          badge: { text: "Line Removed", variant: "rose" },
+          badge: { text: "Removed", variant: "rose" },
+        });
+      } else if (act.action === "SAMP_VIEWED") {
+        events.push({
+          id: act.id,
+          kind: "system_event",
+          actorName: act.actorName || "Sampling Team",
+          actorDepartment: "Sampling",
+          title: "Inspected by Sampling Team",
+          summary: `Sampling Team inspected this program matrix`,
+          timestamp: act.createdAt,
+          badge: { text: "Seen", variant: "sky" },
+        });
+      } else if (act.action === "PLANT_VIEWED") {
+        events.push({
+          id: act.id,
+          kind: "system_event",
+          actorName: act.actorName || "Plant Desk",
+          actorDepartment: "Plant Desk",
+          title: "Inspected by Plant Team",
+          summary: `Plant ${request.targetPlant || ""} inspected this program matrix`,
+          timestamp: act.createdAt,
+          badge: { text: "Seen", variant: "teal" },
+        });
+      } else if (act.action === "SAMP_REVIEWED") {
+        const verdict = payload.verdict || request.samplingVerdict || "Feasible";
+        const isOk = verdict.toLowerCase().includes("feasible") || verdict.toLowerCase().includes("approved");
+        events.push({
+          id: act.id,
+          kind: "sampling_message",
+          actorName: act.actorName || payload.reviewer || "Sampling Lead",
+          actorDepartment: "Sampling Team",
+          title: `Sampling Sign-Off: ${verdict}`,
+          summary: isOk ? "Technical feasibility approved" : "Revision flagged",
+          detailRemark: payload.remark || request.samplingRemark,
+          timestamp: act.createdAt,
+          badge: {
+            text: isOk ? "Feasible" : "Revisions",
+            variant: isOk ? "emerald" : "amber",
+          },
+        });
+      } else if (act.action === "PLANT_REVIEWED") {
+        const verdict = payload.verdict || request.plantVerdict || "Capacity Confirmed";
+        const isOk =
+          verdict.toLowerCase().includes("feasible") ||
+          verdict.toLowerCase().includes("confirmed") ||
+          verdict.toLowerCase().includes("approved");
+        events.push({
+          id: act.id,
+          kind: "plant_message",
+          actorName: act.actorName || payload.reviewer || "Plant Production Lead",
+          actorDepartment: `Plant ${request.targetPlant || ""}`,
+          title: `Plant Sign-Off: ${verdict}`,
+          summary: isOk ? "Manufacturing capacity and tooling confirmed" : "Tooling / Schedule constraint noted",
+          detailRemark: payload.remark || request.plantRemark,
+          timestamp: act.createdAt,
+          badge: {
+            text: isOk ? "Confirmed" : "Constrained",
+            variant: isOk ? "teal" : "amber",
+          },
         });
       } else if (act.action === "SAMP_REMARK_UPDATED" || act.action === "SAMP_REMARKS_UPDATED") {
         events.push({
           id: act.id,
-          actorName: act.actorName || "SAMP Specialist",
-          actorDepartment: act.actorDepartment || "SAMP Team",
-          action: act.action,
-          title: "Technical Review Remarks Recorded",
-          body:
+          kind: "sampling_message",
+          actorName: act.actorName || "Sampling Specialist",
+          actorDepartment: "Sampling Team",
+          title: "Technical Remarks Updated",
+          summary:
             act.action === "SAMP_REMARK_UPDATED"
-              ? `Updated remarks on row #${payload.material_id} (${payload.material_type || "Material"}): "${payload.new_remark || "Remark cleared"}"`
-              : `Batch updated technical evaluation remarks across ${payload.updated_count || 1} material lines.`,
+              ? `Remark on #${payload.material_id}: "${payload.new_remark || "Updated"}"`
+              : `Updated remarks across ${payload.updated_count || 1} material lines`,
           timestamp: act.createdAt,
-          badge: { text: "Lab Review", variant: "teal" },
+          badge: { text: "Lab Remark", variant: "sky" },
         });
-      } else if (act.action === "UPDATED") {
+      } else if (act.action === "STATUS_UPDATED") {
         events.push({
           id: act.id,
-          actorName: act.actorName || "Operator",
-          actorDepartment: act.actorDepartment || "Marketing",
-          action: act.action,
-          title: "Program Metadata Modified",
-          body: `Updated request parameters: ${(payload.fields || []).join(", ") || "details"}.`,
+          kind: "system_event",
+          actorName: act.actorName || "System",
+          actorDepartment: "System",
+          title: "Status Advanced",
+          summary: `Status updated to "${payload.new_status || request.status}"`,
           timestamp: act.createdAt,
-          badge: { text: "Edit", variant: "neutral" },
+          badge: { text: "Status", variant: "emerald" },
         });
       }
     });
 
-    // 2. Synthesize baseline creation event if no persisted CREATED activity exists yet
-    if (!hasCreatedAction) {
-      events.unshift({
-        id: "baseline-create",
-        actorName: request.createdBy || "Marketing Specialist",
+    // 2. Synthesize baseline creation if not present in DB activities
+    if (!recordedActions.has("CREATED")) {
+      events.push({
+        id: "synth-created",
+        kind: "marketing_message",
+        actorName: request.createdBy || "Marketing Desk",
         actorDepartment: "Marketing",
-        action: "CREATED",
-        title: "Program Request Registered",
-        body: `Seasonal Program "${request.programName || "Seasonal Program"}" registered for account ${
-          request.customer
-        } for season ${request.programYear || "2026-2027"} with ${
-          materialRows.length
-        } material specifications allocated to plant ${request.targetPlant || "Plant 1"}.`,
+        title: "Seasonal Campaign Registered",
+        summary: `Initialized program "${request.programName || "Program"}" for ${
+          request.customer || "Client"
+        } (Season: ${request.programYear || "2026-2027"}, Plant: ${request.targetPlant || "Plant 1"}).`,
         timestamp: request.createdAt || request.dateRequestCreated || "",
-        badge: { text: "Created", variant: "purple" },
+        badge: { text: "Intake", variant: "indigo" },
       });
     }
 
-    // Sort descending by timestamp (newest first for clean chatter feed)
+    // 3. Synthesize Sampling Review event if exists in request but not in DB
+    if (!recordedActions.has("SAMP_REVIEWED") && request.samplingVerdict) {
+      const isOk = request.samplingVerdict.toLowerCase().includes("feasible") || request.samplingVerdict.toLowerCase().includes("approved");
+      events.push({
+        id: "synth-samp-review",
+        kind: "sampling_message",
+        actorName: request.samplingSignedBy || "Sampling Lead",
+        actorDepartment: "Sampling Team",
+        title: `Sampling Sign-Off: ${request.samplingVerdict}`,
+        summary: isOk ? "Technical feasibility confirmed" : "Revision flagged",
+        detailRemark: request.samplingRemark || undefined,
+        timestamp: request.samplingSignedAt || request.updatedAt || "",
+        badge: {
+          text: isOk ? "Feasible" : "Revisions",
+          variant: isOk ? "emerald" : "amber",
+        },
+      });
+    }
+
+    // 4. Synthesize Plant Review event if exists in request but not in DB
+    if (!recordedActions.has("PLANT_REVIEWED") && request.plantVerdict) {
+      const isOk = request.plantVerdict.toLowerCase().includes("feasible") || request.plantVerdict.toLowerCase().includes("confirmed");
+      events.push({
+        id: "synth-plant-review",
+        kind: "plant_message",
+        actorName: request.plantSignedBy || "Plant Production Desk",
+        actorDepartment: `Plant ${request.targetPlant || ""}`,
+        title: `Plant Sign-Off: ${request.plantVerdict}`,
+        summary: isOk ? "Manufacturing capacity confirmed" : "Tooling constrained",
+        detailRemark: request.plantRemark || undefined,
+        timestamp: request.plantSignedAt || request.updatedAt || "",
+        badge: {
+          text: isOk ? "Confirmed" : "Constrained",
+          variant: isOk ? "teal" : "amber",
+        },
+      });
+    }
+
+    // Sort ascending (chronological: oldest at top, newest at bottom)
     return events.sort((a, b) => {
-      const ta = a.timestamp ? new Date(a.timestamp).getTime() : 0;
-      const tb = b.timestamp ? new Date(b.timestamp).getTime() : 0;
-      return tb - ta;
+      const timeA = new Date(a.timestamp).getTime() || 0;
+      const timeB = new Date(b.timestamp).getTime() || 0;
+      return timeA - timeB;
     });
-  }, [request, materialRows, isSamplingMode]);
+  }, [request]);
 
-  // Filtered list
-  const filteredEvents = useMemo(() => {
-    if (filterMode === "notes") {
-      return timelineEvents.filter((e) => e.isNote);
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
-    if (filterMode === "audit") {
-      return timelineEvents.filter((e) => !e.isNote);
-    }
-    return timelineEvents;
-  }, [timelineEvents, filterMode]);
-
-  const badgeStyles = {
-    purple: "bg-purple-50 text-[#714B67] dark:bg-purple-950/40 dark:text-purple-300 border-purple-200 dark:border-purple-800",
-    teal: "bg-teal-50 text-[#017E84] dark:bg-teal-950/40 dark:text-teal-300 border-teal-200 dark:border-teal-800",
-    amber: "bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 border-amber-200 dark:border-amber-800",
-    emerald: "bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800",
-    rose: "bg-rose-50 text-rose-800 dark:bg-rose-950/40 dark:text-rose-300 border-rose-200 dark:border-rose-800",
-    neutral: "bg-neutral-100 text-neutral-700 dark:bg-zinc-800 dark:text-zinc-300 border-neutral-300 dark:border-zinc-700",
-  };
+  }, [chatEvents.length]);
 
   return (
-    <div className="w-80 lg:w-96 h-full border-l border-[#D8DADD] dark:border-white/10 bg-white dark:bg-[#161822] flex flex-col shrink-0 overflow-hidden">
-      {/* ── 1. Header Bar with Filter Tabs ── */}
-      <div className="p-3 border-b border-[#D8DADD] dark:border-white/10 bg-[#FBFBFC] dark:bg-zinc-900/60 shrink-0 space-y-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span className="font-bold text-xs text-neutral-800 dark:text-zinc-200">
-              Audit Trail &amp; Chatter
-            </span>
-          </div>
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 font-bold border border-emerald-200 dark:border-emerald-800">
-            Database Log
+    <div className="w-80 lg:w-[360px] bg-[#f8f9ff] dark:bg-[#131622] flex flex-col h-full overflow-hidden select-text border-l border-slate-100 dark:border-white/5 z-10 shrink-0">
+      {/* ── 1. Top Header (Identical to Feasibility Check Style) ── */}
+      <div className="px-4 py-3 bg-white/90 dark:bg-[#161826]/90 backdrop-blur-xl flex items-center justify-between sticky top-0 z-20 border-b border-slate-100 dark:border-white/5 shadow-[0_2px_10px_rgba(11,28,48,0.02)]">
+        <div>
+          <h2 className="font-display font-bold text-xs text-slate-900 dark:text-zinc-100 tracking-tight leading-none">
+            Activity &amp; Communication Log
+          </h2>
+          <span className="text-[10px] text-slate-400 dark:text-zinc-500 font-sans mt-0.5 block">
+            Marketing &amp; SAMP Team Handoff
           </span>
         </div>
 
-        {/* Filter Chips & Log Note Trigger */}
-        <div className="flex items-center justify-between gap-1 pt-1">
-          <div className="flex items-center gap-1 bg-neutral-100 dark:bg-zinc-800/80 p-0.5 rounded text-[11px]">
-            <button
-              type="button"
-              onClick={() => setFilterMode("all")}
-              className={`px-2 py-0.5 rounded font-medium transition cursor-pointer ${
-                filterMode === "all"
-                  ? "bg-white dark:bg-zinc-700 text-neutral-900 dark:text-white shadow-2xs font-semibold"
-                  : "text-neutral-500 hover:text-neutral-800 dark:hover:text-zinc-300"
-              }`}
-            >
-              All ({timelineEvents.length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setFilterMode("notes")}
-              className={`px-2 py-0.5 rounded font-medium transition cursor-pointer ${
-                filterMode === "notes"
-                  ? "bg-white dark:bg-zinc-700 text-[#714B67] dark:text-purple-300 shadow-2xs font-semibold"
-                  : "text-neutral-500 hover:text-neutral-800 dark:hover:text-zinc-300"
-              }`}
-            >
-              Notes
-            </button>
-            <button
-              type="button"
-              onClick={() => setFilterMode("audit")}
-              className={`px-2 py-0.5 rounded font-medium transition cursor-pointer ${
-                filterMode === "audit"
-                  ? "bg-white dark:bg-zinc-700 text-[#017E84] dark:text-teal-300 shadow-2xs font-semibold"
-                  : "text-neutral-500 hover:text-neutral-800 dark:hover:text-zinc-300"
-              }`}
-            >
-              Audit
-            </button>
-          </div>
-
-          {onAddNote && (
-            <button
-              type="button"
-              onClick={() => setIsComposingNote((prev) => !prev)}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#714B67] hover:bg-[#5B3C53] text-white text-[11px] font-semibold shadow-2xs transition active:scale-95 cursor-pointer"
-            >
-              <MessageSquare className="w-3 h-3" />
-              <span>Log Note</span>
-            </button>
-          )}
-        </div>
+        <span className="text-[10.5px] font-mono text-[#006d32] dark:text-[#00d166] bg-[#eff4ff] dark:bg-[#006d32]/20 px-2.5 py-0.5 rounded-full font-bold border border-[#006d32]/20">
+          {chatEvents.length} {chatEvents.length === 1 ? "Event" : "Events"}
+        </span>
       </div>
 
-      {/* ── 2. Live Note Composer Drawer ── */}
-      {isComposingNote && onAddNote && (
-        <form
-          onSubmit={handlePostNote}
-          className="p-3 border-b border-neutral-200 dark:border-zinc-800 bg-purple-50/30 dark:bg-purple-950/20 space-y-2 shrink-0 animate-fadeIn"
-        >
-          <div className="flex items-center justify-between text-[11px] text-neutral-600 dark:text-zinc-400">
-            <span className="font-semibold flex items-center gap-1">
-              <MessageSquare className="w-3 h-3 text-[#714B67]" />
-              Post Internal Technical / Commercial Note
-            </span>
-            <span className="text-[10px] text-neutral-400">Ctrl+Enter to post</span>
-          </div>
-          <textarea
-            value={quickNote}
-            onChange={(e) => setQuickNote(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-                handlePostNote(e);
-              }
-            }}
-            placeholder="Type your communication or lab note here..."
-            rows={3}
-            autoFocus
-            className="w-full p-2 text-xs rounded border border-[#CED4DA] dark:border-zinc-700 bg-white dark:bg-zinc-900 text-neutral-900 dark:text-zinc-100 placeholder:text-neutral-400 outline-none focus:ring-1 focus:ring-[#714B67] transition"
-          />
-          <div className="flex justify-end gap-1.5">
-            <button
-              type="button"
-              onClick={() => {
-                setIsComposingNote(false);
-                setQuickNote("");
-              }}
-              className="px-2.5 py-1 text-xs text-neutral-500 hover:text-neutral-700 dark:hover:text-zinc-300 cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={!quickNote.trim() || isSubmittingNote}
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-[#017E84] hover:bg-[#00666A] text-white text-xs font-semibold shadow-xs disabled:opacity-50 cursor-pointer"
-            >
-              {isSubmittingNote ? <Clock className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
-              <span>{isSubmittingNote ? "Posting..." : "Post Note"}</span>
-            </button>
-          </div>
-        </form>
-      )}
-
-      {/* ── 3. Flagged Review Summary Card (when items are flagged) ── */}
-      {flaggedRows.length > 0 && (
-        <div className="p-3 mx-3 mt-3 rounded border border-amber-200 bg-amber-50/70 dark:border-amber-900/60 dark:bg-amber-950/20 shrink-0">
-          <div className="flex items-center justify-between text-xs font-bold text-amber-900 dark:text-amber-200">
-            <div className="flex items-center gap-1.5">
-              <Highlighter className="w-3.5 h-3.5 text-amber-600" />
-              <span>Active Review Flags</span>
-            </div>
-            <span className="font-mono text-[10px] px-1.5 py-0.2 rounded bg-amber-200 dark:bg-amber-800 text-amber-950 dark:text-amber-100">
-              {totalFlagsCount} Flags / {flaggedRows.length} Lines
-            </span>
-          </div>
-          <div className="mt-1.5 text-[11px] text-neutral-600 dark:text-zinc-400 space-y-1">
-            {flaggedRows.slice(0, 3).map((r, i) => (
-              <div key={r.id} className="truncate">
-                <span className="font-semibold text-neutral-800 dark:text-zinc-200">
-                  #{i + 1} {r.materialType || "Item"}:
-                </span>{" "}
-                {r.highlightedCols.length > 0 && (
-                  <span className="text-amber-700 dark:text-amber-400 font-mono font-medium">
-                    [{r.highlightedCols.join(", ")}]
-                  </span>
-                )}{" "}
-                {r.sampRemarkText && <span className="italic">"{r.sampRemarkText}"</span>}
-              </div>
-            ))}
-            {flaggedRows.length > 3 && (
-              <div className="text-[10px] text-amber-800 dark:text-amber-400 font-medium">
-                + {flaggedRows.length - 3} more flagged line(s) in matrix table
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ── 4. Main Timeline Feed ── */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-3.5">
-        {filteredEvents.length === 0 ? (
-          <div className="p-8 text-center text-neutral-400 dark:text-zinc-500 space-y-1">
-            <Clock className="w-6 h-6 mx-auto stroke-1" />
-            <div className="text-xs font-medium">No activity records match this filter</div>
+      {/* ── 2. Pure Chronological Audit Stream (NO CHAT SECTION) ── */}
+      <div className="flex-1 overflow-y-auto p-3.5 space-y-3 font-sans">
+        {chatEvents.length === 0 ? (
+          <div className="py-12 text-center text-slate-400 font-display text-xs">
+            No activity records found.
           </div>
         ) : (
-          filteredEvents.map((event) => {
-            const isNote = event.isNote;
-            const deptLower = event.actorDepartment?.toLowerCase() || "";
-            const isSamp = deptLower.includes("samp");
-            const isMarketing = deptLower.includes("marketing");
-
-            const avatarBg = isNote
-              ? isSamp
-                ? "bg-teal-100 text-[#017E84] dark:bg-teal-950/60 dark:text-teal-300"
-                : "bg-purple-100 text-[#714B67] dark:bg-purple-950/60 dark:text-purple-300"
-              : isSamp
-              ? "bg-teal-50 text-[#017E84] dark:bg-teal-950/40 dark:text-teal-300"
-              : isMarketing
-              ? "bg-purple-50 text-[#714B67] dark:bg-purple-950/40 dark:text-purple-300"
-              : "bg-neutral-100 text-neutral-700 dark:bg-zinc-800 dark:text-zinc-300";
-
-            const initials = (event.actorName || "OP")
-              .split(" ")
-              .map((w) => w[0])
-              .join("")
-              .slice(0, 2)
-              .toUpperCase();
-
-            return (
-              <div
-                key={event.id}
-                className="flex items-start gap-2.5 animate-fadeIn"
-              >
-                {/* Avatar Icon */}
-                <div
-                  className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 uppercase border border-black/5 dark:border-white/5 ${avatarBg}`}
-                  title={`${event.actorName} (${event.actorDepartment})`}
-                >
-                  {initials}
-                </div>
-
-                {/* Event Card Content */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-baseline justify-between gap-1 flex-wrap">
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <span className="font-bold text-xs text-neutral-900 dark:text-zinc-100 truncate">
-                        {event.actorName}
-                      </span>
-                      <span className="text-[10px] font-mono text-neutral-400">
-                        • {event.actorDepartment}
-                      </span>
-                    </div>
-                    <span className="text-[10px] text-neutral-400 font-mono shrink-0">
-                      {formatOdooLogDate(event.timestamp)}
+          chatEvents.map((evt) => {
+            // Case A: System Event Pill (Seen, Intake, Line Removed)
+            if (evt.kind === "system_event") {
+              const isSeen = evt.title.includes("Inspected") || evt.title.includes("Seen");
+              const isPlant = evt.title.includes("Plant");
+              return (
+                <div key={evt.id} className="flex justify-center my-2 select-none">
+                  <div
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium shadow-2xs border backdrop-blur-xs ${
+                      isSeen
+                        ? isPlant
+                          ? "bg-teal-50/90 text-teal-900 border-teal-200/80 dark:bg-teal-950/60 dark:text-teal-200"
+                          : "bg-sky-50/90 text-sky-900 border-sky-200/80 dark:bg-sky-950/60 dark:text-sky-200"
+                        : "bg-slate-100/90 text-slate-800 border-slate-200/80 dark:bg-zinc-800/80 dark:text-zinc-200"
+                    }`}
+                  >
+                    <span>{evt.summary}</span>
+                    <span className="text-[9.5px] opacity-75 font-mono ml-0.5">
+                      · {formatTimeOnly(evt.timestamp)}
                     </span>
                   </div>
+                </div>
+              );
+            }
 
-                  {/* Title & Badge */}
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="text-[11px] font-semibold text-neutral-700 dark:text-zinc-300">
-                      {event.title}
-                    </span>
-                    {event.badge && (
+            // Case B: Material Added Card
+            if (evt.kind === "material_added") {
+              const mat = evt.materialDetails || {};
+              return (
+                <div key={evt.id} className="flex flex-col items-start select-text max-w-[96%] animate-fadeIn">
+                  <div className="w-full bg-white dark:bg-[#1a202c] rounded-2xl rounded-tl-xs p-3 border border-emerald-200/80 dark:border-emerald-800/50 shadow-[0_2px_8px_rgba(0,109,50,0.04)]">
+                    {/* Header */}
+                    <div className="flex items-center justify-between gap-2 pb-1.5 border-b border-emerald-50 dark:border-white/5">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-5 h-5 rounded-full bg-[#006d32] text-white font-bold text-[9px] font-mono flex items-center justify-center shrink-0">
+                          <Zap className="w-3 h-3" />
+                        </div>
+                        <span className="font-display font-bold text-xs text-slate-900 dark:text-zinc-100 truncate block">
+                          {evt.actorName}
+                        </span>
+                        <span className="px-1.5 py-0.2 rounded text-[9px] font-bold font-mono bg-emerald-100 text-[#006d32] dark:bg-emerald-950/60 dark:text-emerald-300">
+                          Marketing
+                        </span>
+                      </div>
+                      <span className="text-[9px] text-slate-400 dark:text-zinc-500 font-mono">
+                        {formatOdooLogDate(evt.timestamp)}
+                      </span>
+                    </div>
+
+                    {/* Spec Summary */}
+                    <div className="mt-1.5 text-xs text-slate-800 dark:text-zinc-200">
+                      <div className="font-semibold text-emerald-950 dark:text-emerald-100">
+                        {mat.type || "Specification"}{" "}
+                        {mat.supplier ? <span className="font-normal text-slate-500">({mat.supplier})</span> : ""}
+                      </div>
+                      <div className="text-[10.5px] font-mono text-slate-600 dark:text-zinc-400 mt-0.5">
+                        Qty: <strong className="text-slate-800 dark:text-zinc-200">{mat.qty || "—"} {mat.unit || "pcs"}</strong>
+                        {mat.grade ? ` • ${mat.grade}` : ""}
+                        {mat.caliper ? ` • ${mat.caliper}` : ""}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
+            // Case C: Marketing Message Bubble
+            if (evt.kind === "marketing_message") {
+              return (
+                <div key={evt.id} className="flex flex-col items-start select-text max-w-[94%]">
+                  <div className="w-full bg-white dark:bg-[#1a202c] rounded-2xl rounded-tl-xs p-3 border border-emerald-200/70 dark:border-emerald-900/30 shadow-[0_2px_8px_rgba(0,109,50,0.04)]">
+                    <div className="flex items-center justify-between gap-2 pb-1.5 border-b border-emerald-50 dark:border-white/5">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-5 h-5 rounded-full bg-[#006d32] text-white font-bold text-[9px] font-mono flex items-center justify-center shrink-0">
+                          {getInitials(evt.actorName)}
+                        </div>
+                        <span className="font-display font-bold text-xs text-slate-900 dark:text-zinc-100 truncate block">
+                          {evt.actorName}
+                        </span>
+                        <span className="px-1.5 py-0.2 rounded text-[9px] font-bold font-mono bg-emerald-100 text-[#006d32] dark:bg-emerald-950/60 dark:text-emerald-300">
+                          Marketing
+                        </span>
+                      </div>
+                      <span className="text-[9px] text-slate-400 dark:text-zinc-500 font-mono">
+                        {formatOdooLogDate(evt.timestamp)}
+                      </span>
+                    </div>
+
+                    <p className="text-xs text-slate-700 dark:text-zinc-200 mt-1.5 leading-relaxed font-sans">
+                      {evt.summary}
+                    </p>
+                  </div>
+                </div>
+              );
+            }
+
+            // Case D: Sampling Team Review Bubble
+            if (evt.kind === "sampling_message") {
+              return (
+                <div key={evt.id} className="flex flex-col items-end select-text ml-auto max-w-[94%]">
+                  <div className="w-full bg-[#f4f8ff] dark:bg-[#152033] rounded-2xl rounded-tr-xs p-3 border border-sky-200/70 dark:border-sky-900/40 shadow-[0_2px_8px_rgba(0,112,255,0.05)]">
+                    <div className="flex items-center justify-between gap-2 pb-1.5 border-b border-sky-100/80 dark:border-white/5">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-5 h-5 rounded-full bg-[#0070ff] text-white font-bold text-[9px] font-mono flex items-center justify-center shrink-0">
+                          {getInitials(evt.actorName)}
+                        </div>
+                        <span className="font-display font-bold text-xs text-slate-900 dark:text-zinc-100 truncate block">
+                          {evt.actorName}
+                        </span>
+                        <span className="px-1.5 py-0.2 rounded text-[9px] font-bold font-mono bg-sky-100 text-[#0070ff] dark:bg-sky-950/60 dark:text-sky-300">
+                          Sampling
+                        </span>
+                      </div>
+                      <span className="text-[9px] text-slate-400 dark:text-zinc-500 font-mono">
+                        {formatOdooLogDate(evt.timestamp)}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 mt-1.5">
+                      <span className="text-xs font-semibold text-slate-900 dark:text-zinc-100 font-sans">
+                        Verdict:
+                      </span>
                       <span
-                        className={`text-[9px] font-mono font-bold px-1.5 py-0.2 rounded border uppercase ${
-                          badgeStyles[event.badge.variant] || badgeStyles.neutral
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                          evt.badge?.variant === "emerald"
+                            ? "bg-emerald-50 text-[#006d32] border-emerald-200"
+                            : "bg-amber-50 text-amber-700 border-amber-200"
                         }`}
                       >
-                        {event.badge.text}
+                        {evt.badge?.text || "Evaluated"}
                       </span>
+                    </div>
+
+                    {evt.detailRemark && (
+                      <div className="mt-1.5 p-2 rounded-xl bg-white dark:bg-zinc-900 border border-sky-100 dark:border-sky-900/40 text-[11px] text-slate-800 dark:text-zinc-200 font-sans leading-relaxed shadow-2xs">
+                        {evt.detailRemark}
+                      </div>
                     )}
                   </div>
+                </div>
+              );
+            }
 
-                  {/* Body Text */}
-                  {isNote ? (
-                    <div className="mt-1 p-2 rounded bg-purple-50/40 dark:bg-purple-950/20 border border-purple-200/80 dark:border-purple-900/40 text-[11px] text-neutral-800 dark:text-zinc-200 leading-snug whitespace-pre-wrap">
-                      "{event.body}"
+            // Case E: Plant Team Review Bubble
+            return (
+              <div key={evt.id} className="flex flex-col items-end select-text ml-auto max-w-[94%]">
+                <div className="w-full bg-[#f0fdfa] dark:bg-[#132e2b] rounded-2xl rounded-tr-xs p-3 border border-teal-200/70 dark:border-teal-800/40 shadow-[0_2px_8px_rgba(13,148,136,0.05)]">
+                  <div className="flex items-center justify-between gap-2 pb-1.5 border-b border-teal-100/80 dark:border-white/5">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="w-5 h-5 rounded-full bg-[#0d9488] text-white font-bold text-[9px] font-mono flex items-center justify-center shrink-0">
+                        {getInitials(evt.actorName)}
+                      </div>
+                      <span className="font-display font-bold text-xs text-slate-900 dark:text-zinc-100 truncate block">
+                        {evt.actorName}
+                      </span>
+                      <span className="px-1.5 py-0.2 rounded text-[9px] font-bold font-mono bg-teal-100 text-[#0d9488] dark:bg-teal-950/60 dark:text-teal-300">
+                        Plant
+                      </span>
                     </div>
-                  ) : (
-                    <div className="mt-1 text-[11px] text-neutral-600 dark:text-zinc-400 leading-snug">
-                      {event.body}
+                    <span className="text-[9px] text-slate-400 dark:text-zinc-500 font-mono">
+                      {formatOdooLogDate(evt.timestamp)}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2 mt-1.5">
+                    <span className="text-xs font-semibold text-slate-900 dark:text-zinc-100 font-sans">
+                      Verdict:
+                    </span>
+                    <span
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                        evt.badge?.variant === "teal" || evt.badge?.variant === "emerald"
+                          ? "bg-teal-50 text-[#0d9488] border-teal-200"
+                          : "bg-amber-50 text-amber-700 border-amber-200"
+                      }`}
+                    >
+                      {evt.badge?.text || "Plant Review"}
+                    </span>
+                  </div>
+
+                  {evt.detailRemark && (
+                    <div className="mt-1.5 p-2 rounded-xl bg-white dark:bg-zinc-900 border border-teal-100 dark:border-teal-900/40 text-[11px] text-slate-800 dark:text-zinc-200 font-sans leading-relaxed shadow-2xs">
+                      {evt.detailRemark}
                     </div>
                   )}
                 </div>
@@ -507,6 +539,7 @@ export const ProgramChatterFeed: React.FC<ProgramChatterFeedProps> = ({
             );
           })
         )}
+        <div ref={messagesEndRef} />
       </div>
     </div>
   );
