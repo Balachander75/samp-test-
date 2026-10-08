@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import {
   SampleRequestItem,
   ProgramMaterialItem,
@@ -444,9 +445,9 @@ export const SampleRequestInspector: React.FC<SampleRequestInspectorProps> = ({
     setTimeout(() => setCopiedCode(false), 2000);
   };
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/70 backdrop-blur-md"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 bg-slate-950/70"
       onClick={onClose}
     >
       <div
@@ -760,6 +761,7 @@ export const SampleRequestInspector: React.FC<SampleRequestInspectorProps> = ({
         onClose={() => setSelectedPreviewImage(null)}
         onNavigate={movePreview}
       />
-    </div>
+    </div>,
+    document.body
   );
 };

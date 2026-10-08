@@ -289,7 +289,7 @@ export const StudioOverviewPage: React.FC<StudioOverviewPageProps> = ({
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
-              <thead className="sticky top-0 z-10 bg-slate-50/90 dark:bg-[#121622] backdrop-blur-xs border-b border-slate-200/70 dark:border-white/[0.08]">
+              <thead className="sticky top-0 z-10 bg-slate-50 dark:bg-[#121622] border-b border-slate-200/70 dark:border-white/[0.08]">
                 <tr className="text-slate-600 dark:text-zinc-400 font-mono text-[11px] uppercase tracking-wider select-none">
                   <th className="py-3 pl-6 pr-3 font-semibold whitespace-nowrap">Dieline Code</th>
                   <th className="py-3 px-4 font-semibold">Packaging Title</th>

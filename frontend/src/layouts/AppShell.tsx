@@ -179,7 +179,7 @@ export const AppShell: React.FC<AppShellProps> = ({
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         {/* Enterprise Frosted Utility Top Bar */}
-        <header className="h-14 bg-white/95 backdrop-blur-xl text-slate-900 flex items-center justify-between px-4 sm:px-6 border-b border-slate-200/80 shrink-0 z-40 transition-colors gap-3">
+        <header className="h-14 bg-white text-slate-900 flex items-center justify-between px-4 sm:px-6 border-b border-slate-200 shrink-0 z-40 transition-colors gap-3">
           
           {/* Left: Mobile Menu Toggle & Current Workspace Breadcrumb */}
           <div className="flex items-center gap-3 min-w-0">
@@ -374,7 +374,7 @@ export const AppShell: React.FC<AppShellProps> = ({
         {/* Global Toast Alert */}
         {globalToast && (
           <div className="fixed bottom-5 right-5 z-50 max-w-sm w-[calc(100vw-2.5rem)] animate-in fade-in slide-in-from-bottom-3 duration-200">
-            <div className="bg-slate-900/95 dark:bg-[#151926]/95 backdrop-blur-xl text-white px-4 py-3 rounded-2xl shadow-2xl border border-white/10 flex items-center gap-3 text-xs">
+            <div className="bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-2xl border border-slate-800 flex items-center gap-3 text-xs">
               <span
                 className={`w-2 h-2 rounded-full shrink-0 ${
                   globalToast.tone === "error"

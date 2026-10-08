@@ -256,7 +256,7 @@ export const FeasibilityChatterFeed: React.FC<FeasibilityChatterFeedProps> = ({
   return (
     <div className="w-80 lg:w-[390px] bg-[#f8f9ff] dark:bg-[#131622] flex flex-col h-full overflow-hidden select-text shadow-[-12px_0_36px_rgba(11,28,48,0.03)] z-10 relative">
       {/* ── 1. Top Header ── */}
-      <div className="px-4 py-3 bg-white/90 dark:bg-[#161826]/90 backdrop-blur-xl flex items-center justify-between sticky top-0 z-20 border-b border-slate-100 dark:border-white/5 shadow-[0_2px_10px_rgba(11,28,48,0.02)]">
+      <div className="px-4 py-3 bg-white dark:bg-[#161826] flex items-center justify-between sticky top-0 z-20 border-b border-slate-100 dark:border-white/5 shadow-[0_2px_10px_rgba(11,28,48,0.02)]">
         <div>
           <h2 className="font-display font-bold text-xs text-slate-900 dark:text-zinc-100 tracking-tight leading-none">
             Activity &amp; Communication Log
@@ -285,11 +285,10 @@ export const FeasibilityChatterFeed: React.FC<FeasibilityChatterFeedProps> = ({
               return (
                 <div key={evt.id} className="flex justify-center my-2.5 select-none">
                   <div
-                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium shadow-2xs border backdrop-blur-xs ${
-                      isClaim
-                        ? "bg-sky-50/90 text-sky-900 border-sky-200/80 dark:bg-sky-950/60 dark:text-sky-200 dark:border-sky-800/40"
-                        : "bg-emerald-50/90 text-emerald-900 border-emerald-200/80 dark:bg-emerald-950/60 dark:text-emerald-200 dark:border-emerald-800/40"
-                    }`}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium shadow-2xs border ${isClaim
+                        ? "bg-sky-50 text-sky-900 border-sky-200/80 dark:bg-sky-950/60 dark:text-sky-200 dark:border-sky-800/40"
+                        : "bg-emerald-50 text-emerald-900 border-emerald-200/80 dark:bg-emerald-950/60 dark:text-emerald-200 dark:border-emerald-800/40"
+                      }`}
                   >
                     <span>{evt.summary}</span>
                     <span className="text-[9.5px] opacity-75 font-mono ml-0.5">
@@ -337,11 +336,10 @@ export const FeasibilityChatterFeed: React.FC<FeasibilityChatterFeedProps> = ({
                           Decision:
                         </span>
                         <span
-                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                            evt.badge?.variant === "emerald"
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${evt.badge?.variant === "emerald"
                               ? "bg-emerald-50 text-[#006d32] border-emerald-200"
                               : "bg-rose-50 text-rose-700 border-rose-200"
-                          }`}
+                            }`}
                         >
                           {evt.badge?.text || "Decided"}
                         </span>
@@ -389,13 +387,12 @@ export const FeasibilityChatterFeed: React.FC<FeasibilityChatterFeedProps> = ({
                       Verdict:
                     </span>
                     <span
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                        evt.badge?.variant === "emerald"
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${evt.badge?.variant === "emerald"
                           ? "bg-emerald-50 text-[#006d32] border-emerald-200"
                           : evt.badge?.variant === "rose"
-                          ? "bg-rose-50 text-rose-700 border-rose-200"
-                          : "bg-amber-50 text-amber-700 border-amber-200"
-                      }`}
+                            ? "bg-rose-50 text-rose-700 border-rose-200"
+                            : "bg-amber-50 text-amber-700 border-amber-200"
+                        }`}
                     >
                       {evt.badge?.text || "Evaluated"}
                     </span>

@@ -1,5 +1,5 @@
 import React from "react";
-import { X, Copy, Trash2, ExternalLink } from "lucide-react";
+import { X, Copy, Trash2, ExternalLink, Pencil } from "lucide-react";
 import { StagedProductItem, DELIVERABLES } from "../../types/staging";
 
 export interface StagedProductDrawerProps {
@@ -8,6 +8,7 @@ export interface StagedProductDrawerProps {
   onClose: () => void;
   onRemoveProduct: (id: string) => void;
   onDuplicateProduct: (item: StagedProductItem) => void;
+  onEditProduct?: (item: StagedProductItem) => void;
 }
 
 export const StagedProductDrawer: React.FC<StagedProductDrawerProps> = ({
@@ -16,6 +17,7 @@ export const StagedProductDrawer: React.FC<StagedProductDrawerProps> = ({
   onClose,
   onRemoveProduct,
   onDuplicateProduct,
+  onEditProduct,
 }) => {
   if (!inspectingProduct) return null;
 

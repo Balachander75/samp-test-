@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { useMasterData } from "../../hooks/useMasterData";
 import { CustomerCombobox } from "@/components/erp";
@@ -71,11 +72,11 @@ export const NewProgramPlanningModal: React.FC<NewProgramPlanningModalProps> = (
     });
   };
 
-  return (
-    <div className="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
+  return createPortal(
+    <div className="fixed inset-0 z-[100] overflow-y-auto" role="dialog" aria-modal="true">
       {/* Soft diffused backdrop */}
       <div
-        className="fixed inset-0 bg-slate-950/40 backdrop-blur-md transition-opacity"
+        className="fixed inset-0 bg-slate-950/60 transition-opacity"
         onClick={onClose}
       />
 
@@ -200,7 +201,8 @@ export const NewProgramPlanningModal: React.FC<NewProgramPlanningModalProps> = (
           </form>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

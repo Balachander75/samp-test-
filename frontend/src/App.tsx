@@ -62,7 +62,7 @@ function ActiveModuleView({
   return (
     <ErrorBoundary variant="page">
     <Suspense fallback={<DeskSkeletonLoader />}>
-      <div key={location.pathname} className="flex-1 min-h-0 flex flex-col animate-page-enter">
+      <div key={location.pathname} className="flex-1 min-h-0 flex flex-col">
       {(() => {
         // Executive Operations Overview (Dashboard Landing)
         if (location.pathname === "/dashboard" || location.pathname === "/") {

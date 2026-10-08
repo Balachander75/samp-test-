@@ -328,7 +328,7 @@ export const ProgramChatterFeed: React.FC<ProgramChatterFeedProps> = ({
   return (
     <div className="w-80 lg:w-[360px] bg-[#f8f9ff] dark:bg-[#131622] flex flex-col h-full overflow-hidden select-text border-l border-slate-100 dark:border-white/5 z-10 shrink-0">
       {/* ── 1. Top Header (Identical to Feasibility Check Style) ── */}
-      <div className="px-4 py-3 bg-white/90 dark:bg-[#161826]/90 backdrop-blur-xl flex items-center justify-between sticky top-0 z-20 border-b border-slate-100 dark:border-white/5 shadow-[0_2px_10px_rgba(11,28,48,0.02)]">
+      <div className="px-4 py-3 bg-white dark:bg-[#161826] flex items-center justify-between sticky top-0 z-20 border-b border-slate-100 dark:border-white/5 shadow-[0_2px_10px_rgba(11,28,48,0.02)]">
         <div>
           <h2 className="font-display font-bold text-xs text-slate-900 dark:text-zinc-100 tracking-tight leading-none">
             Activity &amp; Communication Log
@@ -358,12 +358,12 @@ export const ProgramChatterFeed: React.FC<ProgramChatterFeedProps> = ({
               return (
                 <div key={evt.id} className="flex justify-center my-2 select-none">
                   <div
-                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium shadow-2xs border backdrop-blur-xs ${
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium shadow-2xs border ${
                       isSeen
                         ? isPlant
-                          ? "bg-teal-50/90 text-teal-900 border-teal-200/80 dark:bg-teal-950/60 dark:text-teal-200"
-                          : "bg-sky-50/90 text-sky-900 border-sky-200/80 dark:bg-sky-950/60 dark:text-sky-200"
-                        : "bg-slate-100/90 text-slate-800 border-slate-200/80 dark:bg-zinc-800/80 dark:text-zinc-200"
+                          ? "bg-teal-50 text-teal-900 border-teal-200/80 dark:bg-teal-950/60 dark:text-teal-200"
+                          : "bg-sky-50 text-sky-900 border-sky-200/80 dark:bg-sky-950/60 dark:text-sky-200"
+                        : "bg-slate-100 text-slate-800 border-slate-200/80 dark:bg-zinc-800 dark:text-zinc-200"
                     }`}
                   >
                     <span>{evt.summary}</span>

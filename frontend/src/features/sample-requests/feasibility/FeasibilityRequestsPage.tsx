@@ -316,7 +316,7 @@ export const FeasibilityRequestsPage: React.FC<FeasibilityRequestsPageProps> = (
       </header>
 
       {/* ── 2. Floating Filter & Search Strip ── */}
-      <div className="px-6 py-2 bg-white/80 backdrop-blur-xs shrink-0 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/50">
+      <div className="px-6 py-2 bg-white shrink-0 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200">
         {/* Soft Segmented Filter Pills */}
         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 select-none">
           {navTabs.map((t) => {
@@ -401,7 +401,7 @@ export const FeasibilityRequestsPage: React.FC<FeasibilityRequestsPageProps> = (
       {/* ── 3. Full-Bleed Table Workspace (Seamlessly Blended into Full UI) ── */}
       <div className="flex-1 min-h-0 overflow-auto bg-white flex flex-col">
         <table className="w-full text-left text-xs border-collapse">
-          <thead className="sticky top-0 z-10 bg-slate-50/90 backdrop-blur-xs border-b border-slate-200/70">
+          <thead className="sticky top-0 z-10 bg-[#f8fafc] border-b border-slate-200">
             <tr className="text-slate-600 font-mono text-[11px] uppercase tracking-wider select-none">
               <th className="py-3 pl-6 pr-3 w-8">
                 <input

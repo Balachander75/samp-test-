@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import {
   X,
@@ -548,11 +549,11 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
     });
   };
 
-  return (
-    <div className="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
+  return createPortal(
+    <div className="fixed inset-0 z-[100] overflow-y-auto" role="dialog" aria-modal="true">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs transition-opacity duration-200"
+        className="fixed inset-0 bg-slate-950/60 transition-opacity duration-200"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -1304,7 +1305,8 @@ export const NewSampleRequestModal: React.FC<NewSampleRequestModalProps> = ({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

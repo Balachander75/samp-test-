@@ -1,4 +1,5 @@
 import React from "react";
+import { createPortal } from "react-dom";
 import { X, ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
 import { ParsedImageRef } from "../../utils/feasibilityParsers";
 
@@ -21,12 +22,12 @@ export const ImageLightboxModal: React.FC<ImageLightboxModalProps> = ({
   const currentIndex = validImages.findIndex((img) => img.url === selectedImage);
   const activeImageRef = validImages[currentIndex];
 
-  return (
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
       aria-label="Image Preview Lightbox"
-      className="fixed inset-0 z-60 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-150 select-none"
+      className="fixed inset-0 z-[120] bg-black/95 flex items-center justify-center p-4 select-none"
       onClick={onClose}
     >
       {/* Lightbox Top Bar */}
@@ -104,6 +105,7 @@ export const ImageLightboxModal: React.FC<ImageLightboxModalProps> = ({
           className="max-h-[85vh] max-w-[90vw] object-contain rounded shadow-2xl"
         />
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

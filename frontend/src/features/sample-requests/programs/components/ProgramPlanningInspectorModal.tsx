@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { createPortal } from "react-dom";
 import {
   Check,
   CheckCircle2,
@@ -414,9 +415,9 @@ export const ProgramPlanningInspectorModal: React.FC<ProgramPlanningInspectorMod
 
   if (!isOpen || !activeRequest) return null;
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/60 backdrop-blur-xs select-text font-sans animate-fadeIn"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 bg-slate-950/70 select-text font-sans"
       onClick={onClose}
     >
       <div
@@ -426,7 +427,7 @@ export const ProgramPlanningInspectorModal: React.FC<ProgramPlanningInspectorMod
         onClick={(e) => e.stopPropagation()}
       >
         {/* ── 1. Top Control Bar (Pristine Luminous Engine Aesthetics) ── */}
-        <div className="bg-white/85 dark:bg-[#151824]/90 backdrop-blur-xl border-b border-slate-100/90 dark:border-white/5 px-6 py-2.5 flex items-center justify-between gap-3 shrink-0 shadow-[0_2px_12px_rgba(11,28,48,0.02)]">
+        <div className="bg-white dark:bg-[#151824] border-b border-slate-100/90 dark:border-white/5 px-6 py-2.5 flex items-center justify-between gap-3 shrink-0 shadow-[0_2px_12px_rgba(11,28,48,0.02)]">
           {/* Left Actions */}
           <div className="flex items-center space-x-2">
             <span className="font-mono text-xs font-bold text-[#006d32] dark:text-[#00d166] bg-[#eff4ff] dark:bg-[#006d32]/20 px-3 py-1 rounded-xl border border-[#006d32]/20">
@@ -1477,7 +1478,8 @@ export const ProgramPlanningInspectorModal: React.FC<ProgramPlanningInspectorMod
           />
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

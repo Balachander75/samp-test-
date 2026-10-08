@@ -52,7 +52,7 @@ export const FeasibilityControlPanel: React.FC<FeasibilityControlPanelProps> = (
   ];
 
   return (
-    <div className="bg-white/85 dark:bg-[#151824]/90 backdrop-blur-xl border-b border-slate-100/90 dark:border-white/5 px-6 py-2.5 flex flex-wrap items-center justify-between gap-3 shrink-0 shadow-[0_2px_12px_rgba(11,28,48,0.02)]">
+    <div className="bg-white dark:bg-[#151824] border-b border-slate-100/90 dark:border-white/5 px-6 py-2.5 flex flex-wrap items-center justify-between gap-3 shrink-0 shadow-[0_2px_12px_rgba(11,28,48,0.02)]">
       {/* Left Action Buttons */}
       <div className="flex items-center space-x-2">
         <button

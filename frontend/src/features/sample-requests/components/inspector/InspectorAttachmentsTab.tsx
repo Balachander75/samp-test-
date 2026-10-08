@@ -36,7 +36,7 @@ export const InspectorAttachmentsTab: React.FC<InspectorAttachmentsTabProps> = (
                     className="w-full h-full object-cover group-hover:scale-105 transition duration-200"
                   />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-                    <span className="text-[11px] font-semibold text-white bg-black/60 px-2.5 py-1 rounded-lg backdrop-blur-xs flex items-center gap-1">
+                    <span className="text-[11px] font-semibold text-white bg-black/75 px-2.5 py-1 rounded-lg flex items-center gap-1">
                       <Eye className="w-3.5 h-3.5" />
                       <span>Preview</span>
                     </span>

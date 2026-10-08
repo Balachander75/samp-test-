@@ -297,7 +297,7 @@ export const CreativeDesignPage: React.FC<CreativeDesignPageProps> = ({
       </header>
 
       {/* ── 2. Floating Filter & Search Strip ── */}
-      <div className="px-6 py-2 bg-white/80 dark:bg-[#0e121a]/80 backdrop-blur-xs shrink-0 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/50 dark:border-white/[0.06]">
+      <div className="px-6 py-2 bg-white dark:bg-[#0e121a] shrink-0 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/50 dark:border-white/[0.06]">
         {/* Soft Segmented Filter Pills */}
         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 select-none">
           {stages.map((t) => {
@@ -369,7 +369,7 @@ export const CreativeDesignPage: React.FC<CreativeDesignPageProps> = ({
       {/* ── 3. Full-Bleed Table Workspace ── */}
       <div className="flex-1 min-h-0 overflow-auto bg-white dark:bg-[#0c0d14] flex flex-col">
         <table className="w-full text-left text-xs border-collapse">
-          <thead className="sticky top-0 z-10 bg-slate-50/90 dark:bg-[#121622] backdrop-blur-xs border-b border-slate-200/70 dark:border-white/[0.07]">
+          <thead className="sticky top-0 z-10 bg-slate-50 dark:bg-[#121622] border-b border-slate-200/70 dark:border-white/[0.07]">
             <tr className="text-slate-600 dark:text-zinc-400 font-mono text-[11px] uppercase tracking-wider select-none">
               <th className="py-3 pl-6 pr-3 font-semibold whitespace-nowrap">Ref Code</th>
               <th className="py-3 px-4 font-semibold">Design Brief &amp; Title</th>

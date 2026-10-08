@@ -31,7 +31,7 @@ export const InspectorSheetHeader: React.FC<InspectorSheetHeaderProps> = ({
   const requestTypes = getRequestTypes(activeRequest);
 
   return (
-    <div className="bg-white/80 dark:bg-[#161928]/80 backdrop-blur-xl border-b border-slate-100 dark:border-white/5">
+    <div className="bg-white dark:bg-[#161928] border-b border-slate-100 dark:border-white/5">
       {/* ── Top Bar: Reference Code & Flow Progression ── */}
       <div className="flex flex-wrap items-center justify-between gap-3 px-8 py-3 bg-[#f8f9ff]/70 dark:bg-zinc-900/40 border-b border-slate-100/80 dark:border-white/5">
         <div className="flex items-center gap-2.5">

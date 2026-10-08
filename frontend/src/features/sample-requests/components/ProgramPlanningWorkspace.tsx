@@ -248,7 +248,7 @@ export const ProgramPlanningWorkspace: React.FC<ProgramPlanningWorkspaceProps> =
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-slate-50/60 text-slate-800 overflow-y-auto select-text">
       {/* ── 1. Page Header (Clean Editorial) ── */}
-      <header className="border-b border-slate-200/60 bg-white/95 px-6 py-3.5 sticky top-0 z-20 shadow-2xs backdrop-blur-md">
+      <header className="border-b border-slate-200 bg-white px-6 py-3.5 sticky top-0 z-20 shadow-2xs">
         <div className="w-full flex items-center justify-between gap-4">
           <div className="flex items-center gap-3.5 min-w-0">
             <button

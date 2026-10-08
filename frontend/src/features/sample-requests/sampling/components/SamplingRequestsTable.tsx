@@ -66,7 +66,7 @@ export const SamplingRequestsTable: React.FC<SamplingRequestsTableProps> = ({
     <div className="flex-1 min-h-0 overflow-auto bg-white flex flex-col">
       <div className="flex-1 min-h-0 overflow-auto">
         <table className="w-full text-left text-xs border-collapse">
-          <thead className="sticky top-0 z-10 bg-slate-50/90 backdrop-blur-xs border-b border-slate-200/70">
+          <thead className="sticky top-0 z-10 bg-[#f8fafc] border-b border-slate-200">
             <tr className="text-slate-600 font-mono text-[11px] uppercase tracking-wider select-none">
               <th className="py-3 pl-6 pr-3 w-8">
                 <input

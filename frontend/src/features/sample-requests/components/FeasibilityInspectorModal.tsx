@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { UserProfile } from "@/features/auth";
 import { SampleRequestItem } from "../types";
 import {
@@ -334,9 +335,9 @@ export const FeasibilityInspectorModal: React.FC<FeasibilityInspectorModalProps>
 
   if (!isOpen || !activeRequest) return null;
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/70 backdrop-blur-md"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 bg-slate-950/70"
       onClick={onClose}
     >
       <div
@@ -523,7 +524,7 @@ export const FeasibilityInspectorModal: React.FC<FeasibilityInspectorModalProps>
                                   className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
                                 />
                                 <div className="absolute inset-0 bg-slate-950/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-                                  <span className="text-[11px] font-display font-semibold text-white bg-black/60 px-2.5 py-1 rounded-lg backdrop-blur-xs">
+                                  <span className="text-[11px] font-display font-semibold text-white bg-black/75 px-2.5 py-1 rounded-lg">
                                     View Full Image
                                   </span>
                                 </div>
@@ -659,7 +660,8 @@ export const FeasibilityInspectorModal: React.FC<FeasibilityInspectorModalProps>
         onClose={() => setSelectedPreviewImage(null)}
         onNavigate={movePreview}
       />
-    </div>
+    </div>,
+    document.body
   );
 };
 

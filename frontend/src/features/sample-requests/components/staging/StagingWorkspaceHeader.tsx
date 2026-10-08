@@ -116,32 +116,12 @@ export const StagingWorkspaceHeader: React.FC<StagingWorkspaceHeaderProps> = ({
             <button
               type="button"
               onClick={onSaveAsDraft}
-              disabled={isSubmittingAll || isReleasing}
-              className="inline-flex h-8 items-center gap-1.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-white/[0.06] dark:hover:bg-white/10 px-3.5 text-xs font-semibold text-slate-700 dark:text-zinc-300 transition-colors cursor-pointer disabled:opacity-50"
-              title="Save staged products into Draft queue"
+              disabled={isSubmittingAll}
+              className="inline-flex h-8 items-center gap-1.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-white/[0.06] dark:hover:bg-white/10 px-3.5 text-xs font-semibold text-slate-800 dark:text-zinc-200 transition-colors cursor-pointer disabled:opacity-50 border border-slate-200/80 dark:border-white/10"
+              title="Save staged products to Draft queue"
             >
-              <BookmarkCheck className="h-3.5 w-3.5 text-slate-500" />
-              <span>Save as Draft</span>
-            </button>
-          )}
-
-          {programContext.openedFromDraft && (stagedProducts.length > 0 || programContext.parentRequestId) && (
-            <button
-              type="button"
-              onClick={onReleaseRequest || onSubmitAll}
-              disabled={isSubmittingAll || isReleasing}
-              className="inline-flex h-8 items-center gap-1.5 rounded-xl px-4 text-xs font-bold text-white shadow-[0_2px_10px_rgba(0,109,50,0.25)] hover:shadow-[0_4px_14px_rgba(0,109,50,0.35)] transition-all cursor-pointer disabled:cursor-wait disabled:opacity-60"
-              style={{ background: "linear-gradient(135deg, #006d32 0%, #00d166 100%)" }}
-              title="Release this request to active PMT / Creative workflow"
-            >
-              <Send className="h-3 w-3" />
-              <span>
-                {isReleasing
-                  ? "Releasing Request…"
-                  : programContext.parentSrNumber
-                  ? `Release Request (${programContext.parentSrNumber})`
-                  : "Release Request"}
-              </span>
+              <BookmarkCheck className="h-3.5 w-3.5 text-[#006d32] dark:text-emerald-400" />
+              <span>{isSubmittingAll ? "Saving…" : "Save Staged Products"}</span>
             </button>
           )}
 

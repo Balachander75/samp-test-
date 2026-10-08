@@ -291,7 +291,7 @@ export const DraftPackagesView: React.FC<DraftPackagesViewProps> = ({
 
       {/* Quick Release Confirmation Modal */}
       {quickReleaseGroup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70">
           <div className="bg-white dark:bg-[#12141d] rounded-xl border border-zinc-200 dark:border-white/[0.08] max-w-md w-full shadow-2xl p-6 space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
@@ -375,7 +375,7 @@ export const DraftPackagesView: React.FC<DraftPackagesViewProps> = ({
 
       {/* Delete Package Modal */}
       {deleteGroup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70">
           <div className="bg-white dark:bg-[#12141d] rounded-xl border border-zinc-200 dark:border-white/[0.08] max-w-md w-full shadow-2xl p-6 space-y-4">
             <div className="flex items-center gap-2.5 text-rose-600">
               <div className="w-9 h-9 rounded-lg bg-rose-100 dark:bg-rose-950/60 flex items-center justify-center">

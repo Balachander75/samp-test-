@@ -617,7 +617,7 @@ export const DraftWorkspacePage: React.FC<DraftWorkspacePageProps> = ({ user }) 
 
       {/* Release Confirmation Modal */}
       {isReleaseModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70">
           <div className="bg-white dark:bg-[#12141d] rounded-xl border border-zinc-200 dark:border-white/[0.08] max-w-md w-full shadow-2xl p-6 space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
@@ -685,7 +685,7 @@ export const DraftWorkspacePage: React.FC<DraftWorkspacePageProps> = ({ user }) 
 
       {/* Edit Metadata Modal */}
       {editingItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70">
           <form
             onSubmit={handleSaveMetadata}
             className="bg-white dark:bg-[#12141d] rounded-xl border border-zinc-200 dark:border-white/[0.08] max-w-lg w-full shadow-2xl overflow-hidden flex flex-col"
@@ -801,7 +801,7 @@ export const DraftWorkspacePage: React.FC<DraftWorkspacePageProps> = ({ user }) 
 
       {/* Specifications Drawer */}
       {specItem && (
-        <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/70">
           <div className="w-full max-w-xl bg-white dark:bg-[#12141d] h-full shadow-2xl flex flex-col border-l border-zinc-200 dark:border-zinc-800 animate-in slide-in-from-right duration-200">
             {/* Drawer Header */}
             <div className="px-6 py-4 bg-[#714B67] text-white flex items-center justify-between shrink-0">

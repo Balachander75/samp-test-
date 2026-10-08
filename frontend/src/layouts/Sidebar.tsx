@@ -20,8 +20,8 @@ const NavButton: React.FC<{ active: boolean; onClick: () => void; "aria-current"
       onClick={onClick}
       className={`group w-full flex items-center justify-between gap-2 h-[38px] px-3 rounded-[10px] cursor-pointer text-left transition-all duration-150 relative ${
         active
-          ? "bg-white text-slate-900 shadow-[0_1px_4px_rgba(0,0,0,0.06),0_0_0_1px_rgba(0,0,0,0.04)] border border-slate-200/80 font-bold"
-          : "bg-transparent hover:bg-slate-200/50 text-slate-700 border border-transparent font-medium"
+          ? "bg-emerald-50 text-[#006d32] border border-emerald-200/70 font-bold shadow-2xs"
+          : "bg-transparent hover:bg-slate-100/70 text-slate-700 border border-transparent font-medium"
       }`}
       {...rest}
     >
@@ -40,8 +40,8 @@ const SubNavButton: React.FC<{ active: boolean; onClick: () => void; children: R
       onClick={onClick}
       className={`w-full flex items-center justify-between gap-2 h-[30px] px-2.5 rounded-[8px] cursor-pointer text-left transition-all duration-150 ${
         active
-          ? "bg-emerald-500/10 text-[#006d32] font-semibold"
-          : "bg-transparent hover:bg-slate-200/40 text-slate-600 font-normal"
+          ? "bg-emerald-50/80 text-[#006d32] font-semibold"
+          : "bg-transparent hover:bg-slate-100/60 text-slate-600 font-normal"
       }`}
     >
       {children}
@@ -238,9 +238,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const roleLabel = user?.sub_role || user?.role || "Global Admin";
 
   const renderNavContent = (isDrawer = false) => (
-    <div className="flex flex-col h-full select-none bg-[#f8f9ff] border-r border-slate-200/80">
+    <div className="flex flex-col h-full select-none bg-white border-r border-slate-200">
       {/* ── Brand Header ── */}
-      <div className="flex items-center justify-between shrink-0 h-14 px-4 bg-white border-b border-slate-200/60">
+      <div className="flex items-center justify-between shrink-0 h-14 px-4 bg-white border-b border-slate-200">
         <img
           src={logoImg}
           alt="Logo"
@@ -348,19 +348,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* ── Bottom User Card ── */}
-      <div className="p-2.5 border-t border-slate-200/60 dark:border-white/[0.06] bg-white dark:bg-[#0c0f18] shrink-0">
-        <div className="flex items-center gap-2.5 p-2 rounded-xl bg-slate-50 dark:bg-[#121622] border border-slate-100 dark:border-white/[0.06]">
-          <div className="w-8 h-8 rounded-lg shrink-0 bg-gradient-to-tr from-[#006d32] to-[#00d166] flex items-center justify-center text-white font-bold text-xs shadow-xs dark:shadow-[0_0_12px_rgba(0,209,102,0.35)] font-display">
+      <div className="p-2.5 border-t border-slate-200 bg-white shrink-0">
+        <div className="flex items-center gap-2.5 p-2 rounded-xl bg-slate-50 border border-slate-200/70">
+          <div className="w-8 h-8 rounded-lg shrink-0 bg-gradient-to-tr from-[#006d32] to-[#00d166] flex items-center justify-center text-white font-bold text-xs shadow-xs font-display">
             {initials}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5">
-              <span className="text-xs font-semibold text-slate-900 dark:text-zinc-100 overflow-hidden text-ellipsis whitespace-nowrap">
+              <span className="text-xs font-semibold text-slate-900 overflow-hidden text-ellipsis whitespace-nowrap">
                 {user?.name || "User"}
               </span>
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:shadow-[0_0_6px_#10b981] shrink-0" />
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
             </div>
-            <span className="block text-[10px] text-slate-400 dark:text-zinc-500 overflow-hidden text-ellipsis whitespace-nowrap font-mono">
+            <span className="block text-[10px] text-slate-400 overflow-hidden text-ellipsis whitespace-nowrap font-mono">
               {roleLabel}
             </span>
           </div>
@@ -370,7 +370,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               onClick={onLogout}
               title="Sign Out"
               aria-label="Sign out"
-              className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 dark:text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer shrink-0"
+              className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer shrink-0"
             >
               <LogOut className="w-3.5 h-3.5" />
             </button>
@@ -390,7 +390,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Mobile Drawer */}
       {isMobileOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={onCloseMobile} />
+          <div className="fixed inset-0 bg-black/60" onClick={onCloseMobile} />
           <aside className="fixed inset-y-0 left-0 z-50 flex flex-col shadow-2xl" style={{ width: 244 }}>
             {renderNavContent(true)}
           </aside>

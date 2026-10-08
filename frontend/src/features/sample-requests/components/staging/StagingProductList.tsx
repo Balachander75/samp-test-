@@ -1,11 +1,12 @@
 import React from "react";
-import { Layers, Plus, Eye, Copy, Trash2, Calendar, Clock, PlusCircle } from "lucide-react";
+import { Layers, Plus, Eye, Pencil, Copy, Trash2, Calendar, Clock, PlusCircle } from "lucide-react";
 import { StagedProductItem, DELIVERABLES } from "../../types/staging";
 
 export interface StagingProductListProps {
   stagedProducts: StagedProductItem[];
   onOpenAddModal: () => void;
   onInspectProduct: (item: StagedProductItem) => void;
+  onEditProduct?: (item: StagedProductItem) => void;
   onDuplicateProduct: (item: StagedProductItem) => void;
   onRemoveProduct: (id: string) => void;
 }
@@ -14,6 +15,7 @@ export const StagingProductList: React.FC<StagingProductListProps> = ({
   stagedProducts,
   onOpenAddModal,
   onInspectProduct,
+  onEditProduct,
   onDuplicateProduct,
   onRemoveProduct,
 }) => {
@@ -223,6 +225,17 @@ export const StagingProductList: React.FC<StagingProductListProps> = ({
                     >
                       <Eye className="w-3.5 h-3.5" />
                     </button>
+                    {onEditProduct && (
+                      <button
+                        type="button"
+                        onClick={() => onEditProduct(prod)}
+                        className="h-7 w-7 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 hover:text-blue-800 flex items-center justify-center transition-colors cursor-pointer dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-900/60"
+                        title="Edit Specification"
+                        aria-label="Edit Specification"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => onDuplicateProduct(prod)}
