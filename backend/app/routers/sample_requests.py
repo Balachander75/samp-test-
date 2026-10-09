@@ -59,10 +59,16 @@ def list_sample_requests(
     customer: Optional[str] = None,
     status: Optional[str] = None,
     stage: Optional[str] = None,
+    created_by: Optional[str] = None,
     service: SampleRequestService = Depends(get_sample_request_service),
 ):
     effective_status = status or stage
-    return service.list_requests(year=year, customer=customer, status=effective_status)
+    return service.list_requests(
+        year=year,
+        customer=customer,
+        status=effective_status,
+        created_by=created_by,
+    )
 
 
 @router.get("/api/v1/sample-requests/search-material", summary="Search products by material code (alias)")
@@ -111,7 +117,8 @@ def create_sample_request(
     # Sync to design requests if request involves design
     request_types = payload.get("request_types") or []
     if "design" in request_types:
-        design_service.sync_sample_request(created)
+        sync_payload = {**payload, **created}
+        design_service.sync_sample_request(sync_payload)
 
     return {"success": True, "message": "Sample request created successfully", "data": created}
 
@@ -145,11 +152,13 @@ def create_sample_requests_batch(
 
     created_results = service.batch_create(normalized_items)
 
-    # Sync any design-scoped items
-    for item in created_results:
+    # Sync any design-scoped items with original input fields
+    for idx, item in enumerate(created_results):
         req_types = item.get("request_types") or []
         if "design" in req_types:
-            design_service.sync_sample_request(item)
+            raw_input = normalized_items[idx] if idx < len(normalized_items) else {}
+            sync_payload = {**raw_input, **item}
+            design_service.sync_sample_request(sync_payload)
 
     return {
         "success": True,
@@ -194,9 +203,11 @@ def update_sample_request(
     if not updated:
         raise HTTPException(status_code=404, detail="Sample request not found")
 
-    # Sync status to design requests if present
-    if "status" in body:
-        design_service.sync_sample_request(updated)
+    # Sync status and design metadata to design requests if present
+    req_types = updated.get("request_types") or body.get("request_types") or []
+    if "design" in req_types or "status" in body or "trend" in body:
+        sync_payload = {**body, **updated}
+        design_service.sync_sample_request(sync_payload)
 
     return updated
 

@@ -116,7 +116,7 @@ export const SamplingRequestsPage: React.FC<SamplingRequestsPageProps> = ({
               trend: row.trend || "",
               targetAudience: row.targetAudience || "",
               referenceImage: row.productImagePath || "",
-              remarks: (row as any).remarks || row.marketingRemarks || row.descriptionNotes || "",
+              remarks: row.designRemarks || (row as any).remarks || row.marketingRemarks || row.descriptionNotes || "",
               images: (row.referenceImages || []).map((url, i) => ({ id: String(i), url, name: `Attachment ${i + 1}` })),
               webLinks: row.referenceLinks || [],
             }

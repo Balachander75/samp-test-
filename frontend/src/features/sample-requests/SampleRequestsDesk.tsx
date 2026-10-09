@@ -21,6 +21,7 @@ import {
 } from "./utils/trackTypes";
 import { useBusinessYear } from "@/context/BusinessYearContext";
 import { exportRecordsToCsv } from "@/lib/csvExport";
+import { Crown, Users, UserCheck } from "lucide-react";
 
 // Modular Sub-Desks
 import { MarketingOverviewPage } from "./overview/MarketingOverviewPage";
@@ -72,6 +73,11 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
     user?.userid === "admin" ||
     user?.role === "Administrator";
 
+  const isTeamHead = Boolean(user?.is_team_head || (user as any)?.isTeamHead || user?.role === "head");
+
+  // For Team Heads: toggle between viewing all team requests vs only their own submissions
+  const [headScopeFilter, setHeadScopeFilter] = useState<"all" | "mine">("all");
+
   const { selectedYear } = useBusinessYear();
 
   // Active Plant state (synced with global app:plant-changed)
@@ -97,6 +103,30 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
   // Primary Data State
   const [requests, setRequests] = useState<SampleRequestItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Filter requests based on user hierarchy & permissions
+  const visibleRequests = useMemo(() => {
+    if (isAdmin) return requests;
+
+    const uName = (user?.name || "").toLowerCase().trim();
+    const uId = (user?.userid || "").toLowerCase().trim();
+
+    if (isTeamHead) {
+      if (headScopeFilter === "mine") {
+        return requests.filter((r) => {
+          const creator = (r.createdBy || "").toLowerCase().trim();
+          return (uName && creator.includes(uName)) || (uId && creator.includes(uId));
+        });
+      }
+      return requests;
+    }
+
+    // Regular team member: ONLY requests they raised themselves
+    return requests.filter((r) => {
+      const creator = (r.createdBy || "").toLowerCase().trim();
+      return (uName && creator.includes(uName)) || (uId && creator.includes(uId));
+    });
+  }, [requests, isAdmin, isTeamHead, headScopeFilter, user]);
 
   // Inspector & Modal State
   const [selectedRequest, setSelectedRequest] = useState<SampleRequestItem | null>(null);
@@ -173,19 +203,19 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
   // Unique plants and customers dynamically derived from active DB records
   const uniquePlants = useMemo(() => {
     const set = new Set<string>();
-    requests.forEach((r) => {
+    visibleRequests.forEach((r) => {
       if (r.targetPlant && r.targetPlant.trim()) set.add(r.targetPlant.trim());
     });
     return Array.from(set).sort();
-  }, [requests]);
+  }, [visibleRequests]);
 
   const uniqueCustomers = useMemo(() => {
     const set = new Set<string>();
-    requests.forEach((r) => {
+    visibleRequests.forEach((r) => {
       if (r.customer && r.customer.trim()) set.add(r.customer.trim());
     });
     return Array.from(set).sort();
-  }, [requests]);
+  }, [visibleRequests]);
 
   // Open Inspector (or route Drafts directly to Product Staging)
   const handleInspectRequest = (req: SampleRequestItem) => {
@@ -516,9 +546,9 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
         { header: "Feasibility (Plant)", accessor: (r) => r.plantFeasibilityResponse || "Pending" },
         { header: "Feasibility (SAMP)", accessor: (r) => r.samplingFeasibilityResponse || "Pending" },
       ],
-      data: requests,
+      data: visibleRequests,
     });
-    showToast(`Exported ${requests.length} records to CSV`);
+    showToast(`Exported ${visibleRequests.length} records to CSV`);
   };
 
   return (
@@ -534,10 +564,66 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
         </div>
       )}
 
+      {/* Role-Based Hierarchy Status Ribbon */}
+      {isTeamHead ? (
+        <div className="bg-emerald-50/70 dark:bg-emerald-950/30 border-b border-emerald-200/60 dark:border-emerald-900/40 px-6 py-2 flex flex-wrap items-center justify-between gap-2 text-xs">
+          <div className="flex items-center gap-2">
+            <Crown className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+            <span className="font-semibold text-emerald-900 dark:text-emerald-200 uppercase tracking-tight">
+              {user?.team ? `${user.team} Team Head` : "Department Head Workspace"}
+            </span>
+            <span className="text-zinc-500 dark:text-zinc-400">({user?.name || user?.userid})</span>
+          </div>
+          <div className="flex items-center gap-1 bg-white dark:bg-zinc-900 p-0.5 rounded-lg border border-emerald-200/80 dark:border-emerald-800/80 shadow-2xs">
+            <button
+              type="button"
+              onClick={() => setHeadScopeFilter("all")}
+              className={`px-3 py-1 rounded-md text-[11px] font-semibold transition-all ${
+                headScopeFilter === "all"
+                  ? "bg-emerald-600 text-white shadow-2xs"
+                  : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200"
+              }`}
+            >
+              All Team Requests ({requests.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setHeadScopeFilter("mine")}
+              className={`px-3 py-1 rounded-md text-[11px] font-semibold transition-all ${
+                headScopeFilter === "mine"
+                  ? "bg-emerald-600 text-white shadow-2xs"
+                  : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200"
+              }`}
+            >
+              My Submissions Only ({
+                requests.filter((r) => {
+                  const uName = (user?.name || "").toLowerCase().trim();
+                  const uId = (user?.userid || "").toLowerCase().trim();
+                  const creator = (r.createdBy || "").toLowerCase().trim();
+                  return (uName && creator.includes(uName)) || (uId && creator.includes(uId));
+                }).length
+              })
+            </button>
+          </div>
+        </div>
+      ) : !isAdmin && user ? (
+        <div className="bg-zinc-100/80 dark:bg-zinc-900/60 border-b border-zinc-200 dark:border-zinc-800 px-6 py-2 flex items-center justify-between text-xs text-zinc-600 dark:text-zinc-400">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+            <span>
+              Personal Workspace: Showing requests created exclusively by <strong>{user.name || user.userid}</strong>
+            </span>
+          </div>
+          <span className="text-[11px] font-mono text-zinc-500">
+            {visibleRequests.length} request{visibleRequests.length === 1 ? "" : "s"} visible
+          </span>
+        </div>
+      ) : null}
+
       {/* Render Active Sub-Page */}
       {activeView === "overview" && (
         <MarketingOverviewPage
-          requests={requests}
+          requests={visibleRequests}
           isLoading={isLoading}
           selectedYear={selectedYear}
           selectedPlant={selectedPlant}
@@ -549,7 +635,7 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
 
       {activeView === "sampling" && (
         <SamplingRequestsPage
-          requests={requests}
+          requests={visibleRequests}
           isLoading={isLoading}
           selectedYear={selectedYear}
           selectedPlant={selectedPlant}
@@ -572,7 +658,7 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
 
       {activeView === "feasibility" && (
         <FeasibilityRequestsPage
-          requests={requests}
+          requests={visibleRequests}
           isLoading={isLoading}
           selectedYear={selectedYear}
           selectedPlant={selectedPlant}
@@ -593,7 +679,7 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
 
       {activeView === "programs" && (
         <ProgramPlanningPage
-          requests={requests}
+          requests={visibleRequests}
           isLoading={isLoading}
           selectedYear={selectedYear}
           selectedPlant={selectedPlant}

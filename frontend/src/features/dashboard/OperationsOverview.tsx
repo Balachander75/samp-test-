@@ -7,6 +7,7 @@ import {
   fetchCostingEstimationsApi,
 } from "@/infrastructure/api";
 import { SampleRequestItem } from "@/features/sample-requests/types";
+import { UserProfile } from "@/features/auth";
 import { useBusinessYear } from "@/context/BusinessYearContext";
 import { MetricRibbon, MetricTileItem } from "@/components/erp/MetricRibbon";
 import {
@@ -32,7 +33,11 @@ import {
   Sparkles,
 } from "lucide-react";
 
-export const OperationsOverview: React.FC = () => {
+export interface OperationsOverviewProps {
+  user?: UserProfile;
+}
+
+export const OperationsOverview: React.FC<OperationsOverviewProps> = ({ user }) => {
   const navigate = useNavigate();
   const { selectedYear } = useBusinessYear();
   const [requests, setRequests] = useState<SampleRequestItem[]>([]);
@@ -80,12 +85,30 @@ export const OperationsOverview: React.FC = () => {
     return () => window.removeEventListener("app:refresh-requested", handleRefresh);
   }, [loadData]);
 
+  // User visibility: regular team member only sees requests they raised
+  const isRegularUser = Boolean(
+    user &&
+    user.role !== "admin" &&
+    user.userid !== "admin" &&
+    !user.is_team_head
+  );
+
+  const visibleRequests = useMemo(() => {
+    if (!isRegularUser || !user) return requests;
+    const uName = (user.name || "").toLowerCase().trim();
+    const uId = (user.userid || "").toLowerCase().trim();
+    return requests.filter((r) => {
+      const creator = (r.createdBy || "").toLowerCase().trim();
+      return (uName && creator.includes(uName)) || (uId && creator.includes(uId));
+    });
+  }, [requests, isRegularUser, user]);
+
   // Compute live pipeline metrics
   const telemetry = useMemo(() => {
-    const total = requests.length;
+    const total = visibleRequests.length;
 
     // Pending Feasibility
-    const pendingFeasibility = requests.filter((r) => {
+    const pendingFeasibility = visibleRequests.filter((r) => {
       const mode = String(r.creationMode || "").toLowerCase();
       const kind = String(r.requestKind || "").toLowerCase();
       const isFeas = mode === "feasibility_check" || kind === "feasibility";
@@ -98,7 +121,7 @@ export const OperationsOverview: React.FC = () => {
     // Urgent SLA (<72h)
     const now = new Date();
     const threeDaysLater = new Date(now.getTime() + 3 * 86400000);
-    const urgentCount = requests.filter((r) => {
+    const urgentCount = visibleRequests.filter((r) => {
       if (!r.sampleRequiredDate) return false;
       const d = new Date(r.sampleRequiredDate);
       const s = (r.status || "").toLowerCase();
@@ -107,7 +130,7 @@ export const OperationsOverview: React.FC = () => {
     }).length;
 
     // Prototyping in progress
-    const inFabrication = requests.filter((r) => {
+    const inFabrication = visibleRequests.filter((r) => {
       const s = (r.status || "").toLowerCase();
       return (
         s.includes("samp") ||
@@ -120,7 +143,7 @@ export const OperationsOverview: React.FC = () => {
     }).length;
 
     // Commercial ready / dispatched
-    const closedCount = requests.filter((r) => {
+    const closedCount = visibleRequests.filter((r) => {
       const s = (r.status || "").toLowerCase();
       return s.includes("dispatch") || s.includes("deal") || s.includes("approved") || s.includes("closed");
     }).length;
@@ -132,7 +155,7 @@ export const OperationsOverview: React.FC = () => {
       inFabrication,
       closedCount,
     };
-  }, [requests]);
+  }, [visibleRequests]);
 
   // Metric Ribbon items
   const metrics: MetricTileItem[] = useMemo(

@@ -198,7 +198,7 @@ export const CreativeWorkDesk: React.FC<CreativeWorkDeskProps> = ({ user }) => {
       numberOfDesigns: brief.variantsCount,
       designRemarks: `${brief.dimensions ? `Dimensions: ${brief.dimensions}\n` : ""}${brief.finishingNotes ? `Finishing: ${brief.finishingNotes}\n` : ""}${brief.colorSpecs ? `Specs: ${brief.colorSpecs}` : ""}`,
       targetAudience: brief.category,
-      trend: brief.colorSpecs,
+      trend: (brief as any).trend || (brief.colorSpecs && brief.colorSpecs !== "Standard CMYK" ? brief.colorSpecs : "—"),
       designRequestStatus: brief.proofStatus,
     };
     setSelectedRequest(adapted);

@@ -61,9 +61,21 @@ export interface SampleRequestItem {
   marketingDesignDecision?: "awaiting_marketing_review" | "remaining_requested" | "accepted" | null;
   remainingDesignCount?: number;
   numberOfDesigns?: number;
+  designRequiredDate?: string | null;
   trend?: string | null;
   targetAudience?: string | null;
   referenceImage?: string | null;
+  // Creative Studio Workflow, Task Claim & 2-Day Counter Date SLA
+  releasedAt?: string | null;
+  claimedBy?: string | null;
+  claimedAt?: string | null;
+  isCounterDateActive?: boolean;
+  proposedTargetDate?: string | null;
+  counterDateReason?: string | null;
+  counterDateRequestedAt?: string | null;
+  counterDateDecision?: "pending" | "accepted" | "rejected" | null;
+  counterDateDecisionAt?: string | null;
+  counterDateDecisionNotes?: string | null;
   createdAt: string;
   updatedAt?: string;
   plantFeasibilityResponse?: "Yes" | "No" | "Maybe" | null;
@@ -222,6 +234,10 @@ export interface CreateSampleRequestForm {
   feasibilityClosedBy?: "plant" | "sampling" | null;
   referenceImages?: string[];
   referenceLinks?: string[];
+  trend?: string;
+  targetAudience?: string;
+  numberOfDesigns?: number;
+  designRemarks?: string;
 }
 
 export type RequestType = "design" | "mockup" | "sample" | "costing";

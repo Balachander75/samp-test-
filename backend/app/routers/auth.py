@@ -56,6 +56,9 @@ class UserOut(BaseModel):
     email: str
     role: str
     sub_role: Optional[str] = None
+    team: Optional[str] = None
+    is_team_head: bool = False
+    plant_code: Optional[str] = None
     is_active: bool
     created_at: Optional[str] = None
 
@@ -124,6 +127,9 @@ def _user_to_out(user: User) -> dict:
         "email": user.email,
         "role": user.role,
         "sub_role": user.sub_role,
+        "team": getattr(user, "team", None),
+        "is_team_head": getattr(user, "is_team_head", False),
+        "plant_code": getattr(user, "plant_code", None),
         "is_active": user.is_active,
         "created_at": user.created_at.isoformat() if user.created_at else None,
     }

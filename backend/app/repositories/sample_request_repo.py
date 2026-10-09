@@ -47,10 +47,11 @@ class SampleRequestRepository(BaseRepository[CreateSampleRequest]):
         year: Optional[str] = None,
         customer: Optional[str] = None,
         status: Optional[str] = None,
+        created_by: Optional[str] = None,
         skip: int = 0,
         limit: Optional[int] = None,
     ) -> List[CreateSampleRequest]:
-        """Query sample requests with optional business year, customer, and status filters."""
+        """Query sample requests with optional business year, customer, status, and created_by filters."""
         query = self.db.query(CreateSampleRequest).options(*self._eager_options())
 
         if year and year.strip().upper() != "ALL":
@@ -74,6 +75,9 @@ class SampleRequestRepository(BaseRepository[CreateSampleRequest]):
 
         if status and status.strip():
             query = query.filter(CreateSampleRequest.status == status.strip())
+
+        if created_by and created_by.strip():
+            query = query.filter(CreateSampleRequest.created_by.ilike(f"%{created_by.strip()}%"))
 
         query = query.order_by(CreateSampleRequest.id.desc())
 

@@ -58,6 +58,19 @@ class SampleRequestService:
                 "costing_selected_at": audit.costing_selected_at.isoformat() if audit.costing_selected_at else None,
             }
 
+        trend_val = None
+        target_audience_val = None
+        remarks_val = None
+        if r.product_details:
+            for d in r.product_details:
+                norm_char = self._normalize_characteristic_name(d.characteristic_name)
+                if norm_char in {"TREND", "THEME", "DESIGNTREND", "DESIGNTHEME"}:
+                    trend_val = d.value
+                elif norm_char in {"TARGETAUDIENCE", "AUDIENCE"}:
+                    target_audience_val = d.value
+                elif norm_char in {"DESIGNREMARKS", "REMARKS"}:
+                    remarks_val = d.value
+
         return {
             "id": r.id,
             "sr_number": r.sr_number,
@@ -93,6 +106,9 @@ class SampleRequestService:
             "creation_mode": r.creation_mode or "material_code",
             "request_types": r.request_types if isinstance(r.request_types, list) else [],
             "request_type_audit": audit_data,
+            "trend": trend_val,
+            "target_audience": target_audience_val,
+            "design_remarks": remarks_val,
             "created_at": r.created_at.isoformat() if r.created_at else None,
             "updated_at": r.updated_at.isoformat() if r.updated_at else None,
         }
@@ -156,6 +172,32 @@ class SampleRequestService:
                         value=str(value).strip(),
                     )
                 )
+
+        for k, c_name in (
+            ("trend", "TREND"),
+            ("target_audience", "TARGET_AUDIENCE"),
+            ("targetAudience", "TARGET_AUDIENCE"),
+            ("design_remarks", "DESIGN_REMARKS"),
+            ("designRemarks", "DESIGN_REMARKS"),
+        ):
+            v = payload.get(k)
+            if v is not None and str(v).strip():
+                norm_c = self._normalize_characteristic_name(c_name)
+                existing = next(
+                    (item for item in request.product_details
+                     if self._normalize_characteristic_name(item.characteristic_name) == norm_c),
+                    None,
+                )
+                if existing:
+                    existing.value = str(v).strip()
+                else:
+                    request.product_details.append(
+                        ProductDetail(
+                            class_name="Design",
+                            characteristic_name=c_name,
+                            value=str(v).strip(),
+                        )
+                    )
 
     def _clone_source_product_details(self, request: CreateSampleRequest, source_id: int) -> None:
         """Clone all product_details rows from source request to the new request."""
@@ -261,11 +303,19 @@ class SampleRequestService:
         year: Optional[str] = None,
         customer: Optional[str] = None,
         status: Optional[str] = None,
+        created_by: Optional[str] = None,
         skip: int = 0,
         limit: Optional[int] = None,
     ) -> List[Dict[str, Any]]:
-        """List requests optionally filtered by business year, customer, and status."""
-        records = self.repo.list_by_filters(year=year, customer=customer, status=status, skip=skip, limit=limit)
+        """List requests optionally filtered by business year, customer, status, and created_by."""
+        records = self.repo.list_by_filters(
+            year=year,
+            customer=customer,
+            status=status,
+            created_by=created_by,
+            skip=skip,
+            limit=limit,
+        )
         return [self.serialize(r) for r in records]
 
     def get_by_id(self, id: int) -> Optional[Dict[str, Any]]:

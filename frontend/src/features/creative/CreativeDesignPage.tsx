@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Palette,
   Search,
@@ -26,6 +26,7 @@ import { CopyBadge } from "@/components/ui/CopyBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { WorkflowTabStrip } from "@/components/erp/WorkflowTabStrip";
 import { exportRecordsToCsv } from "@/lib/csvExport";
+import { mergeWithWorkflowState } from "@/features/sample-requests/utils/designWorkflowStorage";
 
 export interface CreativeDesignPageProps {
   briefs: CreativeBriefItem[];
@@ -56,6 +57,17 @@ export const CreativeDesignPage: React.FC<CreativeDesignPageProps> = ({
   const [selectedStage, setSelectedStage] = useState<string>("all");
   const [selectedTrend, setSelectedTrend] = useState<string>("all");
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [workflowVersion, setWorkflowVersion] = useState(0);
+
+  useEffect(() => {
+    const handleStorageUpdate = () => {
+      setWorkflowVersion((v) => v + 1);
+    };
+    window.addEventListener("samp:design-workflow-updated", handleStorageUpdate);
+    return () => {
+      window.removeEventListener("samp:design-workflow-updated", handleStorageUpdate);
+    };
+  }, []);
 
   // Merge and normalize briefs and design requests
   const unifiedDesigns = useMemo(() => {
@@ -85,7 +97,7 @@ export const CreativeDesignPage: React.FC<CreativeDesignPageProps> = ({
         refCode: b.artCode,
         title: b.title,
         customer: b.brand,
-        trend: b.colorSpecs || "Standard CMYK",
+        trend: (b as any).trend || (b.colorSpecs && b.colorSpecs !== "Standard CMYK" ? b.colorSpecs : "—"),
         targetAudience: b.category || "General",
         referenceCount: 0,
         program: "Creative Studio",
@@ -101,37 +113,45 @@ export const CreativeDesignPage: React.FC<CreativeDesignPageProps> = ({
 
     // 2. From design-scoped requests
     designRequests.forEach((d) => {
+      const merged = mergeWithWorkflowState(d);
       let status: CreativeBriefItem["proofStatus"] = "Brief Intake";
-      const s = String(d.status || "").toLowerCase();
-      const workflowStatus = String(d.designRequestStatus || d.status || "").toLowerCase();
-      if (s.includes("approved") || s.includes("released")) status = "Prepress Approved";
-      else if (workflowStatus.includes("remaining requested")) status = "Revisions Requested";
-      else if (s.includes("review")) status = "Client Review";
-      else if (s.includes("creative")) status = "In Concept";
+      const s = String(merged.status || "").toLowerCase();
+      const workflowStatus = String(merged.designRequestStatus || merged.status || "").toLowerCase();
+      if (s.includes("approved") || s.includes("released") || merged.marketingDesignDecision === "accepted") {
+        status = "Prepress Approved";
+      } else if (workflowStatus.includes("remaining requested") || merged.marketingDesignDecision === "remaining_requested") {
+        status = "Revisions Requested";
+      } else if (s.includes("review") || merged.marketingDesignDecision === "awaiting_marketing_review") {
+        status = "Client Review";
+      } else if (s.includes("creative")) {
+        status = "In Concept";
+      }
 
-      const refCount = (d.referenceImages?.length || 0) + (d.referenceLinks?.length || 0) + (d.productImagePath ? 1 : 0);
+      const refCount = (merged.referenceImages?.length || 0) + (merged.referenceLinks?.length || 0) + (merged.productImagePath ? 1 : 0);
 
       list.push({
-        id: String(d.id),
-        refCode: d.srNumber || `DSG-${d.id}`,
-        title: d.productDescription || (d as any).opportunityName || d.programName || "Graphic Design Request",
-        customer: d.customer || "General Customer",
-        trend: d.trend || "Contemporary Trend",
-        targetAudience: d.targetAudience || "General Audience",
+        id: String(merged.id),
+        refCode: merged.srNumber || `DSG-${merged.id}`,
+        title: merged.productDescription || (merged as any).opportunityName || merged.programName || "Graphic Design Request",
+        customer: merged.customer || "General Customer",
+        trend: merged.trend || "—",
+        targetAudience: merged.targetAudience || "General",
         referenceCount: refCount,
-        program: d.programName || d.programYear || "General Program",
-        variantsCount: Number(d.designsCustomerCreative || d.productArtworkNos) || 1,
-        designer: d.createdBy || "Marketing Specialist",
-        dueDate: d.sampleRequiredDate || d.targetArtworkDateCreative || "Standard SLA",
+        program: merged.programName || merged.programYear || "General Program",
+        variantsCount: Number(merged.designsCustomerCreative || merged.productArtworkNos) || 1,
+        designer: merged.claimedBy ? `${merged.claimedBy} (Claimed)` : (merged.createdBy || "Marketing Specialist"),
+        dueDate: merged.isCounterDateActive && merged.proposedTargetDate
+          ? `${merged.proposedTargetDate} (Counter)`
+          : (merged.targetArtworkDateCreative || merged.sampleRequiredDate || "Standard SLA"),
         proofStatus: status,
         accentColor: "#006d32",
         isBrief: false,
-        rawReq: d,
+        rawReq: merged,
       });
     });
 
     return list;
-  }, [briefs, designRequests]);
+  }, [briefs, designRequests, workflowVersion]);
 
   // Stage filters matching Marketing structure
   const stages = useMemo(() => [
@@ -445,10 +465,34 @@ export const CreativeDesignPage: React.FC<CreativeDesignPageProps> = ({
                     </span>
                   </td>
                   <td className="py-3 px-4 font-mono text-[11px] text-slate-500 dark:text-zinc-400 whitespace-nowrap">
-                    {item.dueDate}
+                    <div>{item.dueDate}</div>
+                    {item.rawReq?.isCounterDateActive && (
+                      <span className="inline-block mt-0.5 px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">
+                        Counter Proposed
+                      </span>
+                    )}
                   </td>
                   <td className="py-3 px-4 whitespace-nowrap">
-                    <StatusPill status={item.proofStatus} size="sm" />
+                    <div className="flex items-center gap-1.5">
+                      <StatusPill status={item.proofStatus} size="sm" />
+                      {!item.isBrief && (
+                        item.rawReq?.claimedBy ? (
+                          <span
+                            className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-[#714B67] dark:bg-purple-950/60 dark:text-purple-300"
+                            title={`Claimed by ${item.rawReq.claimedBy}`}
+                          >
+                            Claimed
+                          </span>
+                        ) : (
+                          <span
+                            className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400"
+                            title="Unclaimed task"
+                          >
+                            Unclaimed
+                          </span>
+                        )
+                      )}
+                    </div>
                   </td>
                   <td className="py-3.5 pl-4 pr-6 text-right whitespace-nowrap">
                     <button

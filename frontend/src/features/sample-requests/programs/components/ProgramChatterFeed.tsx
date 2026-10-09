@@ -76,14 +76,15 @@ interface ChatLogEvent {
   };
 }
 
-function getInitials(name?: string): string {
+function getInitials(name?: any): string {
   if (!name) return "US";
-  const clean = name.trim();
-  const parts = clean.split(/\s+/);
+  const clean = String(name).trim();
+  if (!clean) return "US";
+  const parts = clean.split(/\s+/).filter(Boolean);
   if (parts.length >= 2) {
-    return (parts[0][0] + parts[1][0]).toUpperCase();
+    return ((parts[0][0] || "") + (parts[1][0] || "")).toUpperCase() || "US";
   }
-  return clean.slice(0, 2).toUpperCase();
+  return clean.slice(0, 2).toUpperCase() || "US";
 }
 
 function formatTimeOnly(dateInput?: string | Date | null): string {

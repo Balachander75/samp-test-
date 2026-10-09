@@ -1130,7 +1130,7 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
           <div
-            className="fixed inset-0 bg-black/60 transition-opacity"
+            className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity"
             onClick={() => setIsAddModalOpen(false)}
           />
 

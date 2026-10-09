@@ -222,30 +222,95 @@ class DesignRequestRepository(BaseRepository[DesignRequest]):
                 self.db.rollback()
             return
 
+        # Extract design attributes
+        trend = sample_req.get("trend")
+        target_audience = sample_req.get("target_audience") or sample_req.get("targetAudience")
+        design_remarks = sample_req.get("design_remarks") or sample_req.get("remarks")
+        ref_images = sample_req.get("reference_images") or sample_req.get("referenceImages") or []
+        ref_links = sample_req.get("reference_links") or sample_req.get("referenceLinks") or []
+        ref_image = (
+            sample_req.get("product_image_path")
+            or sample_req.get("reference_image")
+            or (ref_images[0] if ref_images else None)
+        )
+        try:
+            num_designs = int(
+                sample_req.get("number_of_designs")
+                or sample_req.get("product_artwork_nos")
+                or sample_req.get("designs_customer_creative")
+                or 1
+            )
+        except (ValueError, TypeError):
+            num_designs = 1
+
+        req_date = (
+            sample_req.get("design_required_date")
+            or sample_req.get("target_artwork_date_creative")
+            or sample_req.get("sample_required_date")
+        )
+        desc = sample_req.get("product_description") or "Creative Design Brief"
+
         # Check if already present
         exists = any(r.get("sr_number") == sr_number for r in records)
         if not exists:
             self.create_record({
                 "sr_number": sr_number,
-                "customer_name": sample_req.get("customer", ""),
+                "customer_name": sample_req.get("customer") or sample_req.get("customer_name") or "",
                 "program_name": sample_req.get("program_name", ""),
                 "program_year": sample_req.get("program_year", "2026"),
                 "status": sample_req.get("status") or "Draft (Pre-SMT)",
-                "number_of_designs": int(sample_req.get("product_artwork_nos") or 1),
-                "product_description": sample_req.get("product_description", "Creative Design Brief"),
-                "design_required_date": sample_req.get("target_artwork_date_creative"),
+                "number_of_designs": num_designs,
+                "product_description": desc,
+                "design_required_date": req_date,
+                "trend": trend,
+                "target_audience": target_audience,
+                "reference_image": ref_image,
+                "reference_images": ref_images,
+                "reference_links": ref_links,
+                "design_remarks": design_remarks,
                 "created_by": sample_req.get("created_by") or "Marketing Specialist",
             })
         else:
-            # Update status
+            # Update record
             for r in records:
                 if r.get("sr_number") == sr_number:
                     r["status"] = sample_req.get("status", r["status"])
+                    if trend is not None:
+                        r["trend"] = trend
+                    if target_audience is not None:
+                        r["target_audience"] = target_audience
+                    if design_remarks is not None:
+                        r["design_remarks"] = design_remarks
+                    if ref_images:
+                        r["reference_images"] = ref_images
+                    if ref_links:
+                        r["reference_links"] = ref_links
+                    if ref_image:
+                        r["reference_image"] = ref_image
+                    if num_designs:
+                        r["number_of_designs"] = num_designs
+                    if req_date:
+                        r["design_required_date"] = req_date
+                    if desc:
+                        r["product_description"] = desc
                     r["updated_at"] = datetime.now(timezone.utc).isoformat()
             _write_records(records)
             try:
+                update_vals = {"status": sample_req.get("status")}
+                if trend is not None:
+                    update_vals["trend"] = trend
+                if target_audience is not None:
+                    update_vals["target_audience"] = target_audience
+                if design_remarks is not None:
+                    update_vals["design_remarks"] = design_remarks
+                if num_designs:
+                    update_vals["number_of_designs"] = num_designs
+                if req_date:
+                    update_vals["design_required_date"] = req_date
+                if desc:
+                    update_vals["product_description"] = desc
                 self.db.query(DesignRequest).filter(DesignRequest.sr_number == sr_number).update(
-                    {"status": sample_req.get("status")}, synchronize_session=False
+                    update_vals, synchronize_session=False
                 )
                 self.db.commit()
             except Exception:

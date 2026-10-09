@@ -31,6 +31,16 @@ export interface DesignRequest {
   creativeSubmissions?: CreativeDesignSubmission[];
   marketingDecision?: "awaiting_marketing_review" | "remaining_requested" | "accepted" | null;
   remainingDesignCount?: number;
+  releasedAt?: string | null;
+  claimedBy?: string | null;
+  claimedAt?: string | null;
+  isCounterDateActive?: boolean;
+  proposedTargetDate?: string | null;
+  counterDateReason?: string | null;
+  counterDateRequestedAt?: string | null;
+  counterDateDecision?: "pending" | "accepted" | "rejected" | null;
+  counterDateDecisionAt?: string | null;
+  counterDateDecisionNotes?: string | null;
   status: string;
   createdBy: string;
   updatedBy: string;

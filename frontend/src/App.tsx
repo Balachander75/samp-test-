@@ -19,6 +19,7 @@ import CreativeWorkDesk from "@/features/creative/CreativeWorkDesk";
 import StudioWorkDesk from "@/features/studio/StudioWorkDesk";
 import CostingTeamDesk from "@/features/costing/CostingTeamDesk";
 import PlantExecutionDesk from "@/features/plant/PlantExecutionDesk";
+import MembersAndPlantsDesk from "@/features/members/MembersAndPlantsDesk";
 
 // Low-CLS industrial skeleton loader matching ERP table & ribbon metrics
 function DeskSkeletonLoader() {
@@ -66,7 +67,18 @@ function ActiveModuleView({
       {(() => {
         // Executive Operations Overview (Dashboard Landing)
         if (location.pathname === "/dashboard" || location.pathname === "/") {
-          return <OperationsOverview />;
+          return <OperationsOverview user={user} />;
+        }
+
+        // Enterprise Members & Manufacturing Plants Directory (3 Dedicated Sub-pages)
+        if (
+          location.pathname === "/members" ||
+          location.pathname === "/members/teams" ||
+          location.pathname === "/members/plants" ||
+          location.pathname === "/members/governance" ||
+          location.pathname.startsWith("/members/")
+        ) {
+          return <MembersAndPlantsDesk user={user} />;
         }
 
 
@@ -366,6 +378,10 @@ function AppRoutes() {
     "/plants",
     "/analytics",
     "/members",
+    "/members/*",
+    "/members/teams",
+    "/members/plants",
+    "/members/governance",
     "/settings",
     "/help",
   ];

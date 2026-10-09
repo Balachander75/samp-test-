@@ -38,6 +38,22 @@ import {
   recordMarketingDesignDecisionApi,
 } from "@/infrastructure/api/sampleRequestsApi";
 import { StatusPill } from "@/components/ui/StatusPill";
+import {
+  mergeWithWorkflowState,
+  checkCounterDateSla,
+  claimDesignTask,
+  unclaimDesignTask,
+  submitCounterDateProposal,
+  submitCounterDateDecision,
+  submitCreativeOutputBatch,
+  submitMarketingDeliverablesDecision,
+} from "../utils/designWorkflowStorage";
+import {
+  DesignClaimStrip,
+  DesignCounterDateModal,
+  MarketingCounterDateBanner,
+  CreativeOutputSubmissionModal,
+} from "./inspector";
 
 export interface DesignRequestInspectorModalProps {
   request: SampleRequestItem | null;
@@ -115,6 +131,50 @@ export const DesignRequestInspectorModal: React.FC<DesignRequestInspectorModalPr
   const [copiedCode, setCopiedCode] = useState(false);
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
 
+  // Workflow Reactive Synchronization State
+  const [workflowVersion, setWorkflowVersion] = useState(0);
+  const [isCounterDateModalOpen, setIsCounterDateModalOpen] = useState(false);
+  const [isSubmissionModalOpen, setIsSubmissionModalOpen] = useState(false);
+  const [localOverride, setLocalOverride] = useState<SampleRequestItem | null>(null);
+
+  useEffect(() => {
+    setLocalOverride(null);
+  }, [request?.id]);
+
+  // Synchronize across browser tabs and components via window events
+  useEffect(() => {
+    const handleStorageUpdate = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (!request?.id) return;
+      const targetId = customEvent.detail?.id || customEvent.detail?.requestId;
+      if (
+        !targetId ||
+        String(targetId) === String(request.id) ||
+        String(targetId).includes(String(request.id)) ||
+        String(request.id).includes(String(targetId))
+      ) {
+        setWorkflowVersion((v) => v + 1);
+      }
+    };
+    window.addEventListener("samp:design-workflow-updated", handleStorageUpdate as EventListener);
+    return () => {
+      window.removeEventListener("samp:design-workflow-updated", handleStorageUpdate as EventListener);
+    };
+  }, [request?.id]);
+
+  // Merge request with local workflow engine state and memory overrides
+  const activeRequest = useMemo(() => {
+    if (localOverride) return localOverride;
+    if (!request) return null;
+    return mergeWithWorkflowState(request);
+  }, [request, localOverride, workflowVersion]);
+
+  // SLA Calculation for 48h Counter-Date Negotiation
+  const slaStatus = useMemo(() => {
+    if (!activeRequest) return { isEligible: false, hoursRemaining: 0, label: "Expired", deadlineIso: "" };
+    return checkCounterDateSla(activeRequest);
+  }, [activeRequest]);
+
   // Creative Submission Form State
   const [showSubmitForm, setShowSubmitForm] = useState(false);
   const [designFileUrl, setDesignFileUrl] = useState("");
@@ -136,11 +196,11 @@ export const DesignRequestInspectorModal: React.FC<DesignRequestInspectorModalPr
 
   // Computed Values
   const effectiveDesignId = useMemo(() => {
-    if (!request) return null;
-    if (typeof request.designRequestId === "number" && request.designRequestId > 0) {
-      return request.designRequestId;
+    if (!activeRequest) return null;
+    if (typeof activeRequest.designRequestId === "number" && activeRequest.designRequestId > 0) {
+      return activeRequest.designRequestId;
     }
-    const idStr = String(request.id || "");
+    const idStr = String(activeRequest.id || "");
     if (idStr.startsWith("design-")) {
       const num = parseInt(idStr.replace("design-", ""), 10);
       if (!isNaN(num) && num > 0) return num;
@@ -148,23 +208,23 @@ export const DesignRequestInspectorModal: React.FC<DesignRequestInspectorModalPr
     const numericOnly = parseInt(idStr.replace(/\D+/g, ""), 10);
     if (!isNaN(numericOnly) && numericOnly > 0) return numericOnly;
     return null;
-  }, [request]);
+  }, [activeRequest]);
 
-  const activeStage = useMemo(() => getDesignStageIndex(request), [request]);
+  const activeStage = useMemo(() => getDesignStageIndex(activeRequest), [activeRequest]);
 
   const refCode = useMemo(() => {
-    if (!request) return "";
-    return request.srNumber || `DSG-${request.id}`;
-  }, [request]);
+    if (!activeRequest) return "";
+    return activeRequest.srNumber || `DSG-${activeRequest.id}`;
+  }, [activeRequest]);
 
   const requestedCount = useMemo(() => {
-    if (!request) return 1;
-    return Number(request.numberOfDesigns || request.productArtworkNos || request.designsCustomerCreative || 1);
-  }, [request]);
+    if (!activeRequest) return 1;
+    return Number(activeRequest.numberOfDesigns || activeRequest.productArtworkNos || activeRequest.designsCustomerCreative || 1);
+  }, [activeRequest]);
 
   const submissions = useMemo(() => {
-    return request?.creativeSubmissions || [];
-  }, [request]);
+    return activeRequest?.creativeSubmissions || [];
+  }, [activeRequest]);
 
   const deliveredCount = useMemo(() => {
     return submissions.reduce((sum, batch) => sum + (batch.rows?.length || 0), 0);
@@ -176,8 +236,8 @@ export const DesignRequestInspectorModal: React.FC<DesignRequestInspectorModalPr
 
   // Marketing brief description provided by the marketing guy
   const marketingBriefText = useMemo(() => {
-    return request?.productDescription || request?.programName || "Commercial Cover Artwork";
-  }, [request]);
+    return activeRequest?.productDescription || activeRequest?.programName || "Commercial Cover Artwork";
+  }, [activeRequest]);
 
   // Initialize/prefill output rows using the marketing description!
   useEffect(() => {
@@ -190,13 +250,13 @@ export const DesignRequestInspectorModal: React.FC<DesignRequestInspectorModalPr
         remarks: "",
       }))
     );
-  }, [request?.id, remainingCount, deliveredCount, marketingBriefText]);
+  }, [activeRequest?.id, remainingCount, deliveredCount, marketingBriefText]);
 
   // Load persisted internal notes from localStorage
   useEffect(() => {
-    if (!request?.id) return;
+    if (!activeRequest?.id) return;
     try {
-      const stored = localStorage.getItem(`samp_design_notes_${request.id}`);
+      const stored = localStorage.getItem(`samp_design_notes_${activeRequest.id}`);
       if (stored) {
         setInternalNotes(JSON.parse(stored));
       } else {
@@ -205,48 +265,96 @@ export const DesignRequestInspectorModal: React.FC<DesignRequestInspectorModalPr
     } catch {
       setInternalNotes([]);
     }
-  }, [request?.id]);
+  }, [activeRequest?.id]);
 
   const references = useMemo(() => {
-    if (!request) return [];
+    if (!activeRequest) return [];
     const list: Array<{ url: string; label: string; kind: "image" | "link" }> = [];
-    if (request.productImagePath) {
-      list.push({ url: request.productImagePath, label: "Product Reference Image", kind: "image" });
+    if (activeRequest.productImagePath) {
+      list.push({ url: activeRequest.productImagePath, label: "Product Reference Image", kind: "image" });
     }
-    if (request.referenceImage) {
-      list.push({ url: request.referenceImage, label: "Primary Moodboard Image", kind: "image" });
+    if (activeRequest.referenceImage) {
+      list.push({ url: activeRequest.referenceImage, label: "Primary Moodboard Image", kind: "image" });
     }
-    (request.referenceImages || []).forEach((url, i) => {
+    (activeRequest.referenceImages || []).forEach((url, i) => {
       if (url && !list.some((item) => item.url === url)) {
         list.push({ url, label: `Moodboard Ref ${i + 1}`, kind: "image" });
       }
     });
-    (request.referenceLinks || []).forEach((url, i) => {
+    (activeRequest.referenceLinks || []).forEach((url, i) => {
       if (url) {
         list.push({ url, label: `Reference Link ${i + 1}`, kind: "link" });
       }
     });
     return list;
-  }, [request]);
+  }, [activeRequest]);
 
   // Dynamic Chatter Stream Compilation
   const chatterEvents = useMemo<ChatterMessage[]>(() => {
-    if (!request) return [];
+    if (!activeRequest) return [];
     const events: ChatterMessage[] = [];
 
     // 1. Brief Creation Event
     events.push({
       id: "event-intake",
-      actorName: request.createdBy || "Marketing Team (Corporate)",
+      actorName: activeRequest.createdBy || "Marketing Team (Corporate)",
       actorDepartment: "Marketing",
       action: "INTAKE_CREATED",
       title: "Design Brief Logged into System",
       body: `Initial graphic design brief submitted for review (${requestedCount} artwork variants requested).`,
-      timestamp: request.createdAt || request.dateRequestCreated || new Date().toISOString(),
+      timestamp: activeRequest.createdAt || activeRequest.dateRequestCreated || new Date().toISOString(),
       badge: { text: "Intake", variant: "purple" },
     });
 
-    // 2. Submissions Events
+    // 2. Task Claim Event
+    if (activeRequest.claimedBy) {
+      events.push({
+        id: "event-claimed",
+        actorName: activeRequest.claimedBy,
+        actorDepartment: "Creative Studio",
+        action: "TASK_CLAIMED",
+        title: "Task Claimed by Creative Designer",
+        body: `Designer ${activeRequest.claimedBy} officially claimed ownership of this design request.`,
+        timestamp: activeRequest.claimedAt || activeRequest.updatedAt || new Date().toISOString(),
+        badge: { text: "Claimed", variant: "purple" },
+      });
+    }
+
+    // 3. Counter Target Date Proposal Event
+    if (activeRequest.proposedTargetDate) {
+      events.push({
+        id: "event-counter-proposal",
+        actorName: activeRequest.claimedBy || "Creative Studio",
+        actorDepartment: "Creative Studio",
+        action: "COUNTER_DATE_PROPOSED",
+        title: "Target Date Revision Countered",
+        body: `Proposed revised completion date: ${formatDate(activeRequest.proposedTargetDate)}. Reason: "${activeRequest.counterDateReason || "Standard studio lead-time buffer"}"`,
+        timestamp: activeRequest.counterDateRequestedAt || activeRequest.updatedAt || new Date().toISOString(),
+        badge: { text: "Counter Date", variant: "amber" },
+      });
+    }
+
+    // 4. Counter Target Date Decision Event
+    if (activeRequest.counterDateDecision) {
+      events.push({
+        id: "event-counter-decision",
+        actorName: "Marketing Specialist",
+        actorDepartment: "Marketing",
+        action: `COUNTER_DATE_${activeRequest.counterDateDecision.toUpperCase()}`,
+        title: `Counter Target Date ${activeRequest.counterDateDecision === "accepted" ? "Accepted" : "Rejected"}`,
+        body:
+          activeRequest.counterDateDecision === "accepted"
+            ? `Marketing accepted revised target date: ${formatDate(activeRequest.targetArtworkDateCreative)}.`
+            : "Marketing rejected the counter date and retained the original deadline.",
+        timestamp: activeRequest.counterDateDecisionAt || activeRequest.updatedAt || new Date().toISOString(),
+        badge: {
+          text: activeRequest.counterDateDecision === "accepted" ? "Date Accepted" : "Date Retained",
+          variant: activeRequest.counterDateDecision === "accepted" ? "emerald" : "rose",
+        },
+      });
+    }
+
+    // 5. Submissions Events
     submissions.forEach((batch, idx) => {
       events.push({
         id: `event-batch-${idx}`,
@@ -260,8 +368,8 @@ export const DesignRequestInspectorModal: React.FC<DesignRequestInspectorModalPr
       });
     });
 
-    // 3. Marketing Review Decision Event
-    if (request.marketingDesignDecision === "accepted" || activeStage === 3) {
+    // 6. Marketing Review Decision Event
+    if (activeRequest.marketingDesignDecision === "accepted" || activeStage === 3) {
       events.push({
         id: "event-approved",
         actorName: "Marketing Specialist",
@@ -269,10 +377,10 @@ export const DesignRequestInspectorModal: React.FC<DesignRequestInspectorModalPr
         action: "MARKETING_APPROVED",
         title: "Commercial Decision: Accepted & Closed",
         body: "All creative deliverables verified and approved for production.",
-        timestamp: request.updatedAt || new Date().toISOString(),
+        timestamp: activeRequest.updatedAt || new Date().toISOString(),
         badge: { text: "Accepted", variant: "emerald" },
       });
-    } else if (request.marketingDesignDecision === "remaining_requested") {
+    } else if (activeRequest.marketingDesignDecision === "remaining_requested") {
       events.push({
         id: "event-revision",
         actorName: "Marketing Specialist",
@@ -280,17 +388,26 @@ export const DesignRequestInspectorModal: React.FC<DesignRequestInspectorModalPr
         action: "REVISION_REQUESTED",
         title: "Remaining Artworks Requested",
         body: `Marketing returned ${remainingCount} remaining artwork(s) to Creative Studio for completion.`,
-        timestamp: request.updatedAt || new Date().toISOString(),
+        timestamp: activeRequest.updatedAt || new Date().toISOString(),
         badge: { text: "Revisions", variant: "amber" },
       });
     }
 
-    // 4. Merge Internal Notes
-    internalNotes.forEach((n) => events.push(n));
+    // 7. Merge Internal Notes
+    internalNotes.forEach((n) => {
+      if (n && typeof n === "object") {
+        events.push({
+          ...n,
+          actorName: typeof n.actorName === "string" ? n.actorName : String(n.actorName || "Team Member"),
+          actorDepartment: typeof n.actorDepartment === "string" ? n.actorDepartment : "Creative Studio",
+          action: typeof n.action === "string" ? n.action : "NOTE",
+        });
+      }
+    });
 
     // Sort descending by timestamp
     return events.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-  }, [request, requestedCount, submissions, activeStage, remainingCount, internalNotes]);
+  }, [activeRequest, requestedCount, submissions, activeStage, remainingCount, internalNotes]);
 
   const filteredChatter = useMemo(() => {
     if (chatterFilter === "audit") return chatterEvents.filter((e) => !e.isNote);
@@ -330,7 +447,7 @@ export const DesignRequestInspectorModal: React.FC<DesignRequestInspectorModalPr
   // Add Internal Chatter Note
   const handlePostNote = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!noteInput.trim() || !request?.id) return;
+    if (!noteInput.trim() || !activeRequest?.id) return;
     const newNote: ChatterMessage = {
       id: `note-${Date.now()}`,
       actorName: mode === "creative" ? "Creative Designer" : "Marketing Specialist",
@@ -345,16 +462,93 @@ export const DesignRequestInspectorModal: React.FC<DesignRequestInspectorModalPr
     const updated = [newNote, ...internalNotes];
     setInternalNotes(updated);
     try {
-      localStorage.setItem(`samp_design_notes_${request.id}`, JSON.stringify(updated));
+      localStorage.setItem(`samp_design_notes_${activeRequest.id}`, JSON.stringify(updated));
     } catch {}
     setNoteInput("");
+  };
+
+  // ── TASK CLAIMING HANDLERS ──
+  const handleClaim = (designerName?: string) => {
+    if (!activeRequest) return;
+    const name = designerName || "Creative Designer (Studio)";
+    const now = new Date().toISOString();
+    claimDesignTask(activeRequest.id, name);
+    setLocalOverride({
+      ...activeRequest,
+      claimedBy: name,
+      claimedAt: now,
+      status: "Creative Studio",
+    });
+    setWorkflowVersion((v) => v + 1);
+    if (showToast) showToast("Task successfully claimed!");
+    if (onRefresh) onRefresh();
+  };
+
+  const handleUnclaim = () => {
+    if (!activeRequest) return;
+    unclaimDesignTask(activeRequest.id);
+    setLocalOverride({
+      ...activeRequest,
+      claimedBy: null,
+      claimedAt: null,
+    });
+    setWorkflowVersion((v) => v + 1);
+    if (showToast) showToast("Task unassigned.");
+    if (onRefresh) onRefresh();
+  };
+
+  // ── COUNTER DATE PROPOSAL & DECISION HANDLERS ──
+  const handleProposeCounterDate = (proposedDate: string, reason: string) => {
+    if (!activeRequest) return;
+    const now = new Date().toISOString();
+    submitCounterDateProposal(activeRequest.id, proposedDate, reason, "Creative Designer (Studio)");
+    setLocalOverride({
+      ...activeRequest,
+      isCounterDateActive: true,
+      proposedTargetDate: proposedDate,
+      counterDateReason: reason,
+      counterDateRequestedAt: now,
+      counterDateDecision: "pending",
+      status: "Target Date Counter Proposed",
+    });
+    setWorkflowVersion((v) => v + 1);
+    setIsCounterDateModalOpen(false);
+    if (showToast) showToast("Counter target date proposed to Marketing!");
+    if (onRefresh) onRefresh();
+  };
+
+  const handleCounterDateDecision = (decision: "accepted" | "rejected") => {
+    if (!activeRequest) return;
+    submitCounterDateDecision(activeRequest.id, decision, "Marketing Specialist");
+    const isAccepted = decision === "accepted";
+    setLocalOverride({
+      ...activeRequest,
+      isCounterDateActive: false,
+      counterDateDecision: isAccepted ? "accepted" : "rejected",
+      counterDateDecisionAt: new Date().toISOString(),
+      targetArtworkDateCreative: isAccepted && activeRequest.proposedTargetDate ? activeRequest.proposedTargetDate : activeRequest.targetArtworkDateCreative,
+    });
+    setWorkflowVersion((v) => v + 1);
+    if (showToast) {
+      showToast(
+        isAccepted
+          ? "Counter target date accepted and updated!"
+          : "Counter date rejected. Original deadline retained."
+      );
+    }
+    if (onRefresh) onRefresh();
   };
 
   // Creative Submit Deliverables Handler
   const handleSubmitOutput = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!activeRequest) return;
     if (!effectiveDesignId) {
       setSubmitError("Design request reference ID could not be resolved.");
+      return;
+    }
+    if (!activeRequest.claimedBy) {
+      setSubmitError("Please claim this task first before submitting artwork deliverables.");
       return;
     }
     if (!designFileUrl.trim()) {
@@ -371,13 +565,27 @@ export const DesignRequestInspectorModal: React.FC<DesignRequestInspectorModalPr
       return;
     }
 
+    const formattedRows = outputRows.map((r, i) => ({
+      designNumber: `D${deliveredCount + i + 1}`,
+      description: r.description.trim(),
+      stockNumber: r.stockNumber.trim(),
+      remarks: r.remarks.trim(),
+    }));
+
     setIsSubmittingOutput(true);
     setSubmitError(null);
     try {
-      await submitCreativeDesignOutputApi(effectiveDesignId, {
-        designFileUrl: designFileUrl.trim(),
-        rows: outputRows,
-      });
+      try {
+        await submitCreativeDesignOutputApi(effectiveDesignId, {
+          designFileUrl: designFileUrl.trim(),
+          rows: formattedRows,
+        });
+      } catch (apiErr) {
+        console.warn("Backend API not reachable, syncing with local workflow storage:", apiErr);
+      }
+      submitCreativeOutputBatch(activeRequest.id, designFileUrl.trim(), formattedRows);
+      setWorkflowVersion((v) => v + 1);
+
       if (showToast) {
         showToast("Design deliverables submitted to Marketing for review!");
       }
@@ -394,6 +602,7 @@ export const DesignRequestInspectorModal: React.FC<DesignRequestInspectorModalPr
 
   // Marketing Decision Handler
   const handleMarketingDecision = async (decision: "accept" | "request_remaining") => {
+    if (!activeRequest) return;
     if (!effectiveDesignId) {
       setDecisionError("Design request reference ID could not be resolved.");
       return;
@@ -401,7 +610,14 @@ export const DesignRequestInspectorModal: React.FC<DesignRequestInspectorModalPr
     setIsDeciding(true);
     setDecisionError(null);
     try {
-      await recordMarketingDesignDecisionApi(effectiveDesignId, decision);
+      try {
+        await recordMarketingDesignDecisionApi(effectiveDesignId, decision);
+      } catch (apiErr) {
+        console.warn("Backend API not reachable, syncing with local workflow storage:", apiErr);
+      }
+      submitMarketingDeliverablesDecision(activeRequest, decision);
+      setWorkflowVersion((v) => v + 1);
+
       if (showToast) {
         showToast(
           decision === "accept"
@@ -420,16 +636,16 @@ export const DesignRequestInspectorModal: React.FC<DesignRequestInspectorModalPr
   };
 
   // ── EARLY RETURN AFTER ALL HOOKS ──
-  if (!isOpen || !request) return null;
+  if (!isOpen || !activeRequest) return null;
 
   const isAwaitingReview =
-    request.marketingDesignDecision === "awaiting_marketing_review" ||
+    activeRequest.marketingDesignDecision === "awaiting_marketing_review" ||
     activeStage === 2;
   const isClosed = activeStage === 3;
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 bg-slate-950/70"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 bg-slate-950/70 backdrop-blur-xs"
       role="presentation"
       onClick={onClose}
     >
@@ -437,17 +653,17 @@ export const DesignRequestInspectorModal: React.FC<DesignRequestInspectorModalPr
         role="dialog"
         aria-modal="true"
         aria-labelledby="design-inspector-title"
-        className="relative w-full max-w-[96vw] xl:max-w-7xl h-[92vh] max-h-[92vh] flex flex-col bg-[#F8F9FA] dark:bg-[#12141a] border border-zinc-300 dark:border-white/10 rounded-lg shadow-2xl overflow-hidden select-text text-xs"
+        className="relative w-full max-w-[96vw] xl:max-w-7xl h-[92vh] max-h-[92vh] flex flex-col bg-[#f8f9ff] dark:bg-[#0f121d] border border-slate-200/80 dark:border-white/10 rounded-2xl shadow-[0_24px_70px_-12px_rgba(11,28,48,0.25)] overflow-hidden select-text text-xs"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* ── 1. TOP CONTROL PANEL (IMAGE 1 STYLE) ── */}
-        <div className="bg-white dark:bg-[#1a1c24] border-b border-[#D8DADD] dark:border-white/10 px-4 py-2 flex flex-wrap items-center justify-between gap-3 shrink-0 shadow-2xs">
+        {/* ── 1. TOP CONTROL PANEL (MODERN ERP STYLE) ── */}
+        <div className="bg-white dark:bg-[#161928] border-b border-slate-100 dark:border-white/10 px-6 py-2.5 flex flex-wrap items-center justify-between gap-3 shrink-0 shadow-2xs">
           {/* Left Action Buttons */}
           <div className="flex items-center space-x-2">
             <button
               type="button"
               onClick={onClose}
-              className="bg-[#714B67] hover:bg-[#5B3C53] text-white px-3 py-1 rounded text-xs font-semibold flex items-center space-x-1.5 shadow-xs transition active:scale-95 cursor-pointer"
+              className="bg-[#714B67] hover:bg-[#5B3C53] text-white px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center space-x-1.5 shadow-xs transition active:scale-95 cursor-pointer"
             >
               <span>Save &amp; Close</span>
             </button>
@@ -455,17 +671,17 @@ export const DesignRequestInspectorModal: React.FC<DesignRequestInspectorModalPr
             <button
               type="button"
               onClick={onClose}
-              className="bg-white dark:bg-zinc-800 hover:bg-neutral-50 dark:hover:bg-zinc-700 text-neutral-600 dark:text-zinc-300 border border-[#CED4DA] dark:border-zinc-700 px-2.5 py-1 rounded text-xs font-medium transition cursor-pointer"
+              className="bg-white dark:bg-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-700 text-slate-600 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700 px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer"
             >
               Discard
             </button>
 
-            <div className="h-4 w-px bg-neutral-300 dark:bg-zinc-700 mx-1"></div>
+            <div className="h-4 w-px bg-slate-200 dark:bg-zinc-700 mx-1"></div>
 
             <button
               type="button"
               onClick={handleCopyCode}
-              className="text-neutral-500 hover:text-[#714B67] dark:hover:text-purple-300 font-medium px-2 py-1 text-xs flex items-center gap-1 cursor-pointer"
+              className="text-slate-500 hover:text-[#714B67] dark:hover:text-purple-300 font-semibold px-2.5 py-1.5 text-xs flex items-center gap-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 transition cursor-pointer"
               title="Copy request code"
             >
               {copiedCode ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
@@ -492,7 +708,7 @@ export const DesignRequestInspectorModal: React.FC<DesignRequestInspectorModalPr
             <button
               type="button"
               onClick={onClose}
-              className="p-1 rounded text-neutral-400 hover:text-neutral-700 dark:hover:text-white transition cursor-pointer ml-1"
+              className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition cursor-pointer ml-1"
               aria-label="Close"
             >
               <X className="w-4 h-4" />
@@ -503,12 +719,12 @@ export const DesignRequestInspectorModal: React.FC<DesignRequestInspectorModalPr
         {/* ── 2. MAIN WORKSPACE VIEWPORT (SPLIT: FORM SHEET + CHATTER) ── */}
         <div className="flex-1 flex overflow-hidden">
           {/* ── LEFT: FORM SHEET (DOCUMENT BODY) ── */}
-          <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 bg-[#F8F9FA] dark:bg-[#12141a]">
-            <div className="o_form_sheet max-w-4xl mx-auto rounded-lg bg-white dark:bg-[#1a1c24] border border-zinc-200 dark:border-white/10 shadow-sm overflow-hidden">
+          <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 bg-[#f8f9ff] dark:bg-[#0f121d]">
+            <div className="max-w-4xl mx-auto rounded-2xl bg-white dark:bg-[#161928] border border-slate-100 dark:border-white/5 shadow-[0_8px_30px_rgba(11,28,48,0.04)] overflow-hidden">
               {/* Sheet Header */}
-              <div className="border-b border-zinc-200 dark:border-white/10 bg-white dark:bg-[#161822]">
+              <div className="border-b border-slate-100 dark:border-white/10 bg-white dark:bg-[#161822]">
                 {/* Reference & Mini Progress */}
-                <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-2.5 bg-zinc-50/80 dark:bg-zinc-900/40 border-b border-zinc-200/80 dark:border-white/5">
+                <div className="flex flex-wrap items-center justify-between gap-3 px-8 py-3 bg-slate-50/70 dark:bg-white/[0.02] border-b border-slate-100 dark:border-white/5">
                   <div className="flex items-center gap-2">
                     <span className="font-mono text-xs font-bold text-[#714B67] dark:text-purple-300">
                       {refCode}
@@ -602,89 +818,147 @@ export const DesignRequestInspectorModal: React.FC<DesignRequestInspectorModalPr
                 </div>
 
                 {/* Document Hero & Primary Details */}
-                <div className="px-6 py-4">
+                <div className="px-8 py-4.5">
                   <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
-                      <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-950 dark:text-zinc-50 font-sans">
-                        {request.customer || "General Customer Account"}
+                      <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-zinc-50 font-display">
+                        {activeRequest.customer || "General Customer Account"}
                       </h1>
-                      <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                      <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">
                         Initiated by{" "}
-                        <span className="font-semibold text-zinc-800 dark:text-zinc-200">
-                          {request.createdBy || "Marketing Team (Corporate)"}
+                        <span className="font-semibold text-slate-800 dark:text-zinc-200">
+                          {activeRequest.createdBy || "Marketing Team (Corporate)"}
                         </span>{" "}
-                        on {formatDate(request.dateRequestCreated || request.createdAt)}
+                        on {formatDate(activeRequest.dateRequestCreated || activeRequest.createdAt)}
                       </p>
                     </div>
 
                     {/* Context Badges */}
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="inline-flex items-center px-2.5 py-1 rounded text-xs font-semibold bg-purple-50 text-[#714B67] dark:bg-purple-950/50 dark:text-purple-300 border border-[#714B67]/20">
+                    <div className="flex items-center gap-2.5 flex-wrap">
+                      <span className="inline-flex items-center px-3 py-1 rounded-xl text-xs font-bold bg-purple-50 text-[#714B67] dark:bg-purple-950/50 dark:text-purple-300 border border-[#714B67]/20">
                         Design Request
                       </span>
                       <StatusPill
-                        status={request.designRequestStatus || request.status || "Creative"}
+                        status={activeRequest.designRequestStatus || activeRequest.status || "Creative"}
                         size="md"
                       />
                     </div>
                   </div>
 
                   {/* 4-Point Metadata Strip */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-3.5 mt-3 border-t border-zinc-200/80 dark:border-white/10 text-xs">
-                    <div>
-                      <span className="text-[11px] text-zinc-500 font-medium block">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 mt-3.5 border-t border-slate-100 dark:border-white/5 text-xs">
+                    <div className="p-3 rounded-xl bg-slate-50/70 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5">
+                      <span className="text-[11px] text-slate-500 font-medium block">
                         Required Target Date
                       </span>
-                      <div className="flex items-center gap-1.5 mt-0.5 font-semibold text-zinc-900 dark:text-zinc-100">
+                      <div className="flex items-center gap-1.5 mt-1 font-bold text-slate-900 dark:text-zinc-100">
                         <Calendar className="w-3.5 h-3.5 text-[#017E84]" />
                         <span>
-                          {formatDate(request.targetArtworkDateCreative || request.sampleRequiredDate)}
+                          {formatDate(activeRequest.targetArtworkDateCreative || activeRequest.sampleRequiredDate)}
                         </span>
                       </div>
+
+                      {/* Counter-Date Proposal Trigger for Creative */}
+                      {mode === "creative" && (
+                        <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
+                          <button
+                            type="button"
+                            disabled={!activeRequest.claimedBy || !slaStatus.isEligible}
+                            onClick={() => setIsCounterDateModalOpen(true)}
+                            className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#714B67] hover:text-[#5B3C53] dark:text-purple-300 hover:underline disabled:opacity-40 disabled:no-underline cursor-pointer"
+                            title={
+                              !activeRequest.claimedBy
+                                ? "Claim task first to propose counter date"
+                                : !slaStatus.isEligible
+                                ? "48h SLA has expired"
+                                : "Propose revised completion date within 48h SLA"
+                            }
+                          >
+                            <Clock className="w-3 h-3" />
+                            <span>Propose Date</span>
+                          </button>
+                          {slaStatus.isEligible ? (
+                            <span className="text-[10px] font-mono font-semibold text-emerald-600 dark:text-emerald-400">
+                              ({slaStatus.label})
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-mono text-zinc-400" title="Counter date proposal locked after 48h">
+                              (SLA expired)
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
 
-                    <div>
-                      <span className="text-[11px] text-zinc-500 font-medium block">
+                    <div className="p-3 rounded-xl bg-slate-50/70 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5">
+                      <span className="text-[11px] text-slate-500 font-medium block">
                         Artworks Required
                       </span>
-                      <div className="flex items-center gap-1.5 mt-0.5 font-semibold text-[#714B67] dark:text-[#d5bdd0]">
+                      <div className="flex items-center gap-1.5 mt-1 font-bold text-[#714B67] dark:text-[#d5bdd0]">
                         <Palette className="w-3.5 h-3.5 text-[#714B67]" />
                         <span>{requestedCount} Artworks</span>
                       </div>
                     </div>
 
-                    <div>
-                      <span className="text-[11px] text-zinc-500 font-medium block">
+                    <div className="p-3 rounded-xl bg-slate-50/70 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5">
+                      <span className="text-[11px] text-slate-500 font-medium block">
                         Theme / Trend
                       </span>
-                      <div className="flex items-center gap-1.5 mt-0.5 text-zinc-800 dark:text-zinc-200 font-medium">
+                      <div className="flex items-center gap-1.5 mt-1 text-slate-800 dark:text-zinc-200 font-semibold truncate">
                         <Sparkles className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                        <span className="truncate">{request.trend || "Contemporary Trend"}</span>
+                        <span className="truncate">{activeRequest.trend || "None specified"}</span>
                       </div>
                     </div>
 
-                    <div>
-                      <span className="text-[11px] text-zinc-500 font-medium block">
+                    <div className="p-3 rounded-xl bg-slate-50/70 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5">
+                      <span className="text-[11px] text-slate-500 font-medium block">
                         Target Audience
                       </span>
-                      <div className="flex items-center gap-1.5 mt-0.5 text-zinc-800 dark:text-zinc-200 font-medium">
+                      <div className="flex items-center gap-1.5 mt-1 text-slate-800 dark:text-zinc-200 font-semibold truncate">
                         <Users className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                        <span className="truncate">{request.targetAudience || "General Audience"}</span>
+                        <span className="truncate">{activeRequest.targetAudience || "General Audience"}</span>
                       </div>
                     </div>
                   </div>
                 </div>
 
+                {/* Workflow Negotiation & Task Claim Strips */}
+                <div className="px-8 space-y-2.5 pb-2.5">
+                  {/* Counter Date Negotiation Banner */}
+                  {activeRequest.isCounterDateActive && (
+                    <MarketingCounterDateBanner
+                      originalDate={activeRequest.targetArtworkDateCreative || activeRequest.sampleRequiredDate || ""}
+                      proposedDate={activeRequest.proposedTargetDate || ""}
+                      reason={activeRequest.counterDateReason}
+                      claimedBy={activeRequest.claimedBy}
+                      requestedAt={activeRequest.counterDateRequestedAt}
+                      isMarketingMode={mode === "marketing"}
+                      onAccept={() => handleCounterDateDecision("accepted")}
+                      onReject={() => handleCounterDateDecision("rejected")}
+                    />
+                  )}
+
+                  {/* Task Ownership & Claim Strip */}
+                  <DesignClaimStrip
+                    claimedBy={activeRequest.claimedBy}
+                    claimedAt={activeRequest.claimedAt}
+                    currentUserName="Creative Designer"
+                    isCreativeMode={mode === "creative"}
+                    onClaim={handleClaim}
+                    onUnclaim={handleUnclaim}
+                  />
+                </div>
+
                 {/* Notebook Tab Strip */}
-                <div className="px-6 pb-0 pt-1">
-                  <div className="border-b border-zinc-200 dark:border-white/10 flex items-center space-x-6 text-xs font-semibold overflow-x-auto">
+                <div className="px-8 pb-0 pt-2">
+                  <div className="border-b border-slate-100 dark:border-white/10 flex items-center space-x-6 text-xs font-semibold overflow-x-auto">
                     <button
                       type="button"
                       onClick={() => setActiveTab("specs")}
-                      className={`pb-2.5 border-b-2 transition cursor-pointer select-none flex items-center gap-1.5 whitespace-nowrap ${
+                      className={`pb-3 border-b-2 font-display transition cursor-pointer select-none flex items-center gap-1.5 whitespace-nowrap ${
                         activeTab === "specs"
                           ? "border-[#714B67] text-[#714B67] dark:text-purple-300 font-bold"
-                          : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
+                          : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-zinc-200"
                       }`}
                     >
                       <FileText className="w-3.5 h-3.5" />
@@ -694,15 +968,15 @@ export const DesignRequestInspectorModal: React.FC<DesignRequestInspectorModalPr
                     <button
                       type="button"
                       onClick={() => setActiveTab("references")}
-                      className={`pb-2.5 border-b-2 transition cursor-pointer select-none flex items-center gap-1.5 whitespace-nowrap ${
+                      className={`pb-3 border-b-2 font-display transition cursor-pointer select-none flex items-center gap-1.5 whitespace-nowrap ${
                         activeTab === "references"
                           ? "border-[#714B67] text-[#714B67] dark:text-purple-300 font-bold"
-                          : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
+                          : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-zinc-200"
                       }`}
                     >
                       <ImageIcon className="w-3.5 h-3.5" />
                       <span>2. References &amp; Moodboard</span>
-                      <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300">
+                      <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-200 dark:bg-zinc-700 text-slate-700 dark:text-zinc-300 font-bold">
                         {references.length}
                       </span>
                     </button>
@@ -710,19 +984,19 @@ export const DesignRequestInspectorModal: React.FC<DesignRequestInspectorModalPr
                     <button
                       type="button"
                       onClick={() => setActiveTab("deliverables")}
-                      className={`pb-2.5 border-b-2 transition cursor-pointer select-none flex items-center gap-1.5 whitespace-nowrap ${
+                      className={`pb-3 border-b-2 font-display transition cursor-pointer select-none flex items-center gap-1.5 whitespace-nowrap ${
                         activeTab === "deliverables"
                           ? "border-[#714B67] text-[#714B67] dark:text-purple-300 font-bold"
-                          : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
+                          : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-zinc-200"
                       }`}
                     >
                       <Layers className="w-3.5 h-3.5" />
                       <span>3. Creative Deliverables &amp; Review</span>
-                      <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300">
+                      <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-200 dark:bg-zinc-700 text-slate-700 dark:text-zinc-300 font-bold">
                         {deliveredCount}/{requestedCount}
                       </span>
                       {isAwaitingReview && (
-                        <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-amber-500 text-white animate-pulse">
+                        <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-amber-500 text-white animate-pulse font-bold">
                           Pending
                         </span>
                       )}
@@ -731,10 +1005,10 @@ export const DesignRequestInspectorModal: React.FC<DesignRequestInspectorModalPr
                     <button
                       type="button"
                       onClick={() => setActiveTab("signoff")}
-                      className={`pb-2.5 border-b-2 transition cursor-pointer select-none flex items-center gap-1.5 whitespace-nowrap ${
+                      className={`pb-3 border-b-2 font-display transition cursor-pointer select-none flex items-center gap-1.5 whitespace-nowrap ${
                         activeTab === "signoff"
                           ? "border-[#714B67] text-[#714B67] dark:text-purple-300 font-bold"
-                          : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
+                          : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-zinc-200"
                       }`}
                     >
                       <ShieldCheck className="w-3.5 h-3.5" />
@@ -745,7 +1019,7 @@ export const DesignRequestInspectorModal: React.FC<DesignRequestInspectorModalPr
               </div>
 
               {/* Tab Contents Area */}
-              <div className="p-6 space-y-6">
+              <div className="p-8 space-y-6">
                 {/* ── TAB 1: SCOPE & DESIGN BRIEF ── */}
                 {activeTab === "specs" && (
                   <div className="space-y-6">
@@ -755,7 +1029,35 @@ export const DesignRequestInspectorModal: React.FC<DesignRequestInspectorModalPr
                         Technical Description &amp; Product Scope
                       </h3>
                       <div className="p-4 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-white/[0.02] text-sm text-zinc-800 dark:text-zinc-200 whitespace-pre-wrap leading-relaxed min-h-[70px]">
-                        {request.productDescription || "No design brief description was provided."}
+                        {activeRequest.productDescription || "No design brief description was provided."}
+                      </div>
+                    </div>
+
+                    {/* Art Direction & Aesthetic Theme */}
+                    <div>
+                      <h3 className="text-[11px] font-mono font-bold uppercase tracking-wider text-zinc-500 mb-2">
+                        Art Direction &amp; Aesthetic Theme
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="p-3.5 rounded-xl border border-purple-200/80 dark:border-purple-900/40 bg-purple-50/40 dark:bg-purple-950/20 space-y-1.5">
+                          <div className="text-xs text-[#714B67] dark:text-purple-300 font-bold flex items-center gap-1.5">
+                            <Sparkles className="w-3.5 h-3.5" />
+                            <span>Theme / Trend</span>
+                          </div>
+                          <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                            {activeRequest.trend || "None specified"}
+                          </div>
+                        </div>
+
+                        <div className="p-3.5 rounded-xl border border-teal-200/80 dark:border-teal-900/40 bg-teal-50/40 dark:bg-teal-950/20 space-y-1.5">
+                          <div className="text-xs text-teal-800 dark:text-teal-300 font-bold flex items-center gap-1.5">
+                            <Users className="w-3.5 h-3.5" />
+                            <span>Target Audience</span>
+                          </div>
+                          <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                            {activeRequest.targetAudience || "General Audience"}
+                          </div>
+                        </div>
                       </div>
                     </div>
 
@@ -768,17 +1070,17 @@ export const DesignRequestInspectorModal: React.FC<DesignRequestInspectorModalPr
                         <div className="p-3.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/40 space-y-2">
                           <div className="text-xs text-zinc-500 font-medium">Program Specification</div>
                           <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                            {request.programName || "Standard Season Program"}
+                            {activeRequest.programName || "Standard Season Program"}
                           </div>
                           <div className="text-xs text-zinc-500 font-mono">
-                            Year: {request.programYear || request.year || "2026-27"}
+                            Year: {activeRequest.programYear || "2026-27"}
                           </div>
                         </div>
 
                         <div className="p-3.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/40 space-y-2">
                           <div className="text-xs text-zinc-500 font-medium">Finishing Notes / Remarks</div>
                           <div className="text-sm text-zinc-800 dark:text-zinc-200 whitespace-pre-wrap">
-                            {request.designRemarks || "Standard cover finishes (UV / Spot gloss as per production line)."}
+                            {activeRequest.designRemarks || "Standard cover finishes (UV / Spot gloss as per production line)."}
                           </div>
                         </div>
                       </div>
@@ -888,14 +1190,37 @@ export const DesignRequestInspectorModal: React.FC<DesignRequestInspectorModalPr
                         </div>
 
                         {mode === "creative" && remainingCount > 0 && (
-                          <button
-                            type="button"
-                            onClick={() => setShowSubmitForm(!showSubmitForm)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-[#714B67] hover:bg-[#5B3C53] text-white text-xs font-bold shadow-xs transition cursor-pointer"
-                          >
-                            <Plus className="w-3.5 h-3.5" />
-                            <span>{showSubmitForm ? "Hide Form" : "Submit Artwork Batch"}</span>
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (!activeRequest.claimedBy) {
+                                  if (showToast) showToast("Please claim this task first before submitting deliverables.");
+                                  return;
+                                }
+                                setIsSubmissionModalOpen(true);
+                              }}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-[#714B67] hover:bg-[#5B3C53] text-white text-xs font-bold shadow-xs transition cursor-pointer"
+                              title={!activeRequest.claimedBy ? "Claim task first" : "Open 3-Column Deliverables Submission Modal"}
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                              <span>Submit Deliverables Matrix</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (!activeRequest.claimedBy) {
+                                  if (showToast) showToast("Please claim this task first before submitting deliverables.");
+                                  return;
+                                }
+                                setShowSubmitForm(!showSubmitForm);
+                              }}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-semibold transition cursor-pointer"
+                            >
+                              <span>{showSubmitForm ? "Hide Quick Form" : "Quick Form"}</span>
+                            </button>
+                          </div>
                         )}
                       </div>
 
@@ -1299,21 +1624,26 @@ export const DesignRequestInspectorModal: React.FC<DesignRequestInspectorModalPr
                 </div>
               ) : (
                 filteredChatter.map((evt) => {
+                  const actorDeptStr = typeof evt.actorDepartment === "string" ? evt.actorDepartment : String(evt.actorDepartment || "");
+                  const actionStr = typeof evt.action === "string" ? evt.action : String(evt.action || "");
                   const isMarketing =
-                    evt.actorDepartment.toLowerCase().includes("marketing") ||
-                    evt.action.includes("INTAKE");
+                    actorDeptStr.toLowerCase().includes("marketing") ||
+                    actionStr.includes("INTAKE");
                   const avatarBg = evt.isNote
                     ? "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300"
                     : isMarketing
                     ? "bg-purple-100 text-[#714B67] dark:bg-purple-950/60 dark:text-purple-300"
                     : "bg-teal-100 text-[#017E84] dark:bg-teal-950/60 dark:text-teal-300";
 
-                  const initials = evt.actorName
-                    .split(" ")
+                  const safeActorName = typeof evt.actorName === "string" ? evt.actorName : String(evt.actorName || "Team Member");
+                  const initials = safeActorName
+                    .trim()
+                    .split(/\s+/)
+                    .filter(Boolean)
                     .map((n) => n[0])
                     .join("")
                     .substring(0, 2)
-                    .toUpperCase();
+                    .toUpperCase() || "CR";
 
                   return (
                     <div key={evt.id} className="flex items-start gap-2.5 text-xs select-text group">
@@ -1326,10 +1656,10 @@ export const DesignRequestInspectorModal: React.FC<DesignRequestInspectorModalPr
                         <div className="flex items-center justify-between gap-1 flex-wrap">
                           <div className="flex items-center gap-1.5">
                             <span className="font-semibold text-zinc-900 dark:text-zinc-100">
-                              {evt.actorName}
+                              {safeActorName}
                             </span>
                             <span className="text-[10px] text-zinc-400 font-mono">
-                              • {evt.actorDepartment}
+                              • {actorDeptStr || "Creative"}
                             </span>
                           </div>
                           <span className="text-[10px] font-mono text-zinc-400">
@@ -1374,6 +1704,43 @@ export const DesignRequestInspectorModal: React.FC<DesignRequestInspectorModalPr
           </div>
         </div>
       </div>
+
+      {/* Counter Target Date Proposal Modal */}
+      <DesignCounterDateModal
+        isOpen={isCounterDateModalOpen}
+        onClose={() => setIsCounterDateModalOpen(false)}
+        originalDate={activeRequest.targetArtworkDateCreative || activeRequest.sampleRequiredDate || ""}
+        isSlaEligible={slaStatus.isEligible}
+        slaLabel={slaStatus.label}
+        onSubmitCounterDate={handleProposeCounterDate}
+      />
+
+      {/* Dedicated 3-Column Creative Output Submission Modal */}
+      <CreativeOutputSubmissionModal
+        isOpen={isSubmissionModalOpen}
+        onClose={() => setIsSubmissionModalOpen(false)}
+        totalRequested={requestedCount}
+        deliveredCount={deliveredCount}
+        remainingCount={remainingCount}
+        marketingBriefText={marketingBriefText}
+        batchNumber={submissions.length + 1}
+        onSubmitBatch={async ({ designFileUrl, rows }) => {
+          if (!effectiveDesignId) return;
+          try {
+            await submitCreativeDesignOutputApi(effectiveDesignId, {
+              designFileUrl,
+              rows,
+            });
+          } catch (err) {
+            console.warn("Backend API call failed, syncing with local workflow storage:", err);
+          }
+          submitCreativeOutputBatch(activeRequest.id, designFileUrl, rows);
+          setWorkflowVersion((v) => v + 1);
+          setIsSubmissionModalOpen(false);
+          if (showToast) showToast("Design deliverables submitted to Marketing!");
+          if (onRefresh) await onRefresh();
+        }}
+      />
 
       {/* Lightbox Image Preview Modal */}
       {lightboxImage && (

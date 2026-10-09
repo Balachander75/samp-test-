@@ -8,6 +8,7 @@ import { CreateSampleRequestForm } from "../types";
 import { API_BASE_URL, createApiHeaders } from "@/infrastructure/api/client";
 import { UserProfile } from "@/features/auth";
 import { getBusinessYearForDate } from "@/lib/businessYear";
+import { saveDesignWorkflowState } from "./designWorkflowStorage";
 
 export interface ProgramContextData {
   customer?: string;
@@ -135,6 +136,19 @@ export async function autoSaveStagedProductsToDraft(
           if (data?.results && Array.isArray(data.results) && data.results.length > 0) {
             firstId = data.results[0].id;
             firstSr = data.results[0].sr_number;
+            data.results.forEach((r: any, idx: number) => {
+              const srcItem = items[idx];
+              if (srcItem?.designMetadata) {
+                const meta = {
+                  trend: srcItem.designMetadata.trend || null,
+                  targetAudience: srcItem.designMetadata.targetAudience || null,
+                  numberOfDesigns: srcItem.designMetadata.numberOfDesigns || 1,
+                  designRemarks: srcItem.designMetadata.remarks || null,
+                };
+                if (r.id) saveDesignWorkflowState(r.id, meta);
+                if (r.sr_number) saveDesignWorkflowState(r.sr_number, meta);
+              }
+            });
           }
         } catch {
           // ignore
@@ -181,6 +195,10 @@ export async function autoSaveStagedProductsToDraft(
       productImagePath: prod.designMetadata?.referenceImage || undefined,
       referenceImages: prod.designMetadata?.images?.map((img) => img.url) || [],
       referenceLinks: prod.designMetadata?.webLinks || [],
+      trend: prod.designMetadata?.trend || undefined,
+      targetAudience: prod.designMetadata?.targetAudience || undefined,
+      numberOfDesigns: prod.designMetadata?.numberOfDesigns || 1,
+      designRemarks: prod.designMetadata?.remarks || undefined,
       sourceSampleCode:
         prod.samplingMetadata?.sourceSrNumber ||
         prod.samplingMetadata?.selectedMaterialCode ||
@@ -207,6 +225,16 @@ export async function autoSaveStagedProductsToDraft(
           firstSavedId = created.id;
           firstSavedSr = created.srNumber;
         }
+      }
+      if (prod.designMetadata) {
+        const meta = {
+          trend: prod.designMetadata.trend || null,
+          targetAudience: prod.designMetadata.targetAudience || null,
+          numberOfDesigns: prod.designMetadata.numberOfDesigns || 1,
+          designRemarks: prod.designMetadata.remarks || null,
+        };
+        if (prod.savedRequestId) saveDesignWorkflowState(prod.savedRequestId, meta);
+        if (prod.savedSrNumber) saveDesignWorkflowState(prod.savedSrNumber, meta);
       }
       prod.isDraftSaved = true;
       savedCount++;

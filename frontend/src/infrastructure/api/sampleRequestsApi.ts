@@ -278,6 +278,11 @@ export function mapSampleRequest(item: ApiSampleRequest, fallbackDate = ""): Sam
         : [];
       return explicitLinks;
     })(),
+    trend: text(item.trend ?? (item as any).trend) || null,
+    targetAudience: text(item.target_audience ?? (item as any).targetAudience) || null,
+    designRemarks: text(item.design_remarks ?? (item as any).designRemarks ?? item.remarks ?? (item as any).remarks) || null,
+    numberOfDesigns: Number(item.number_of_designs ?? (item as any).numberOfDesigns ?? item.product_artwork_nos ?? (item as any).productArtworkNos) || 1,
+    designRequiredDate: text(item.design_required_date ?? (item as any).designRequiredDate ?? item.sample_required_date ?? (item as any).sampleRequiredDate) || null,
   };
 }
 
@@ -303,18 +308,20 @@ export async function fetchAllMarketingRequestsApi(year?: string): Promise<Sampl
 
     const mappedDesignRequests = designRequests.map(mapDesignRequestToSampleRequest);
     const mergedSamples = sampleRequests.map((sample) => {
-      const design = mappedDesignRequests.find((item) => item.srNumber === sample.srNumber);
+      const design = mappedDesignRequests.find(
+        (item) => item.srNumber === sample.srNumber || String(item.id) === String(sample.id)
+      );
       return design ? {
         ...sample,
         designRequestId: design.designRequestId,
         designRequestStatus: design.designRequestStatus,
-        numberOfDesigns: design.numberOfDesigns,
-        trend: design.trend,
-        targetAudience: design.targetAudience,
-        referenceImage: design.referenceImage,
-        designRemarks: design.designRemarks,
-        referenceImages: design.referenceImages,
-        referenceLinks: design.referenceLinks,
+        numberOfDesigns: design.numberOfDesigns || sample.numberOfDesigns,
+        trend: design.trend || sample.trend,
+        targetAudience: design.targetAudience || sample.targetAudience,
+        referenceImage: design.referenceImage || sample.productImagePath,
+        designRemarks: design.designRemarks || sample.designRemarks,
+        referenceImages: (design.referenceImages && design.referenceImages.length > 0) ? design.referenceImages : sample.referenceImages,
+        referenceLinks: (design.referenceLinks && design.referenceLinks.length > 0) ? design.referenceLinks : sample.referenceLinks,
         creativeSubmissions: design.creativeSubmissions,
         marketingDesignDecision: design.marketingDesignDecision,
         remainingDesignCount: design.remainingDesignCount,
@@ -395,6 +402,12 @@ export async function createSampleRequestApi(form: CreateSampleRequestForm): Pro
       custom_details: form.customDetails || null,
       status: form.status || "Draft (Pre-SMT)",
       source_sample_request_id: form.sourceRequestId,
+      trend: form.trend || null,
+      target_audience: form.targetAudience || null,
+      targetAudience: form.targetAudience || null,
+      number_of_designs: form.numberOfDesigns != null ? Number(form.numberOfDesigns) : null,
+      design_remarks: form.designRemarks || null,
+      designRemarks: form.designRemarks || null,
       reference_images: form.referenceImages || [],
       reference_links: form.referenceLinks || [],
       plant_feasibility_response: form.plantFeasibilityResponse || null,
@@ -490,6 +503,15 @@ export async function updateSampleRequestApi(
       request_types: payload.requestTypes,
       source_sample_code: payload.sourceSampleCode,
       status: payload.status,
+      trend: payload.trend !== undefined ? payload.trend : (payload as any).trend,
+      target_audience: payload.targetAudience !== undefined ? payload.targetAudience : (payload as any).target_audience,
+      targetAudience: payload.targetAudience !== undefined ? payload.targetAudience : (payload as any).target_audience,
+      number_of_designs: payload.numberOfDesigns !== undefined ? payload.numberOfDesigns : (payload as any).number_of_designs,
+      numberOfDesigns: payload.numberOfDesigns !== undefined ? payload.numberOfDesigns : (payload as any).number_of_designs,
+      design_remarks: payload.designRemarks !== undefined ? payload.designRemarks : (payload as any).design_remarks,
+      designRemarks: payload.designRemarks !== undefined ? payload.designRemarks : (payload as any).design_remarks,
+      reference_images: payload.referenceImages !== undefined ? payload.referenceImages : (payload as any).reference_images,
+      reference_links: payload.referenceLinks !== undefined ? payload.referenceLinks : (payload as any).reference_links,
       plant_feasibility_response: (payload as any).plantFeasibilityResponse ?? (payload as any).plant_feasibility_response,
       plant_feasibility_remark: (payload as any).plantFeasibilityRemark ?? (payload as any).plant_feasibility_remark,
       sampling_feasibility_response: (payload as any).samplingFeasibilityResponse ?? (payload as any).sampling_feasibility_response,

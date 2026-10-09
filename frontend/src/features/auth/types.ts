@@ -5,6 +5,9 @@ export interface UserProfile {
   email: string;
   role: string;
   sub_role?: string;
+  team?: string;
+  is_team_head?: boolean;
+  plant_code?: string;
   is_active: boolean;
   created_at?: string;
 }

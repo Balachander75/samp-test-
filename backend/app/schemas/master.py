@@ -35,6 +35,39 @@ class PlantOut(PlantBase):
     model_config = ConfigDict(from_attributes=True)
 
 
+class PlantUpdate(BaseModel):
+    code: Optional[str] = None
+    name: Optional[str] = None
+    location: Optional[str] = None
+    is_active: Optional[bool] = None
+
+
+class UserCreate(BaseModel):
+    name: str
+    userid: str
+    email: str
+    password: str
+    role: str = "user"
+    sub_role: Optional[str] = None
+    team: Optional[str] = None
+    is_team_head: Optional[bool] = False
+    plant_code: Optional[str] = None
+    is_active: Optional[bool] = True
+
+
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    userid: Optional[str] = None
+    email: Optional[str] = None
+    password: Optional[str] = None
+    role: Optional[str] = None
+    sub_role: Optional[str] = None
+    team: Optional[str] = None
+    is_team_head: Optional[bool] = None
+    plant_code: Optional[str] = None
+    is_active: Optional[bool] = None
+
+
 class UserOut(BaseModel):
     id: int
     name: str
@@ -42,6 +75,11 @@ class UserOut(BaseModel):
     email: str
     role: str
     sub_role: Optional[str] = None
+    team: Optional[str] = None
+    is_team_head: bool = False
+    plant_code: Optional[str] = None
     is_active: bool
+    created_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
+

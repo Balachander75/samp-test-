@@ -7,3 +7,7 @@ export * from "./InspectorAttachmentsTab";
 export * from "./InspectorMaterialsTable";
 export * from "./InspectorChatter";
 export * from "./ImageLightboxModal";
+export * from "./DesignClaimStrip";
+export * from "./DesignCounterDateModal";
+export * from "./MarketingCounterDateBanner";
+export * from "./CreativeOutputSubmissionModal";

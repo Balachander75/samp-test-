@@ -471,3 +471,151 @@ export async function searchProductsByBindingApi(
     return [];
   }
 }
+
+// ==========================================
+// USERS & TEAMS MANAGEMENT API
+// ==========================================
+
+export interface UserItem {
+  id: number;
+  name: string;
+  userid: string;
+  email: string;
+  role: string;
+  subRole?: string;
+  team?: string;
+  isTeamHead: boolean;
+  plantCode?: string;
+  isActive: boolean;
+  createdAt?: string;
+}
+
+export interface CreateUserPayload {
+  name: string;
+  userid: string;
+  email: string;
+  password: string;
+  role?: string;
+  sub_role?: string;
+  team?: string;
+  is_team_head?: boolean;
+  plant_code?: string;
+  is_active?: boolean;
+}
+
+export interface UpdateUserPayload {
+  name?: string;
+  userid?: string;
+  email?: string;
+  password?: string;
+  role?: string;
+  sub_role?: string;
+  team?: string;
+  is_team_head?: boolean;
+  plant_code?: string;
+  is_active?: boolean;
+}
+
+export async function fetchUsersApi(team?: string): Promise<UserItem[]> {
+  try {
+    const query = team && team.toUpperCase() !== "ALL" ? `?team=${encodeURIComponent(team)}` : "";
+    const data = await apiFetch<any[]>(`/api/v1/users${query}`);
+    return (data || []).map((u: any) => ({
+      id: u.id,
+      name: u.name,
+      userid: u.userid,
+      email: u.email,
+      role: u.role,
+      subRole: u.sub_role || undefined,
+      team: u.team || undefined,
+      isTeamHead: Boolean(u.is_team_head),
+      plantCode: u.plant_code || undefined,
+      isActive: Boolean(u.is_active),
+      createdAt: u.created_at ? String(u.created_at).split("T")[0] : undefined,
+    }));
+  } catch (err) {
+    console.error("Error fetching users:", err);
+    return [];
+  }
+}
+
+export async function createUserApi(payload: CreateUserPayload): Promise<UserItem> {
+  const u = await apiFetch<any>("/api/v1/users", {
+    method: "POST",
+    jsonBody: payload,
+  });
+  return {
+    id: u.id,
+    name: u.name,
+    userid: u.userid,
+    email: u.email,
+    role: u.role,
+    subRole: u.sub_role || undefined,
+    team: u.team || undefined,
+    isTeamHead: Boolean(u.is_team_head),
+    plantCode: u.plant_code || undefined,
+    isActive: Boolean(u.is_active),
+    createdAt: u.created_at ? String(u.created_at).split("T")[0] : undefined,
+  };
+}
+
+export async function updateUserApi(id: number, payload: UpdateUserPayload): Promise<UserItem> {
+  const u = await apiFetch<any>(`/api/v1/users/${id}`, {
+    method: "PATCH",
+    jsonBody: payload,
+  });
+  return {
+    id: u.id,
+    name: u.name,
+    userid: u.userid,
+    email: u.email,
+    role: u.role,
+    subRole: u.sub_role || undefined,
+    team: u.team || undefined,
+    isTeamHead: Boolean(u.is_team_head),
+    plantCode: u.plant_code || undefined,
+    isActive: Boolean(u.is_active),
+    createdAt: u.created_at ? String(u.created_at).split("T")[0] : undefined,
+  };
+}
+
+export async function deleteUserApi(id: number): Promise<boolean> {
+  try {
+    await apiFetch(`/api/v1/users/${id}`, { method: "DELETE" });
+    return true;
+  } catch (err) {
+    console.error("Error deleting user:", err);
+    return false;
+  }
+}
+
+export async function updatePlantApi(
+  id: number,
+  payload: { code?: string; name?: string; location?: string; is_active?: boolean }
+): Promise<PlantItem> {
+  const p = await apiFetch<any>(`/api/v1/plants/${id}`, {
+    method: "PATCH",
+    jsonBody: payload,
+  });
+  return {
+    id: p.id,
+    code: p.code,
+    name: p.name,
+    location: p.location || undefined,
+    isActive: p.is_active,
+    createdBy: p.created_by,
+    createdAt: p.created_at ? p.created_at.split("T")[0] : "",
+    updatedAt: p.updated_at ? p.updated_at.split("T")[0] : "",
+  };
+}
+
+export async function deletePlantApi(id: number): Promise<boolean> {
+  try {
+    await apiFetch(`/api/v1/plants/${id}`, { method: "DELETE" });
+    return true;
+  } catch (err) {
+    console.error("Error deleting plant:", err);
+    return false;
+  }
+}
+
