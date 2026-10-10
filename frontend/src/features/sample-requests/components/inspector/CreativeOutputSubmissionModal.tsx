@@ -4,14 +4,9 @@ import {
   Link2,
   ExternalLink,
   Plus,
-  Trash2,
-  Sparkles,
-  Layers,
-  Send,
   AlertTriangle,
-  Info,
-  CheckCircle2,
   X,
+  Send,
 } from "lucide-react";
 import { CreativeDesignOutputRow } from "@/features/creative/types";
 
@@ -21,7 +16,6 @@ export interface CreativeOutputSubmissionModalProps {
   totalRequested: number;
   deliveredCount: number;
   remainingCount: number;
-  marketingBriefText: string;
   batchNumber: number;
   onSubmitBatch: (payload: {
     designFileUrl: string;
@@ -35,7 +29,6 @@ export const CreativeOutputSubmissionModal: React.FC<CreativeOutputSubmissionMod
   totalRequested,
   deliveredCount,
   remainingCount,
-  marketingBriefText,
   batchNumber,
   onSubmitBatch,
 }) => {
@@ -50,44 +43,26 @@ export const CreativeOutputSubmissionModal: React.FC<CreativeOutputSubmissionMod
     const safeCount = Math.max(1, Math.min(remainingCount || 10, outputCount));
     setOutputRows((prev) =>
       Array.from({ length: safeCount }, (_, index) => {
-        const rowDesignNum = `D${deliveredCount + index + 1}`;
         if (prev[index]) {
           return {
             ...prev[index],
-            designNumber: rowDesignNum,
+            designNumber: `D${deliveredCount + index + 1}`,
           };
         }
         return {
-          designNumber: rowDesignNum,
-          description: marketingBriefText
-            ? `${marketingBriefText} (${rowDesignNum})`
-            : `Cover Artwork (${rowDesignNum})`,
-          stockNumber: "",
+          designNumber: `D${deliveredCount + index + 1}`,
+          description: "",
           remarks: "",
         };
       })
     );
-  }, [outputCount, deliveredCount, marketingBriefText, remainingCount]);
+  }, [outputCount, deliveredCount, remainingCount]);
 
   if (!isOpen) return null;
 
-  const handleApplyBriefToAll = () => {
-    setOutputRows((curr) =>
-      curr.map((r, i) => {
-        const rowDesignNum = `D${deliveredCount + i + 1}`;
-        return {
-          ...r,
-          description: marketingBriefText
-            ? `${marketingBriefText} (${rowDesignNum})`
-            : `Artwork (${rowDesignNum})`,
-        };
-      })
-    );
-  };
-
   const handleUpdateRow = (
     index: number,
-    field: "description" | "stockNumber" | "remarks",
+    field: "description" | "remarks",
     value: string
   ) => {
     setOutputRows((curr) =>
@@ -140,7 +115,7 @@ export const CreativeOutputSubmissionModal: React.FC<CreativeOutputSubmissionMod
               </span>
             </div>
             <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
-              Specify design file repository and artwork variants with stock asset numbers
+              Add the artwork file link and details for each completed design.
             </p>
           </div>
         </div>
@@ -231,29 +206,20 @@ export const CreativeOutputSubmissionModal: React.FC<CreativeOutputSubmissionMod
           </div>
         </div>
 
-        {/* Section 3: Dynamic 3-Column Artwork Matrix */}
+        {/* Section 3: Artwork Matrix */}
         <div className="space-y-2">
-          <div className="flex items-center justify-between">
+          <div>
             <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-zinc-300 font-sans">
               3. Artwork Variant Specifications ({outputRows.length} Rows Generated)
             </label>
-            <button
-              type="button"
-              onClick={handleApplyBriefToAll}
-              className="text-[11px] font-semibold text-[#714B67] hover:underline dark:text-purple-300 flex items-center gap-1 cursor-pointer"
-            >
-              <Sparkles className="w-3 h-3 text-[#714B67]" />
-              <span>Reset to Marketing Brief Description</span>
-            </button>
           </div>
 
           <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-zinc-800 shadow-2xs">
             {/* Table Header: 3 Columns */}
-            <div className="grid grid-cols-[80px_1fr_1fr_1fr] gap-3 bg-slate-100/90 dark:bg-zinc-800/80 px-4 py-2.5 text-[11px] font-mono font-bold uppercase text-slate-600 dark:text-zinc-300 border-b border-slate-200 dark:border-zinc-800">
+            <div className="grid grid-cols-[80px_minmax(0,1.5fr)_minmax(0,1fr)] gap-3 bg-slate-100/90 dark:bg-zinc-800/80 px-4 py-2.5 text-[11px] font-mono font-bold uppercase text-slate-600 dark:text-zinc-300 border-b border-slate-200 dark:border-zinc-800">
               <span>Code</span>
               <span>1. Artwork Description</span>
-              <span>2. Shutterstock / Stock No.</span>
-              <span>3. Remarks / Finishes</span>
+              <span>2. Remarks / Finishes</span>
             </div>
 
             {/* Dynamic Rows */}
@@ -261,7 +227,7 @@ export const CreativeOutputSubmissionModal: React.FC<CreativeOutputSubmissionMod
               {outputRows.map((row, idx) => (
                 <div
                   key={idx}
-                  className="grid grid-cols-[80px_1fr_1fr_1fr] gap-3 px-4 py-2.5 items-center bg-white dark:bg-[#161822] hover:bg-slate-50/50 dark:hover:bg-zinc-850/40 transition"
+                  className="grid grid-cols-[80px_minmax(0,1.5fr)_minmax(0,1fr)] gap-3 px-4 py-2.5 items-center bg-white dark:bg-[#161822] hover:bg-slate-50/50 dark:hover:bg-zinc-850/40 transition"
                 >
                   {/* Badge */}
                   <div>
@@ -270,36 +236,25 @@ export const CreativeOutputSubmissionModal: React.FC<CreativeOutputSubmissionMod
                     </span>
                   </div>
 
-                  {/* Column 1: Description (Prefilled with Marketing description + D1..Dn) */}
+                  {/* Column 1: Description */}
                   <div>
                     <input
                       type="text"
                       required
                       value={row.description}
                       onChange={(e) => handleUpdateRow(idx, "description", e.target.value)}
-                      placeholder="e.g. Spiral Notebook - Floral Cover (D1)"
+                      placeholder="Artwork description"
                       className="w-full h-8 px-2.5 rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs text-slate-900 dark:text-zinc-100 outline-none focus:border-[#714B67] focus:ring-1 focus:ring-[#714B67]/20"
                     />
                   </div>
 
-                  {/* Column 2: Shutterstock / Stock Number (Empty for Creative) */}
-                  <div>
-                    <input
-                      type="text"
-                      value={row.stockNumber}
-                      onChange={(e) => handleUpdateRow(idx, "stockNumber", e.target.value)}
-                      placeholder="e.g. Shutterstock #192837482"
-                      className="w-full h-8 px-2.5 rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-mono text-slate-900 dark:text-zinc-100 outline-none focus:border-[#714B67] focus:ring-1 focus:ring-[#714B67]/20"
-                    />
-                  </div>
-
-                  {/* Column 3: Remarks (Empty for Creative) */}
+                  {/* Column 2: Remarks */}
                   <div>
                     <input
                       type="text"
                       value={row.remarks}
                       onChange={(e) => handleUpdateRow(idx, "remarks", e.target.value)}
-                      placeholder="e.g. Foil stamping plate separated"
+                      placeholder="Remarks (optional)"
                       className="w-full h-8 px-2.5 rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs text-slate-900 dark:text-zinc-100 outline-none focus:border-[#714B67] focus:ring-1 focus:ring-[#714B67]/20"
                     />
                   </div>

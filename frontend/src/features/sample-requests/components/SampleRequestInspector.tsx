@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
+import { ExternalLink } from "lucide-react";
 import {
   SampleRequestItem,
   ProgramMaterialItem,
@@ -674,6 +675,7 @@ export const SampleRequestInspector: React.FC<SampleRequestInspectorProps> = ({
 
                 {/* Tab 1: Specifications & Scope */}
                 {activeTab === "specs" && (
+                  <>
                   <InspectorSpecsTab
                     trackType={trackType}
                     request={request}
@@ -703,6 +705,23 @@ export const SampleRequestInspector: React.FC<SampleRequestInspectorProps> = ({
                     }
                     onSaveNewRow={handleSaveNewMaterialRow}
                   />
+                  {activeRequest.mockupWorkflowState?.stage === "marketing" && activeRequest.mockupWorkflowState.mockupUrl && (
+                    <section className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50/70 p-4 dark:border-emerald-900/60 dark:bg-emerald-950/20">
+                      <h3 className="text-sm font-semibold text-emerald-900 dark:text-emerald-200">Studio mockup ready</h3>
+                      <p className="mt-1 text-xs text-emerald-800/80 dark:text-emerald-300/80">
+                        Studio submitted the mockup for this request.
+                      </p>
+                      <a
+                        href={activeRequest.mockupWorkflowState.mockupUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-3 inline-flex items-center gap-2 rounded-lg bg-emerald-700 px-3 py-2 text-xs font-semibold text-white transition hover:bg-emerald-800"
+                      >
+                        Open mockup <ExternalLink className="h-3.5 w-3.5" />
+                      </a>
+                    </section>
+                  )}
+                  </>
                 )}
 
                 {/* Tab 2: Technical Review */}

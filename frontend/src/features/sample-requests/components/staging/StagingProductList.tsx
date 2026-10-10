@@ -166,6 +166,13 @@ export const StagingProductList: React.FC<StagingProductListProps> = ({
                         Standard Request Line Item
                       </div>
                     )}
+                    {prod.scopes.includes("costing") && (
+                      <div className="mt-1 flex flex-wrap gap-x-2 text-[10.5px] text-teal-700 dark:text-teal-300">
+                        <span>{prod.qtyDesignCosting || "—"} costing units</span>
+                        <span>{prod.unitPcPack || "—"}{prod.unitPcPack === "Pack" ? ` · ${prod.qtyPerPack || "—"} pc/pack` : ""}</span>
+                        {prod.customerProductCode && <span>SKU {prod.customerProductCode}</span>}
+                      </div>
+                    )}
                   </div>
                 </td>
 

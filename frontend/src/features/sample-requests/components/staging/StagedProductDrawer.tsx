@@ -95,6 +95,40 @@ export const StagedProductDrawer: React.FC<StagedProductDrawerProps> = ({
               })}
             </div>
 
+            {/* Commercial Merchandising Taxonomy (Strictly outside technical SAP classes) */}
+            {(inspectingProduct.productCategory || inspectingProduct.productSubCategory || inspectingProduct.productThirdCategory) && (
+              <div className="p-3.5 rounded-xl border border-emerald-100 dark:border-emerald-900/40 bg-emerald-50/40 dark:bg-emerald-950/20 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10.5px] font-mono font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-300">
+                    Merchandising Taxonomy
+                  </span>
+                  <span className="text-[10px] font-mono text-emerald-600/80 dark:text-emerald-400/80">
+                    Commercial Category
+                  </span>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="p-2.5 rounded-lg bg-white/80 dark:bg-white/5 border border-emerald-100/80 dark:border-emerald-900/30">
+                    <span className="text-[9.5px] font-mono uppercase text-slate-400 dark:text-zinc-400 block font-medium">Category</span>
+                    <span className="font-bold text-xs text-slate-900 dark:text-zinc-100 mt-0.5 block truncate" title={inspectingProduct.productCategory}>
+                      {inspectingProduct.productCategory || "—"}
+                    </span>
+                  </div>
+                  <div className="p-2.5 rounded-lg bg-white/80 dark:bg-white/5 border border-emerald-100/80 dark:border-emerald-900/30">
+                    <span className="text-[9.5px] font-mono uppercase text-slate-400 dark:text-zinc-400 block font-medium">Sub Category</span>
+                    <span className="font-bold text-xs text-slate-900 dark:text-zinc-100 mt-0.5 block truncate" title={inspectingProduct.productSubCategory}>
+                      {inspectingProduct.productSubCategory || "—"}
+                    </span>
+                  </div>
+                  <div className="p-2.5 rounded-lg bg-white/80 dark:bg-white/5 border border-emerald-100/80 dark:border-emerald-900/30">
+                    <span className="text-[9.5px] font-mono uppercase text-slate-400 dark:text-zinc-400 block font-medium">Third Category</span>
+                    <span className="font-bold text-xs text-slate-900 dark:text-zinc-100 mt-0.5 block truncate" title={inspectingProduct.productThirdCategory}>
+                      {inspectingProduct.productThirdCategory || "—"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Design Specifications (Clean Key-Value 2x2 Grid) */}
             {inspectingProduct.designMetadata && (
               <div className="space-y-3 pt-3 border-t border-zinc-100 dark:border-white/[0.06]">
@@ -113,7 +147,7 @@ export const StagedProductDrawer: React.FC<StagedProductDrawerProps> = ({
                       Target Due Date
                     </span>
                     <span className="font-mono font-bold text-sm text-zinc-900 dark:text-zinc-100 mt-0.5 block">
-                      {inspectingProduct.designMetadata.designRequiredDate || "Not specified"}
+                      {inspectingProduct.designMetadata.designRequiredDate || ""}
                     </span>
                   </div>
 
@@ -122,7 +156,7 @@ export const StagedProductDrawer: React.FC<StagedProductDrawerProps> = ({
                       Trend / Theme
                     </span>
                     <span className="font-medium text-xs text-zinc-900 dark:text-zinc-100 mt-0.5 block break-words">
-                      {inspectingProduct.designMetadata.trend || "None specified"}
+                      {inspectingProduct.designMetadata.trend || ""}
                     </span>
                   </div>
 
@@ -131,7 +165,7 @@ export const StagedProductDrawer: React.FC<StagedProductDrawerProps> = ({
                       Target Demographic
                     </span>
                     <span className="font-medium text-xs text-zinc-900 dark:text-zinc-100 mt-0.5 block break-words">
-                      {inspectingProduct.designMetadata.targetAudience || "General Audience"}
+                      {inspectingProduct.designMetadata.targetAudience || ""}
                     </span>
                   </div>
                 </div>
@@ -224,6 +258,27 @@ export const StagedProductDrawer: React.FC<StagedProductDrawerProps> = ({
                   </p>
                 )}
               </div>
+            )}
+            {inspectingProduct.scopes.includes("costing") && (
+              <section className="space-y-3 rounded-xl border border-teal-200/80 bg-teal-50/40 p-3.5 dark:border-teal-800/50 dark:bg-teal-950/15">
+                <h4 className="text-[11px] font-semibold uppercase tracking-wide text-teal-800 dark:text-teal-300">Costing Details</h4>
+                <div className="grid grid-cols-2 gap-2.5">
+                  {[
+                    ["Quantity for costing", inspectingProduct.qtyDesignCosting || "—"],
+                    ["Customer SKU", inspectingProduct.customerProductCode || "—"],
+                    ["Barcode", inspectingProduct.barcode || "—"],
+                    ["Brand", inspectingProduct.brandName || "—"],
+                    ["Costing required date", inspectingProduct.costingRequiredDate || "—"],
+                    ["Unit", inspectingProduct.unitPcPack || "—"],
+                    ...(inspectingProduct.unitPcPack === "Pack" ? [["Pieces per pack", inspectingProduct.qtyPerPack || "—"]] : []),
+                  ].map(([label, value]) => (
+                    <div key={label} className="min-w-0 rounded-lg bg-white/75 p-2.5 dark:bg-white/[0.04]">
+                      <span className="block text-[9px] uppercase text-teal-700/75 dark:text-teal-300/75">{label}</span>
+                      <span className="mt-0.5 block break-words text-xs font-semibold text-slate-900 dark:text-zinc-100">{value}</span>
+                    </div>
+                  ))}
+                </div>
+              </section>
             )}
             {/* Sampling Specifications */}
             {inspectingProduct.samplingMetadata && (

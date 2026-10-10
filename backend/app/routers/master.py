@@ -147,3 +147,13 @@ def delete_user(
 ):
     service.delete_user(id)
     return None
+
+
+# ---------------------------------------------------------------------------
+# Product Categories Merchandising Taxonomy
+# ---------------------------------------------------------------------------
+@router.get("/api/v1/master/product-categories", summary="List product categories hierarchy")
+@router.get("/api/master/product-categories", summary="List product categories hierarchy (legacy alias)")
+def get_product_categories(service: MasterService = Depends(get_master_service)):
+    return service.get_product_categories()
+

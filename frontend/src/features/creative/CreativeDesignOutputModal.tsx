@@ -17,13 +17,13 @@ export const CreativeDesignOutputModal: React.FC<Props> = ({ request, isOpen, on
   const remaining = Math.max(0, requested - previousRows.length);
   const [count, setCount] = useState(remaining ? 1 : 0);
   const [fileUrl, setFileUrl] = useState("");
-  const [rows, setRows] = useState<Array<{ description: string; stockNumber: string; remarks: string }>>([]);
+  const [rows, setRows] = useState<Array<{ description: string; remarks: string }>>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
     setCount(remaining ? 1 : 0);
-    setRows(remaining ? [{ description: "", stockNumber: "", remarks: "" }] : []);
+    setRows(remaining ? [{ description: "", remarks: "" }] : []);
     setFileUrl("");
     setError("");
   }, [request?.designRequestId, remaining, isOpen]);
@@ -34,15 +34,15 @@ export const CreativeDesignOutputModal: React.FC<Props> = ({ request, isOpen, on
   const changeCount = (next: number) => {
     const safeCount = Math.max(1, Math.min(remaining, next || 1));
     setCount(safeCount);
-    setRows((current) => Array.from({ length: safeCount }, (_, index) => current[index] || { description: "", stockNumber: "", remarks: "" }));
+    setRows((current) => Array.from({ length: safeCount }, (_, index) => current[index] || { description: "", remarks: "" }));
   };
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!request.designRequestId) return;
-    const invalidIndex = rows.findIndex((row) => !row.description.trim() || (!row.stockNumber.trim() && !row.remarks.trim()));
+    const invalidIndex = rows.findIndex((row) => !row.description.trim());
     if (invalidIndex >= 0) {
-      setError(`D${firstNumber + invalidIndex} needs a description and a Shutterstock number or remark.`);
+      setError(`D${firstNumber + invalidIndex} needs a description.`);
       return;
     }
     if (!fileUrl.trim()) {
@@ -52,7 +52,7 @@ export const CreativeDesignOutputModal: React.FC<Props> = ({ request, isOpen, on
     setSaving(true);
     setError("");
     try {
-      await submitCreativeDesignOutputApi(request.designRequestId, { designFileUrl: fileUrl.trim(), rows });
+      await submitCreativeDesignOutputApi(request.designRequestId, { designFileUrl: fileUrl.trim(), rows }, request.claimedBy || undefined);
       await onSubmitted();
       showToast("Design output sent to Marketing for review.");
       onClose();
@@ -87,10 +87,10 @@ export const CreativeDesignOutputModal: React.FC<Props> = ({ request, isOpen, on
                 <label className="block text-xs font-medium text-slate-700 dark:text-zinc-300">Designs completed<input type="number" min={1} max={remaining} value={count} onChange={(event) => changeCount(Number(event.target.value))} className="mt-1.5 h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-[#006d32] dark:border-zinc-700 dark:bg-[#171923]" /></label>
               </div>
               <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-zinc-700">
-                <div className="hidden grid-cols-[56px_minmax(180px,1.5fr)_minmax(150px,1fr)_minmax(150px,1fr)] gap-3 bg-slate-50 px-3 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:bg-white/[0.04] md:grid"><span>Design</span><span>Description</span><span>Shutterstock number</span><span>Remarks</span></div>
-                {rows.map((row, index) => <div key={index} className="grid grid-cols-1 gap-3 border-t border-slate-200 p-3 dark:border-zinc-700 sm:grid-cols-2 md:grid-cols-[56px_minmax(180px,1.5fr)_minmax(150px,1fr)_minmax(150px,1fr)]"><span className="text-sm font-semibold text-[#006d32] dark:text-[#00d166] md:pt-2">D{firstNumber + index}</span><input aria-label={`D${firstNumber + index} description`} value={row.description} onChange={(event) => setRows((current) => current.map((item, i) => i === index ? { ...item, description: event.target.value } : item))} placeholder="Design description" className="h-9 min-w-0 rounded-lg border border-slate-300 px-2.5 text-xs outline-none focus:border-[#006d32] dark:border-zinc-700 dark:bg-[#171923]" /><input aria-label={`D${firstNumber + index} Shutterstock number`} value={row.stockNumber} onChange={(event) => setRows((current) => current.map((item, i) => i === index ? { ...item, stockNumber: event.target.value } : item))} placeholder="Stock number (Shutterstock)" className="h-9 min-w-0 rounded-lg border border-slate-300 px-2.5 text-xs outline-none focus:border-[#006d32] dark:border-zinc-700 dark:bg-[#171923]" /><input aria-label={`D${firstNumber + index} remarks`} value={row.remarks} onChange={(event) => setRows((current) => current.map((item, i) => i === index ? { ...item, remarks: event.target.value } : item))} placeholder="Remarks" className="h-9 min-w-0 rounded-lg border border-slate-300 px-2.5 text-xs outline-none focus:border-[#006d32] dark:border-zinc-700 dark:bg-[#171923]" /></div>)}
+                <div className="hidden grid-cols-[56px_minmax(180px,1.5fr)_minmax(150px,1fr)] gap-3 bg-slate-50 px-3 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:bg-white/[0.04] md:grid"><span>Design</span><span>Description</span><span>Remarks</span></div>
+                {rows.map((row, index) => <div key={index} className="grid grid-cols-1 gap-3 border-t border-slate-200 p-3 dark:border-zinc-700 sm:grid-cols-2 md:grid-cols-[56px_minmax(180px,1.5fr)_minmax(150px,1fr)]"><span className="text-sm font-semibold text-[#006d32] dark:text-[#00d166] md:pt-2">D{firstNumber + index}</span><input aria-label={`D${firstNumber + index} description`} value={row.description} onChange={(event) => setRows((current) => current.map((item, i) => i === index ? { ...item, description: event.target.value } : item))} placeholder="Design description" className="h-9 min-w-0 rounded-lg border border-slate-300 px-2.5 text-xs outline-none focus:border-[#006d32] dark:border-zinc-700 dark:bg-[#171923]" /><input aria-label={`D${firstNumber + index} remarks`} value={row.remarks} onChange={(event) => setRows((current) => current.map((item, i) => i === index ? { ...item, remarks: event.target.value } : item))} placeholder="Remarks" className="h-9 min-w-0 rounded-lg border border-slate-300 px-2.5 text-xs outline-none focus:border-[#006d32] dark:border-zinc-700 dark:bg-[#171923]" /></div>)}
               </div>
-              <p className="text-xs text-slate-500">Each row needs a description and either a Shutterstock number, a remark, or both.</p>
+              <p className="text-xs text-slate-500">Add a description for each artwork. Remarks are optional.</p>
             </>}
             {error && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-300">{error}</p>}
           </div>

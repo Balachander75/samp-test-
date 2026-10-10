@@ -62,9 +62,6 @@ export function isDesignRequest(r?: Partial<SampleRequestItem> | null): boolean 
   const mat = String(r.materialCode || "").toLowerCase();
   const sr = String(r.srNumber || "").toLowerCase();
   if (mat.startsWith("dsg-") || sr.startsWith("dsg-")) return true;
-  if (Boolean(r.numberOfDesigns) || Boolean(r.designsCustomerCreative)) {
-    if (!scopes.includes("sample") && !r.productType) return true;
-  }
   return false;
 }
 
@@ -144,10 +141,16 @@ export function getStageIdForRequest(r: SampleRequestItem): string {
     return "samp"; // SAMP Team Work / Seasonal Matrix Review
   }
 
+  const mockupStage = r.mockupWorkflowState?.stage;
+  if (mockupStage === "marketing" && r.mockupWorkflowState?.mockupUrl) return "marketing";
+  if (mockupStage === "studio") return "studio";
+  if (mockupStage === "creative") return "creative";
+
   // 3. Marketing Request: Only Marketing requests can be in "draft"
   if (s.includes("draft") || s.includes("smt") || s.includes("pending allocation")) {
     return "draft";
   }
+  if (s.includes("marketing")) return "marketing";
   if (s.includes("creative")) return "creative";
   if (s.includes("studio")) return "studio";
   if (s.includes("cost") || s.includes("estimation")) return "costing";

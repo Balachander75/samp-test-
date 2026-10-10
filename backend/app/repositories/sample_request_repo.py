@@ -112,11 +112,14 @@ class SampleRequestRepository(BaseRepository[CreateSampleRequest]):
 
     def search_by_binding(
         self,
-        binding1: str,
+        binding1: Optional[str] = None,
         binding2: Optional[str] = None,
+        category: Optional[str] = None,
+        sub_category: Optional[str] = None,
+        third_category: Optional[str] = None,
         limit: Optional[int] = None,
     ) -> List[CreateSampleRequest]:
-        """Find saved products whose EAV binding characteristics match the filters."""
+        """Find saved products filtered by category taxonomy and/or binding characteristics."""
         def normalized_sql(column):
             return func.regexp_replace(
                 func.lower(func.coalesce(column, "")),
@@ -128,40 +131,57 @@ class SampleRequestRepository(BaseRepository[CreateSampleRequest]):
         def normalized_value(value: str) -> str:
             return re.sub(r"[^a-z0-9]+", "", str(value or "").casefold())
 
-        normalized_binding1 = normalized_value(binding1)
-        if not normalized_binding1:
-            return []
+        query = self.db.query(CreateSampleRequest).options(*self._eager_options())
 
-        binding1_detail = aliased(ProductDetail)
-        binding1_name = normalized_sql(binding1_detail.characteristic_name)
-        binding1_detail_match = and_(
-            binding1_name.in_(("bindingtype1", "binding1")),
-            normalized_sql(binding1_detail.value) == normalized_binding1,
-        )
-        # Existing catalog records predate the normalized ProductDetail binding
-        # rows. Their binding is often present in the product description instead.
-        legacy_description_match = normalized_sql(
-            CreateSampleRequest.product_description
-        ).like(f"%{normalized_binding1}%")
-        query = (
-            self.db.query(CreateSampleRequest)
-            .outerjoin(binding1_detail, binding1_detail.sample_request_id == CreateSampleRequest.id)
-            .filter(or_(binding1_detail_match, legacy_description_match))
-        )
+        # Taxonomy filters
+        if category and category.strip():
+            query = query.filter(normalized_sql(CreateSampleRequest.product_category) == normalized_value(category))
+        if sub_category and sub_category.strip():
+            query = query.filter(normalized_sql(CreateSampleRequest.product_sub_category) == normalized_value(sub_category))
+        if third_category and third_category.strip():
+            query = query.filter(normalized_sql(CreateSampleRequest.product_third_category) == normalized_value(third_category))
 
+        # Binding 1 filter
+        if binding1 and binding1.strip():
+            normalized_binding1 = normalized_value(binding1)
+            binding1_detail = aliased(ProductDetail)
+            binding1_name = normalized_sql(binding1_detail.characteristic_name)
+            binding1_detail_match = and_(
+                normalized_sql(binding1_detail.class_name) == "nbbinding",
+                binding1_name.in_(("bindingtype1", "binding1")),
+                normalized_sql(binding1_detail.value) == normalized_binding1,
+            )
+            query = query.join(
+                binding1_detail, binding1_detail.sample_request_id == CreateSampleRequest.id
+            ).filter(binding1_detail_match)
+
+        # Binding 2 filter
         if binding2 and binding2.strip():
             normalized_binding2 = normalized_value(binding2)
             binding2_detail = aliased(ProductDetail)
             binding2_name = normalized_sql(binding2_detail.characteristic_name)
-            query = (
-                query.join(binding2_detail, binding2_detail.sample_request_id == CreateSampleRequest.id)
-                .filter(binding2_name.in_(("bindingtype2", "binding2")))
-                .filter(normalized_sql(binding2_detail.value) == normalized_binding2)
+            binding2_detail_match = and_(
+                normalized_sql(binding2_detail.class_name) == "nbbinding",
+                binding2_name.in_(("bindingtype2", "binding2")),
+                normalized_sql(binding2_detail.value) == normalized_binding2,
             )
+            query = query.join(
+                binding2_detail, binding2_detail.sample_request_id == CreateSampleRequest.id
+            ).filter(binding2_detail_match)
+
+        # If no filter at all provided, return empty list
+        if not (
+            (binding1 and binding1.strip())
+            or (binding2 and binding2.strip())
+            or (category and category.strip())
+            or (sub_category and sub_category.strip())
+            or (third_category and third_category.strip())
+        ):
+            return []
 
         query = query.distinct().order_by(CreateSampleRequest.id.desc())
-        if limit is not None:
-            query = query.limit(max(1, min(limit, 1000)))
+        if limit is not None and limit > 0:
+            query = query.limit(limit)
         return query.all()
 
     def batch_update_status(self, ids: List[int], status: str) -> int:

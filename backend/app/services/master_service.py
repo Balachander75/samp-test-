@@ -155,3 +155,59 @@ class MasterService:
         if not user:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
         return self.repo.delete_user(user_id)
+
+    # ---------------------------------------------------------
+    # Product Categories Merchandising Taxonomy
+    # ---------------------------------------------------------
+    def get_product_categories(self) -> Dict[str, Any]:
+        """Return structured product category, sub-category, and third-category taxonomy hierarchy."""
+        from app.models.sample_request import CreateSampleRequest
+        rows = (
+            self.repo.db.query(
+                CreateSampleRequest.product_category,
+                CreateSampleRequest.product_sub_category,
+                CreateSampleRequest.product_third_category,
+            )
+            .filter(CreateSampleRequest.product_category.isnot(None))
+            .distinct()
+            .order_by(
+                CreateSampleRequest.product_category.asc(),
+                CreateSampleRequest.product_sub_category.asc(),
+                CreateSampleRequest.product_third_category.asc(),
+            )
+            .all()
+        )
+
+        categories_map: Dict[str, Dict[str, set]] = {}
+        for cat, sub, third in rows:
+            c = (cat or "").strip()
+            if not c:
+                continue
+            if c not in categories_map:
+                categories_map[c] = {}
+            s = (sub or "").strip()
+            if s:
+                if s not in categories_map[c]:
+                    categories_map[c][s] = set()
+                t = (third or "").strip()
+                if t:
+                    categories_map[c][s].add(t)
+
+        result_categories = []
+        for cat_name, sub_dict in categories_map.items():
+            subs = []
+            for sub_name, thirds_set in sub_dict.items():
+                subs.append({
+                    "name": sub_name,
+                    "third_categories": sorted(list(thirds_set)),
+                })
+            result_categories.append({
+                "name": cat_name,
+                "subcategories": sorted(subs, key=lambda x: x["name"]),
+            })
+
+        return {
+            "categories": sorted(result_categories, key=lambda x: x["name"]),
+            "flat_categories": sorted(list(categories_map.keys())),
+        }
+

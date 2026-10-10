@@ -9,6 +9,8 @@ import {
   recordFeasibilityMarketingDecisionApi,
   mapFeasibilityRequestToSampleRequest,
   updateSampleRequestApi,
+  updateAnyRequestStatusApi,
+  releaseDraftRequestsApi,
   deleteAnyRequestApi,
   batchDeleteAnyRequestsApi,
 } from "@/infrastructure/api";
@@ -180,14 +182,27 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
       setRequests(merged);
     } catch (err) {
       console.error("Failed to load sample requests:", err);
+      showToast("Could not load requests from the backend. Retry in a moment.");
     } finally {
       setIsLoading(false);
     }
-  }, [selectedYear]);
+  }, [selectedYear, showToast]);
 
   useEffect(() => {
     loadRequests();
   }, [loadRequests, location.state]);
+
+  useEffect(() => {
+    const handleFocus = () => void loadRequests();
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
+  }, [loadRequests]);
+
+  useEffect(() => {
+    if (!selectedRequest) return;
+    const refreshed = requests.find((item) => String(item.id) === String(selectedRequest.id));
+    if (refreshed && refreshed !== selectedRequest) setSelectedRequest(refreshed);
+  }, [requests, selectedRequest?.id]);
 
   useEffect(() => {
     const handleRefresh = (event: Event) => {
@@ -349,7 +364,8 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
       return;
 
     try {
-      await batchDeleteAnyRequestsApi(selectedList);
+      const deleted = await batchDeleteAnyRequestsApi(selectedList);
+      if (!deleted) throw new Error("One or more selected requests could not be deleted.");
       if (selectedRequest && selectedIds.has(selectedRequest.id)) {
         setIsInspectorOpen(false);
         setSelectedRequest(null);
@@ -358,12 +374,14 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
       showToast(`✓ ${selectedList.length} request(s) deleted and sample codes reset.`);
     } catch (err) {
       console.error("Failed to batch delete requests:", err);
+      await loadRequests();
       showToast("Error deleting selected requests from database.");
     }
   };
 
   // Direct Status Update Handler (for quick status change)
   const handleUpdateStatus = async (reqId: string | number, newStatus: string) => {
+    const requestItem = requests.find((r) => String(r.id) === String(reqId));
     setRequests((prev) =>
       prev.map((r) =>
         String(r.id) === String(reqId) ? { ...r, status: newStatus } : r
@@ -373,11 +391,13 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
       setSelectedRequest((prev) => (prev ? { ...prev, status: newStatus } : null));
     }
     try {
-      await updateSampleRequestApi(reqId, { status: newStatus });
+      if (requestItem) await updateAnyRequestStatusApi(requestItem, newStatus);
+      else await updateSampleRequestApi(reqId, { status: newStatus });
       await loadRequests();
       showToast(`✓ Request status updated to "${newStatus}"`);
     } catch (err) {
       console.error("Failed to update request status:", err);
+      await loadRequests();
       showToast("Error updating request status.");
     }
   };
@@ -397,14 +417,7 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
     const newStatus = isDesign ? "Creative" : "Sampling Review (PMT)";
 
     try {
-      const updated = await updateSampleRequestApi(requestItem.id, {
-        status: newStatus,
-      });
-
-      if (!updated) {
-        showToast("Failed to release request from draft.");
-        return;
-      }
+      await updateAnyRequestStatusApi(requestItem, newStatus);
 
       setRequests((prev) =>
         prev.map((r) =>
@@ -415,6 +428,8 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
       if (selectedRequest && String(selectedRequest.id) === String(requestItem.id)) {
         setSelectedRequest((prev) => (prev ? { ...prev, status: newStatus } : null));
       }
+
+      await loadRequests();
 
       showToast(`✓ Request ${requestItem.srNumber} released from Draft into ${newStatus}!`);
     } catch (err) {
@@ -435,19 +450,20 @@ export const SampleRequestsDesk: React.FC<SampleRequestsDeskProps> = ({ user }) 
     if (draftItems.length === 0) return;
 
     try {
+      const groups = new Map<string, SampleRequestItem[]>();
       for (const item of draftItems) {
-        const isDesign =
-          (item.requestTypes || []).includes("design") ||
-          String(item.materialCode || "").startsWith("DSG-") ||
-          String(item.srNumber || "").includes("-DSG-");
-        const newStatus = isDesign ? "Creative" : "Sampling Review (PMT)";
-        await updateSampleRequestApi(item.id, { status: newStatus });
+        const newStatus = isDesignRequest(item) ? "Creative" : "Sampling Review (PMT)";
+        groups.set(newStatus, [...(groups.get(newStatus) || []), item]);
+      }
+      for (const [newStatus, items] of groups) {
+        await releaseDraftRequestsApi(items, newStatus);
       }
 
       await loadRequests();
       showToast(`✓ Released ${draftItems.length} request(s) from Draft to active workflow.`);
     } catch (err) {
       console.error("Failed to batch release draft requests:", err);
+      await loadRequests();
       showToast("Error releasing selected requests from draft.");
     }
   };

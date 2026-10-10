@@ -35,6 +35,8 @@ export interface StagingWorkspaceHeaderProps {
   onSaveAsDraft: () => void;
   onSubmitAll: () => void;
   onReleaseRequest?: () => void;
+  onSendCostingRequest?: () => void;
+  isSendingCostingRequest?: boolean;
 }
 
 export const StagingWorkspaceHeader: React.FC<StagingWorkspaceHeaderProps> = ({
@@ -48,6 +50,8 @@ export const StagingWorkspaceHeader: React.FC<StagingWorkspaceHeaderProps> = ({
   onSaveAsDraft,
   onSubmitAll,
   onReleaseRequest,
+  onSendCostingRequest,
+  isSendingCostingRequest = false,
 }) => {
   const designCount = stagedProducts.filter((product) => product.scopes.includes("design")).length;
   const mockupCount = stagedProducts.filter((product) => product.scopes.includes("mockup")).length;
@@ -105,6 +109,7 @@ export const StagingWorkspaceHeader: React.FC<StagingWorkspaceHeaderProps> = ({
           <button
             type="button"
             onClick={onOpenAddModal}
+            disabled={isSendingCostingRequest}
             className="inline-flex h-8 items-center gap-1.5 rounded-xl px-4 text-xs font-bold text-white shadow-[0_2px_10px_rgba(0,109,50,0.25)] hover:shadow-[0_4px_14px_rgba(0,109,50,0.35)] transition-all cursor-pointer active:scale-98"
             style={{ background: "linear-gradient(135deg, #006d32 0%, #00d166 100%)" }}
           >
@@ -116,7 +121,7 @@ export const StagingWorkspaceHeader: React.FC<StagingWorkspaceHeaderProps> = ({
             <button
               type="button"
               onClick={onSaveAsDraft}
-              disabled={isSubmittingAll}
+              disabled={isSubmittingAll || isSendingCostingRequest}
               className="inline-flex h-8 items-center gap-1.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-white/[0.06] dark:hover:bg-white/10 px-3.5 text-xs font-semibold text-slate-800 dark:text-zinc-200 transition-colors cursor-pointer disabled:opacity-50 border border-slate-200/80 dark:border-white/10"
               title="Save staged products to Draft queue"
             >
@@ -125,10 +130,24 @@ export const StagingWorkspaceHeader: React.FC<StagingWorkspaceHeaderProps> = ({
             </button>
           )}
 
+          {costingCount > 0 && onSendCostingRequest && (
+            <button
+              type="button"
+              onClick={onSendCostingRequest}
+              disabled={isSendingCostingRequest || isSubmittingAll || costingCount !== stagedProducts.length}
+              title={costingCount !== stagedProducts.length ? "Add Costing to every staged product before sending this batch" : "Send completed costing requests to the Costing queue"}
+              className="inline-flex h-8 items-center gap-1.5 rounded-xl bg-teal-700 px-3.5 text-xs font-semibold text-white transition-colors hover:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-45"
+            >
+              <Send className="h-3.5 w-3.5" />
+              <span>{isSendingCostingRequest ? "Sending…" : "Send Costing Request"}</span>
+            </button>
+          )}
+
           {stagedProducts.length > 0 && (
             <button
               type="button"
               onClick={onClearAll}
+              disabled={isSendingCostingRequest}
               className="inline-flex h-8 items-center gap-1 rounded-xl text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-2.5 text-xs font-semibold transition-colors cursor-pointer dark:text-rose-400 dark:hover:bg-rose-950/40 ml-1"
             >
               <Trash2 className="h-3.5 w-3.5" />

@@ -8,7 +8,6 @@ import { CreateSampleRequestForm } from "../types";
 import { API_BASE_URL, createApiHeaders } from "@/infrastructure/api/client";
 import { UserProfile } from "@/features/auth";
 import { getBusinessYearForDate } from "@/lib/businessYear";
-import { saveDesignWorkflowState } from "./designWorkflowStorage";
 
 export interface ProgramContextData {
   customer?: string;
@@ -42,16 +41,16 @@ export async function autoSaveStagedProductsToDraft(
     return { success: false, count: 0, customer: "", programName: "" };
   }
 
-  const customer = programContext?.customer?.trim() || "General Customer";
-  const programName = programContext?.programName?.trim() || "Marketing Intake Program";
-  const rawYear = programContext?.programYear || "2026";
-  const programYear = String(rawYear).replace(/BTS/gi, "").trim() || "2026";
+  const customer = programContext?.customer?.trim() || "";
+  const programName = programContext?.programName?.trim() || "";
+  const rawYear = programContext?.programYear || "";
+  const programYear = String(rawYear).replace(/BTS/gi, "").trim();
   const dateStr = new Date().toISOString().split("T")[0];
   const year = (programContext?.year && programContext.year.includes("-"))
     ? programContext.year
     : getBusinessYearForDate(dateStr);
   const targetPlant = programContext?.targetPlant?.trim() || "";
-  const createdBy = user?.name || user?.userid || "Marketing Specialist";
+  const createdBy = user?.name || user?.userid || "";
 
   // A newly created request is completed with the first staged product. Remaining
   // products are created as their own requests under the same customer/program.
@@ -100,12 +99,17 @@ export async function autoSaveStagedProductsToDraft(
         status: "Draft (Pre-SMT)",
         target_plant: prod.plant || targetPlant,
         unit_pc_pack: prod.unitPcPack || null,
+        qty_per_pack: prod.qtyPerPack || null,
         qty_for_sampling: prod.qtyForSampling || null,
         qty_design_costing: prod.qtyDesignCosting || null,
+        costing_required_date: prod.costingRequiredDate || null,
         customer_product_code: prod.customerProductCode || null,
         barcode: prod.barcode || null,
         brand_name: prod.brandName || null,
         product_type: prod.productType || (prod.samplingMetadata ? (prod.samplingMetadata.sampleType === "full" ? "Full Sample" : "Partial Sample") : null),
+        product_category: prod.productCategory || null,
+        product_sub_category: prod.productSubCategory || null,
+        product_third_category: prod.productThirdCategory || null,
         number_of_designs: prod.designMetadata?.numberOfDesigns || 1,
         sample_required_date: prod.sampleRequiredDate || prod.designMetadata?.designRequiredDate || null,
         target_artwork_date_creative: prod.designMetadata?.designRequiredDate || null,
@@ -136,18 +140,11 @@ export async function autoSaveStagedProductsToDraft(
           if (data?.results && Array.isArray(data.results) && data.results.length > 0) {
             firstId = data.results[0].id;
             firstSr = data.results[0].sr_number;
-            data.results.forEach((r: any, idx: number) => {
-              const srcItem = items[idx];
-              if (srcItem?.designMetadata) {
-                const meta = {
-                  trend: srcItem.designMetadata.trend || null,
-                  targetAudience: srcItem.designMetadata.targetAudience || null,
-                  numberOfDesigns: srcItem.designMetadata.numberOfDesigns || 1,
-                  designRemarks: srcItem.designMetadata.remarks || null,
-                };
-                if (r.id) saveDesignWorkflowState(r.id, meta);
-                if (r.sr_number) saveDesignWorkflowState(r.sr_number, meta);
-              }
+            data.results.forEach((saved: any, index: number) => {
+              if (!items[index]) return;
+              items[index].savedRequestId = saved.id;
+              items[index].savedSrNumber = saved.sr_number;
+              items[index].isDraftSaved = true;
             });
           }
         } catch {
@@ -181,13 +178,13 @@ export async function autoSaveStagedProductsToDraft(
       targetPlant,
       productDescription: prod.productDescription,
       materialCode: prod.materialCode,
-      barcode: "",
-      customerProductCode: "",
+      barcode: prod.barcode || "",
+      customerProductCode: prod.customerProductCode || "",
       sampleRequiredDate: prod.designMetadata?.designRequiredDate,
       dateRequestCreated: dateStr,
       createdBy,
       status: "Draft (Pre-SMT)",
-      creationMode: "marketing_request",
+      creationMode: prod.creationMode || "marketing_request",
       requestTypes: prod.scopes,
       productArtworkNos: prod.designMetadata?.numberOfDesigns ? String(prod.designMetadata.numberOfDesigns) : undefined,
       designsCustomerCreative: prod.designMetadata?.numberOfDesigns ? String(prod.designMetadata.numberOfDesigns) : undefined,
@@ -206,6 +203,11 @@ export async function autoSaveStagedProductsToDraft(
       customBinding1: prod.samplingMetadata?.bindingType1 || prod.catalogMetadata?.bindingType1,
       customBinding2: prod.samplingMetadata?.bindingType2 || prod.catalogMetadata?.bindingType2,
       mockupRequired: prod.scopes.includes("mockup") ? "Yes" : undefined,
+      brandName: prod.brandName || undefined,
+      unitPcPack: prod.unitPcPack || undefined,
+      qtyPerPack: prod.qtyPerPack || undefined,
+      qtyDesignCosting: prod.qtyDesignCosting || undefined,
+      costingRequiredDate: prod.costingRequiredDate || undefined,
     };
 
     try {
@@ -225,16 +227,6 @@ export async function autoSaveStagedProductsToDraft(
           firstSavedId = created.id;
           firstSavedSr = created.srNumber;
         }
-      }
-      if (prod.designMetadata) {
-        const meta = {
-          trend: prod.designMetadata.trend || null,
-          targetAudience: prod.designMetadata.targetAudience || null,
-          numberOfDesigns: prod.designMetadata.numberOfDesigns || 1,
-          designRemarks: prod.designMetadata.remarks || null,
-        };
-        if (prod.savedRequestId) saveDesignWorkflowState(prod.savedRequestId, meta);
-        if (prod.savedSrNumber) saveDesignWorkflowState(prod.savedSrNumber, meta);
       }
       prod.isDraftSaved = true;
       savedCount++;

@@ -16,7 +16,19 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
 from app.config import settings
-from app.database import engine, Base, ensure_design_workflow_columns, ensure_program_review_columns
+from app.database import (
+    engine,
+    Base,
+    ensure_design_requests_table,
+    ensure_design_workflow_columns,
+    ensure_product_category_columns,
+    ensure_costing_detail_columns,
+    ensure_program_review_columns,
+    ensure_sample_reference_columns,
+    ensure_mockup_workflow_columns,
+    ensure_sample_request_types_default,
+    ensure_user_team_columns,
+)
 from app.routers import auth, feasibility, master, program_requests, sample_requests
 
 logger = logging.getLogger("uvicorn.error")
@@ -31,10 +43,17 @@ async def lifespan(app: FastAPI):
     """Run startup tasks before serving requests."""
     # Auto-create any new DB tables (idempotent, safe to run on every restart)
     Base.metadata.create_all(bind=engine)
+    ensure_design_requests_table()
+    ensure_user_team_columns()
     ensure_design_workflow_columns()
     ensure_program_review_columns()
+    ensure_product_category_columns()
+    ensure_costing_detail_columns()
+    ensure_sample_reference_columns()
+    ensure_mockup_workflow_columns()
+    ensure_sample_request_types_default()
+    from app.database import SessionLocal
     try:
-        from app.database import SessionLocal
         from app.services.downstream_service import DownstreamService
         with SessionLocal() as db:
             DownstreamService(db).seed_if_empty()

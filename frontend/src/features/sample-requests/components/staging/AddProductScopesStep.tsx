@@ -48,7 +48,7 @@ export const AddProductScopesStep: React.FC<AddProductScopesStepProps> = ({
   onProceed,
 }) => {
   return (
-    <div className="relative flex max-h-[calc(100dvh-2.5rem)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#12141a] shadow-2xl animate-smooth-modal">
+    <div className="relative flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#12141a] shadow-2xl animate-smooth-modal">
       {/* Header */}
       <div className="flex shrink-0 items-center justify-between gap-4 border-b border-slate-100 dark:border-white/[0.06] px-6 py-4.5 sm:px-7">
         <div className="min-w-0">
@@ -81,11 +81,17 @@ export const AddProductScopesStep: React.FC<AddProductScopesStepProps> = ({
           <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
             Commercial Scope Selection
           </div>
+          {selectedScopes.includes("mockup") && (
+            <p className="-mt-2 text-xs leading-relaxed text-slate-500 dark:text-zinc-400">
+              Design is decided after product selection: required for brand-new products, and a yes/no choice for existing products.
+            </p>
+          )}
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {DELIVERABLES.map((item) => {
               const isSelected = selectedScopes.includes(item.id);
               const disabled = isScopeDisabled(item.id);
+              const designDeferred = selectedScopes.includes("mockup") && item.id === "design";
               const meta = SCOPES_METADATA[item.id];
 
               return (
@@ -97,7 +103,11 @@ export const AddProductScopesStep: React.FC<AddProductScopesStepProps> = ({
                   aria-pressed={isSelected}
                   className={`group relative flex flex-col justify-between rounded-xl border p-4 text-left transition-all duration-150 cursor-pointer ${
                     disabled
-                      ? "cursor-not-allowed border-slate-200/50 bg-slate-50/50 opacity-40 dark:border-zinc-800 dark:bg-white/[0.02]"
+                      ? designDeferred
+                        ? isSelected
+                          ? "cursor-not-allowed border-2 border-[#006d32] bg-emerald-50/50 dark:bg-[#006d32]/10 shadow-xs"
+                          : "cursor-not-allowed border-purple-200/70 bg-purple-50/40 dark:border-purple-900/50 dark:bg-purple-950/15"
+                        : "cursor-not-allowed border-slate-200/50 bg-slate-50/50 opacity-40 dark:border-zinc-800 dark:bg-white/[0.02]"
                       : isSelected
                       ? "border-2 border-[#006d32] bg-emerald-50/50 dark:bg-[#006d32]/10 shadow-xs"
                       : "border-slate-200/80 bg-white hover:border-slate-300 hover:shadow-xs dark:border-white/[0.08] dark:bg-[#161822] dark:hover:bg-white/[0.02]"
@@ -112,6 +122,11 @@ export const AddProductScopesStep: React.FC<AddProductScopesStepProps> = ({
                       <span className={`px-1.5 py-0.2 rounded text-[9px] font-mono font-bold border ${meta.badgeColor}`}>
                         {meta.badge}
                       </span>
+                      {designDeferred && (
+                        <span className="rounded bg-purple-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-purple-800 dark:bg-purple-900/50 dark:text-purple-200">
+                          After product
+                        </span>
+                      )}
                     </div>
 
                     {/* Circular Check Indicator */}
@@ -128,7 +143,9 @@ export const AddProductScopesStep: React.FC<AddProductScopesStepProps> = ({
 
                   {/* Description */}
                   <p className="mt-2 text-xs leading-relaxed text-slate-500 dark:text-zinc-400">
-                    {meta.description}
+                    {item.id === "design" && selectedScopes.includes("mockup")
+                      ? "Required for brand-new products; choose yes or no for existing products."
+                      : meta.description}
                   </p>
                 </button>
               );
@@ -153,11 +170,13 @@ export const AddProductScopesStep: React.FC<AddProductScopesStepProps> = ({
             style={{ background: "linear-gradient(135deg, #006d32 0%, #00d166 100%)" }}
           >
             <span>
-              {selectedScopes.includes("design")
+              {selectedScopes.length === 1 && selectedScopes[0] === "design"
                 ? "Configure Design Brief"
                 : selectedScopes.includes("sample")
                 ? "Configure Sampling"
-                : selectedScopes.includes("mockup") || selectedScopes.includes("costing")
+                : selectedScopes.includes("mockup")
+                ? "Configure Mockup Brief"
+                : selectedScopes.includes("costing")
                 ? "Select Catalog Product"
                 : "Stage Product"}
             </span>

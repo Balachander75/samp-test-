@@ -27,6 +27,7 @@ export interface SampleRequestItem {
   dateRequestCreated: string;
   createdBy: string;
   materialCode: string;
+  requestCode?: string;
   barcode?: string;
   customerProductCode?: string;
   sourceSampleCode?: string;
@@ -36,22 +37,37 @@ export interface SampleRequestItem {
   productType?: string;
   productTypeNavneet?: string;
   productTypeNewCustomer?: string;
+  productCategory?: string;
+  productSubCategory?: string;
+  productThirdCategory?: string;
   productImagePath?: string;
   designsCustomerCreative?: string;
   brandName?: string;
   unitPcPack?: string | number;
+  qtyPerPack?: string | number;
   qtyDesignCosting?: string | number;
+  costingRequiredDate?: string | null;
+  costingCounterDate?: string | null;
+  costingOutputPath?: string | null;
   productArtworkNos?: string | number;
   targetArtworkDateCreative?: string;
   targetArtworkDateStudio?: string;
   qtyForSampling?: string | number;
   mockupRequired?: string;
+  mockupWorkflowState?: MockupWorkflowState;
   status: SampleStatus | string;
   creationMode?: "material_code" | "binding" | string;
   programYear?: string;
   programName?: string;
   programCampaignTitle?: string;
   programMaterials?: ProgramMaterialItem[];
+  customDetails?: Array<{
+    id?: number;
+    className: string;
+    characteristicName: string;
+    value: string | null;
+    uom?: string | null;
+  }>;
   requestTypes?: RequestType[];
   requestKind?: "sample" | "design" | "feasibility" | "program";
   designRequestId?: number;
@@ -69,6 +85,7 @@ export interface SampleRequestItem {
   releasedAt?: string | null;
   claimedBy?: string | null;
   claimedAt?: string | null;
+    designRequestCreatedAt?: string | null;
   isCounterDateActive?: boolean;
   proposedTargetDate?: string | null;
   counterDateReason?: string | null;
@@ -76,6 +93,9 @@ export interface SampleRequestItem {
   counterDateDecision?: "pending" | "accepted" | "rejected" | null;
   counterDateDecisionAt?: string | null;
   counterDateDecisionNotes?: string | null;
+  counterDateRequestedBy?: string | null;
+  workflowEvents?: Array<Record<string, any>>;
+  workflowNotes?: Array<Record<string, any>>;
   createdAt: string;
   updatedAt?: string;
   plantFeasibilityResponse?: "Yes" | "No" | "Maybe" | null;
@@ -119,6 +139,26 @@ export interface SampleRequestItem {
   plantRemark?: string | null;
   plantSignedAt?: string | null;
   plantSignedBy?: string | null;
+}
+
+export interface MockupWorkflowEvent {
+  action: string;
+  title: string;
+  actorName: string;
+  actorDepartment: string;
+  timestamp: string;
+  mockupUrl?: string;
+}
+
+export interface MockupWorkflowState {
+  stage: "marketing" | "creative" | "studio" | string;
+  releasedToCreativeAt?: string;
+  sentToStudioAt?: string;
+  sentToStudioBy?: string;
+  mockupUrl?: string;
+  submittedToMarketingAt?: string;
+  submittedToMarketingBy?: string;
+  events?: MockupWorkflowEvent[];
 }
 
 export interface FeasibilityActivityItem {
@@ -202,7 +242,11 @@ export interface CreateSampleRequestForm {
   productTypeNavneet?: string;
   productTypeNewCustomer?: string;
   unitPcPack?: string | number;
+  qtyPerPack?: string | number;
   qtyDesignCosting?: string | number;
+  costingRequiredDate?: string | null;
+  costingCounterDate?: string | null;
+  costingOutputPath?: string | null;
   productArtworkNos?: string | number;
   targetArtworkDateCreative?: string;
   targetArtworkDateStudio?: string;
@@ -219,6 +263,7 @@ export interface CreateSampleRequestForm {
   customBinding1?: string;
   customBinding2?: string;
   customDetails?: Array<{
+    id?: number;
     className: string;
     characteristicName: string;
     value: string | null;
@@ -261,9 +306,12 @@ export interface StagedProductItem {
   barcode?: string;
   customerProductCode?: string;
   productType?: string;
+  productCategory?: string;
+  productSubCategory?: string;
+  productThirdCategory?: string;
   sourceSampleRequestId?: number;
   sourceRequestId?: number;
-  creationMode: "material_code" | "binding";
+  creationMode: "material_code" | "binding" | "custom" | "new";
   bindingType1: string;
   bindingType2: string;
   originalBindingType1?: string;
@@ -293,6 +341,9 @@ export interface BatchSampleRequestItemPayload {
   customer_product_code?: string | null;
   source_sample_code?: string | null;
   product_type?: string | null;
+  product_category?: string | null;
+  product_sub_category?: string | null;
+  product_third_category?: string | null;
   source_sample_request_id?: number;
   creation_mode: "material_code" | "binding";
   custom_binding_1?: string | null;

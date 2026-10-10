@@ -1,27 +1,26 @@
 import React from "react";
-import { UserCheck, ShieldAlert, CheckCircle2, User, Clock, ArrowRight } from "lucide-react";
+import { UserCheck, ShieldAlert, CheckCircle2, Clock, ArrowRight } from "lucide-react";
 
 export interface DesignClaimStripProps {
   claimedBy?: string | null;
   claimedAt?: string | null;
-  currentUserName?: string;
   isCreativeMode?: boolean;
+  canClaim?: boolean;
+  claimDisabledReason?: string;
+  slaLabel?: string;
   onClaim: () => void;
-  onUnclaim?: () => void;
 }
 
 export const DesignClaimStrip: React.FC<DesignClaimStripProps> = ({
   claimedBy,
   claimedAt,
-  currentUserName = "Creative Designer",
   isCreativeMode = false,
+  canClaim = true,
+  claimDisabledReason,
+  slaLabel,
   onClaim,
-  onUnclaim,
 }) => {
   const isClaimed = Boolean(claimedBy);
-  const isClaimedByMe =
-    isClaimed && claimedBy?.trim().toLowerCase() === currentUserName.trim().toLowerCase();
-
   const formattedClaimedTime = claimedAt
     ? new Date(claimedAt).toLocaleString("en-IN", {
         day: "2-digit",
@@ -57,15 +56,10 @@ export const DesignClaimStrip: React.FC<DesignClaimStripProps> = ({
           </div>
         </div>
 
-        {isCreativeMode && onUnclaim && (
-          <button
-            type="button"
-            onClick={onUnclaim}
-            className="text-[11px] font-medium text-slate-500 hover:text-rose-600 dark:text-zinc-400 dark:hover:text-rose-400 px-2 py-1 rounded hover:bg-black/5 dark:hover:bg-white/5 transition cursor-pointer"
-            title="Release assignment to allow another designer to claim"
-          >
-            Release Claim
-          </button>
+        {isCreativeMode && slaLabel && (
+          <span role="status" className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white/80 px-2.5 py-1 text-[10px] font-semibold text-slate-700 dark:border-white/10 dark:bg-black/20 dark:text-zinc-300">
+            <Clock className="h-3 w-3" /> {slaLabel}
+          </span>
         )}
       </div>
     );
@@ -89,22 +83,33 @@ export const DesignClaimStrip: React.FC<DesignClaimStripProps> = ({
           </div>
           <p className="text-[11px] text-amber-800/90 dark:text-amber-400/90 mt-0.5">
             {isCreativeMode
-              ? "Claim this task to start work, request target date adjustment, or submit artwork deliverables."
+              ? canClaim
+                ? "Claim this task to start work. The claim and counter-date window closes 48 hours after Marketing raised the request."
+                : claimDisabledReason || "The 48-hour claim and counter-date window has expired."
               : "Creative team has not claimed this design assignment yet."}
           </p>
         </div>
       </div>
 
       {isCreativeMode && (
-        <button
-          type="button"
-          onClick={onClaim}
-          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#714B67] hover:bg-[#5B3C53] text-white text-xs font-bold shadow-sm transition active:scale-98 cursor-pointer"
-        >
-          <UserCheck className="w-3.5 h-3.5 stroke-[2.2]" />
-          <span>Claim Task</span>
-          <ArrowRight className="w-3 h-3 stroke-[2.5]" />
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          {slaLabel && (
+            <span role="status" className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-white/80 px-2.5 py-1 text-[10px] font-semibold text-amber-900 dark:border-amber-800 dark:bg-black/20 dark:text-amber-200">
+              <Clock className="h-3 w-3" /> {slaLabel}
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={onClaim}
+            disabled={!canClaim}
+            title={!canClaim ? claimDisabledReason : "Claim this design request"}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#714B67] hover:bg-[#5B3C53] text-white text-xs font-bold shadow-sm transition active:scale-98 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-[#714B67]"
+          >
+            <UserCheck className="w-3.5 h-3.5 stroke-[2.2]" />
+            <span>{canClaim ? "Claim Task" : "Claim Window Closed"}</span>
+            {canClaim && <ArrowRight className="w-3 h-3 stroke-[2.5]" />}
+          </button>
+        </div>
       )}
     </div>
   );

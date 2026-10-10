@@ -192,6 +192,55 @@ export const InspectorSpecsTab: React.FC<InspectorSpecsTabProps> = ({
           </div>
 
           {/* ── 3. Reference URLs & Links ── */}
+          {requestTypes.includes("costing") && (
+            <section className="space-y-4 rounded-2xl bg-teal-50/45 p-5 dark:bg-teal-950/15">
+              <div>
+                <h3 className="text-sm font-bold text-slate-950 dark:text-white">Costing handoff details</h3>
+                <p className="mt-1 text-xs text-slate-600 dark:text-zinc-400">Costing schedule, customer identifiers, and submitted output for Marketing review.</p>
+              </div>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {[
+                  ["Required date", activeRequest.costingRequiredDate],
+                  ["Counter date offered", activeRequest.costingCounterDate],
+                  ["Quantity for costing", activeRequest.qtyDesignCosting],
+                  ["Unit", activeRequest.unitPcPack],
+                  ["Pieces per pack", activeRequest.unitPcPack === "Pack" ? activeRequest.qtyPerPack : "1"],
+                  ["Customer SKU", activeRequest.customerProductCode],
+                  ["Barcode", activeRequest.barcode],
+                  ["Brand", activeRequest.brandName],
+                ].map(([label, value]) => (
+                  <div key={label} className="rounded-xl bg-white/80 p-3 dark:bg-white/[0.04]">
+                    <span className="block text-[10px] font-semibold uppercase tracking-wide text-teal-800/75 dark:text-teal-300/75">{label}</span>
+                    <span className="mt-1 block break-words text-xs font-semibold text-slate-900 dark:text-zinc-100">{value || "—"}</span>
+                  </div>
+                ))}
+              </div>
+              {activeRequest.costingOutputPath && (
+                <div className="rounded-xl bg-white/80 p-3 dark:bg-white/[0.04]">
+                  <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-teal-800/75 dark:text-teal-300/75">Completed costing output</span>
+                  {/^https?:\/\//i.test(activeRequest.costingOutputPath) ? (
+                    <a href={activeRequest.costingOutputPath} target="_blank" rel="noreferrer" className="break-all text-xs font-semibold text-teal-800 underline underline-offset-2 dark:text-teal-300">{activeRequest.costingOutputPath}</a>
+                  ) : (
+                    <code className="break-all text-xs text-slate-800 dark:text-zinc-200">{activeRequest.costingOutputPath}</code>
+                  )}
+                </div>
+              )}
+              {activeRequest.customDetails?.length ? (
+                <div className="overflow-hidden rounded-xl bg-white/80 dark:bg-white/[0.025]">
+                  <div className="grid grid-cols-[1fr_1.5fr_1.5fr_auto] gap-3 px-4 py-2 text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:text-zinc-400"><span>Class</span><span>Characteristic</span><span>Value</span><span>Unit</span></div>
+                  {activeRequest.customDetails.map((detail, index) => (
+                    <div key={detail.id ?? `${detail.className}-${detail.characteristicName}-${index}`} className="grid grid-cols-[1fr_1.5fr_1.5fr_auto] gap-3 border-t border-slate-200/70 px-4 py-2.5 text-xs dark:border-white/[0.06]">
+                      <span className="break-words font-semibold">{detail.className || "—"}</span>
+                      <span className="break-words">{detail.characteristicName || "—"}</span>
+                      <span className="break-words font-medium">{detail.value || "—"}</span>
+                      <span>{detail.uom || "—"}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </section>
+          )}
+
           {feasibilityDetails.referenceLinks.length > 0 && (
             <div className="space-y-2">
               <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 font-display">

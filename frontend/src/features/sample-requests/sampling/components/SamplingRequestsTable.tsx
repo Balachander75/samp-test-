@@ -190,11 +190,26 @@ export const SamplingRequestsTable: React.FC<SamplingRequestsTableProps> = ({
                       <div className="font-semibold text-xs text-slate-900 truncate">
                         {row.productDescription || row.programName || "Commercial Product Sample"}
                       </div>
-                      {row.brandName && (
-                        <div className="text-[10.5px] text-slate-400 font-sans mt-0.5 truncate">
-                          Brand: {row.brandName}
-                        </div>
-                      )}
+                      <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                        {row.productCategory && (
+                          <span
+                            className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-50 text-[#006d32] border border-emerald-200/60"
+                            title={`Category: ${row.productCategory}${row.productSubCategory ? ' › ' + row.productSubCategory : ''}${row.productThirdCategory ? ' › ' + row.productThirdCategory : ''}`}
+                          >
+                            {row.productCategory}
+                            {row.productSubCategory && (
+                              <span className="opacity-75 font-normal ml-0.5">
+                                › {row.productSubCategory}
+                              </span>
+                            )}
+                          </span>
+                        )}
+                        {row.brandName && (
+                          <span className="text-[10px] text-slate-400 font-sans truncate">
+                            Brand: {row.brandName}
+                          </span>
+                        )}
+                      </div>
                     </td>
 
                     {/* Request Scope */}

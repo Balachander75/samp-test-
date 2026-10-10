@@ -6,10 +6,12 @@ import {
   searchProductsByMaterialApi,
   searchProductsByBindingApi,
   fetchBindingHierarchyApi,
+  fetchProductCategoriesApi,
   updateSampleRequestApi,
   createDesignBriefFromSampleApi,
 } from "@/infrastructure/api";
 import { ProductSearchResult, BindingHierarchyResponse } from "../types";
+import { ProductCategoryItem } from "@/types/master";
 import { useMasterData } from "../hooks/useMasterData";
 import { getNextWorkingDate } from "@/lib/holidayUtils";
 import { getCurrentBusinessYear } from "@/lib/businessYear";
@@ -29,6 +31,7 @@ import {
   AddProductCatalogStep,
   AddProductDesignStep,
   AddProductSamplingStep,
+  CatalogProductInspectModal,
 } from "./staging";
 
 export interface ProductStagingWorkspaceProps {
@@ -139,10 +142,17 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
   const [mediaTab, setMediaTab] = useState<"files" | "links">("files");
   const [modalError, setModalError] = useState<string | null>(null);
 
-  // Sampling Configuration State
+  // Sampling / Specification Configuration State
   const [sampleType, setSampleType] = useState<"full" | "partial">("full");
   const [partialRequirements, setPartialRequirements] = useState("");
-  const [samplingSearchMode, setSamplingSearchMode] = useState<"material_code" | "binding">("material_code");
+  const [samplingSearchMode, setSamplingSearchMode] = useState<"new" | "material_code" | "binding">("new");
+  const [designNeeded, setDesignNeeded] = useState<boolean | null>(null);
+
+  // Commercial Taxonomy Hierarchy State
+  const [productCategories, setProductCategories] = useState<ProductCategoryItem[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedSubCategory, setSelectedSubCategory] = useState("");
+  const [selectedThirdCategory, setSelectedThirdCategory] = useState("");
 
   // Mode A: Search by Material Code
   const [materialSearchQuery, setMaterialSearchQuery] = useState("");
@@ -154,8 +164,11 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
   // Mode B: Search by Binding (Binding 1 & Binding 2)
   const [bindingHierarchy, setBindingHierarchy] = useState<BindingHierarchyResponse>({
     binding1_options: [],
+    binding2_options: [],
     hierarchy: {},
   });
+  const [isLoadingBindingHierarchy, setIsLoadingBindingHierarchy] = useState(false);
+  const bindingHierarchySequenceRef = useRef(0);
   const [selectedBinding1, setSelectedBinding1] = useState("");
   const [selectedBinding2, setSelectedBinding2] = useState("");
   const [bindingSearchResults, setBindingSearchResults] = useState<ProductSearchResult[]>([]);
@@ -165,12 +178,21 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
   // Staged product description for sampling item
   const [samplingDescription, setSamplingDescription] = useState("");
   const [catalogProductDescription, setCatalogProductDescription] = useState("");
+  const [qtyDesignCosting, setQtyDesignCosting] = useState("");
+  const [customerProductCode, setCustomerProductCode] = useState("");
+  const [costingBarcode, setCostingBarcode] = useState("");
+  const [brandName, setBrandName] = useState("");
+  const [unitPcPack, setUnitPcPack] = useState("PC");
+  const [qtyPerPack, setQtyPerPack] = useState("1");
+  const [costingRequiredDate, setCostingRequiredDate] = useState("");
 
   // Toast / Notifications
   const [toastMsg, setToastMsg] = useState<{ text: string; tone: "success" | "error" } | null>(null);
   const [isSubmittingAll, setIsSubmittingAll] = useState(false);
   const [isReleasing, setIsReleasing] = useState(false);
+  const [isSendingCostingRequest, setIsSendingCostingRequest] = useState(false);
   const [inspectingProduct, setInspectingProduct] = useState<StagedProductItem | null>(null);
+  const [inspectingCatalogProduct, setInspectingCatalogProduct] = useState<ProductSearchResult | null>(null);
   const [editingProduct, setEditingProduct] = useState<StagedProductItem | null>(null);
 
   // Auto-save refs to guarantee zero data loss if user navigates away or switches tabs
@@ -236,16 +258,37 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
     if (masterDataError) showToast(masterDataError, "error");
   }, [masterDataError]);
 
+  useEffect(() => {
+    fetchProductCategoriesApi()
+      .then((res) => {
+        if (res?.categories) {
+          setProductCategories(res.categories);
+        }
+      })
+      .catch((err) => console.error("Failed to load product categories:", err));
+  }, []);
+
   const resetSamplingState = () => {
     setSampleType("full");
     setPartialRequirements("");
-    setSamplingSearchMode("material_code");
+    setSamplingSearchMode("new");
+    setDesignNeeded(null);
     setMaterialSearchQuery("");
     setSelectedDbSample(null);
+    setSelectedCategory("");
+    setSelectedSubCategory("");
+    setSelectedThirdCategory("");
     setSelectedBinding1("");
     setSelectedBinding2("");
     setSamplingDescription("");
     setCatalogProductDescription("");
+    setQtyDesignCosting("");
+    setCustomerProductCode("");
+    setCostingBarcode("");
+    setBrandName("");
+    setUnitPcPack("PC");
+    setQtyPerPack("1");
+    setCostingRequiredDate("");
     setBindingSearchResults([]);
     setModalError(null);
   };
@@ -264,6 +307,18 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
     setModalError(null);
   };
 
+  const clearMockupDesignChoice = () => {
+    if (!selectedScopes.includes("mockup")) return;
+    setDesignNeeded(null);
+    setSelectedScopes((prev) => prev.filter((scope) => scope !== "design"));
+    setScopeTimestamps((prev) => {
+      const next = { ...prev };
+      delete next.design;
+      return next;
+    });
+    resetDesignState();
+  };
+
   // Open modal starting in Step 1 (Deliverables Selection)
   const handleOpenAddProduct = () => {
     setEditingProduct(null);
@@ -278,6 +333,44 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
   // Edit existing staged product specification
   const handleEditProduct = (item: StagedProductItem) => {
     setEditingProduct(item);
+    const editSearchMode =
+      item.creationMode === "binding" || item.samplingMetadata?.searchMode === "binding"
+        ? "binding"
+        : item.creationMode === "material_code" || item.catalogMetadata?.sourceMaterialCode || item.sourceSampleCode
+          ? "material_code"
+          : "new";
+    setSamplingSearchMode(editSearchMode);
+    setSelectedDbSample(null);
+    setMaterialSearchQuery("");
+    setDesignNeeded(
+      item.scopes.includes("mockup")
+        ? editSearchMode === "new" || item.scopes.includes("design")
+        : null
+    );
+    setSamplingDescription(item.productDescription);
+    setCatalogProductDescription(item.catalogMetadata ? item.productDescription : "");
+    setQtyDesignCosting(String(item.qtyDesignCosting || ""));
+    setCustomerProductCode(item.customerProductCode || "");
+    setCostingBarcode(item.barcode || "");
+    setBrandName(item.brandName || "");
+    setUnitPcPack(item.unitPcPack || "PC");
+    setQtyPerPack(item.qtyPerPack || "1");
+    setCostingRequiredDate(item.costingRequiredDate || "");
+    setSampleType(item.samplingMetadata?.sampleType || "full");
+    setPartialRequirements(item.samplingMetadata?.partialRequirements || "");
+    setSelectedCategory(item.productCategory || "");
+    setSelectedSubCategory(item.productSubCategory || "");
+    setSelectedThirdCategory(item.productThirdCategory || "");
+    setSelectedBinding1(
+      editSearchMode === "new"
+        ? ""
+        : item.samplingMetadata?.bindingType1 || item.catalogMetadata?.bindingType1 || item.customBinding1 || ""
+    );
+    setSelectedBinding2(
+      editSearchMode === "new"
+        ? ""
+        : item.samplingMetadata?.bindingType2 || item.catalogMetadata?.bindingType2 || item.customBinding2 || ""
+    );
     setSelectedScopes([...item.scopes]);
     const cleanedTimestamps: Record<string, string> = {};
     if (item.requestTypeTimestamps) {
@@ -301,48 +394,69 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
       setDesignDesc(item.productDescription);
     }
 
-    if (item.samplingMetadata) {
-      setSamplingDescription(item.productDescription);
-      setSampleType(item.samplingMetadata.sampleType || "full");
-      setPartialRequirements(item.samplingMetadata.partialRequirements || "");
-      setSelectedBinding1(item.samplingMetadata.bindingType1 || item.customBinding1 || "");
-      setSelectedBinding2(item.samplingMetadata.bindingType2 || item.customBinding2 || "");
-    }
-
-    if (item.catalogMetadata) {
-      setCatalogProductDescription(item.productDescription);
-      setSelectedBinding1(item.catalogMetadata.bindingType1 || item.customBinding1 || "");
-      setSelectedBinding2(item.catalogMetadata.bindingType2 || item.customBinding2 || "");
-    }
-
     if (item.scopes.includes("design") && item.scopes.length === 1) {
       setAddModalStep("design_brief");
-    } else if (item.scopes.includes("sample")) {
-      setAddModalStep("sampling_config");
-    } else if (item.scopes.includes("mockup") || item.scopes.includes("costing")) {
-      setAddModalStep("product_search");
     } else {
-      setAddModalStep("scopes");
+      setAddModalStep("sampling_config");
     }
 
     setIsAddModalOpen(true);
   };
 
-  // Fetch binding hierarchy and initial database materials on demand
+  // Fetch current category-specific bindings; ignore responses for filters the user has since changed.
   useEffect(() => {
     if (
-      isAddModalOpen &&
-      (addModalStep === "sampling_config" || addModalStep === "product_search")
+      !isAddModalOpen ||
+      (addModalStep !== "sampling_config" && addModalStep !== "product_search")
     ) {
-      if (bindingHierarchy.binding1_options.length === 0) {
-        fetchBindingHierarchyApi()
-          .then((res) => {
-            setBindingHierarchy(res);
-          })
-          .catch((err) => console.error("Failed to fetch binding hierarchy:", err));
-      }
+      bindingHierarchySequenceRef.current += 1;
+      setIsLoadingBindingHierarchy(false);
+      return;
     }
-  }, [isAddModalOpen, addModalStep]);
+    const requestSequence = ++bindingHierarchySequenceRef.current;
+    setIsLoadingBindingHierarchy(true);
+    fetchBindingHierarchyApi(
+      selectedCategory || undefined,
+      selectedSubCategory || undefined,
+      selectedThirdCategory || undefined
+    )
+      .then((res) => {
+        if (bindingHierarchySequenceRef.current !== requestSequence) return;
+        setBindingHierarchy(res);
+        if (selectedBinding1 && !res.binding1_options.includes(selectedBinding1)) {
+          setSelectedBinding1("");
+          setSelectedBinding2("");
+        } else if (selectedBinding2) {
+          const validB2 = res.hierarchy[selectedBinding1] || res.binding2_options || [];
+          if (!validB2.includes(selectedBinding2)) {
+            setSelectedBinding2("");
+          }
+        }
+      })
+      .catch((err) => {
+        if (bindingHierarchySequenceRef.current !== requestSequence) return;
+        setBindingHierarchy({ binding1_options: [], binding2_options: [], hierarchy: {} });
+        setSelectedBinding1("");
+        setSelectedBinding2("");
+        console.error("Failed to fetch binding hierarchy:", err);
+      })
+      .finally(() => {
+        if (bindingHierarchySequenceRef.current === requestSequence) {
+          setIsLoadingBindingHierarchy(false);
+        }
+      });
+    return () => {
+      if (bindingHierarchySequenceRef.current === requestSequence) {
+        bindingHierarchySequenceRef.current += 1;
+      }
+    };
+  }, [
+    isAddModalOpen,
+    addModalStep,
+    selectedCategory,
+    selectedSubCategory,
+    selectedThirdCategory,
+  ]);
 
   // Debounced live material code search
   useEffect(() => {
@@ -379,7 +493,7 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
     };
   }, [materialSearchQuery, addModalStep, samplingSearchMode, isAddModalOpen]);
 
-  // Dynamic filter for Binding 1 & Binding 2
+  // Dynamic filter for Taxonomy Category & Binding
   useEffect(() => {
     if (
       !isAddModalOpen ||
@@ -390,18 +504,24 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
       setIsSearchingBinding(false);
       return;
     }
-    if (!selectedBinding1) {
+    if (!selectedBinding1 && !selectedBinding2 && !selectedCategory && !selectedSubCategory && !selectedThirdCategory) {
       setBindingSearchResults([]);
       setIsSearchingBinding(false);
       return;
     }
     const requestSequence = ++bindingSearchSequenceRef.current;
     setIsSearchingBinding(true);
-    // The sampling prototype list is filtered by Binding 1. Binding 2 can
-    // still describe the requested variant, but must not hide matching products.
-    const binding2Filter = addModalStep === "sampling_config" ? undefined : selectedBinding2;
-    const resultLimit = addModalStep === "sampling_config" ? undefined : 100;
-    searchProductsByBindingApi(selectedBinding1, binding2Filter, undefined, undefined, undefined, resultLimit)
+    searchProductsByBindingApi(
+      selectedBinding1 || undefined,
+      selectedBinding2 || undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      selectedCategory || undefined,
+      selectedSubCategory || undefined,
+      selectedThirdCategory || undefined
+    )
       .then((res) => {
         if (bindingSearchSequenceRef.current === requestSequence) {
           setBindingSearchResults(res);
@@ -418,13 +538,60 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
         bindingSearchSequenceRef.current += 1;
       }
     };
-  }, [selectedBinding1, selectedBinding2, addModalStep, samplingSearchMode, isAddModalOpen]);
+  }, [
+    selectedBinding1,
+    selectedBinding2,
+    selectedCategory,
+    selectedSubCategory,
+    selectedThirdCategory,
+    addModalStep,
+    samplingSearchMode,
+    isAddModalOpen,
+  ]);
 
   const handleSelectDbSample = (item: ProductSearchResult) => {
+    if (selectedDbSample?.id !== item.id) clearMockupDesignChoice();
+    const keepCurrentFilters = samplingSearchMode === "binding";
+    const nextCategory = item.product_category || (keepCurrentFilters ? selectedCategory : "");
+    const nextSubCategory = item.product_sub_category || (keepCurrentFilters ? selectedSubCategory : "");
+    const nextThirdCategory = item.product_third_category || (keepCurrentFilters ? selectedThirdCategory : "");
+    if (
+      nextCategory !== selectedCategory ||
+      nextSubCategory !== selectedSubCategory ||
+      nextThirdCategory !== selectedThirdCategory
+    ) {
+      setIsLoadingBindingHierarchy(true);
+    }
     setSelectedDbSample(item);
     setSamplingDescription(item.product_description || "");
-    if (item.binding_type_1) setSelectedBinding1(item.binding_type_1);
-    if (item.binding_type_2) setSelectedBinding2(item.binding_type_2);
+    setSelectedCategory(nextCategory);
+    setSelectedSubCategory(nextSubCategory);
+    setSelectedThirdCategory(nextThirdCategory);
+    setSelectedBinding1(item.binding_type_1 || (keepCurrentFilters ? selectedBinding1 : ""));
+    setSelectedBinding2(item.binding_type_2 || (keepCurrentFilters ? selectedBinding2 : ""));
+  };
+
+  const handleDesignNeededChange = (needed: boolean) => {
+    setDesignNeeded(needed);
+    if (needed) {
+      const timestamp = new Date().toISOString();
+      setSelectedScopes((prev) =>
+        prev.includes("design") ? prev : ["design", ...prev]
+      );
+      setScopeTimestamps((prev) => ({ ...prev, design: prev.design || timestamp }));
+      setDesignDesc(selectedDbSample?.product_description || samplingDescription);
+      setModalError(null);
+      setAddModalStep("design_brief");
+      return;
+    }
+
+    setSelectedScopes((prev) => prev.filter((scope) => scope !== "design"));
+    setScopeTimestamps((prev) => {
+      const next = { ...prev };
+      delete next.design;
+      return next;
+    });
+    resetDesignState();
   };
 
   const handleSelectCatalogProduct = (item: ProductSearchResult) => {
@@ -539,29 +706,43 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
     setWebLinks((prev) => prev.filter((_, i) => i !== idx));
   };
 
-  const isScopeDisabled = (_scopeId: DeliverableScopeId): boolean => {
+  const isScopeDisabled = (scopeId: DeliverableScopeId): boolean => {
+    if (scopeId === "design" && selectedScopes.includes("mockup")) return true;
     // Up to all four scopes (Design, Mockup, Sample, Costing) may be selected
     return false;
   };
 
   const handleToggleScope = (scopeId: DeliverableScopeId) => {
-    setSelectedScopes((prev) => {
-      if (prev.includes(scopeId)) {
-        setScopeTimestamps((st) => {
-          const next = { ...st };
-          delete next[scopeId];
-          return next;
-        });
-        return prev.filter((s) => s !== scopeId);
+    if (selectedScopes.includes(scopeId)) {
+      const scopesToRemove: DeliverableScopeId[] =
+        scopeId === "mockup" ? ["mockup", "design"] : [scopeId];
+      setSelectedScopes((prev) =>
+        prev.filter((scope) => !scopesToRemove.includes(scope))
+      );
+      setScopeTimestamps((prev) => {
+        const next = { ...prev };
+        scopesToRemove.forEach((scope) => delete next[scope]);
+        return next;
+      });
+      if (scopeId === "mockup") {
+        setDesignNeeded(null);
+        resetDesignState();
       }
-      setScopeTimestamps((st) => ({
-        ...st,
-        [scopeId]: new Date().toISOString(),
-      }));
-      const pipelineOrder: DeliverableScopeId[] = ["design", "mockup", "sample", "costing"];
-      const next = [...prev, scopeId];
-      return pipelineOrder.filter((id) => next.includes(id));
+      return;
+    }
+
+    const pipelineOrder: DeliverableScopeId[] = ["design", "mockup", "sample", "costing"];
+    const nextScopes = [...selectedScopes, scopeId].filter((scope) => !(scopeId === "mockup" && scope === "design"));
+    setSelectedScopes(pipelineOrder.filter((scope) => nextScopes.includes(scope)));
+    setScopeTimestamps((prev) => {
+      const next = { ...prev, [scopeId]: new Date().toISOString() };
+      if (scopeId === "mockup") delete next.design;
+      return next;
     });
+    if (scopeId === "mockup") {
+      setDesignNeeded(null);
+      resetDesignState();
+    }
   };
 
   // Step 1: Proceed from Deliverables Scopes to next step
@@ -579,12 +760,9 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
       return;
     }
 
-    if (selectedScopes.includes("sample")) {
-      setAddModalStep("sampling_config");
-      setModalError(null);
-      return;
-    }
-    setAddModalStep("product_search");
+    // Any other scope (sampling, mockup, costing) opens the unified product config!
+    setSamplingSearchMode(selectedScopes.includes("mockup") ? "material_code" : "new");
+    setAddModalStep("sampling_config");
     setModalError(null);
   };
 
@@ -608,9 +786,9 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
       return;
     }
 
-    if (selectedScopes.includes("mockup")) {
+    if (selectedScopes.includes("mockup") || selectedScopes.includes("sample") || selectedScopes.includes("costing")) {
       setModalError(null);
-      setAddModalStep("product_search");
+      setAddModalStep("sampling_config");
       return;
     }
 
@@ -742,6 +920,9 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
         requestTypeTimestamps: { ...scopeTimestamps },
         sourceSampleRequestId: selectedDbSample.id,
         sourceSampleCode: selectedDbSample.material_code,
+        productCategory: selectedDbSample.product_category || editingProduct.productCategory,
+        productSubCategory: selectedDbSample.product_sub_category || editingProduct.productSubCategory,
+        productThirdCategory: selectedDbSample.product_third_category || editingProduct.productThirdCategory,
         customBinding1: selectedDbSample.binding_type_1 || selectedBinding1 || undefined,
         customBinding2: selectedDbSample.binding_type_2 || selectedBinding2 || undefined,
         catalogMetadata: {
@@ -766,6 +947,9 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
         creationMode: "material_code",
         sourceSampleRequestId: selectedDbSample.id,
         sourceSampleCode: selectedDbSample.material_code,
+        productCategory: selectedDbSample.product_category,
+        productSubCategory: selectedDbSample.product_sub_category,
+        productThirdCategory: selectedDbSample.product_third_category,
         customBinding1: selectedDbSample.binding_type_1 || selectedBinding1 || undefined,
         customBinding2: selectedDbSample.binding_type_2 || selectedBinding2 || undefined,
         stagedDate: now.toISOString().split("T")[0],
@@ -815,7 +999,26 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
   const handleStageSamplingProduct = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (sampleType === "partial" && !partialRequirements.trim()) {
+    if (selectedScopes.includes("costing")) {
+      if (!qtyDesignCosting.trim() || !Number.isInteger(Number(qtyDesignCosting)) || Number(qtyDesignCosting) < 1) {
+        setModalError("Enter a whole-number quantity for costing (minimum 1).");
+        return;
+      }
+      if (!customerProductCode.trim() || !costingBarcode.trim() || !brandName.trim()) {
+        setModalError("Customer SKU, barcode, and brand are required for costing.");
+        return;
+      }
+      if (!costingRequiredDate.trim()) {
+        setModalError("Select the date Costing is required.");
+        return;
+      }
+      if (unitPcPack === "Pack" && (!qtyPerPack.trim() || !Number.isInteger(Number(qtyPerPack)) || Number(qtyPerPack) < 1)) {
+        setModalError("Enter the number of pieces in each pack.");
+        return;
+      }
+    }
+
+    if (selectedScopes.includes("sample") && sampleType === "partial" && !partialRequirements.trim()) {
       setModalError("Partial sample details are mandatory.");
       showToast("Partial sample details are required.", "error");
       return;
@@ -824,26 +1027,70 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
     const desc =
       samplingDescription.trim() ||
       selectedDbSample?.product_description ||
-      (selectedBinding1
-        ? `${selectedBinding1} Notebook${selectedBinding2 ? ` (${selectedBinding2})` : ""}`
-        : "");
+      "";
 
     if (!desc) {
-      setModalError("Please select a sample from the database or enter a product description.");
-      showToast("Please choose a sample or enter product description.", "error");
+      setModalError(
+        samplingSearchMode === "new"
+          ? "Product description is required."
+          : "Please select a product from search or enter a product description."
+      );
+      showToast("Please enter product description or select a product.", "error");
       return;
     }
 
+    if (
+      selectedScopes.includes("mockup") &&
+      samplingSearchMode !== "new" &&
+      selectedDbSample &&
+      designNeeded === null
+    ) {
+      setModalError("Choose whether this product also needs a design request.");
+      return;
+    }
+
+    const requiresDesign =
+      selectedScopes.includes("mockup") &&
+      (samplingSearchMode === "new" || designNeeded === true);
+    if (requiresDesign) {
+      setDesignNeeded(true);
+      setSelectedScopes((prev) => prev.includes("design") ? prev : ["design", ...prev]);
+      setScopeTimestamps((prev) => ({
+        ...prev,
+        design: prev.design || new Date().toISOString(),
+      }));
+      if (!designDesc.trim()) setDesignDesc(selectedDbSample?.product_description || desc);
+
+      if (
+        !designDesc.trim() ||
+        designCount === "" ||
+        Number(designCount) < 1 ||
+        !designDueDate.trim()
+      ) {
+        setModalError(null);
+        setAddModalStep("design_brief");
+        return;
+      }
+    }
+
+    const plantCode = programContext.targetPlant
+      ? programContext.targetPlant.split(/[-–\s]/)[0]
+      : "1505";
+    const prefix = selectedScopes.includes("sample")
+      ? "SMP"
+      : selectedScopes.includes("mockup")
+        ? "MUP"
+        : "PRD";
     const matCode =
       selectedDbSample?.material_code ||
-      (programContext.targetPlant
-        ? `SMP-${programContext.targetPlant.split(/[-–\s]/)[0]}-${Math.floor(1000 + Math.random() * 9000)}`
-        : `SMP-1505-${Math.floor(1000 + Math.random() * 9000)}`);
+      `${prefix}-${plantCode}-${Math.floor(1000 + Math.random() * 9000)}`;
 
     const now = new Date();
     const formattedDate = now.toISOString().split("T")[0];
     const formattedTime = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    const isCustom = samplingSearchMode === "binding";
+    const isNewProduct = samplingSearchMode === "new";
+    const bindingType1 = isNewProduct ? undefined : selectedBinding1 || selectedDbSample?.binding_type_1;
+    const bindingType2 = isNewProduct ? undefined : selectedBinding2 || selectedDbSample?.binding_type_2;
 
     let nextItem: StagedProductItem;
     let nextProducts: StagedProductItem[];
@@ -854,21 +1101,52 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
         productDescription: desc,
         scopes: [...selectedScopes],
         requestTypeTimestamps: { ...scopeTimestamps },
-        sourceSampleRequestId: selectedDbSample?.id || editingProduct.sourceSampleRequestId,
-        sourceSampleCode: selectedDbSample?.material_code || editingProduct.sourceSampleCode,
-        customBinding1: selectedBinding1 || selectedDbSample?.binding_type_1 || editingProduct.customBinding1,
-        customBinding2: selectedBinding2 || selectedDbSample?.binding_type_2 || editingProduct.customBinding2,
-        samplingMetadata: {
+        creationMode: samplingSearchMode,
+        ...(selectedScopes.includes("costing") && {
+          qtyDesignCosting: qtyDesignCosting.trim(),
+          customerProductCode: customerProductCode.trim(),
+          barcode: costingBarcode.trim(),
+          brandName: brandName.trim(),
+          unitPcPack,
+          qtyPerPack: unitPcPack === "Pack" ? qtyPerPack.trim() : "1",
+          costingRequiredDate: costingRequiredDate.trim(),
+        }),
+        sourceSampleRequestId: isNewProduct ? undefined : selectedDbSample?.id || editingProduct.sourceSampleRequestId,
+        sourceSampleCode: isNewProduct ? undefined : selectedDbSample?.material_code || editingProduct.sourceSampleCode,
+        productCategory: selectedDbSample?.product_category || selectedCategory || (isNewProduct ? undefined : editingProduct.productCategory),
+        productSubCategory: selectedDbSample?.product_sub_category || selectedSubCategory || (isNewProduct ? undefined : editingProduct.productSubCategory),
+        productThirdCategory: selectedDbSample?.product_third_category || selectedThirdCategory || (isNewProduct ? undefined : editingProduct.productThirdCategory),
+        customBinding1: bindingType1 || (isNewProduct ? undefined : editingProduct.customBinding1),
+        customBinding2: bindingType2 || (isNewProduct ? undefined : editingProduct.customBinding2),
+        samplingMetadata: selectedScopes.includes("sample") ? {
           sampleType,
           partialRequirements: partialRequirements.trim() || undefined,
           searchMode: samplingSearchMode,
-          sourceSampleId: selectedDbSample?.id || editingProduct.samplingMetadata?.sourceSampleId,
-          sourceSrNumber: selectedDbSample?.sr_number || editingProduct.samplingMetadata?.sourceSrNumber,
-          selectedMaterialCode: selectedDbSample?.material_code || editingProduct.samplingMetadata?.selectedMaterialCode,
-          bindingType1: selectedBinding1 || selectedDbSample?.binding_type_1 || editingProduct.samplingMetadata?.bindingType1,
-          bindingType2: selectedBinding2 || selectedDbSample?.binding_type_2 || editingProduct.samplingMetadata?.bindingType2,
-          customerReference: selectedDbSample?.customer || editingProduct.samplingMetadata?.customerReference,
-          targetPlant: selectedDbSample?.target_plant || editingProduct.samplingMetadata?.targetPlant,
+          sourceSampleId: isNewProduct ? undefined : selectedDbSample?.id || editingProduct.samplingMetadata?.sourceSampleId,
+          sourceSrNumber: isNewProduct ? undefined : selectedDbSample?.sr_number || editingProduct.samplingMetadata?.sourceSrNumber,
+          selectedMaterialCode: isNewProduct ? undefined : selectedDbSample?.material_code || editingProduct.samplingMetadata?.selectedMaterialCode,
+          bindingType1: bindingType1 || (isNewProduct ? undefined : editingProduct.samplingMetadata?.bindingType1),
+          bindingType2: bindingType2 || (isNewProduct ? undefined : editingProduct.samplingMetadata?.bindingType2),
+          customerReference: selectedDbSample?.customer || (isNewProduct ? undefined : editingProduct.samplingMetadata?.customerReference),
+          targetPlant: selectedDbSample?.target_plant || (isNewProduct ? undefined : editingProduct.samplingMetadata?.targetPlant),
+        } : editingProduct.samplingMetadata,
+        designMetadata: selectedScopes.includes("design") ? {
+          numberOfDesigns: Number(designCount) || 1,
+          designRequiredDate: designDueDate.trim(),
+          trend: designTrend.trim(),
+          targetAudience: designAudience.trim(),
+          remarks: designRemarks.trim(),
+          images: uploadedImages,
+          webLinks,
+          referenceImage: uploadedImages[0]?.url || webLinks[0] || "",
+        } : undefined,
+        catalogMetadata: {
+          sourceProductId: isNewProduct ? undefined : selectedDbSample?.id || editingProduct.catalogMetadata?.sourceProductId,
+          sourceRequestNumber: isNewProduct ? undefined : selectedDbSample?.sr_number || editingProduct.catalogMetadata?.sourceRequestNumber,
+          sourceMaterialCode: isNewProduct ? undefined : selectedDbSample?.material_code || editingProduct.catalogMetadata?.sourceMaterialCode,
+          sourceDescription: selectedDbSample?.product_description || desc,
+          bindingType1: bindingType1 || (isNewProduct ? undefined : editingProduct.catalogMetadata?.bindingType1),
+          bindingType2: bindingType2 || (isNewProduct ? undefined : editingProduct.catalogMetadata?.bindingType2),
         },
       };
       nextProducts = stagedProducts.map((p) => (p.id === editingProduct.id ? nextItem : p));
@@ -877,35 +1155,67 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
     } else {
       nextItem = {
         id: `staged-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-        materialCode: isCustom && !selectedDbSample ? "" : matCode,
+        materialCode: matCode,
         productDescription: desc,
         scopes: [...selectedScopes],
         requestTypeTimestamps: { ...scopeTimestamps },
-        creationMode: isCustom ? "binding" : "material_code",
+        creationMode: samplingSearchMode,
+        ...(selectedScopes.includes("costing") && {
+          qtyDesignCosting: qtyDesignCosting.trim(),
+          customerProductCode: customerProductCode.trim(),
+          barcode: costingBarcode.trim(),
+          brandName: brandName.trim(),
+          unitPcPack,
+          qtyPerPack: unitPcPack === "Pack" ? qtyPerPack.trim() : "1",
+          costingRequiredDate: costingRequiredDate.trim(),
+        }),
         sourceSampleRequestId: selectedDbSample?.id,
         sourceSampleCode: selectedDbSample?.material_code,
-        customBinding1: selectedBinding1 || selectedDbSample?.binding_type_1,
-        customBinding2: selectedBinding2 || selectedDbSample?.binding_type_2,
+        productCategory: selectedDbSample?.product_category || selectedCategory || undefined,
+        productSubCategory: selectedDbSample?.product_sub_category || selectedSubCategory || undefined,
+        productThirdCategory: selectedDbSample?.product_third_category || selectedThirdCategory || undefined,
+        customBinding1: bindingType1,
+        customBinding2: bindingType2,
         stagedDate: formattedDate,
         timestamp: formattedTime,
         isDraftSaved: false,
-        samplingMetadata: {
-          sampleType,
-          partialRequirements: partialRequirements.trim() || undefined,
-          searchMode: samplingSearchMode,
-          sourceSampleId: selectedDbSample?.id,
-          sourceSrNumber: selectedDbSample?.sr_number,
-          selectedMaterialCode: selectedDbSample?.material_code,
-          bindingType1: selectedBinding1 || selectedDbSample?.binding_type_1,
-          bindingType2: selectedBinding2 || selectedDbSample?.binding_type_2,
-          customerReference: selectedDbSample?.customer,
-          targetPlant: selectedDbSample?.target_plant,
+        ...(selectedScopes.includes("design") && {
+          designMetadata: {
+            numberOfDesigns: Number(designCount) || 1,
+            designRequiredDate: designDueDate.trim(),
+            trend: designTrend.trim(),
+            targetAudience: designAudience.trim(),
+            remarks: designRemarks.trim(),
+            images: uploadedImages,
+            webLinks,
+            referenceImage: uploadedImages[0]?.url || webLinks[0] || "",
+          },
+        }),
+        ...(selectedScopes.includes("sample") && {
+          samplingMetadata: {
+            sampleType,
+            partialRequirements: partialRequirements.trim() || undefined,
+            searchMode: samplingSearchMode,
+            sourceSampleId: selectedDbSample?.id,
+            sourceSrNumber: selectedDbSample?.sr_number,
+            selectedMaterialCode: selectedDbSample?.material_code,
+            bindingType1,
+            bindingType2,
+            customerReference: selectedDbSample?.customer,
+            targetPlant: selectedDbSample?.target_plant,
+          },
+        }),
+        catalogMetadata: {
+          sourceProductId: selectedDbSample?.id,
+          sourceRequestNumber: selectedDbSample?.sr_number,
+          sourceMaterialCode: selectedDbSample?.material_code,
+          sourceDescription: selectedDbSample?.product_description || desc,
+          bindingType1,
+          bindingType2,
         },
       };
       nextProducts = [...stagedProducts, nextItem];
-      showToast(
-        `Added Sampling (${sampleType === "full" ? "Full Sample" : "Partial Sample"}): "${nextItem.productDescription}" to Product Staging.`
-      );
+      showToast(`Added "${nextItem.productDescription}" to Product Staging.`);
     }
 
     setStagedProducts(nextProducts);
@@ -1036,6 +1346,53 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
     }
   };
 
+  const handleSendCostingRequest = async () => {
+    if (!stagedProducts.length || stagedProducts.some((item) => !item.scopes.includes("costing"))) {
+      showToast("Add Costing to every staged product before sending this batch.", "error");
+      return;
+    }
+    const incomplete = stagedProducts.find((item) =>
+      !item.qtyDesignCosting || Number(item.qtyDesignCosting) < 1 ||
+      !item.customerProductCode?.trim() || !item.barcode?.trim() || !item.brandName?.trim() ||
+      !item.costingRequiredDate?.trim() ||
+      !item.unitPcPack || (item.unitPcPack === "Pack" && (!item.qtyPerPack || Number(item.qtyPerPack) < 1))
+    );
+    if (incomplete) {
+      showToast(`Complete Costing Details for "${incomplete.productDescription}" before sending.`, "error");
+      return;
+    }
+
+    setIsSendingCostingRequest(true);
+    hasAutoSavedRef.current = true;
+    try {
+      const saved = await autoSaveStagedProductsToDraft(stagedProducts, programContext, user);
+      if (!saved.success) throw new Error("Could not save costing request details.");
+
+      const savedItems = stagedProducts.filter((item) => item.savedRequestId);
+      if (!savedItems.length && saved.requestId) {
+        stagedProducts[0].savedRequestId = saved.requestId;
+      }
+      const requestsToSend = savedItems.length ? savedItems : stagedProducts.filter((item) => item.savedRequestId);
+      if (!requestsToSend.length) throw new Error("The saved costing request could not be found.");
+
+      for (const item of requestsToSend) {
+        const updated = await updateSampleRequestApi(item.savedRequestId!, { status: "Costing Review" });
+        if (!updated) throw new Error(`Could not send ${item.productDescription} to Costing.`);
+      }
+
+      sessionStorage.removeItem("samp_active_program_form");
+      sessionStorage.removeItem("samp_active_staged_products");
+      setStagedProducts([]);
+      showToast(`Sent ${requestsToSend.length} costing request(s) to the Costing queue.`);
+      setTimeout(() => navigate("/sample-requests", { state: { refresh: Date.now(), stage: "costing" } }), 700);
+    } catch (error) {
+      console.error("Failed to send costing request:", error);
+      showToast(error instanceof Error ? error.message : "The costing request could not be sent.", "error");
+    } finally {
+      setIsSendingCostingRequest(false);
+    }
+  };
+
   // Explicitly release the staged draft request to active PMT or Creative workflow
   const handleReleaseRequest = async () => {
     if (!programContext.openedFromDraft) return;
@@ -1107,6 +1464,8 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
           stagedProducts={stagedProducts}
           isSubmittingAll={isSubmittingAll}
           isReleasing={isReleasing}
+          onSendCostingRequest={handleSendCostingRequest}
+          isSendingCostingRequest={isSendingCostingRequest}
           onNavigateBack={handleReturnToDesk}
           onOpenAddModal={handleOpenAddProduct}
           onClearAll={() => setStagedProducts([])}
@@ -1150,6 +1509,10 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
                 programContext={programContext}
                 selectedScopes={selectedScopes}
                 isEditing={Boolean(editingProduct)}
+                productAlreadySelected={Boolean(
+                  selectedScopes.includes("mockup") &&
+                    (selectedDbSample || samplingDescription.trim() || editingProduct)
+                )}
                 designDesc={designDesc}
                 designCount={designCount}
                 designDueDate={designDueDate}
@@ -1176,7 +1539,11 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
                 onAddWebLink={handleAddWebLink}
                 onRemoveWebLink={handleRemoveWebLink}
                 onBackToScopes={() => {
-                  setAddModalStep("scopes");
+                  const hasMockupProduct = Boolean(
+                    selectedScopes.includes("mockup") &&
+                      (selectedDbSample || samplingDescription.trim() || editingProduct)
+                  );
+                  setAddModalStep(hasMockupProduct ? "sampling_config" : "scopes");
                   setModalError(null);
                 }}
                 onClose={() => setIsAddModalOpen(false)}
@@ -1184,92 +1551,141 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
               />
             )}
 
-            {addModalStep === "sampling_config" && (
+            {(addModalStep === "sampling_config" || addModalStep === "product_search") && (
               <AddProductSamplingStep
+                selectedScopes={selectedScopes}
                 modalError={modalError}
                 sampleType={sampleType}
                 partialRequirements={partialRequirements}
                 samplingSearchMode={samplingSearchMode}
+                productDescription={samplingDescription}
+                qtyDesignCosting={qtyDesignCosting}
+                customerProductCode={customerProductCode}
+                barcode={costingBarcode}
+                brandName={brandName}
+                unitPcPack={unitPcPack}
+                qtyPerPack={qtyPerPack}
+                costingRequiredDate={costingRequiredDate}
                 materialSearchQuery={materialSearchQuery}
                 materialSearchResults={materialSearchResults}
                 isSearchingMaterial={isSearchingMaterial}
                 selectedDbSample={selectedDbSample}
                 bindingHierarchy={bindingHierarchy}
+                isLoadingBindingHierarchy={isLoadingBindingHierarchy}
                 selectedBinding1={selectedBinding1}
                 selectedBinding2={selectedBinding2}
+                productCategories={productCategories}
+                selectedCategory={selectedCategory}
+                selectedSubCategory={selectedSubCategory}
+                selectedThirdCategory={selectedThirdCategory}
                 bindingSearchResults={bindingSearchResults}
                 isSearchingBinding={isSearchingBinding}
                 isSubmittingAll={isSubmittingAll}
+                isEditing={Boolean(editingProduct)}
+                designNeeded={designNeeded}
+                designBriefComplete={Boolean(
+                  designDesc.trim() && designCount !== "" && Number(designCount) >= 1 && designDueDate.trim()
+                )}
                 onSetModalError={setModalError}
                 onSetSampleType={setSampleType}
                 onSetPartialRequirements={setPartialRequirements}
-                onSetSamplingSearchMode={setSamplingSearchMode}
+                onSetSamplingSearchMode={(mode) => {
+                  if (mode === samplingSearchMode) return;
+                  clearMockupDesignChoice();
+                  setSamplingSearchMode(mode);
+                  setSelectedDbSample(null);
+                  setSamplingDescription("");
+                  setMaterialSearchQuery("");
+                  setSelectedCategory("");
+                  setSelectedSubCategory("");
+                  setSelectedThirdCategory("");
+                  setSelectedBinding1("");
+                  setSelectedBinding2("");
+                  setModalError(null);
+                  if (selectedScopes.includes("mockup") && mode === "new") {
+                    setDesignNeeded(true);
+                    setSelectedScopes((prev) =>
+                      prev.includes("design") ? prev : ["design", ...prev]
+                    );
+                    setScopeTimestamps((prev) => ({
+                      ...prev,
+                      design: prev.design || new Date().toISOString(),
+                    }));
+                  }
+                }}
+                onSetDesignNeeded={handleDesignNeededChange}
+                onSetProductDescription={setSamplingDescription}
+                onSetQtyDesignCosting={setQtyDesignCosting}
+                onSetCustomerProductCode={setCustomerProductCode}
+                onSetBarcode={setCostingBarcode}
+                onSetBrandName={setBrandName}
+                onSetUnitPcPack={(value) => {
+                  setUnitPcPack(value);
+                  if (value === "PC") setQtyPerPack("1");
+                }}
+                onSetQtyPerPack={setQtyPerPack}
+                onSetCostingRequiredDate={setCostingRequiredDate}
                 onSetMaterialSearchQuery={(query) => {
+                  if (selectedDbSample) clearMockupDesignChoice();
                   setMaterialSearchQuery(query);
                   setSelectedDbSample(null);
+                  setSamplingDescription("");
                   setModalError(null);
                 }}
                 onSelectDbSample={handleSelectDbSample}
+                onInspectProduct={setInspectingCatalogProduct}
+                onSelectCategory={(cat) => {
+                  if (selectedDbSample) clearMockupDesignChoice();
+                  setIsLoadingBindingHierarchy(true);
+                  setBindingSearchResults([]);
+                  setSelectedBinding1("");
+                  setSelectedBinding2("");
+                  setSelectedCategory(cat);
+                  setSelectedSubCategory("");
+                  setSelectedThirdCategory("");
+                  setSelectedDbSample(null);
+                  setSamplingDescription("");
+                }}
+                onSelectSubCategory={(sub) => {
+                  if (selectedDbSample) clearMockupDesignChoice();
+                  setIsLoadingBindingHierarchy(true);
+                  setBindingSearchResults([]);
+                  setSelectedBinding1("");
+                  setSelectedBinding2("");
+                  setSelectedSubCategory(sub);
+                  setSelectedThirdCategory("");
+                  setSelectedDbSample(null);
+                  setSamplingDescription("");
+                }}
+                onSelectThirdCategory={(third) => {
+                  if (selectedDbSample) clearMockupDesignChoice();
+                  setIsLoadingBindingHierarchy(true);
+                  setBindingSearchResults([]);
+                  setSelectedBinding1("");
+                  setSelectedBinding2("");
+                  setSelectedThirdCategory(third);
+                  setSelectedDbSample(null);
+                  setSamplingDescription("");
+                }}
                 onSelectBinding1={(b1) => {
+                  if (selectedDbSample) clearMockupDesignChoice();
                   setSelectedBinding1(b1);
                   setSelectedBinding2("");
                   setSelectedDbSample(null);
-                  if (b1 && !samplingDescription) {
-                    setSamplingDescription(`${b1} Notebook`);
-                  }
+                  setSamplingDescription("");
                 }}
                 onSelectBinding2={(b2) => {
+                  if (selectedDbSample) clearMockupDesignChoice();
                   setSelectedBinding2(b2);
                   setSelectedDbSample(null);
-                  if (selectedBinding1 && b2) {
-                    setSamplingDescription(`${selectedBinding1} Notebook (${b2})`);
-                  }
+                  setSamplingDescription("");
                 }}
                 onBackToScopes={() => {
-                  setAddModalStep("scopes");
                   setModalError(null);
+                  setAddModalStep("scopes");
                 }}
                 onClose={() => setIsAddModalOpen(false)}
                 onSubmit={handleStageSamplingProduct}
-              />
-            )}
-
-            {addModalStep === "product_search" && (
-              <AddProductCatalogStep
-                purpose={selectedScopes.includes("mockup") ? "mockup" : "costing"}
-                includesDesign={selectedScopes.includes("design")}
-                selectedScopes={selectedScopes}
-                modalError={modalError}
-                searchMode={samplingSearchMode}
-                materialSearchQuery={materialSearchQuery}
-                materialSearchResults={materialSearchResults}
-                isSearchingMaterial={isSearchingMaterial}
-                selectedProduct={selectedDbSample}
-                newProductDescription={catalogProductDescription}
-                bindingHierarchy={bindingHierarchy}
-                selectedBinding1={selectedBinding1}
-                selectedBinding2={selectedBinding2}
-                bindingSearchResults={bindingSearchResults}
-                isSearchingBinding={isSearchingBinding}
-                onSetSearchMode={setSamplingSearchMode}
-                onSetMaterialSearchQuery={setMaterialSearchQuery}
-                onSelectProduct={handleSelectCatalogProduct}
-                onSetNewProductDescription={setCatalogProductDescription}
-                onSelectBinding1={(binding1) => {
-                  setSelectedBinding1(binding1);
-                  setSelectedBinding2("");
-                  setSelectedDbSample(null);
-                }}
-                onSelectBinding2={(binding2) => {
-                  setSelectedBinding2(binding2);
-                  setSelectedDbSample(null);
-                }}
-                onBack={() => {
-                  setModalError(null);
-                  setAddModalStep(selectedScopes.includes("design") ? "design_brief" : "scopes");
-                }}
-                onClose={() => setIsAddModalOpen(false)}
-                onSubmit={handleStageCatalogProduct}
               />
             )}
           </div>
@@ -1293,6 +1709,11 @@ export const ProductStagingWorkspace: React.FC<ProductStagingWorkspaceProps> = (
           setInspectingProduct(null);
           handleEditProduct(item);
         }}
+      />
+
+      <CatalogProductInspectModal
+        product={inspectingCatalogProduct}
+        onClose={() => setInspectingCatalogProduct(null)}
       />
 
       {/* 5. Floating Bottom Popup Toast Notification */}

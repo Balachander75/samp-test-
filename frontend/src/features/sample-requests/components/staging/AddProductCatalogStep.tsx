@@ -62,7 +62,7 @@ export const AddProductCatalogStep: React.FC<AddProductCatalogStepProps> = ({
   const hasBinding = Boolean(selectedBinding1);
 
   return (
-    <div className="relative flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-2xl animate-smooth-modal dark:border-white/[0.08] dark:bg-[#161822]">
+    <div className="relative flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-2xl animate-smooth-modal dark:border-white/[0.08] dark:bg-[#161822]">
       {/* Modal Header */}
       <div className="flex items-center justify-between px-6 py-4 bg-white dark:bg-[#161822] text-slate-900 dark:text-white shrink-0 border-b border-slate-100 dark:border-white/[0.06]">
         <div className="flex items-center gap-3">
@@ -240,6 +240,8 @@ export const AddProductCatalogStep: React.FC<AddProductCatalogStepProps> = ({
                         </span>
                         <span className="mt-0.5 block truncate text-[11px] text-zinc-500 dark:text-zinc-400">
                           {product.customer || "Customer not listed"}
+                          {product.product_category && ` · ${product.product_category}`}
+                          {product.product_sub_category && ` › ${product.product_sub_category}`}
                           {(product.binding_type_1 || product.binding_type_2) &&
                             ` · ${[product.binding_type_1, product.binding_type_2].filter(Boolean).join(" / ")}`}
                         </span>
@@ -258,6 +260,12 @@ export const AddProductCatalogStep: React.FC<AddProductCatalogStepProps> = ({
                 <span className="ml-2 font-medium text-zinc-800 dark:text-zinc-200">
                   {selectedProduct.material_code} · {selectedProduct.product_description}
                 </span>
+                {selectedProduct.product_category && (
+                  <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#006d32]/10 text-[#006d32] dark:text-emerald-300 border border-[#006d32]/20">
+                    {selectedProduct.product_category}
+                    {selectedProduct.product_sub_category && ` › ${selectedProduct.product_sub_category}`}
+                  </span>
+                )}
               </div>
               {!includesDesign && (
                 <label className="block text-[11px] font-semibold uppercase tracking-wide text-zinc-600 dark:text-zinc-400">

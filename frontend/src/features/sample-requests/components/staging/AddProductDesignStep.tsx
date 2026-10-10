@@ -23,6 +23,7 @@ export interface AddProductDesignStepProps {
   };
   selectedScopes: DeliverableScopeId[];
   isEditing?: boolean;
+  productAlreadySelected?: boolean;
   designDesc: string;
   designCount: number | "";
   designDueDate: string;
@@ -57,6 +58,7 @@ export const AddProductDesignStep: React.FC<AddProductDesignStepProps> = ({
   programContext,
   selectedScopes,
   isEditing = false,
+  productAlreadySelected = false,
   designDesc,
   designCount,
   designDueDate,
@@ -154,10 +156,10 @@ export const AddProductDesignStep: React.FC<AddProductDesignStepProps> = ({
               <div className="flex min-h-10 w-full items-center justify-between gap-3 rounded-xl border border-slate-200/80 bg-[#f8f9ff]/70 px-3.5 py-2 text-[13px] font-medium text-slate-900 dark:border-white/[0.08] dark:bg-white/[0.03] dark:text-zinc-100">
                 <div className="flex items-center gap-2 min-w-0">
                   <span className="truncate font-semibold text-slate-900 dark:text-zinc-100">
-                    {programContext.customer || "General Account"}
+                    {programContext.customer || ""}
                   </span>
                   <span className="truncate text-xs text-slate-500 dark:text-zinc-400">
-                    {programContext.programName} · {programContext.programYear}
+                    {[programContext.programName, programContext.programYear].filter(Boolean).join(" · ")}
                   </span>
                 </div>
                 <span className="flex shrink-0 items-center gap-1 rounded-lg border border-slate-200/80 bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:border-white/[0.08] dark:bg-[#161822] dark:text-zinc-400">
@@ -499,7 +501,11 @@ export const AddProductDesignStep: React.FC<AddProductDesignStepProps> = ({
             className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-slate-100 dark:bg-white/[0.06] px-4 text-xs font-semibold text-slate-700 dark:text-zinc-300 transition-colors hover:bg-slate-200/80 cursor-pointer"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            <span>Back to Deliverables</span>
+            <span>
+              {selectedScopes.includes("mockup") && productAlreadySelected
+                ? "Back to Product"
+                : "Back to Deliverables"}
+            </span>
           </button>
 
           <button
@@ -510,7 +516,7 @@ export const AddProductDesignStep: React.FC<AddProductDesignStepProps> = ({
           >
             {selectedScopes.includes("mockup") ? (
               <>
-                <span>Next: Choose Product</span>
+                <span>{productAlreadySelected ? "Save Brief & Return" : "Next: Choose Product"}</span>
                 <ChevronRight className="w-3.5 h-3.5 stroke-[2.5]" />
               </>
             ) : isEditing ? (

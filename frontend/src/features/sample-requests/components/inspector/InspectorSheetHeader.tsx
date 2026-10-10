@@ -90,6 +90,32 @@ export const InspectorSheetHeader: React.FC<InspectorSheetHeaderProps> = ({
                 </>
               )}
             </p>
+
+            {/* Merchandising Category Breadcrumb Bar (Commercial Taxonomy - Distinct from Technical SAP Specs) */}
+            {(activeRequest.productCategory || activeRequest.productSubCategory || activeRequest.productThirdCategory) && (
+              <div className="mt-3 flex items-center gap-2 flex-wrap text-xs">
+                <span className="text-[10px] font-mono uppercase font-bold text-slate-400 dark:text-zinc-500 tracking-wider">
+                  Category
+                </span>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-gradient-to-r from-emerald-50/90 to-teal-50/80 dark:from-emerald-950/30 dark:to-teal-950/20 border border-emerald-200/70 dark:border-emerald-800/40 text-emerald-900 dark:text-emerald-300 shadow-xs">
+                  <span className="font-bold font-display">{activeRequest.productCategory || "Uncategorized"}</span>
+                  {activeRequest.productSubCategory && (
+                    <>
+                      <span className="text-emerald-400/80 dark:text-emerald-600 font-sans">›</span>
+                      <span className="font-medium text-emerald-800 dark:text-emerald-200">{activeRequest.productSubCategory}</span>
+                    </>
+                  )}
+                  {activeRequest.productThirdCategory && (
+                    <>
+                      <span className="text-emerald-400/80 dark:text-emerald-600 font-sans">›</span>
+                      <span className="font-mono text-[11px] px-1.5 py-0.5 rounded-md bg-white/70 dark:bg-white/10 text-emerald-950 dark:text-emerald-100 font-semibold border border-emerald-200/50 dark:border-emerald-700/30">
+                        {activeRequest.productThirdCategory}
+                      </span>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

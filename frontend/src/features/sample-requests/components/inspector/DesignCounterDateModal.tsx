@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   X,
@@ -33,24 +33,55 @@ export const DesignCounterDateModal: React.FC<DesignCounterDateModalProps> = ({
   const [reason, setReason] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const originalDateOnly = originalDate.split("T", 1)[0].slice(0, 10);
+
+  useEffect(() => {
+    if (isOpen) return;
+    setProposedDate("");
+    setReason("");
+    setError(null);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
+  const resetAndClose = () => {
+    setProposedDate("");
+    setReason("");
+    setError(null);
+    onClose();
+  };
+
+  const handleClose = () => {
+    if (isSubmitting) return;
+    resetAndClose();
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     if (!isSlaEligible) {
-      setError("The 48-hour window to propose a counter date has expired.");
+      setError(
+        slaLabel === "Awaiting Marketing decision"
+          ? "A counter date is already awaiting Marketing. Wait for their decision before proposing another."
+          : slaLabel === "Counter proposal already used"
+          ? "This request has already used its one counter-date proposal. No further date changes can be submitted."
+          : "The 48-hour window to propose a counter date has expired."
+      );
       return;
     }
     if (!proposedDate.trim()) {
       setError("Please select a proposed target date.");
       return;
     }
+    if (proposedDate <= new Date().toISOString().slice(0, 10)) {
+      setError("Choose a revised date after today.");
+      return;
+    }
     if (!reason.trim()) {
       setError("Please explain why the requested date is not feasible.");
       return;
     }
-    if (originalDate && proposedDate <= originalDate) {
+    if (originalDateOnly && proposedDate <= originalDateOnly) {
       setError("Proposed target date must be later than the original required date.");
       return;
     }
@@ -59,7 +90,7 @@ export const DesignCounterDateModal: React.FC<DesignCounterDateModalProps> = ({
     setError(null);
     try {
       await onSubmitCounterDate(proposedDate.trim(), reason.trim());
-      onClose();
+      resetAndClose();
     } catch (err: any) {
       setError(err?.message || "Could not submit counter date proposal.");
     } finally {
@@ -72,14 +103,17 @@ export const DesignCounterDateModal: React.FC<DesignCounterDateModalProps> = ({
       className="fixed inset-0 z-[120] overflow-y-auto flex items-center justify-center p-3 sm:p-5 bg-slate-950/70 select-text"
       role="dialog"
       aria-modal="true"
+      aria-labelledby="counter-date-dialog-title"
+      aria-describedby="counter-date-dialog-description"
+      onClick={(event) => event.stopPropagation()}
     >
       <div
         className="fixed inset-0 bg-transparent"
-        onClick={onClose}
+        onClick={handleClose}
         aria-hidden="true"
       />
 
-      <div className="relative w-full max-w-lg bg-white dark:bg-[#161822] border border-slate-200/90 dark:border-white/[0.08] rounded-2xl shadow-2xl overflow-hidden animate-smooth-modal">
+      <div className="relative z-10 w-full max-w-lg bg-white dark:bg-[#161822] border border-slate-200/90 dark:border-white/[0.08] rounded-2xl shadow-2xl animate-smooth-modal">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 bg-white dark:bg-[#161822] border-b border-slate-100 dark:border-white/[0.06]">
           <div className="flex items-center gap-2.5">
@@ -88,14 +122,14 @@ export const DesignCounterDateModal: React.FC<DesignCounterDateModalProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white tracking-tight font-display">
+                <h3 id="counter-date-dialog-title" className="text-sm font-bold text-slate-900 dark:text-white tracking-tight font-display">
                   Propose Counter Required Date
                 </h3>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/50">
                   48H SLA
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-0.5">
+              <p id="counter-date-dialog-description" className="text-[11px] text-slate-500 dark:text-zinc-400 mt-0.5">
                 Negotiate deliverable timeline with Marketing
               </p>
             </div>
@@ -103,7 +137,7 @@ export const DesignCounterDateModal: React.FC<DesignCounterDateModalProps> = ({
 
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 dark:hover:text-white transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
@@ -144,10 +178,10 @@ export const DesignCounterDateModal: React.FC<DesignCounterDateModalProps> = ({
           <div className="grid grid-cols-2 gap-3 p-3.5 rounded-xl bg-slate-50 dark:bg-[#12141d] border border-slate-200/80 dark:border-zinc-800">
             <div>
               <span className="text-[10px] font-mono uppercase text-slate-500 dark:text-zinc-400 block font-bold">
-                Marketing Target Date
+                Current committed deadline
               </span>
               <span className="text-xs font-bold text-slate-800 dark:text-zinc-200 font-mono mt-1 block">
-                {originalDate || "Not specified"}
+                {originalDateOnly || "Not specified"}
               </span>
             </div>
             <div>
@@ -160,6 +194,7 @@ export const DesignCounterDateModal: React.FC<DesignCounterDateModalProps> = ({
                   onChange={setProposedDate}
                   placeholder="Select new target date"
                   disabled={!isSlaEligible || isSubmitting}
+                  calendarAlign="right"
                   className="w-full"
                 />
               </div>
@@ -189,7 +224,7 @@ export const DesignCounterDateModal: React.FC<DesignCounterDateModalProps> = ({
           <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100 dark:border-white/[0.06]">
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               disabled={isSubmitting}
               className="h-9 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.06] dark:hover:bg-white/10 text-slate-700 dark:text-zinc-300 text-xs font-semibold cursor-pointer transition"
             >

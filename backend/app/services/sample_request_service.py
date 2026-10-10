@@ -17,7 +17,6 @@ from app.models.sample_request import (
 from app.models.master import Plant
 from app.utils.business_year import (
     get_business_year_for_date_str,
-    get_business_year_start,
     get_current_business_year,
 )
 
@@ -41,8 +40,14 @@ class SampleRequestService:
         """Serialize a sample request database record."""
         created_date = r.date_request_created or (r.created_at.strftime("%Y-%m-%d") if r.created_at else "")
         by_val = get_business_year_for_date_str(created_date) if created_date else (r.year or get_current_business_year())
-        py_val = r.program_year or (by_val.split("-")[0] if by_val and "-" in by_val else str(get_business_year_start()))
+        py_val = r.program_year or ""
         binding_values = self._get_binding_values(r)
+        mockup_workflow_state = r.mockup_workflow_state if isinstance(r.mockup_workflow_state, dict) else {}
+        request_types = r.request_types if isinstance(r.request_types, list) else []
+        if not mockup_workflow_state and ("mockup" in request_types or str(r.mockup_required or "").casefold() == "yes"):
+            current_status = str(r.status or "").strip().casefold()
+            stage = "studio" if current_status.startswith("studio") else "creative" if current_status.startswith("creative") else "marketing"
+            mockup_workflow_state = {"stage": stage, "events": []}
 
         audit_data = None
         if getattr(r, "request_type_audit", None):
@@ -68,7 +73,7 @@ class SampleRequestService:
                     trend_val = d.value
                 elif norm_char in {"TARGETAUDIENCE", "AUDIENCE"}:
                     target_audience_val = d.value
-                elif norm_char in {"DESIGNREMARKS", "REMARKS"}:
+                elif norm_char == "DESIGNREMARKS":
                     remarks_val = d.value
 
         return {
@@ -81,7 +86,7 @@ class SampleRequestService:
             "customer": r.customer or "",
             "target_plant": r.target_plant or "",
             "date_request_created": created_date,
-            "created_by": r.created_by or "Marketing",
+            "created_by": r.created_by or "",
             "material_code": r.material_code or "",
             "barcode": r.barcode or "",
             "customer_product_code": r.customer_product_code or "",
@@ -94,18 +99,38 @@ class SampleRequestService:
             "product_type_new_customer": r.product_type_new_customer,
             "brand_name": r.brand_name,
             "unit_pc_pack": r.unit_pc_pack,
+            "qty_per_pack": r.qty_per_pack,
             "qty_for_sampling": r.qty_for_sampling,
             "qty_design_costing": r.qty_design_costing,
+            "costing_required_date": r.costing_required_date,
+            "costing_counter_date": r.costing_counter_date,
+            "costing_output_path": r.costing_output_path,
             "mockup_required": r.mockup_required,
             "designs_customer_creative": r.designs_customer_creative,
             "product_artwork_nos": r.product_artwork_nos,
             "product_image_path": r.product_image_path,
+            "reference_images": r.reference_images if isinstance(r.reference_images, list) else [],
+            "reference_links": r.reference_links if isinstance(r.reference_links, list) else [],
             "target_artwork_date_creative": r.target_artwork_date_creative,
             "target_artwork_date_studio": r.target_artwork_date_studio,
             "status": r.status or "Draft (Pre-SMT)",
             "creation_mode": r.creation_mode or "material_code",
-            "request_types": r.request_types if isinstance(r.request_types, list) else [],
+            "request_types": r.request_types if isinstance(r.request_types, list) and len(r.request_types) > 0 else ["sample"],
+            "mockup_workflow_state": mockup_workflow_state,
             "request_type_audit": audit_data,
+            "custom_details": [
+                {
+                    "id": d.id,
+                    "class_name": d.class_name,
+                    "characteristic_name": d.characteristic_name,
+                    "value": d.value,
+                    "uom": d.uom,
+                }
+                for d in (r.product_details or [])
+            ],
+            "product_category": r.product_category,
+            "product_sub_category": r.product_sub_category,
+            "product_third_category": r.product_third_category,
             "trend": trend_val,
             "target_audience": target_audience_val,
             "design_remarks": remarks_val,
@@ -156,7 +181,8 @@ class SampleRequestService:
             normalized_name = self._normalize_characteristic_name(characteristic)
             existing = next(
                 (item for item in request.product_details
-                 if self._normalize_characteristic_name(item.characteristic_name) in {
+                 if self._normalize_characteristic_name(item.class_name) == "NBBINDING"
+                 and self._normalize_characteristic_name(item.characteristic_name) in {
                      normalized_name,
                      "BINDING1" if characteristic.endswith("1") else "BINDING2",
                  }),
@@ -257,6 +283,8 @@ class SampleRequestService:
         binding1 = None
         binding2 = None
         for detail in request.product_details:
+            if cls._normalize_characteristic_name(detail.class_name) != "NBBINDING":
+                continue
             name = cls._normalize_characteristic_name(detail.characteristic_name)
             if name in {"BINDINGTYPE1", "BINDING1"} and detail.value:
                 binding1 = binding1 or detail.value
@@ -338,9 +366,8 @@ class SampleRequestService:
         if not item_year or "-" not in str(item_year):
             item_year = calc_year
 
-        prog_year = payload.get("program_year") or str(get_business_year_start())
-        if prog_year:
-            prog_year = str(prog_year).replace("BTS", "").strip()
+        raw_program_year = payload.get("program_year")
+        prog_year = str(raw_program_year).replace("BTS", "").strip() if raw_program_year is not None else None
 
         target_plant = payload.get("target_plant")
         if not target_plant or not str(target_plant).strip():
@@ -349,6 +376,12 @@ class SampleRequestService:
             target_plant = str(target_plant).strip()
 
         sr_num = payload.get("sr_number")
+        reference_images = payload.get("reference_images", payload.get("referenceImages", []))
+        reference_links = payload.get("reference_links", payload.get("referenceLinks", []))
+        if not isinstance(reference_images, list):
+            reference_images = []
+        if not isinstance(reference_links, list):
+            reference_links = []
 
         sample_req_date = None
         s_date_val = payload.get("sample_required_date")
@@ -367,7 +400,7 @@ class SampleRequestService:
             customer=payload.get("customer") or "",
             target_plant=target_plant,
             date_request_created=created_date_str,
-            created_by=payload.get("created_by") or "Marketing",
+            created_by=payload.get("created_by") or "",
             material_code=payload.get("material_code") or "",
             barcode=payload.get("barcode") or None,
             customer_product_code=payload.get("customer_product_code") or None,
@@ -378,14 +411,23 @@ class SampleRequestService:
             product_type_new_customer=payload.get("product_type_new_customer") or None,
             brand_name=payload.get("brand_name") or None,
             unit_pc_pack=str(payload.get("unit_pc_pack")) if payload.get("unit_pc_pack") is not None else None,
+            qty_per_pack=str(payload.get("qty_per_pack")) if payload.get("qty_per_pack") is not None else None,
             qty_for_sampling=str(payload.get("qty_for_sampling")) if payload.get("qty_for_sampling") is not None else None,
             qty_design_costing=str(payload.get("qty_design_costing")) if payload.get("qty_design_costing") is not None else None,
+            costing_required_date=payload.get("costing_required_date") or None,
+            costing_counter_date=payload.get("costing_counter_date") or None,
+            costing_output_path=payload.get("costing_output_path") or None,
             mockup_required=payload.get("mockup_required") or None,
             designs_customer_creative=payload.get("designs_customer_creative") or None,
             product_artwork_nos=str(payload.get("product_artwork_nos")) if payload.get("product_artwork_nos") is not None else None,
             product_image_path=payload.get("product_image_path") or None,
+            reference_images=reference_images,
+            reference_links=reference_links,
             target_artwork_date_creative=payload.get("target_artwork_date_creative") or None,
             target_artwork_date_studio=payload.get("target_artwork_date_studio") or None,
+            product_category=payload.get("product_category") or payload.get("productCategory") or None,
+            product_sub_category=payload.get("product_sub_category") or payload.get("productSubCategory") or None,
+            product_third_category=payload.get("product_third_category") or payload.get("productThirdCategory") or None,
             status=payload.get("status") or "Draft (Pre-SMT)",
             creation_mode=payload.get("creation_mode") or "material_code",
             request_types=payload.get("request_types") or [],
@@ -526,17 +568,30 @@ class SampleRequestService:
                 "source_sample_code": r.source_sample_code,
                 "binding_type_1": self._get_binding_values(r)[0],
                 "binding_type_2": self._get_binding_values(r)[1],
+                "product_category": r.product_category,
+                "product_sub_category": r.product_sub_category,
+                "product_third_category": r.product_third_category,
             }
             for r in records
         ]
 
     def search_products_by_binding(
         self,
-        binding1: str,
+        binding1: Optional[str] = None,
         binding2: Optional[str] = None,
+        category: Optional[str] = None,
+        sub_category: Optional[str] = None,
+        third_category: Optional[str] = None,
         limit: Optional[int] = None,
     ) -> List[Dict[str, Any]]:
-        records = self.repo.search_by_binding(binding1, binding2, limit)
+        records = self.repo.search_by_binding(
+            binding1=binding1,
+            binding2=binding2,
+            category=category,
+            sub_category=sub_category,
+            third_category=third_category,
+            limit=limit,
+        )
         return [
             {
                 "id": record.id,
@@ -546,8 +601,11 @@ class SampleRequestService:
                 "customer": record.customer,
                 "target_plant": record.target_plant,
                 "source_sample_code": record.source_sample_code,
-                "binding_type_1": self._get_binding_values(record)[0] or binding1,
+                "binding_type_1": self._get_binding_values(record)[0],
                 "binding_type_2": self._get_binding_values(record)[1],
+                "product_category": record.product_category,
+                "product_sub_category": record.product_sub_category,
+                "product_third_category": record.product_third_category,
             }
             for record in records
         ]

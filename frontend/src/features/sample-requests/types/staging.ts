@@ -19,7 +19,7 @@ export interface StagedProductItem {
   scopes: DeliverableScopeId[];
   timestamp: string;
   stagedDate?: string;
-  creationMode?: "material_code" | "binding" | "custom";
+  creationMode?: "material_code" | "binding" | "custom" | "new";
   savedRequestId?: string | number;
   savedSrNumber?: string;
   isDraftSaved?: boolean;
@@ -40,10 +40,15 @@ export interface StagedProductItem {
   unitPcPack?: string;
   qtyForSampling?: string;
   qtyDesignCosting?: string;
+  qtyPerPack?: string;
+  costingRequiredDate?: string;
   customerProductCode?: string;
   barcode?: string;
   brandName?: string;
   productType?: string;
+  productCategory?: string;
+  productSubCategory?: string;
+  productThirdCategory?: string;
   sampleRequiredDate?: string;
   designMetadata?: {
     numberOfDesigns: number;
@@ -58,7 +63,7 @@ export interface StagedProductItem {
   samplingMetadata?: {
     sampleType: "full" | "partial";
     partialRequirements?: string;
-    searchMode: "material_code" | "binding";
+    searchMode: "material_code" | "binding" | "new";
     sourceSampleId?: number;
     sourceSrNumber?: string;
     selectedMaterialCode?: string;
@@ -68,9 +73,9 @@ export interface StagedProductItem {
     targetPlant?: string;
   };
   catalogMetadata?: {
-    sourceProductId: number;
+    sourceProductId?: number;
     sourceRequestNumber?: string;
-    sourceMaterialCode: string;
+    sourceMaterialCode?: string;
     sourceDescription: string;
     bindingType1?: string;
     bindingType2?: string;

@@ -30,6 +30,7 @@ export interface OperationalDatePickerProps {
   disabled?: boolean;
   required?: boolean;
   className?: string;
+  calendarAlign?: "left" | "right";
   id?: string;
   name?: string;
   hasError?: boolean;
@@ -62,6 +63,7 @@ export const OperationalDatePicker: React.FC<OperationalDatePickerProps> = ({
   maxDate,
   placeholder = "Select required target date...",
   disabled = false,
+  calendarAlign = "left",
   required = false,
   className,
   id,
@@ -403,7 +405,10 @@ export const OperationalDatePicker: React.FC<OperationalDatePickerProps> = ({
       {/* Calendar Popover Modal */}
       {isOpen && (
         <div
-          className="absolute z-50 mt-1 left-0 w-[310px] p-3 rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#0f1118] shadow-xl text-zinc-900 dark:text-zinc-100 select-none animate-in fade-in zoom-in-95 duration-100"
+          className={cn(
+            "absolute z-50 mt-1 w-[310px] p-3 rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#0f1118] shadow-xl text-zinc-900 dark:text-zinc-100 select-none animate-in fade-in zoom-in-95 duration-100",
+            calendarAlign === "right" ? "right-0" : "left-0"
+          )}
           style={{ minWidth: "300px" }}
         >
           {/* Calendar Header: Navigation & Month Selector */}

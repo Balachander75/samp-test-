@@ -46,6 +46,7 @@ export type SamplingFilterTab =
   | "creative"
   | "studio"
   | "costing"
+  | "marketing"
   | "samp"
   | "plant"
   | "dispatched"
@@ -72,6 +73,7 @@ export const SamplingRequestsPage: React.FC<SamplingRequestsPageProps> = ({
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedPlantFilter, setSelectedPlantFilter] = useState<string>("all");
   const [selectedCustomerFilter, setSelectedCustomerFilter] = useState<string>("all");
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>("all");
   const [selectedTypeFilter, setSelectedTypeFilter] = useState<string>("all");
   const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set());
 
@@ -190,6 +192,15 @@ export const SamplingRequestsPage: React.FC<SamplingRequestsPageProps> = ({
     return Array.from(set).sort();
   }, [samplingRequests]);
 
+  // Derived Merchandising Product Categories List
+  const categoryList = useMemo(() => {
+    const set = new Set<string>();
+    samplingRequests.forEach((r) => {
+      if (r.productCategory && r.productCategory.trim()) set.add(r.productCategory.trim());
+    });
+    return Array.from(set).sort();
+  }, [samplingRequests]);
+
   // Stage counts
   const stageCounts = useMemo(() => {
     const counts: Record<SamplingFilterTab, number> = {
@@ -198,6 +209,7 @@ export const SamplingRequestsPage: React.FC<SamplingRequestsPageProps> = ({
       creative: 0,
       studio: 0,
       costing: 0,
+      marketing: 0,
       samp: 0,
       plant: 0,
       dispatched: 0,
@@ -248,6 +260,10 @@ export const SamplingRequestsPage: React.FC<SamplingRequestsPageProps> = ({
         return false;
       }
 
+      if (selectedCategoryFilter !== "all" && r.productCategory !== selectedCategoryFilter) {
+        return false;
+      }
+
       if (selectedTypeFilter !== "all") {
         const types = getRequestTypes(r);
         if (!types.includes(selectedTypeFilter as any)) return false;
@@ -261,6 +277,9 @@ export const SamplingRequestsPage: React.FC<SamplingRequestsPageProps> = ({
         const cust = (r.customer || "").toLowerCase();
         const plant = (r.targetPlant || "").toLowerCase();
         const brand = (r.brandName || "").toLowerCase();
+        const cat = (r.productCategory || "").toLowerCase();
+        const subCat = (r.productSubCategory || "").toLowerCase();
+        const thirdCat = (r.productThirdCategory || "").toLowerCase();
 
         return (
           sr.includes(q) ||
@@ -268,7 +287,10 @@ export const SamplingRequestsPage: React.FC<SamplingRequestsPageProps> = ({
           desc.includes(q) ||
           cust.includes(q) ||
           plant.includes(q) ||
-          brand.includes(q)
+          brand.includes(q) ||
+          cat.includes(q) ||
+          subCat.includes(q) ||
+          thirdCat.includes(q)
         );
       }
 
@@ -281,6 +303,7 @@ export const SamplingRequestsPage: React.FC<SamplingRequestsPageProps> = ({
     selectedPlant,
     selectedPlantFilter,
     selectedCustomerFilter,
+    selectedCategoryFilter,
     selectedTypeFilter,
     searchTerm,
   ]);
@@ -322,6 +345,7 @@ export const SamplingRequestsPage: React.FC<SamplingRequestsPageProps> = ({
     setSearchTerm("");
     setSelectedCustomerFilter("all");
     setSelectedPlantFilter("all");
+    setSelectedCategoryFilter("all");
     setSelectedTypeFilter("all");
     setSelectedStageTab("all");
     setCurrentPage(1);
@@ -331,6 +355,7 @@ export const SamplingRequestsPage: React.FC<SamplingRequestsPageProps> = ({
     searchTerm.trim() ||
       selectedCustomerFilter !== "all" ||
       selectedPlantFilter !== "all" ||
+      selectedCategoryFilter !== "all" ||
       selectedTypeFilter !== "all" ||
       selectedStageTab !== "all"
   );
@@ -341,6 +366,7 @@ export const SamplingRequestsPage: React.FC<SamplingRequestsPageProps> = ({
     { id: "creative", label: "Creative & Design", count: stageCounts.creative },
     { id: "studio", label: "Studio CAD", count: stageCounts.studio },
     { id: "costing", label: "Costing", count: stageCounts.costing },
+    { id: "marketing", label: "Marketing Review", count: stageCounts.marketing },
     { id: "samp", label: "SAMP Lab", count: stageCounts.samp },
     { id: "plant", label: "Plant Floor", count: stageCounts.plant },
     { id: "dispatched", label: "Dispatched", count: stageCounts.dispatched },
@@ -524,6 +550,26 @@ export const SamplingRequestsPage: React.FC<SamplingRequestsPageProps> = ({
             <option value="mockup">Mockup</option>
             <option value="costing">Costing</option>
           </select>
+
+          {/* Product Category Filter */}
+          {categoryList.length > 0 && (
+            <select
+              value={selectedCategoryFilter}
+              onChange={(e) => {
+                setSelectedCategoryFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="h-9 px-3 rounded-lg bg-slate-100/80 hover:bg-slate-200/60 text-xs font-medium text-slate-700 border border-slate-200/70 focus:outline-none focus:ring-2 focus:ring-[#006d32]/15 focus:border-[#006d32]/40 cursor-pointer transition max-w-[170px] truncate"
+              title="Filter by Merchandising Product Category"
+            >
+              <option value="all">All Categories ({categoryList.length})</option>
+              {categoryList.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+            </select>
+          )}
 
           {/* Customer Filter */}
           {customerList.length > 0 && (

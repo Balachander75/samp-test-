@@ -1,11 +1,13 @@
-import React, { useState, useMemo, useCallback, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+﻿import React, { useState, useMemo, useCallback, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { fetchStudioDielinesApi, updateStudioDielineApi } from "@/infrastructure/api/downstreamApi";
-import { fetchAllMarketingRequestsApi } from "@/infrastructure/api/sampleRequestsApi";
+import { fetchSampleRequestsApi } from "@/infrastructure/api/sampleRequestsApi";
 import { useBusinessYear } from "@/context/BusinessYearContext";
 import type { UserProfile } from "@/features/auth";
+import type { SampleRequestItem } from "@/features/sample-requests/types";
+import { MockupWorkflowInspectorModal } from "@/features/sample-requests/components/staging/MockupWorkflowInspectorModal";
+import { MockupWorkflowQueuePage } from "@/features/sample-requests/components/staging/MockupWorkflowQueuePage";
 import { DielineItem } from "./types";
-import { StudioOverviewPage } from "./StudioOverviewPage";
 import { StudioArtworkPage } from "./StudioArtworkPage";
 import { StudioInspectorModal } from "./StudioInspectorModal";
 
@@ -15,29 +17,16 @@ export interface StudioWorkDeskProps {
 
 export const StudioWorkDesk: React.FC<StudioWorkDeskProps> = ({ user }) => {
   const location = useLocation();
-  const navigate = useNavigate();
   const { selectedYear } = useBusinessYear();
 
-  // Active sub-view: "overview" | "mockup" | "sampling"
-  const activeView: "overview" | "mockup" | "sampling" = useMemo(() => {
+  // Studio opens directly into its real mockup handoff queue.
+  const activeView: "mockup" | "sampling" = useMemo(() => {
     const path = location.pathname.toLowerCase();
-    if (path.includes("/mockup") || path.includes("/cad") || path.includes("/simulation")) {
-      return "mockup";
-    }
     if (path.includes("/sampling") || path.includes("/prepress") || path.includes("/tooling")) {
       return "sampling";
     }
-    if (path.includes("/artwork")) {
-      return "mockup";
-    }
-    return "overview";
+    return "mockup";
   }, [location.pathname]);
-
-  const handleSelectTab = (tab: "overview" | "mockup" | "sampling") => {
-    if (tab === "overview") navigate("/studio-work");
-    else if (tab === "mockup") navigate("/studio-work/mockup");
-    else if (tab === "sampling") navigate("/studio-work/sampling");
-  };
 
   // Plant state
   const [selectedPlant, setSelectedPlant] = useState<string>(() => {
@@ -61,92 +50,52 @@ export const StudioWorkDesk: React.FC<StudioWorkDeskProps> = ({ user }) => {
 
   // Data state
   const [dielines, setDielines] = useState<DielineItem[]>([]);
+  const [mockupRequests, setMockupRequests] = useState<SampleRequestItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Inspector state
   const [selectedDieline, setSelectedDieline] = useState<DielineItem | null>(null);
   const [isInspectorOpen, setIsInspectorOpen] = useState(false);
+  const [selectedMockupRequest, setSelectedMockupRequest] = useState<SampleRequestItem | null>(null);
+  const [isMockupInspectorOpen, setIsMockupInspectorOpen] = useState(false);
 
   const showToast = useCallback((msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
   }, []);
 
-  // Fetch real dielines from backend API and active marketing mockup requests
+  // Keep the legacy tooling data separate from the real mockup handoff queue.
   const loadDielines = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [live, marketingRequests] = await Promise.all([
-        fetchStudioDielinesApi().catch(() => []),
-        fetchAllMarketingRequestsApi(selectedYear).catch(() => []),
+      const [live, sampleRequests] = await Promise.all([
+        activeView === "sampling" ? fetchStudioDielinesApi().catch(() => []) : Promise.resolve([]),
+        activeView === "mockup" ? fetchSampleRequestsApi(selectedYear).catch(() => []) : Promise.resolve([]),
       ]);
-
-      // Filter out any lingering fake requests
-      const cleanLive = (Array.isArray(live) ? live : []).filter(
+      setDielines((Array.isArray(live) ? live : []).filter(
         (d) => !String(d.id || "").startsWith("DL-2024-") && !String(d.srNumber || "").startsWith("SR-25-")
-      );
-
-      // Map any real requests requiring CAD mockup or studio dieline
-      const realMockupDielines: DielineItem[] = (Array.isArray(marketingRequests) ? marketingRequests : [])
-        .filter((r) => {
-          const scopes = r.requestTypes || [];
-          return (
-            scopes.includes("mockup") ||
-            r.mockupRequired === "Yes" ||
-            String(r.status || "").toLowerCase().includes("studio")
-          );
-        })
-        .map((r) => {
-          const validBoxFormats: DielineItem["boxFormat"][] = [
-            "Rigid Box",
-            "Folding Carton",
-            "Flute Corrugated",
-            "Blister / Sleeve",
-          ];
-          const boxFormat: DielineItem["boxFormat"] = validBoxFormats.includes(r.productType as any)
-            ? (r.productType as DielineItem["boxFormat"])
-            : "Folding Carton";
-
-          return {
-            id: String(r.id),
-            dielineCode: r.srNumber || `DL-${r.id}`,
-            srNumber: r.srNumber || `SR-${r.id}`,
-            boxFormat,
-            title: r.productDescription || "CAD Structural Dieline",
-            client: r.customer || "General",
-            dimensions: "Standard Specification",
-            substrate: r.brandName || "Carton Board",
-            caliperMicrons: 350,
-            machineCompatibility: "Bobst VisionCut",
-            status: ((r.status === "Studio" ? "CAD Intake" : r.status) as any) || "CAD Intake",
-            dueDate: r.sampleRequiredDate || r.targetArtworkDateStudio || "Standard SLA",
-            targetPlant: r.targetPlant || "All Plants",
-            fluteGrade: undefined,
-            grainDirection: "Parallel to Spine",
-            fileFormats: ["DXF", "PDF"],
-          };
-        });
-
-      const combined = [...cleanLive, ...realMockupDielines];
-      const seen = new Set<string>();
-      const unique = combined.filter((d) => {
-        const key = d.srNumber || d.dielineCode || d.id;
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      });
-      setDielines(unique);
+      ));
+      setMockupRequests((Array.isArray(sampleRequests) ? sampleRequests : []).filter((request) => {
+        const isMockup = (request.requestTypes || []).includes("mockup") || String(request.mockupRequired || "").toLowerCase() === "yes";
+        return isMockup && request.mockupWorkflowState?.stage === "studio";
+      }));
     } catch (err) {
       console.error("Failed to load studio dielines:", err);
       setDielines([]);
     } finally {
       setIsLoading(false);
     }
-  }, [selectedYear]);
+  }, [activeView, selectedYear]);
 
   useEffect(() => {
     loadDielines();
+  }, [loadDielines]);
+
+  useEffect(() => {
+    const handleFocus = () => void loadDielines();
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
   }, [loadDielines]);
 
   useEffect(() => {
@@ -213,24 +162,6 @@ export const StudioWorkDesk: React.FC<StudioWorkDeskProps> = ({ user }) => {
     showToast(`Exported ${dielines.length} dielines to CSV`);
   };
 
-  const mockupCount = useMemo(() => {
-    return dielines.filter(
-      (d) =>
-        d.status === "3D Simulation" ||
-        d.status === "CAD Intake" ||
-        d.status === "Plotter Sample Tested"
-    ).length || dielines.length;
-  }, [dielines]);
-
-  const samplingCount = useMemo(() => {
-    return dielines.filter(
-      (d) =>
-        d.status === "Laser Die Cleared" ||
-        d.status === "Plotter Sample Tested" ||
-        d.status === "Dieline Construction"
-    ).length || dielines.length;
-  }, [dielines]);
-
   return (
     <div className="flex-1 flex flex-col h-full bg-white dark:bg-[#0c0d14] text-slate-800 dark:text-zinc-100 overflow-hidden select-none relative">
       {/* Toast Notification */}
@@ -242,36 +173,18 @@ export const StudioWorkDesk: React.FC<StudioWorkDeskProps> = ({ user }) => {
 
 
       {/* Active Sub-View Body */}
-      {activeView === "overview" && (
-        <StudioOverviewPage
-          dielines={dielines}
-          isLoading={isLoading}
-          selectedYear={selectedYear}
-          selectedPlant={selectedPlant}
-          onNavigateToMockup={() => handleSelectTab("mockup")}
-          onNavigateToSampling={() => handleSelectTab("sampling")}
-          onInspectDieline={(dieline) => {
-            setSelectedDieline(dieline);
-            setIsInspectorOpen(true);
-          }}
-        />
-      )}
-
       {activeView === "mockup" && (
-        <StudioArtworkPage
-          dielines={dielines}
-          mode="mockup"
-          selectedYear={selectedYear}
-          selectedPlant={selectedPlant}
-          onInspectDieline={(dieline) => {
-            setSelectedDieline(dieline);
-            setIsInspectorOpen(true);
-          }}
-          onExportCSV={handleExportCSV}
+        <MockupWorkflowQueuePage
+          requests={mockupRequests}
+          role="studio"
+          isLoading={isLoading}
           onRefresh={loadDielines}
+          onInspect={(request) => {
+            setSelectedMockupRequest(request);
+            setIsMockupInspectorOpen(true);
+          }}
         />
       )}
-
       {activeView === "sampling" && (
         <StudioArtworkPage
           dielines={dielines}
@@ -293,6 +206,13 @@ export const StudioWorkDesk: React.FC<StudioWorkDeskProps> = ({ user }) => {
         onClose={() => setIsInspectorOpen(false)}
         dieline={selectedDieline}
         onUpdateStatus={handleUpdateStatus}
+      />
+      <MockupWorkflowInspectorModal
+        request={selectedMockupRequest}
+        role="studio"
+        actorName={user?.name || user?.userid}
+        onClose={() => setIsMockupInspectorOpen(false)}
+        onRefresh={loadDielines}
       />
     </div>
   );
